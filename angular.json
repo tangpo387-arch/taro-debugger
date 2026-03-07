@@ -23,16 +23,14 @@
                 "glob": "**/*",
                 "input": "public"
               },
-	    "src/assets",
-	      {
+              "src/assets",
+              {
                 "glob": "**/*",
                 "input": "node_modules/monaco-editor/min/vs",
                 "output": "/assets/monaco/"
               }
             ],
-            "styles": [
-              "src/styles.css"
-            ]
+            "styles": ["src/material-theme.scss", "src/styles.scss"]
           },
           "configurations": {
             "production": {

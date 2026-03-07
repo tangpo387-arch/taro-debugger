@@ -1,25 +1,35 @@
 :host {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* 撐滿整個視窗高度 */
+  height: 100vh;
+  overflow: hidden; /* 確保主視窗不晃動 */
 }
 
-.nav-bar {
-  background: #333;
-  padding: 10px;
-  flex-shrink: 0; /* 防止導覽列被壓縮 */
+.main-header {
+  flex-shrink: 0;
+  z-index: 10;
+  /* 增加一點邊界感 */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 3px 5px -1px rgba(0,0,0,.3);
 }
 
 .main-container {
-  flex-grow: 1;    /* 自動填滿剩餘的所有空間 */
-  overflow-y: auto; /* 若內容過長則顯示捲軸 */
+  flex-grow: 1;
+  /* 重要：必須設定為 hidden 或 auto，防止內部代碼編輯器撐破容器 */
+  overflow: hidden;
+  background-color: #1e1e1e; /* 讓內容區背景與編輯器融為一體 */
+
+  /* 若內部有元件需要自己捲動，確保它是相對定位 */
+  position: relative;
 }
 
 .status-bar {
-  background: #f0f0f0;
-  padding: 5px;
-  flex-shrink: 0; /* 防止頁尾被壓縮 */
-  }
-
-.nav-bar a { color: white; margin-right: 15px; text-decoration: none; }
-.nav-bar a.active { border-bottom: 2px solid #007acc; }
+  flex-shrink: 0;
+  background: #181818; /* 比背景再深一點，更有層次 */
+  padding: 4px 12px;   /* 稍微縮減高度，讓偵錯區空間更大 */
+  color: #cccccc;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  border-top: 1px solid #333;
+}
