@@ -1,0 +1,14 @@
+/* 確保類別名稱與 HTML 中的 class 保持一致 */
+.editor-container {
+  display: block;
+  flex-grow: 1;    /* 自動填滿剩餘的所有空間 */
+  width: 100%;
+  height: 100%;
+  border: 1px solid #333;
+}
+
+/* 針對 Monaco Editor 內部的基本修正 */
+ngx-monaco-editor {
+  width: 100%;
+  height: 100%;
+}

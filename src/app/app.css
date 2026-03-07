@@ -1,0 +1,25 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* 撐滿整個視窗高度 */
+}
+
+.nav-bar {
+  background: #333;
+  padding: 10px;
+  flex-shrink: 0; /* 防止導覽列被壓縮 */
+}
+
+.main-container {
+  flex-grow: 1;    /* 自動填滿剩餘的所有空間 */
+  overflow-y: auto; /* 若內容過長則顯示捲軸 */
+}
+
+.status-bar {
+  background: #f0f0f0;
+  padding: 5px;
+  flex-shrink: 0; /* 防止頁尾被壓縮 */
+  }
+
+.nav-bar a { color: white; margin-right: 15px; text-decoration: none; }
+.nav-bar a.active { border-bottom: 2px solid #007acc; }
