@@ -1,12 +1,11 @@
-@import "@angular/material/prebuilt-themes/indigo-pink.css";
-
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
 }
 
 .mat-app-background {
-  background-color: #303030; /* 若使用深色主題 */
-  color: white;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
 }

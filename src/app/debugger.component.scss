@@ -4,14 +4,15 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  background-color: #ffffff;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
 }
 
 /* --- 頂部工具列樣式 --- */
 .top-toolbar {
   flex-shrink: 0;
   z-index: 10;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--mat-sys-level2-shadow);
 }
 
 .brand-title {
@@ -23,7 +24,8 @@
   margin-left: 16px;
   font-size: 0.75rem;
   /* 半透明背景 */
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: var(--mat-sys-surface-variant);
+  color: var(--mat-sys-on-surface-variant);
   padding: 4px 8px;
   border-radius: 4px;
 }
@@ -42,17 +44,17 @@
 .sidenav-left,
 .sidenav-right {
   padding: 16px;
-  background-color: #fafafa;
+  background-color: var(--mat-sys-surface-container);
 }
 
 .sidenav-left {
   width: 250px;
-  border-right: 1px solid #e5e7eb;
+  border-right: 1px solid var(--mat-sys-outline-variant);
 }
 
 .sidenav-right {
   width: 300px;
-  border-left: 1px solid #e5e7eb;
+  border-left: 1px solid var(--mat-sys-outline-variant);
   display: flex;
   flex-direction: column;
 }
@@ -62,14 +64,14 @@
 
   h3 {
     font-weight: bold;
-    color: #4b5563;
+    color: var(--mat-sys-on-surface-variant);
     margin: 0 0 8px 0;
   }
 }
 
 .source-path {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--mat-sys-on-surface-variant);
   white-space: nowrap;
   overflow: hidden;
   /* 路徑過長時顯示省略號 */
@@ -88,20 +90,20 @@
 
 .variables-section {
   height: 50%;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
   margin-bottom: 16px;
   padding-bottom: 16px;
 }
 
 .panel-title {
   font-weight: bold;
-  color: #4b5563;
+  color: var(--mat-sys-on-surface-variant);
   margin: 0 0 8px 0;
 }
 
 .placeholder-content {
   font-size: 0.875rem;
-  color: #9ca3af;
+  color: var(--mat-sys-on-surface-variant);
 }
 
 /* --- 中央編輯器區域樣式 --- */
@@ -109,7 +111,7 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  background-color: #f9fafb;
+  background-color: var(--mat-sys-surface-container-low);
 }
 
 .editor-container {
@@ -122,16 +124,15 @@
 }
 
 .placeholder-text {
-  color: #9ca3af;
+  color: var(--mat-sys-on-surface-variant);
 }
 
 /* --- 控制面板區域樣式 --- */
 .consoles-container {
   height: 250px;
   flex-shrink: 0;
-  border-top: 1px solid #e5e7eb;
-  /* 暗色主題 */
-  background-color: #1e1e1e;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  background-color: var(--mat-sys-surface-container-high);
   display: flex;
   flex-direction: column;
 
@@ -140,9 +141,7 @@
   }
 
   ::ng-deep .mat-mdc-tab-header {
-    background-color: #2d2d2d;
-    --mdc-tab-text-label-color-default: #ccc;
-    --mdc-tab-text-label-color-active: #fff;
+    background-color: var(--mat-sys-surface-container-highest);
   }
 
   ::ng-deep .mat-mdc-tab-body-wrapper {
@@ -170,8 +169,9 @@
   width: 100%;
   font-family: 'Consolas', 'Courier New', monospace;
   font-size: 13px;
-  color: #cccccc;
-  background-color: #1e1e1e;
+  color: var(--mat-sys-on-surface);
+  // Use a slightly darker background for the viewport to make text pop
+  background-color: var(--mat-sys-surface-container-low);
 }
 
 .console-line {
@@ -181,9 +181,10 @@
   white-space: pre;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--mat-sys-on-surface);
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--mat-sys-surface-container-highest);
   }
 }
 
@@ -191,9 +192,8 @@
 .status-bar {
   height: 32px;
   flex-shrink: 0;
-  /* 藍色背景 */
-  background-color: #2563eb;
-  color: white;
+  background-color: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
   font-size: 0.75rem;
   display: flex;
   align-items: center;
@@ -209,12 +209,12 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  /* 預設灰色 */
-  background-color: #9ca3af;
+  /* Use a more visible outline color in dark mode */
+  background-color: var(--mat-sys-outline);
   margin-right: 8px;
 
   &.online {
-    /* 上線為綠色 */
+    /* 上線為主要顏色或特定成功顏色，這裡用 primary-container 或是自定義 */
     background-color: #4ade80;
   }
 }
