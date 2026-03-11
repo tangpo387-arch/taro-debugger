@@ -11,7 +11,8 @@ import { MatListModule } from '@angular/material/list';
 import { MatTabsModule } from '@angular/material/tabs';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 
-// 引入全域設定服務
+// 引入子元件與全域設定服務
+import { EditorComponent } from './editor.component';
 import { GdbConfigService } from './gdb-config.service';
 
 @Component({
@@ -25,7 +26,8 @@ import { GdbConfigService } from './gdb-config.service';
     MatSidenavModule,
     MatListModule,
     MatTabsModule,
-    ScrollingModule
+    ScrollingModule,
+    EditorComponent,
   ],
   templateUrl: './debugger.component.html',
   styleUrls: ['./debugger.component.scss']

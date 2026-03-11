@@ -8,9 +8,9 @@
     <span class="loaded-file">
       {{ currentConfig.executableFile || '未載入檔案' }}
     </span>
-    
+
     <span class="spacer"></span>
-    
+
     <!-- 偵錯控制按鈕群 -->
     <div class="debug-controls">
       <button mat-icon-button title="Continue"><mat-icon>play_arrow</mat-icon></button>
@@ -18,9 +18,9 @@
       <button mat-icon-button title="Step Into"><mat-icon>arrow_downward</mat-icon></button>
       <button mat-icon-button title="Stop" color="warn"><mat-icon>stop</mat-icon></button>
     </div>
-    
+
     <span class="spacer"></span>
-    
+
     <!-- 返回設定頁按鈕 -->
     <button mat-button (click)="goBack()">
       <mat-icon>settings</mat-icon> 重新設定
@@ -35,7 +35,7 @@
         來源：{{ currentConfig.sourceFile || '未指定' }}
       </div>
     </div>
-    
+
     <!-- 檔案列表 (示意用) -->
     <mat-nav-list class="file-list">
       <a mat-list-item href="#">main.c</a>
@@ -50,7 +50,7 @@
       <h3 class="panel-title">Variables</h3>
       <div class="placeholder-content">變數樹狀圖預留區...</div>
     </div>
-    
+
     <!-- 呼叫堆疊區 -->
     <div class="panel-section">
       <h3 class="panel-title">Call Stack</h3>
@@ -60,12 +60,12 @@
 
   <!-- 4. 中央：核心編輯器與主控台 -->
   <mat-sidenav-content class="main-content">
-    
+
     <!-- Monaco Editor 容器 -->
     <div class="editor-container">
-      <div class="placeholder-text">Monaco Editor 程式碼編輯區</div>
+      <app-editor class="monaco-editor-instance" />
     </div>
-    
+
     <!-- 底部 Console 區域 -->
     <div class="consoles-container">
       <mat-tab-group animationDuration="0ms">
@@ -81,7 +81,7 @@
         </mat-tab>
       </mat-tab-group>
     </div>
-    
+
     <!-- 底部狀態列 -->
     <footer class="status-bar">
       <div class="connection-status">
