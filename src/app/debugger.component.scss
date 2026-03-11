@@ -1,0 +1,220 @@
+/* 核心容器樣式，填滿視窗並禁止捲動 */
+.debugger-container {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+}
+
+/* --- 頂部工具列樣式 --- */
+.top-toolbar {
+  flex-shrink: 0;
+  z-index: 10;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.brand-title {
+  font-weight: 600;
+  font-size: 1.125rem;
+}
+
+.loaded-file {
+  margin-left: 16px;
+  font-size: 0.75rem;
+  /* 半透明背景 */
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.debug-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- 側邊欄共用與個別樣式 --- */
+.sidenav-left,
+.sidenav-right {
+  padding: 16px;
+  background-color: #fafafa;
+}
+
+.sidenav-left {
+  width: 250px;
+  border-right: 1px solid #e5e7eb;
+}
+
+.sidenav-right {
+  width: 300px;
+  border-left: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidenav-header {
+  margin-bottom: 16px;
+
+  h3 {
+    font-weight: bold;
+    color: #4b5563;
+    margin: 0 0 8px 0;
+  }
+}
+
+.source-path {
+  font-size: 0.875rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  /* 路徑過長時顯示省略號 */
+  text-overflow: ellipsis;
+}
+
+.file-list {
+  margin-top: 16px;
+}
+
+/* 右側面板區塊樣式 */
+.panel-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.variables-section {
+  height: 50%;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+}
+
+.panel-title {
+  font-weight: bold;
+  color: #4b5563;
+  margin: 0 0 8px 0;
+}
+
+.placeholder-content {
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+/* --- 中央編輯器區域樣式 --- */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background-color: #f9fafb;
+}
+
+.editor-container {
+  /* 填滿剩餘空間 */
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.placeholder-text {
+  color: #9ca3af;
+}
+
+/* --- 控制面板區域樣式 --- */
+.consoles-container {
+  height: 250px;
+  flex-shrink: 0;
+  border-top: 1px solid #e5e7eb;
+  /* 暗色主題 */
+  background-color: #1e1e1e;
+  display: flex;
+  flex-direction: column;
+
+  mat-tab-group {
+    height: 100%;
+  }
+
+  ::ng-deep .mat-mdc-tab-header {
+    background-color: #2d2d2d;
+    --mdc-tab-text-label-color-default: #ccc;
+    --mdc-tab-text-label-color-active: #fff;
+  }
+
+  ::ng-deep .mat-mdc-tab-body-wrapper {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    height: 100%;
+  }
+
+  ::ng-deep .mat-mdc-tab-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  ::ng-deep .mat-mdc-tab-body-content {
+    /* 強制內容區塊填滿高度 */
+    height: 100% !important;
+    overflow: hidden;
+  }
+}
+
+.console-viewport {
+  height: 100%;
+  width: 100%;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 13px;
+  color: #cccccc;
+  background-color: #1e1e1e;
+}
+
+.console-line {
+  height: 20px;
+  line-height: 20px;
+  padding: 0 16px;
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* 底部狀態列樣式 */
+.status-bar {
+  height: 32px;
+  flex-shrink: 0;
+  /* 藍色背景 */
+  background-color: #2563eb;
+  color: white;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+}
+
+.indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  /* 預設灰色 */
+  background-color: #9ca3af;
+  margin-right: 8px;
+
+  &.online {
+    /* 上線為綠色 */
+    background-color: #4ade80;
+  }
+}

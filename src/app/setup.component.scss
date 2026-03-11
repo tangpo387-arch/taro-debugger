@@ -1,0 +1,61 @@
+/* 設定頁面主容器樣式 */
+.setup-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh; /* 佔滿視窗高度 */
+  background-color: #f9fafb; /* 淺灰色背景 */
+}
+
+/* 設定卡片樣式 */
+.setup-card {
+  width: 100%;
+  max-width: 450px; /* 限制卡片最大寬度 */
+  padding: 24px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+}
+
+/* 卡片標頭樣式 */
+.setup-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.header-icon {
+  font-size: 48px;
+  height: 48px;
+  width: 48px;
+  margin-bottom: 8px;
+}
+
+.header-title {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+/* 表單內容區樣式 */
+.setup-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* 欄位之間的間距 */
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* 按鈕區樣式 */
+.setup-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding: 0;
+}
+
+.connect-button {
+  width: 100%;
+  padding: 8px 0;
+}
