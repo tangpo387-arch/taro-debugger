@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "gdb-frontend": {
+    "tarodap": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -60,10 +60,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "gdb-frontend:build:production"
+              "buildTarget": "tarodap:build:production"
             },
             "development": {
-              "buildTarget": "gdb-frontend:build:development"
+              "buildTarget": "tarodap:build:development"
             }
           },
           "defaultConfiguration": "development"

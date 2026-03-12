@@ -1,7 +1,7 @@
 import { Component, inject, NgZone } from '@angular/core';
 import { FormsModule } from '@angular/forms'; // 處理 [(ngModel)]
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
-import { GdbConfigService } from './gdb-config.service';
+import { DapConfigService } from './dap-config.service';
 
 @Component({
   selector: 'app-editor',
@@ -27,7 +27,7 @@ export class EditorComponent {
   code: string = '// Loading source code...'; // 編輯器顯示的內容
   private editorInstance: any;               // 儲存 Monaco 實例以便後續操作
   private breakpointIds: string[] = [];      // 追蹤當前的斷點 ID
-  private readonly configService = inject(GdbConfigService);
+  private readonly configService = inject(DapConfigService);
 
   constructor(private zone: NgZone) {
     // 可以在這裡存取設定

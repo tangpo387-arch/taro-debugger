@@ -13,7 +13,7 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
 
 // 引入子元件與全域設定服務
 import { EditorComponent } from './editor.component';
-import { GdbConfigService } from './gdb-config.service';
+import { DapConfigService } from './dap-config.service';
 
 @Component({
   selector: 'app-debugger',
@@ -34,29 +34,29 @@ import { GdbConfigService } from './gdb-config.service';
 })
 export class DebuggerComponent implements OnInit {
   // 注入依賴服務
-  private readonly configService = inject(GdbConfigService);
+  private readonly configService = inject(DapConfigService);
   private readonly router = inject(Router);
 
-  /** 儲存當前 GDB 之配置狀態，供 HTML 模板綁定顯示 */
+  /** 儲存當前 DAP 之配置狀態，供 HTML 模板綁定顯示 */
   public currentConfig: { executableFile: string; sourceFile: string } = {
     executableFile: '',
     sourceFile: ''
   };
 
-  /** 模擬的 GDB 輸出紀錄 */
-  public gdbLogs: string[] = [];
+  /** 模擬的 DAP 輸出紀錄 */
+  public dapLogs: string[] = [];
 
   /** 模擬的 Program 輸出紀錄 */
   public programLogs: string[] = [];
 
   /**
    * 於元件初始化時執行
-   * 負責向 GdbConfigService 獲取最新的配置資訊
+   * 負責向 DapConfigService 獲取最新的配置資訊
    */
   public ngOnInit(): void {
     this.currentConfig = this.configService.getConfig();
 
-    this.gdbLogs.push("Start debugging session...");
+    this.dapLogs.push("Start debugging session...");
 
     // 防呆機制：若未獲取到執行檔路徑，自動導向回設定頁面
     if (!this.currentConfig.executableFile) {
@@ -70,8 +70,8 @@ export class DebuggerComponent implements OnInit {
    * 此方法將中斷當前偵錯作業，並導航回設定視圖
    */
   public goBack(): void {
-    // (預留擴充) 於此處可呼叫 Electron IPC API 以終止底層 GDB 程序
-    // window.electronAPI.stopGdb();
+    // (預留擴充) 於此處可呼叫 Electron IPC API 以終止底層 DAP 程序
+    // window.electronAPI.stopDap();
 
     this.router.navigate(['/setup']);
   }

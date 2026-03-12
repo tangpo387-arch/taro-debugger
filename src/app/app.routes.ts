@@ -10,13 +10,13 @@ export const routes: Routes = [
     // 當網址為 '/setup' 時，載入設定頁面
     path: 'setup',
     component: SetupComponent,
-    title: '設定環境 - GDB DAP 偵錯器' // 這裡可以順便設定瀏覽器分頁標題
+    title: '設定環境 - TaroDAP' // 這裡可以順便設定瀏覽器分頁標題
   },
   {
     // 當網址為 '/debug' 時，載入核心偵錯主畫面
     path: 'debug',
     component: DebuggerComponent,
-    title: '偵錯主畫面 - GDB DAP 偵錯器'
+    title: '偵錯主畫面 - TaroDAP'
   },
   {
     // 當網址為空（即根目錄）時，自動重新導向至設定頁面

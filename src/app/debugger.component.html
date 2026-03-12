@@ -3,7 +3,7 @@
 
   <!-- 1. 頂部工具與導航列 -->
   <mat-toolbar color="primary" class="top-toolbar">
-    <span class="brand-title">GDB Workspace</span>
+    <span class="brand-title">TaroDAP</span>
     <!-- 顯示當前載入的執行檔，從 Service 取得 -->
     <span class="loaded-file">
       {{ currentConfig.executableFile || '未載入檔案' }}
@@ -69,9 +69,9 @@
     <!-- 底部 Console 區域 -->
     <div class="consoles-container">
       <mat-tab-group animationDuration="0ms">
-        <mat-tab label="GDB Console">
+        <mat-tab label="DAP Console">
           <cdk-virtual-scroll-viewport itemSize="20" class="console-viewport" minBufferPx="200" maxBufferPx="400">
-            <div *cdkVirtualFor="let log of gdbLogs" class="console-line">{{log}}</div>
+            <div *cdkVirtualFor="let log of dapLogs" class="console-line">{{log}}</div>
           </cdk-virtual-scroll-viewport>
         </mat-tab>
         <mat-tab label="Program Console">
@@ -87,7 +87,7 @@
       <div class="connection-status">
         <!-- 連線指示燈：根據實際狀態切換 class -->
         <span class="indicator online"></span>
-        <span>GDB 已連線</span>
+        <span>DAP 已連線</span>
       </div>
     </footer>
 

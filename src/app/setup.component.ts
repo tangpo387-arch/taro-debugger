@@ -11,7 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
 // 引入全域設定服務 (請確保路徑與您的專案結構一致)
-import { GdbConfigService } from './gdb-config.service';
+import { DapConfigService } from './dap-config.service';
 
 @Component({
   selector: 'app-setup',
@@ -37,7 +37,7 @@ export class SetupComponent {
 
   // 運用 Angular 的 inject() 函式注入所需之服務與路由物件
   private readonly router = inject(Router);
-  private readonly configService = inject(GdbConfigService);
+  private readonly configService = inject(DapConfigService);
 
   /**
    * 處理「Connect & Debug」按鈕之點擊事件
@@ -49,11 +49,11 @@ export class SetupComponent {
       return;
     }
 
-    // 1. 將設定參數委託給 GdbConfigService 進行全域暫存
+    // 1. 將設定參數委託給 DapConfigService 進行全域暫存
     this.configService.setConfig(this.execPath, this.sourcePath);
     
-    // 2. (預留擴充) 於此處可呼叫 Electron IPC API 以啟動底層 GDB 程序
-    // window.electronAPI.startGdb(this.execPath);
+    // 2. (預留擴充) 於此處可呼叫 Electron IPC API 以啟動底層 DAP 程序
+    // window.electronAPI.startDap(this.execPath);
     
     // 3. 透過 Angular Router 切換至偵錯主畫面
     this.router.navigate(['/debug']);
