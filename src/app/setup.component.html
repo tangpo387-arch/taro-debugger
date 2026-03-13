@@ -9,73 +9,99 @@
     </mat-card-header>
 
     <mat-card-content class="setup-content">
+      <!-- 表單綁定至 Reactive FormGroup -->
+      <form [formGroup]="form" (ngSubmit)="onConnect()" novalidate>
 
-      <!-- ── 區段一：DAP Server 連線 ── -->
-      <div class="section-label">連線設定</div>
+        <!-- ── 區段一：DAP Server 連線 ── -->
+        <div class="section-label">連線設定</div>
 
-      <!-- DAP Server 連線位址 -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>DAP Server 位址</mat-label>
-        <input matInput id="serverAddressInput" [(ngModel)]="serverAddress" placeholder="例如: localhost:4711">
-        <mat-icon matSuffix>dns</mat-icon>
-        <mat-hint>格式: host:port</mat-hint>
-      </mat-form-field>
+        <!-- DAP Server 連線位址 -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>DAP Server 位址</mat-label>
+          <input matInput id="serverAddressInput" formControlName="serverAddress"
+                 placeholder="例如: localhost:4711">
+          <mat-icon matSuffix>dns</mat-icon>
+          <!-- 驗證成功時顯示格式提示；有錯誤時 Angular Material 會自動隱藏 hint -->
+          @if (!form.controls.serverAddress.errors) {
+            <mat-hint>格式: host:port</mat-hint>
+          }
+          <!-- 行內錯誤訊息：只有欄位被接觸（touched）後才顯示 -->
+          @if (form.controls.serverAddress.touched) {
+            @if (form.controls.serverAddress.hasError('required')) {
+              <mat-error>連線位址為必填欄位</mat-error>
+            } @else if (form.controls.serverAddress.hasError('invalidFormat')) {
+              <mat-error>格式不正確，請改用 host:port（例如 localhost:4711）</mat-error>
+            }
+          }
+        </mat-form-field>
 
-      <!-- 啟動模式選擇器 -->
-      <div class="mode-selector-wrapper">
-        <span class="mode-label">啟動模式</span>
-        <mat-button-toggle-group [(ngModel)]="launchMode" id="launchModeToggle" class="mode-toggle" aria-label="啟動模式">
-          <mat-button-toggle value="launch">
-            <mat-icon>play_arrow</mat-icon>
-            Launch
-          </mat-button-toggle>
-          <mat-button-toggle value="attach">
-            <mat-icon>link</mat-icon>
-            Attach
-          </mat-button-toggle>
-        </mat-button-toggle-group>
-        <p class="mode-hint" *ngIf="launchMode === 'launch'">
-          由偵錯器啟動並附加至新程序
-        </p>
-        <p class="mode-hint" *ngIf="launchMode === 'attach'">
-          附加至一個已在執行中的程序
-        </p>
-      </div>
+        <!-- 啟動模式選擇器 -->
+        <div class="mode-selector-wrapper">
+          <span class="mode-label">啟動模式</span>
+          <mat-button-toggle-group formControlName="launchMode" id="launchModeToggle"
+                                   class="mode-toggle" aria-label="啟動模式">
+            <mat-button-toggle value="launch">
+              <mat-icon>play_arrow</mat-icon>
+              Launch
+            </mat-button-toggle>
+            <mat-button-toggle value="attach">
+              <mat-icon>link</mat-icon>
+              Attach
+            </mat-button-toggle>
+          </mat-button-toggle-group>
+          @if (launchMode === 'launch') {
+            <p class="mode-hint">由偵錯器啟動並附加至新程序</p>
+          } @else {
+            <p class="mode-hint">附加至一個已在執行中的程序</p>
+          }
+        </div>
 
-      <mat-divider class="section-divider"></mat-divider>
+        <mat-divider class="section-divider"></mat-divider>
 
-      <!-- ── 區段二：程式設定 ── -->
-      <div class="section-label">程式設定</div>
+        <!-- ── 區段二：程式設定 ── -->
+        <div class="section-label">程式設定</div>
 
-      <!-- 執行檔路徑（Launch 模式，必填） -->
-      <mat-form-field appearance="outline" class="full-width" *ngIf="launchMode === 'launch'">
-        <mat-label>執行檔路徑 <span class="required-mark">*</span></mat-label>
-        <input matInput id="execPathInput" [(ngModel)]="execPath" placeholder="例如：/workspace/build/main.out">
-        <mat-icon matSuffix>terminal</mat-icon>
-      </mat-form-field>
+        <!-- 執行檔路徑（Launch 模式，必填） -->
+        @if (launchMode === 'launch') {
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>執行檔路徑 <span class="required-mark">*</span></mat-label>
+            <input matInput id="execPathInput" formControlName="executablePath"
+                   placeholder="例如：/workspace/build/main.out">
+            <mat-icon matSuffix>terminal</mat-icon>
+            @if (form.controls.executablePath.touched &&
+                 form.controls.executablePath.hasError('required')) {
+              <mat-error>啟動模式下，執行檔路徑為必填欄位</mat-error>
+            }
+          </mat-form-field>
 
-      <!-- 程式引數（Launch 模式，選填） -->
-      <mat-form-field appearance="outline" class="full-width" *ngIf="launchMode === 'launch'">
-        <mat-label>程式引數</mat-label>
-        <input matInput id="programArgsInput" [(ngModel)]="programArgs" placeholder="例如：--config app.cfg --verbose">
-        <mat-icon matSuffix>format_list_bulleted</mat-icon>
-        <mat-hint>選填，傳遞給被偵錯程式的命令列引數</mat-hint>
-      </mat-form-field>
+          <!-- 程式引數（Launch 模式，選填） -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>程式引數</mat-label>
+            <input matInput id="programArgsInput" formControlName="programArgs"
+                   placeholder="例如：--config app.cfg --verbose">
+            <mat-icon matSuffix>format_list_bulleted</mat-icon>
+            <mat-hint>選填，傳遞給被偵錯程式的命令列引數</mat-hint>
+          </mat-form-field>
+        }
 
-      <!-- 原始碼路徑（選填） -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>原始碼路徑</mat-label>
-        <input matInput id="sourcePathInput" [(ngModel)]="sourcePath" placeholder="例如：/workspace/src">
-        <mat-icon matSuffix>folder</mat-icon>
-        <mat-hint>選填，用於原始碼對應</mat-hint>
-      </mat-form-field>
+        <!-- 原始碼路徑（選填，Launch / Attach 皆顯示） -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>原始碼路徑</mat-label>
+          <input matInput id="sourcePathInput" formControlName="sourcePath"
+                 placeholder="例如：/workspace/src">
+          <mat-icon matSuffix>folder</mat-icon>
+          <mat-hint>選填，用於原始碼對應</mat-hint>
+        </mat-form-field>
 
+      </form>
     </mat-card-content>
 
     <mat-card-actions class="setup-actions">
-      <!-- 連線按鈕：文字與圖示隨 Launch Mode 動態切換 -->
-      <button mat-flat-button color="primary" id="connectButton" class="connect-button" [disabled]="!isFormValid"
-        (click)="onConnect()">
+      <!-- 連線按鈕：文字與圖示隨 Launch Mode 動態切換；表單無效時 disable -->
+      <button mat-flat-button color="primary" id="connectButton"
+              class="connect-button"
+              [disabled]="form.invalid"
+              (click)="onConnect()">
         <mat-icon>{{ connectButtonIcon }}</mat-icon>
         {{ connectButtonLabel }}
       </button>

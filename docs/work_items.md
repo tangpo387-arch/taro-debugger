@@ -12,7 +12,7 @@
 |---|---|---|
 | `app.routes.ts` | ✅ 已完成 | `/setup` → `/debug` 路由已建立 |
 | `GdbConfigService` | ✅ 已完成 | 僅存 `executableFile` / `sourceFile`，缺少 DAP Server 位址、Launch Mode、程式引數 |
-| `SetupComponent` | ✅ 已完成 | DAP Server 位址、Launch/Attach 模式切換、執行檔路徑、原始碼目錄、程式引數欄位均已實作 |
+| `SetupComponent` | ✅ 已完成 | DAP Server 位址、Launch/Attach 模式切換、執行檔路徑、原始碼目錄、程式引數欄位均已實作；Reactive Forms 驗證（WI-03）已完成 |
 | `DebuggerComponent` | ⚠️ 骨架版 | 佈局三段式已成形，但側邊欄/工具列/主控台皆為 placeholder |
 | `EditorComponent` | ⚠️ 基礎版 | Monaco Editor 已嵌入，但無斷點互動、執行行高亮 |
 | DAP 通訊層 | ❌ 未實作 | 無 `DapTransportService` 抽象、無 WebSocket/IPC 實作 |
@@ -55,6 +55,7 @@
   - 必填欄位驗證 + 行內錯誤訊息
   - Launch/Attach 按鈕在驗證失敗時 disable
 - **依賴**：WI-02
+- **狀態**：✅ 已完成
 
 ---
 
@@ -313,6 +314,7 @@ graph TD
     style WI01 fill:#4ade80,stroke:#16a34a
     style WI02 fill:#4ade80,stroke:#16a34a
     style WI03 fill:#4ade80,stroke:#16a34a
+
     style WI04 fill:#60a5fa,stroke:#2563eb
     style WI05 fill:#60a5fa,stroke:#2563eb
     style WI06 fill:#60a5fa,stroke:#2563eb
