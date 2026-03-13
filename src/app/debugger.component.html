@@ -6,7 +6,7 @@
     <span class="brand-title">TaroDAP</span>
     <!-- 顯示當前載入的執行檔，從 Service 取得 -->
     <span class="loaded-file">
-      {{ currentConfig.executableFile || '未載入檔案' }}
+      {{ currentConfig.executablePath || '未載入檔案' }}
     </span>
 
     <span class="spacer"></span>
@@ -31,8 +31,8 @@
   <mat-sidenav mode="side" opened position="start" class="sidenav-left">
     <div class="sidenav-header">
       <h3>檔案清單</h3>
-      <div class="source-path" title="{{ currentConfig.sourceFile }}">
-        來源：{{ currentConfig.sourceFile || '未指定' }}
+      <div class="source-path" title="{{ currentConfig.sourcePath }}">
+        來源：{{ currentConfig.sourcePath || '未指定' }}
       </div>
     </div>
 

@@ -5,31 +5,79 @@
     <mat-card-header class="setup-header">
       <mat-icon color="primary" class="header-icon">bug_report</mat-icon>
       <mat-card-title class="header-title">TaroDAP 偵錯器</mat-card-title>
-      <mat-card-subtitle>請設定專案執行環境</mat-card-subtitle>
+      <mat-card-subtitle>請設定 DAP 連線環境</mat-card-subtitle>
     </mat-card-header>
 
     <mat-card-content class="setup-content">
-      <!-- 執行檔路徑輸入欄位 -->
+
+      <!-- ── 區段一：DAP Server 連線 ── -->
+      <div class="section-label">連線設定</div>
+
+      <!-- DAP Server 連線位址 -->
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>執行檔路徑 (Executable File)</mat-label>
-        <input matInput [(ngModel)]="execPath" placeholder="例如：/workspace/build/main.out">
+        <mat-label>DAP Server 位址</mat-label>
+        <input matInput id="serverAddressInput" [(ngModel)]="serverAddress" placeholder="例如: localhost:4711">
+        <mat-icon matSuffix>dns</mat-icon>
+        <mat-hint>格式: host:port</mat-hint>
+      </mat-form-field>
+
+      <!-- 啟動模式選擇器 -->
+      <div class="mode-selector-wrapper">
+        <span class="mode-label">啟動模式</span>
+        <mat-button-toggle-group [(ngModel)]="launchMode" id="launchModeToggle" class="mode-toggle" aria-label="啟動模式">
+          <mat-button-toggle value="launch">
+            <mat-icon>play_arrow</mat-icon>
+            Launch
+          </mat-button-toggle>
+          <mat-button-toggle value="attach">
+            <mat-icon>link</mat-icon>
+            Attach
+          </mat-button-toggle>
+        </mat-button-toggle-group>
+        <p class="mode-hint" *ngIf="launchMode === 'launch'">
+          由偵錯器啟動並附加至新程序
+        </p>
+        <p class="mode-hint" *ngIf="launchMode === 'attach'">
+          附加至一個已在執行中的程序
+        </p>
+      </div>
+
+      <mat-divider class="section-divider"></mat-divider>
+
+      <!-- ── 區段二：程式設定 ── -->
+      <div class="section-label">程式設定</div>
+
+      <!-- 執行檔路徑（Launch 模式，必填） -->
+      <mat-form-field appearance="outline" class="full-width" *ngIf="launchMode === 'launch'">
+        <mat-label>執行檔路徑 <span class="required-mark">*</span></mat-label>
+        <input matInput id="execPathInput" [(ngModel)]="execPath" placeholder="例如：/workspace/build/main.out">
         <mat-icon matSuffix>terminal</mat-icon>
       </mat-form-field>
 
-      <!-- 原始碼目錄輸入欄位 -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>原始碼目錄 (Source Directory)</mat-label>
-        <input matInput [(ngModel)]="sourcePath" placeholder="例如：/workspace/src">
-        <mat-icon matSuffix>folder</mat-icon>
+      <!-- 程式引數（Launch 模式，選填） -->
+      <mat-form-field appearance="outline" class="full-width" *ngIf="launchMode === 'launch'">
+        <mat-label>程式引數</mat-label>
+        <input matInput id="programArgsInput" [(ngModel)]="programArgs" placeholder="例如：--config app.cfg --verbose">
+        <mat-icon matSuffix>format_list_bulleted</mat-icon>
+        <mat-hint>選填，傳遞給被偵錯程式的命令列引數</mat-hint>
       </mat-form-field>
+
+      <!-- 原始碼路徑（選填） -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>原始碼路徑</mat-label>
+        <input matInput id="sourcePathInput" [(ngModel)]="sourcePath" placeholder="例如：/workspace/src">
+        <mat-icon matSuffix>folder</mat-icon>
+        <mat-hint>選填，用於原始碼對應</mat-hint>
+      </mat-form-field>
+
     </mat-card-content>
 
     <mat-card-actions class="setup-actions">
-      <!-- 連線按鈕：只有在兩個路徑都填寫時才啟用 -->
-      <button mat-flat-button color="primary" class="connect-button" 
-              [disabled]="!execPath || !sourcePath" 
-              (click)="onConnect()">
-        <mat-icon>cable</mat-icon> Connect & Debug
+      <!-- 連線按鈕：文字與圖示隨 Launch Mode 動態切換 -->
+      <button mat-flat-button color="primary" id="connectButton" class="connect-button" [disabled]="!isFormValid"
+        (click)="onConnect()">
+        <mat-icon>{{ connectButtonIcon }}</mat-icon>
+        {{ connectButtonLabel }}
       </button>
     </mat-card-actions>
   </mat-card>

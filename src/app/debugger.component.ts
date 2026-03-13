@@ -13,7 +13,7 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
 
 // 引入子元件與全域設定服務
 import { EditorComponent } from './editor.component';
-import { DapConfigService } from './dap-config.service';
+import { DapConfigService, DapConfig } from './dap-config.service';
 
 @Component({
   selector: 'app-debugger',
@@ -37,10 +37,13 @@ export class DebuggerComponent implements OnInit {
   private readonly configService = inject(DapConfigService);
   private readonly router = inject(Router);
 
-  /** 儲存當前 DAP 之配置狀態，供 HTML 模板綁定顯示 */
-  public currentConfig: { executableFile: string; sourceFile: string } = {
-    executableFile: '',
-    sourceFile: ''
+  /** 儲存當前 DAP 之完整組態，供 HTML 模板綁定顯示 */
+  public currentConfig: DapConfig = {
+    serverAddress: '',
+    launchMode: 'launch',
+    executablePath: '',
+    sourcePath: '',
+    programArgs: ''
   };
 
   /** 模擬的 DAP 輸出紀錄 */
@@ -59,7 +62,7 @@ export class DebuggerComponent implements OnInit {
     this.dapLogs.push("Start debugging session...");
 
     // 防呆機制：若未獲取到執行檔路徑，自動導向回設定頁面
-    if (!this.currentConfig.executableFile) {
+    if (!this.currentConfig.executablePath) {
       console.warn('偵測到未完整的設定參數，系統將自動導回設定頁面。');
       this.router.navigate(['/setup']);
     }

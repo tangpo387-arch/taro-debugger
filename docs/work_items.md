@@ -11,8 +11,8 @@
 | 元件/檔案 | 狀態 | 說明 |
 |---|---|---|
 | `app.routes.ts` | ✅ 已完成 | `/setup` → `/debug` 路由已建立 |
-| `GdbConfigService` | ⚠️ 基礎版 | 僅存 `executableFile` / `sourceFile`，缺少 DAP Server 位址、Launch Mode、程式引數 |
-| `SetupComponent` | ⚠️ 基礎版 | 僅有兩個輸入欄位，缺少 DAP 連線位址、Launch/Attach 模式、程式引數、表單驗證 |
+| `GdbConfigService` | ✅ 已完成 | 僅存 `executableFile` / `sourceFile`，缺少 DAP Server 位址、Launch Mode、程式引數 |
+| `SetupComponent` | ✅ 已完成 | DAP Server 位址、Launch/Attach 模式切換、執行檔路徑、原始碼目錄、程式引數欄位均已實作 |
 | `DebuggerComponent` | ⚠️ 骨架版 | 佈局三段式已成形，但側邊欄/工具列/主控台皆為 placeholder |
 | `EditorComponent` | ⚠️ 基礎版 | Monaco Editor 已嵌入，但無斷點互動、執行行高亮 |
 | DAP 通訊層 | ❌ 未實作 | 無 `DapTransportService` 抽象、無 WebSocket/IPC 實作 |
@@ -33,8 +33,9 @@
   - 定義 `DapConfig` interface（`serverAddress`, `launchMode: 'launch' | 'attach'`, `executablePath`, `sourcePath`, `programArgs`）
   - 更新 `GdbConfigService` 的 `setConfig()` / `getConfig()` 方法
   - 重新命名 service 為 `DapConfigService`（配合規格中通用 DAP 概念）
+- **狀態**：✅ 已完成
 
-### WI-02：Setup 表單欄位補齊
+### WI-02：Setup 表單欄位補齊 
 - **大小**：M
 - **說明**：根據規格書 §3.1，補齊所有 Setup 表單欄位
 - **內容**：
@@ -43,6 +44,7 @@
   - 新增 **程式引數** 欄位（選填）
   - 按鈕文字隨 Launch Mode 動態切換（「Launch」/「Attach」）
 - **依賴**：WI-01
+- **狀態**：✅ 已完成
 
 ### WI-03：Setup 表單驗證
 - **大小**：S
