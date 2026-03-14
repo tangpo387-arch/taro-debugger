@@ -15,7 +15,7 @@
 | `SetupComponent` | ✅ 已完成 | DAP Server 位址、Launch/Attach 模式切換、執行檔路徑、原始碼目錄、程式引數欄位均已實作；Reactive Forms 驗證（WI-03）已完成 |
 | `DebuggerComponent` | ⚠️ 骨架版 | 佈局三段式已成形，但側邊欄/工具列/主控台皆為 placeholder |
 | `EditorComponent` | ⚠️ 基礎版 | Monaco Editor 已嵌入，但無斷點互動、執行行高亮 |
-| DAP 通訊層 | ❌ 未實作 | 無 `DapTransportService` 抽象、無 WebSocket/IPC 實作 |
+| DAP 通訊層 | ✅ 已完成 | `DapTransportService`、`WebSocketTransportService` 及 `DapSessionService` 皆已完成 |
 | 檔案樹 | ❌ 未實作 | 左側邊欄為硬編碼假資料 |
 | 變數檢視器 | ❌ 未實作 | 右側為 placeholder 文字 |
 | 呼叫堆疊 | ❌ 未實作 | 右側為 placeholder 文字 |
@@ -68,6 +68,7 @@
   - 定義抽象 class / interface `DapTransportService`
   - 方法：`connect()`, `disconnect()`, `sendRequest()`, `onEvent()` (Observable)
   - 定義 DAP Message 基礎型別（`DapRequest`, `DapResponse`, `DapEvent`）
+- **狀態**：✅ 已完成
 
 ### WI-05：實作 WebSocket 通訊層 (`WebSocketTransportService`)
 - **大小**：M
@@ -78,6 +79,7 @@
   - DAP 訊息序列化/反序列化（Content-Length header + JSON body）
   - 使用 RxJS Subject 發射接收到的事件
 - **依賴**：WI-04
+- **狀態**：✅ 已完成
 
 ### WI-06：DAP 會話管理服務 (`DapSessionService`)
 - **大小**：M
@@ -89,6 +91,7 @@
   - `disconnect()` → 終止會話
   - 管理 request sequence ID 與 pending response 對應
 - **依賴**：WI-05
+- **狀態**：✅ 已完成
 
 ---
 
