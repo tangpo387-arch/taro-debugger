@@ -4,7 +4,6 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 
-
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),

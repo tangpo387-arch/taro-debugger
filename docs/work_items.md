@@ -100,7 +100,7 @@
   - 修改 `sendRequest` 方法，加入 `setTimeout` 等待上限 (例如 5秒)
   - 逾時發生時，清除 pending handler 並 reject `Promise`
 - **依賴**：WI-06
-- **狀態**：⏳ 待處理
+- **狀態**：✅ 已完成
 
 ### WI-08：在 DebuggerComponent 整合 DapSessionService
 - **大小**：S
@@ -111,7 +111,7 @@
   - 訂閱 `onEvent()` 即時記錄基礎事件至 UI 日誌
   - 使用 `try/catch` 捕捉 timeout 錯誤，於 UI 顯示友善提示（如 `MatSnackBar` 或 `dapLogs`）
 - **依賴**：WI-06, WI-07
-- **狀態**：⏳ 待處理
+- **狀態**：✅ 已完成
 
 ---
 

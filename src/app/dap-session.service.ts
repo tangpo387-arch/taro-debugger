@@ -5,9 +5,7 @@ import { DapTransportService } from './dap-transport.service';
 import { DapConfigService } from './dap-config.service';
 import { DapRequest, DapResponse, DapEvent } from './dap.types';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class DapSessionService {
   private seq = 1;
   private pendingRequests = new Map<number, { resolve: (response: DapResponse) => void; reject: (error: any) => void }>();
@@ -16,12 +14,24 @@ export class DapSessionService {
   constructor(
     private transportStatus: DapTransportService,
     private configService: DapConfigService
-  ) {}
+  ) { }
 
   /**
-   * 初始化 Session。開始監聽 Message 並發送 initialize 請求。
+   * 初始化 Session。這會先建立底層連線，接著開始監聽 Message 並發送 initialize 請求。
    */
   async initializeSession(): Promise<DapResponse> {
+    const config = this.configService.getConfig();
+    if (!config.serverAddress) {
+      throw new Error('Server address is empty');
+    }
+
+    try {
+      // 等待連線建立完成
+      await firstValueFrom(this.transportStatus.connect(config.serverAddress));
+    } catch (e) {
+      throw new Error(`websocket 連線失敗`);
+    }
+
     if (this.messageSubscription) {
       this.messageSubscription.unsubscribe();
     }
@@ -73,7 +83,7 @@ export class DapSessionService {
   async launchOrAttach(): Promise<DapResponse> {
     const config = this.configService.getConfig();
     const command = config.launchMode;
-    
+
     // 將 args 字串拆分為陣列
     const argsArray = config.programArgs ? config.programArgs.split(' ').filter(a => a.length > 0) : [];
 
@@ -100,11 +110,11 @@ export class DapSessionService {
   async disconnect(): Promise<void> {
     try {
       if (this.transportStatus.connectionStatus$) {
-          // 先發送 disconnect request 給 DAP Server
-          await this.sendRequest('disconnect', {
-              restart: false,
-              terminateDebuggee: true
-          });
+        // 先發送 disconnect request 給 DAP Server
+        await this.sendRequest('disconnect', {
+          restart: false,
+          terminateDebuggee: true
+        });
       }
     } catch (e) {
       console.warn('Failed to send disconnect request cleanly', e);
@@ -114,7 +124,7 @@ export class DapSessionService {
         this.messageSubscription.unsubscribe();
         this.messageSubscription = undefined;
       }
-      
+
       for (const [seq, handler] of this.pendingRequests.entries()) {
         handler.reject(new Error('Session stopped'));
         this.pendingRequests.delete(seq);
@@ -123,16 +133,17 @@ export class DapSessionService {
       this.transportStatus.disconnect();
     }
   }
-  
+
   /**
    * 封裝發送 Request 並等待對應 Response 的邏輯
    * @param command DAP 指令名稱
    * @param args DAP 指令的 arguments (optional)
+   * @param timeoutMs 逾時時間 (預設 5000ms)
    */
-  sendRequest(command: string, args?: any): Promise<DapResponse> {
+  sendRequest(command: string, args?: any, timeoutMs: number = 5000): Promise<DapResponse> {
     return new Promise((resolve, reject) => {
       const currentSeq = this.seq++;
-      
+
       const request: DapRequest = {
         seq: currentSeq,
         type: 'request',
@@ -140,11 +151,28 @@ export class DapSessionService {
         arguments: args
       };
 
-      this.pendingRequests.set(currentSeq, { resolve, reject });
+      const timeoutId = setTimeout(() => {
+        if (this.pendingRequests.has(currentSeq)) {
+          this.pendingRequests.delete(currentSeq);
+          reject(new Error(`DAP request '${command}' timed out after ${timeoutMs}ms`));
+        }
+      }, timeoutMs);
+
+      const resolveWrapper = (response: DapResponse) => {
+        clearTimeout(timeoutId);
+        resolve(response);
+      };
+
+      const rejectWrapper = (error: any) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      };
+
+      this.pendingRequests.set(currentSeq, { resolve: resolveWrapper, reject: rejectWrapper });
       this.transportStatus.sendRequest(request);
     });
   }
-  
+
   /**
    * 開放取得 Session 事件串流
    */
