@@ -89,6 +89,12 @@
 2. **WebSocket 通訊層**：Angular 應用程式透過 WebSocket 連線至遠端 DAP Server 或中繼代理伺服器 (Relay Proxy)，直接傳輸 DAP 協定訊息。  
 3. **偵錯適配器協定層 (DAP Layer)**：DAP Server 接收 WebSocket 訊息，執行偵錯操作並將結果即時串流回傳前端。
 
+#### **4.2.1 WebSocket 傳輸層規格與防呆要求**
+
+由於 WebSocket 資料流之特性，前端緩衝區的實作應遵守以下嚴格規範以確保系統正確性與防呆能力：
+* **嚴格 Header 檢驗**：傳入之 DAP 資料流必須嚴格由 `Content-Length: <長度>\r\n\r\n` 表頭（Header）引導。系統不得嘗試在缺乏此合法 Header 之狀況下盲目解析資料串流（例如：禁止直接尋找大括號 `{}` 解析 JSON），且首字元必須為 `'C'`。
+* **錯誤隔離與阻斷 (Fail-Fast Mechanism)**：若 WebSocket 傳輸層偵測到任何一個封包之格式異常（包含：不支援的二進位型別、缺失 Header 欄位、或 1KB 內未能尋獲合法 Header 結尾等），系統應**永久終止當前之訊號匯流排 (Message Subject is errored)**。這意味著：只要有一個封包損毀出錯，整個 WebSocket 訊息接收機制將主動進入失效狀態，不再接收後續不確定狀態的封包，避免系統因讀取到錯位之串流而在使用者介面上產生難以預測的錯誤。使用者必須重新建立連線 (`connect()`) 始能恢復偵錯作業。
+
 ## **5. DAP 協定支援範圍 (DAP Protocol Support Scope)**
 
 本系統基於偵錯適配器協定 (Debug Adapter Protocol) 規範，實作以下核心請求與事件。目前僅支援 C/C++ 語言之偵錯適配器，未來可依需求擴展至其他語言。
