@@ -156,7 +156,7 @@
   - `initialized` 事件 → 觸發 `configurationDone`
   - `breakpoint` 事件 → 更新斷點顯示狀態
 - **依賴**：WI-07
-- **狀態**：⏳ 待處理
+- **狀態**：✅ 已完成
 
 ---
 
@@ -254,12 +254,12 @@
 - **大小**：M
 - **說明**：根據規格書 §3.2.5，完善底部主控台
 - **內容**：
-  - 接收 DAP `output` 事件，依 category 分流至 GDB Console / Program Console
+  - 接收 DAP `output` 事件，依 category 分流至 Debugger Console / Program Console
   - 新增命令輸入欄位（input field），發送 `evaluate` request
   - 自動捲動至最新 log
   - Log 時間戳記顯示
 - **依賴**：WI-11
-- **狀態**：⏳ 待處理
+- **狀態**：✅ 已完成
 
 ### WI-20：連線狀態指示器功能化
 - **大小**：S
@@ -377,12 +377,12 @@ graph TD
     style WI05 fill:#4ade80,stroke:#16a34a
     style WI06 fill:#4ade80,stroke:#16a34a
 
-    style WI07 fill:#60a5fa,stroke:#2563eb
-    style WI08 fill:#60a5fa,stroke:#2563eb
+    style WI07 fill:#4ade80,stroke:#16a34a
+    style WI08 fill:#4ade80,stroke:#16a34a
     style WI09 fill:#60a5fa,stroke:#2563eb
 
     style WI10 fill:#f97316,stroke:#c2410c
-    style WI11 fill:#f97316,stroke:#c2410c
+    style WI11 fill:#4ade80,stroke:#16a34a
 
     style WI12 fill:#a78bfa,stroke:#7c3aed
     style WI13 fill:#a78bfa,stroke:#7c3aed
@@ -394,7 +394,7 @@ graph TD
     style WI17 fill:#f472b6,stroke:#db2777
     style WI18 fill:#f472b6,stroke:#db2777
 
-    style WI19 fill:#2dd4bf,stroke:#0d9488
+    style WI19 fill:#4ade80,stroke:#16a34a
     style WI20 fill:#2dd4bf,stroke:#0d9488
 
     style WI21 fill:#fb923c,stroke:#ea580c

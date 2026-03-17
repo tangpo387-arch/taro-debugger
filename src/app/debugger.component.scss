@@ -162,12 +162,14 @@
   ::ng-deep .mat-mdc-tab-body-content {
     /* 強制內容區塊填滿高度 */
     height: 100% !important;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
   }
 }
 
 .console-viewport {
-  height: 100%;
+  flex: 1;
   width: 100%;
   font-family: 'Consolas', 'Courier New', monospace;
   font-size: 13px;
@@ -187,6 +189,52 @@
 
   &:hover {
     background-color: var(--mat-sys-surface-container-highest);
+  }
+
+  /* Different colors for log categories */
+  .log-timestamp {
+    color: var(--mat-sys-on-surface-variant);
+    margin-right: 8px;
+  }
+
+  .log-message {
+    &.stderr {
+      color: var(--mat-sys-error);
+    }
+    &.telemetry {
+      color: var(--mat-sys-tertiary);
+    }
+    // console and stdout inherits default color
+  }
+}
+
+/* 底部命令輸入區域 */
+.console-input-area {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  height: 40px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface-container);
+  
+  mat-icon {
+    color: var(--mat-sys-primary);
+    margin-right: 8px;
+  }
+
+  input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--mat-sys-on-surface);
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+
+    &::placeholder {
+      color: var(--mat-sys-outline);
+    }
   }
 }
 

@@ -71,12 +71,31 @@
       <mat-tab-group animationDuration="0ms">
         <mat-tab label="DAP Console">
           <cdk-virtual-scroll-viewport itemSize="20" class="console-viewport" minBufferPx="200" maxBufferPx="400">
-            <div *cdkVirtualFor="let log of dapLogs" class="console-line">{{log}}</div>
+            <div *cdkVirtualFor="let log of dapLogs; trackBy: trackByFn" class="console-line">
+              <span class="log-timestamp">[{{ log.timestamp | date:'HH:mm:ss.SSS' }}]</span> 
+              <span class="log-message" [ngClass]="log.category">{{ log.message }}</span>
+            </div>
           </cdk-virtual-scroll-viewport>
+          <!-- Evaluate input field -->
+          <div class="console-input-area">
+            <mat-icon>chevron_right</mat-icon>
+            <input 
+              matInput
+              type="text" 
+              placeholder="Evaluate expression..." 
+              [(ngModel)]="evaluateExpression" 
+              (keyup.enter)="evaluateCommand()">
+            <button mat-icon-button (click)="evaluateCommand()" [disabled]="executionState !== 'stopped'">
+              <mat-icon>send</mat-icon>
+            </button>
+          </div>
         </mat-tab>
         <mat-tab label="Program Console">
           <cdk-virtual-scroll-viewport itemSize="20" class="console-viewport" minBufferPx="200" maxBufferPx="400">
-            <div *cdkVirtualFor="let log of programLogs" class="console-line">{{log}}</div>
+            <div *cdkVirtualFor="let log of programLogs; trackBy: trackByFn" class="console-line">
+              <span class="log-timestamp">[{{ log.timestamp | date:'HH:mm:ss.SSS' }}]</span> 
+              <span class="log-message" [ngClass]="log.category">{{ log.message }}</span>
+            </div>
           </cdk-virtual-scroll-viewport>
         </mat-tab>
       </mat-tab-group>
