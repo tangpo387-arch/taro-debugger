@@ -331,7 +331,52 @@
 
 ---
 
+## Phase 11：自動化測試 (Automation Tests)
+
+### TI-01：`DapConfigService` 單元測試
+- **大小**：S
+- **說明**：根據 `test_plan.md` 規劃，驗證全域組態的存取機制
+- **內容**：
+  - 驗證 `setConfig()` 與 `getConfig()` 是否能正確存儲與回傳完整的 `DapConfig` 資料
+- **狀態**：⏳ 待處理
+
+### TI-02：`DapSessionService` 會話管理單元測試
+- **大小**：M
+- **說明**：根據 `test_plan.md` 規劃，驗證會話生命週期與對應機制
+- **內容**：
+  - **Sequence ID 管理**：驗證發出 request 時 `seq` 是否正確遞增
+  - **Promise Mapping**：驗證 `sendRequest` 產生的 Promise 在收到 response 時能正確 resolve 或 reject
+  - **Timeout 機制**：模擬伺服器無回應，驗證 `sendRequest` 於設定時間後是否觸發 timeout 錯誤
+- **依賴**：WI-06, WI-07
+- **狀態**：⏳ 待處理
+
+### TI-03：`WebSocketTransportService` 傳輸層單元測試
+- **大小**：M
+- **說明**：根據 `test_plan.md` 規劃，驗證底層防呆機制與資料緩衝
+- **內容**：
+  - **Header 解析驗證**：確保封包能依 `Content-Length: ...\r\n\r\n` 被正確分割並觸發 message 事件
+  - **黏包/半包處理**：模擬 TCP 碎化封包，驗證 Buffer 拼接邏輯是否能正確拼出完整 JSON
+  - **防呆與錯誤隔離 (Fail-Fast)**：送入錯誤格式封包，驗證服務是否永久中斷 `Subject` 並拒絕後續訊息
+- **依賴**：WI-05
+- **狀態**：⏳ 待處理
+
+---
+
 ## 建議開發順序
+
+### 圖表顏色說明
+| 顏色 | 代表意義 | 項目範例 |
+|---|---|---|
+| <span style="color:#4ade80">●</span> **綠色** | 已完成功能 (Core) | WI-01 ~ WI-08, WI-11 |
+| <span style="color:#60a5fa">●</span> **藍色** | 後端中繼層 (Bridge) | WI-09 |
+| <span style="color:#f97316">●</span> **橘色** | 偵錯控制 UI (Controls) | WI-10 |
+| <span style="color:#a78bfa">●</span> **紫色** | 編輯器進階互動 (Editor) | WI-12 ~ WI-14 |
+| <span style="color:#facc15">●</span> **黃色** | 檔案資源管理 (Explorer) | WI-15 ~ WI-16 |
+| <span style="color:#f472b6">●</span> **粉色** | 偵錯資訊面板 (Inspector) | WI-17 ~ WI-18 |
+| <span style="color:#2dd4bf">●</span> **青色** | 狀態與主控台 (UI) | WI-19 ~ WI-20 |
+| <span style="color:#fb923c">●</span> **深橘** | 異常處理 (Error Handling) | WI-21 ~ WI-22 |
+| <span style="color:#94a3b8">●</span> **灰色** | Electron 桌面專屬 (Bridge) | WI-23 ~ WI-25 |
+| <span style="color:#ffffff">●</span> **白色** | 自動化測試 (Testing) | TI-01 ~ TI-03 |
 
 ```mermaid
 graph TD
@@ -370,6 +415,10 @@ graph TD
     WI23 --> WI25[WI-25 Electron 檔案系統]
     WI15 --> WI25
 
+    WI01 -.-> TI01[TI-01 Config 單元測試]
+    WI06 -.-> TI02[TI-02 Session 單元測試]
+    WI05 -.-> TI03[TI-03 Transport 單元測試]
+
     style WI01 fill:#4ade80,stroke:#16a34a
     style WI02 fill:#4ade80,stroke:#16a34a
     style WI03 fill:#4ade80,stroke:#16a34a
@@ -395,7 +444,7 @@ graph TD
     style WI18 fill:#f472b6,stroke:#db2777
 
     style WI19 fill:#4ade80,stroke:#16a34a
-    style WI20 fill:#2dd4bf,stroke:#0d9488
+    style WI20 fill:#4ade80,stroke:#16a34a
 
     style WI21 fill:#fb923c,stroke:#ea580c
     style WI22 fill:#fb923c,stroke:#ea580c
@@ -403,6 +452,10 @@ graph TD
     style WI23 fill:#94a3b8,stroke:#64748b
     style WI24 fill:#94a3b8,stroke:#64748b
     style WI25 fill:#94a3b8,stroke:#64748b
+
+    style TI01 fill:#ffffff,stroke:#334155
+    style TI02 fill:#ffffff,stroke:#334155
+    style TI03 fill:#ffffff,stroke:#334155
 ```
 
 ---
@@ -417,6 +470,7 @@ graph TD
 | **M4：全面資訊呈現** | WI-15 ~ WI-20 | 檔案樹、變數、堆疊、主控台、狀態列全面功能化 |
 | **M5：穩健性提升** | WI-21 ~ WI-22 | 連線異常處理、DAP 錯誤處理 |
 | **M6：Electron 桌面版** | WI-23 ~ WI-25 | 桌面應用可獨立運行、本機檔案存取 |
+| **M7：測試與品質保證** | TI-01 ~ TI-03 | 核心服務之單元測試，確保邊界與異常處理 |
 
 > [!TIP]
 > **建議先從 Phase 1 + Phase 2 並行**開始：Phase 1 (UI 表單) 不依賴 DAP 通訊層，Phase 2 (通訊層) 也不依賴 UI 變更，兩者可同時進行。另外 **WI-12（斷點 UI）** 也可獨立開發，不依賴 DAP 層。
