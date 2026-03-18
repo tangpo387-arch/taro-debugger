@@ -267,4 +267,17 @@
     /* 上線為主要顏色或特定成功顏色，這裡用 primary-container 或是自定義 */
     background-color: #4ade80;
   }
+  
+  &.offline {
+    background-color: var(--mat-sys-error, #f44336);
+  }
+}
+
+.server-address {
+  margin-left: 8px;
+  opacity: 0.8;
+}
+
+.execution-state {
+  font-weight: 500;
 }

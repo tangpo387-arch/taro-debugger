@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, Observable } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { ViewChildren, QueryList } from '@angular/core';
 
@@ -61,6 +61,9 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
   private readonly cdr = inject(ChangeDetectorRef);
+
+  /** 綁定 DAP 連線狀態 */
+  public readonly connectionStatus$: Observable<boolean> = this.dapSession.connectionStatus$;
 
   private eventSubscription?: Subscription;
 

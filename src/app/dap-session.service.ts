@@ -17,6 +17,13 @@ export class DapSessionService {
   ) { }
 
   /**
+   * 取得 Transport 層的連線狀態 Observable
+   */
+  get connectionStatus$(): Observable<boolean> {
+    return this.transportStatus.connectionStatus$;
+  }
+
+  /**
    * 初始化 Session。這會先建立底層連線，接著開始監聽 Message 並發送 initialize 請求。
    */
   async initializeSession(): Promise<DapResponse> {

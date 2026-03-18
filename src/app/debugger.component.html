@@ -72,18 +72,14 @@
         <mat-tab label="DAP Console">
           <cdk-virtual-scroll-viewport itemSize="20" class="console-viewport" minBufferPx="200" maxBufferPx="400">
             <div *cdkVirtualFor="let log of dapLogs; trackBy: trackByFn" class="console-line">
-              <span class="log-timestamp">[{{ log.timestamp | date:'HH:mm:ss.SSS' }}]</span> 
+              <span class="log-timestamp">[{{ log.timestamp | date:'HH:mm:ss.SSS' }}]</span>
               <span class="log-message" [ngClass]="log.category">{{ log.message }}</span>
             </div>
           </cdk-virtual-scroll-viewport>
           <!-- Evaluate input field -->
           <div class="console-input-area">
             <mat-icon>chevron_right</mat-icon>
-            <input 
-              matInput
-              type="text" 
-              placeholder="Evaluate expression..." 
-              [(ngModel)]="evaluateExpression" 
+            <input matInput type="text" placeholder="Evaluate expression..." [(ngModel)]="evaluateExpression"
               (keyup.enter)="evaluateCommand()">
             <button mat-icon-button (click)="evaluateCommand()" [disabled]="executionState !== 'stopped'">
               <mat-icon>send</mat-icon>
@@ -93,7 +89,7 @@
         <mat-tab label="Program Console">
           <cdk-virtual-scroll-viewport itemSize="20" class="console-viewport" minBufferPx="200" maxBufferPx="400">
             <div *cdkVirtualFor="let log of programLogs; trackBy: trackByFn" class="console-line">
-              <span class="log-timestamp">[{{ log.timestamp | date:'HH:mm:ss.SSS' }}]</span> 
+              <span class="log-timestamp">[{{ log.timestamp | date:'HH:mm:ss.SSS' }}]</span>
               <span class="log-message" [ngClass]="log.category">{{ log.message }}</span>
             </div>
           </cdk-virtual-scroll-viewport>
@@ -105,8 +101,17 @@
     <footer class="status-bar">
       <div class="connection-status">
         <!-- 連線指示燈：根據實際狀態切換 class -->
-        <span class="indicator online"></span>
-        <span>DAP 已連線</span>
+        <span class="indicator" [ngClass]="(connectionStatus$ | async) ? 'online' : 'offline'"></span>
+        <span>DAP {{ (connectionStatus$ | async) ? '已連線' : '未連線' }}</span>
+        @if (currentConfig.serverAddress) {
+        <span class="server-address">
+          ({{ currentConfig.serverAddress }})
+        </span>
+        }
+      </div>
+      <span class="spacer"></span>
+      <div class="execution-state">
+        狀態: {{ executionState | titlecase }}
       </div>
     </footer>
 
