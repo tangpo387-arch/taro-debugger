@@ -143,7 +143,7 @@
   - Stop → `disconnect` request
   - 按鈕狀態管理（Running 時只能 Pause/Stop，Stopped 時可 Continue/Step）
 - **依賴**：WI-07
-- **狀態**：⏳ 待處理
+- **狀態**：✅ 已完成
 
 ### WI-11：DAP 事件處理與狀態管理
 - **大小**：M
@@ -367,9 +367,9 @@
 ### 圖表顏色說明
 | 顏色 | 代表意義 | 項目範例 |
 |---|---|---|
-| <span style="color:#4ade80">●</span> **綠色** | 已完成功能 (Core) | WI-01 ~ WI-08, WI-11 |
+| <span style="color:#4ade80">●</span> **綠色** | 已完成功能 (Core) | WI-01 ~ WI-08, WI-10, WI-11 |
 | <span style="color:#60a5fa">●</span> **藍色** | 後端中繼層 (Bridge) | WI-09 |
-| <span style="color:#f97316">●</span> **橘色** | 偵錯控制 UI (Controls) | WI-10 |
+| <span style="color:#f97316">●</span> **橘色** | 偵錯控制 UI (Controls) | |
 | <span style="color:#a78bfa">●</span> **紫色** | 編輯器進階互動 (Editor) | WI-12 ~ WI-14 |
 | <span style="color:#facc15">●</span> **黃色** | 檔案資源管理 (Explorer) | WI-15 ~ WI-16 |
 | <span style="color:#f472b6">●</span> **粉色** | 偵錯資訊面板 (Inspector) | WI-17 ~ WI-18 |
@@ -430,7 +430,7 @@ graph TD
     style WI08 fill:#4ade80,stroke:#16a34a
     style WI09 fill:#60a5fa,stroke:#2563eb
 
-    style WI10 fill:#f97316,stroke:#c2410c
+    style WI10 fill:#4ade80,stroke:#16a34a
     style WI11 fill:#4ade80,stroke:#16a34a
 
     style WI12 fill:#a78bfa,stroke:#7c3aed

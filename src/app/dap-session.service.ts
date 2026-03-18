@@ -98,7 +98,7 @@ export class DapSessionService {
       program: config.executablePath,
       cwd: config.sourcePath || undefined,
       args: argsArray,
-      stopAtEntry: false // 預設不在進入點停下，可之後依需求做設定
+      stopOnEntry: true
     };
 
     return this.sendRequest(command, args);
@@ -139,6 +139,42 @@ export class DapSessionService {
 
       this.transportStatus.disconnect();
     }
+  }
+
+  /**
+   * 繼續執行 (Continue)
+   */
+  async continue(): Promise<DapResponse> {
+    // 註：目前暫不指定 threadId，由 DAP Server 決定 (通常為當前停止的 thread)
+    return this.sendRequest('continue', { threadId: 1 });
+  }
+
+  /**
+   * 單步執行 (Step Over / Next)
+   */
+  async next(): Promise<DapResponse> {
+    return this.sendRequest('next', { threadId: 1 });
+  }
+
+  /**
+   * 進入函式 (Step Into)
+   */
+  async stepIn(): Promise<DapResponse> {
+    return this.sendRequest('stepIn', { threadId: 1 });
+  }
+
+  /**
+   * 跳出函式 (Step Out)
+   */
+  async stepOut(): Promise<DapResponse> {
+    return this.sendRequest('stepOut', { threadId: 1 });
+  }
+
+  /**
+   * 暫停執行 (Pause)
+   */
+  async pause(): Promise<DapResponse> {
+    return this.sendRequest('pause', { threadId: 1 });
   }
 
   /**

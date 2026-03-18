@@ -1,5 +1,5 @@
-<!-- 核心佈局容器：包含側邊欄與主要內容區 -->
-<mat-sidenav-container class="debugger-container">
+<!-- 全螢幕的最外層容器 -->
+<div class="app-layout">
 
   <!-- 1. 頂部工具與導航列 -->
   <mat-toolbar color="primary" class="top-toolbar">
@@ -13,10 +13,36 @@
 
     <!-- 偵錯控制按鈕群 -->
     <div class="debug-controls">
-      <button mat-icon-button title="Continue"><mat-icon>play_arrow</mat-icon></button>
-      <button mat-icon-button title="Step Over"><mat-icon>redo</mat-icon></button>
-      <button mat-icon-button title="Step Into"><mat-icon>arrow_downward</mat-icon></button>
-      <button mat-icon-button title="Stop" color="warn"><mat-icon>stop</mat-icon></button>
+      <!-- 暫停按鈕：僅在 Running 狀態下可用 -->
+      <button mat-icon-button title="Pause" (click)="onPause()" [disabled]="executionState !== 'running'">
+        <mat-icon>pause</mat-icon>
+      </button>
+
+      <!-- 繼續按鈕：僅在 Stopped 狀態下可用 -->
+      <button mat-icon-button title="Continue" (click)="onResume()" [disabled]="executionState !== 'stopped'">
+        <mat-icon>play_arrow</mat-icon>
+      </button>
+
+      <!-- 單步執行：僅在 Stopped 狀態下可用 -->
+      <button mat-icon-button title="Step Over" (click)="onStepOver()" [disabled]="executionState !== 'stopped'">
+        <mat-icon>redo</mat-icon>
+      </button>
+
+      <!-- 進入函式：僅在 Stopped 狀態下可用 -->
+      <button mat-icon-button title="Step Into" (click)="onStepInto()" [disabled]="executionState !== 'stopped'">
+        <mat-icon>arrow_downward</mat-icon>
+      </button>
+
+      <!-- 跳出函式：僅在 Stopped 狀態下可用 -->
+      <button mat-icon-button title="Step Out" (click)="onStepOut()" [disabled]="executionState !== 'stopped'">
+        <mat-icon>arrow_upward</mat-icon>
+      </button>
+
+      <!-- 停止按鈕：只要 Session 還在且不是正在啟動中即可用 -->
+      <button mat-icon-button title="Stop" color="warn" (click)="onStop()"
+        [disabled]="executionState === 'terminated' || executionState === 'starting'">
+        <mat-icon>stop</mat-icon>
+      </button>
     </div>
 
     <span class="spacer"></span>
@@ -26,6 +52,9 @@
       <mat-icon>settings</mat-icon> 重新設定
     </button>
   </mat-toolbar>
+
+  <!-- 核心佈局容器：包含側邊欄與主要內容區 -->
+  <mat-sidenav-container class="debugger-container">
 
   <!-- 2. 左側：檔案總管 -->
   <mat-sidenav mode="side" opened position="start" class="sidenav-left">
@@ -117,4 +146,5 @@
 
   </mat-sidenav-content>
 
-</mat-sidenav-container>
+  </mat-sidenav-container>
+</div>

@@ -43,6 +43,8 @@
     *   **狀態切換**：切換 Launch / Attach 模式時，按鈕文字與可見欄位應正確變動。
 *   **`DebuggerComponent`**
     *   確保組件初始化與銷毀時，能正確調用 Session Service 的 `initialize` 與 `disconnect`。
+    *   **控制按鈕狀態綁定**：模擬不同的 `executionState` (`stopped`, `running`, `terminated`)，驗證對應的控制按鈕 (Continue, Pause, Step 等) 的 `disabled` 屬性是否正確套用。
+    *   **控制按鈕交互**：模擬點擊各控制按鈕，驗證是否正確呼叫了 `DapSessionService` 的對應方法 (如 `continue()`, `pause()`, `next()` 等)。
 
 ---
 
@@ -72,6 +74,18 @@
 *   **異常與超時路徑 (Error Path)**
     *   輸入無法連線的位址，驗證 UI 顯示 Timeout 錯誤對話框（或 Error SnackBar）。
     *   在偵錯途中關閉 Mock Server 連線，驗證狀態列轉為灰/紅燈，且跳出斷線提示。
+
+---
+
+### 2.4 手動驗證項目 (Manual Verification Items)
+
+本節列出難以自動化或需人類判感官驗證的功能點。
+
+*   **WI-10：偵錯控制按鈕視覺回饋驗證 (UI/UX)**
+    *   **Tooltip 顯示**：滑鼠懸停於各控制按鈕 (Continue, Pause, Step Over 等) 時，驗證是否顯示預期的人類可讀提示文字。
+    *   **互動動畫 (Ripple Effect)**：點擊啟用狀態的按鈕時，確認是否有 Material Design 的水波紋視覺按壓回饋。
+    *   **顏色與灰階渲染**：確認 Stop 按鈕呈現警告色 (warn)，且按鈕處於禁用 (disabled) 狀態時的外觀 (opacity/color) 能夠讓使用者明確辨識為不可點擊狀態。
+
 
 ---
 

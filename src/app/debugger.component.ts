@@ -201,6 +201,69 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** 繼續執行 */
+  public async onResume(): Promise<void> {
+    if (this.executionState !== 'stopped') return;
+    try {
+      await this.dapSession.continue();
+    } catch (e: any) {
+      this.appendDapLog(`[Error] Continue failed: ${e.message}`, 'stderr');
+    }
+  }
+
+  /** 暫停執行 */
+  public async onPause(): Promise<void> {
+    if (this.executionState !== 'running') return;
+    try {
+      await this.dapSession.pause();
+    } catch (e: any) {
+      this.appendDapLog(`[Error] Pause failed: ${e.message}`, 'stderr');
+    }
+  }
+
+  /** 單步執行 (Step Over) */
+  public async onStepOver(): Promise<void> {
+    if (this.executionState !== 'stopped') return;
+    try {
+      await this.dapSession.next();
+    } catch (e: any) {
+      this.appendDapLog(`[Error] Step Over failed: ${e.message}`, 'stderr');
+    }
+  }
+
+  /** 進入函式 (Step Into) */
+  public async onStepInto(): Promise<void> {
+    if (this.executionState !== 'stopped') return;
+    try {
+      await this.dapSession.stepIn();
+    } catch (e: any) {
+      this.appendDapLog(`[Error] Step Into failed: ${e.message}`, 'stderr');
+    }
+  }
+
+  /** 跳出函式 (Step Out) */
+  public async onStepOut(): Promise<void> {
+    if (this.executionState !== 'stopped') return;
+    try {
+      await this.dapSession.stepOut();
+    } catch (e: any) {
+      this.appendDapLog(`[Error] Step Out failed: ${e.message}`, 'stderr');
+    }
+  }
+
+  /** 停止偵錯 */
+  public async onStop(): Promise<void> {
+    try {
+      await this.dapSession.disconnect();
+      // 註：disconnect 後通常會觸發 terminated 事件或連線中斷，
+      // 但保險起見這裡也可以手動更新狀態或導航
+      this.executionState = 'terminated';
+      this.snackBar.open('偵錯已停止', 'OK', { duration: 2000 });
+    } catch (e: any) {
+      this.appendDapLog(`[Error] Stop failed: ${e.message}`, 'stderr');
+    }
+  }
+
   /** 發送 evaluate 查詢請求 */
   public async evaluateCommand(): Promise<void> {
     if (!this.evaluateExpression.trim() || this.executionState !== 'stopped') {
