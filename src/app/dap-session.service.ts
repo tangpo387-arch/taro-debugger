@@ -4,6 +4,8 @@ import { filter } from 'rxjs/operators';
 import { DapTransportService } from './dap-transport.service';
 import { DapConfigService } from './dap-config.service';
 import { DapRequest, DapResponse, DapEvent } from './dap.types';
+import { FileTreeService } from './file-tree.service';
+import { DapFileTreeService } from './dap-file-tree.service';
 
 @Injectable()
 export class DapSessionService {
@@ -11,10 +13,14 @@ export class DapSessionService {
   private pendingRequests = new Map<number, { resolve: (response: DapResponse) => void; reject: (error: any) => void }>();
   private messageSubscription?: Subscription;
 
+  public readonly fileTree: FileTreeService;
+
   constructor(
     private transportStatus: DapTransportService,
     private configService: DapConfigService
-  ) { }
+  ) { 
+    this.fileTree = new DapFileTreeService(this);
+  }
 
   /**
    * 取得 Transport 層的連線狀態 Observable

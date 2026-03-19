@@ -206,7 +206,7 @@
   - 定義 `FileTreeService` 抽象（`getTree(rootPath)`, `readFile(path)`）
   - Web 模式：透過後端 API / WebSocket 取得遠端檔案樹
 - **依賴**：無
-- **狀態**：⏳ 待處理
+- **狀態**：✅ 已完成
 
 ### WI-16：左側邊欄檔案樹 UI
 - **大小**：M
@@ -360,6 +360,19 @@
 - **依賴**：WI-05
 - **狀態**：⏳ 待處理
 
+### TI-04：`DapFileTreeService` 檔案樹服務單元測試
+- **大小**：M
+- **說明**：驗證 `DapFileTreeService` 透過 DAP 請求建構檔案樹與讀取檔案內容的邏輯
+- **內容**：
+  - **getTree - 正常流程**：模擬 `loadedSources` 回傳多個 source，驗證 `buildTreeFromSources` 能正確建構出目錄/檔案的巢狀樹狀結構
+  - **getTree - 路徑邏輯**：驗證不同路徑格式（絕對路徑 `/`、Windows 路徑 `C:\`）是否能被正確拆分與重組
+  - **getTree - 排序**：驗證目錄優先、名稱字母排序是否正確
+  - **getTree - 失敗 Fallback**：模擬 `loadedSources` 請求失敗，驗證是否回傳預設的 fallback 節點
+  - **readFile - 正常流程**：模擬 `source` request 回傳內容，驗證 `content` 欄位是否被正確取出
+  - **readFile - 失敗 Fallback**：模擬 `source` request 失敗，驗證是否回傳 fallback 字串
+- **依賴**：WI-15
+- **狀態**：✅ 已完成
+
 ---
 
 ## 建議開發順序
@@ -376,7 +389,7 @@
 | <span style="color:#2dd4bf">●</span> **青色** | 狀態與主控台 (UI) | WI-19 ~ WI-20 |
 | <span style="color:#fb923c">●</span> **深橘** | 異常處理 (Error Handling) | WI-21 ~ WI-22 |
 | <span style="color:#94a3b8">●</span> **灰色** | Electron 桌面專屬 (Bridge) | WI-23 ~ WI-25 |
-| <span style="color:#ffffff">●</span> **白色** | 自動化測試 (Testing) | TI-01 ~ TI-03 |
+| <span style="color:#ffffff">●</span> **白色** | 自動化測試 (Testing) | TI-01 ~ TI-04 |
 
 ```mermaid
 graph TD
@@ -418,6 +431,7 @@ graph TD
     WI01 -.-> TI01[TI-01 Config 單元測試]
     WI06 -.-> TI02[TI-02 Session 單元測試]
     WI05 -.-> TI03[TI-03 Transport 單元測試]
+    WI15 -.-> TI04[TI-04 FileTree 單元測試]
 
     style WI01 fill:#4ade80,stroke:#16a34a
     style WI02 fill:#4ade80,stroke:#16a34a
@@ -437,7 +451,7 @@ graph TD
     style WI13 fill:#a78bfa,stroke:#7c3aed
     style WI14 fill:#a78bfa,stroke:#7c3aed
 
-    style WI15 fill:#facc15,stroke:#ca8a04
+    style WI15 fill:#4ade80,stroke:#16a34a
     style WI16 fill:#facc15,stroke:#ca8a04
 
     style WI17 fill:#f472b6,stroke:#db2777
@@ -456,6 +470,7 @@ graph TD
     style TI01 fill:#ffffff,stroke:#334155
     style TI02 fill:#ffffff,stroke:#334155
     style TI03 fill:#ffffff,stroke:#334155
+    style TI04 fill:#4ade80,stroke:#16a34a
 ```
 
 ---
@@ -470,7 +485,7 @@ graph TD
 | **M4：全面資訊呈現** | WI-15 ~ WI-20 | 檔案樹、變數、堆疊、主控台、狀態列全面功能化 |
 | **M5：穩健性提升** | WI-21 ~ WI-22 | 連線異常處理、DAP 錯誤處理 |
 | **M6：Electron 桌面版** | WI-23 ~ WI-25 | 桌面應用可獨立運行、本機檔案存取 |
-| **M7：測試與品質保證** | TI-01 ~ TI-03 | 核心服務之單元測試，確保邊界與異常處理 |
+| **M7：測試與品質保證** | TI-01 ~ TI-04 | 核心服務之單元測試，確保邊界與異常處理 |
 
 > [!TIP]
 > **建議先從 Phase 1 + Phase 2 並行**開始：Phase 1 (UI 表單) 不依賴 DAP 通訊層，Phase 2 (通訊層) 也不依賴 UI 變更，兩者可同時進行。另外 **WI-12（斷點 UI）** 也可獨立開發，不依賴 DAP 層。
