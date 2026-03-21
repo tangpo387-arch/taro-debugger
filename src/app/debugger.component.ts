@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Subscription, Observable } from 'rxjs';
+import { Subscription, Observable, firstValueFrom } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { ViewChildren, QueryList } from '@angular/core';
 
@@ -18,12 +18,15 @@ import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrollin
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 
+import { MatTreeModule } from '@angular/material/tree';
+
 // 引入子元件與全域設定服務
 import { EditorComponent } from './editor.component';
 import { ErrorDialog, ErrorDialogData } from './error-dialog/error-dialog';
 import { DapConfigService, DapConfig } from './dap-config.service';
 import { DapSessionService, ExecutionState } from './dap-session.service';
 import { DapEvent } from './dap.types';
+import { FileNode } from './file-tree.service';
 
 @Component({
   selector: 'app-debugger',
@@ -41,6 +44,7 @@ import { DapEvent } from './dap.types';
     ScrollingModule,
     MatSnackBarModule,
     MatDialogModule,
+    MatTreeModule,
     FormsModule,
     EditorComponent,
   ],
@@ -92,6 +96,14 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
   /** 當前輸入的 evaluate 查詢語句 */
   public evaluateExpression: string = '';
+
+  /** 檔案樹狀態 */
+  public fileDataSource: FileNode[] = [];
+  public childrenAccessor = (node: FileNode) => node.children ?? [];
+  public hasChild = (_: number, node: FileNode) => !!node.children && node.children.length > 0;
+  public activeFilePath: string | null = null;
+  public currentCode: string = '// Editor is ready.';
+  public fileTreeSupported: boolean = true;
 
   /**
    * 於元件初始化時執行
@@ -163,8 +175,45 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     }
   }
 
+  private loadTree(): void {
+    if (!this.dapSession.capabilities?.supportsLoadedSourcesRequest) {
+      this.fileTreeSupported = false;
+      return;
+    }
+    this.fileTreeSupported = true;
+
+    const rootPath = this.currentConfig.sourcePath || '';
+    this.dapSession.fileTree.getTree(rootPath).subscribe({
+      next: (rootNode) => {
+        // 直接展開第一層 (root)，或者把 root 的 children 直接設定為 dataSource
+        // 如果 root 節點是一層沒意義的目錄，也可以跳過。這裡依照規格將其直接放進 array 即可
+        this.fileDataSource = rootNode.children || [];
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.warn('Failed to load file tree', err);
+      }
+    });
+  }
+
+  public async onFileNodeClick(node: FileNode): Promise<void> {
+    if (node.type !== 'file') return;
+    
+    this.activeFilePath = node.path;
+    this.currentCode = '// Loading source code...';
+    this.cdr.detectChanges();
+
+    try {
+      const code = await firstValueFrom(this.dapSession.fileTree.readFile(node.path));
+      this.currentCode = code;
+    } catch (e: any) {
+      this.currentCode = `// Error loading file: ${e.message}`;
+    }
+    this.cdr.detectChanges();
+  }
+
   private handleDapEvent(event: DapEvent): void {
-    const skipLogs = ['output', 'breakpoint'];
+    const skipLogs = ['output', 'breakpoint', 'loadedSource'];
     if (!skipLogs.includes(event.event)) {
       this.appendDapLog(`[Event] ${event.event}`, 'console');
     }
@@ -172,6 +221,14 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     switch (event.event) {
       case 'initialized':
         this.appendDapLog("Configuration Done.", 'console');
+        break;
+      case 'stopped':
+        // DA 處於暫停狀態時，安全地更新檔案樹（避免 Running 時請求失敗）
+        this.loadTree();
+        break;
+      case 'loadedSource':
+        // DA 發送動態載入事件時更新檔案樹
+        this.loadTree();
         break;
       case 'terminated':
       case 'exited':

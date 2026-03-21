@@ -65,11 +65,36 @@
       </div>
     </div>
 
-    <!-- 檔案列表 (示意用) -->
-    <mat-nav-list class="file-list">
-      <a mat-list-item href="#">main.c</a>
-      <a mat-list-item href="#">utils.c</a>
-    </mat-nav-list>
+    @if (fileTreeSupported) {
+      <!-- 動態檔案樹 -->
+      <mat-tree #tree="matTree" [dataSource]="fileDataSource" [childrenAccessor]="childrenAccessor" class="file-tree">
+        <!-- 檔案節點 -->
+        <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
+          <button mat-button class="file-node-btn"
+                  [class.active-file]="activeFilePath === node.path"
+                  (click)="onFileNodeClick(node)">
+            <mat-icon class="file-icon">description</mat-icon>
+            {{ node.name }}
+          </button>
+        </mat-tree-node>
+
+        <!-- 目錄節點 -->
+        <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding>
+          <button mat-icon-button matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name">
+            <mat-icon class="mat-icon-rtl-mirror">
+              {{tree.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
+            </mat-icon>
+          </button>
+          <mat-icon class="folder-icon">folder</mat-icon>
+          <span class="folder-name">{{ node.name }}</span>
+        </mat-tree-node>
+      </mat-tree>
+    } @else {
+      <div class="unsupported-message" style="padding: 16px; color: var(--mat-sys-on-surface-variant); font-size: 0.875rem; display: flex; align-items: center; justify-content: center; text-align: center; flex-direction: column; opacity: 0.8; margin-top: 32px;">
+        <mat-icon style="margin-bottom: 8px; font-size: 32px; width: 32px; height: 32px;">info</mat-icon>
+        DAP Server 不支援 loadedSources 請求<br>無法顯示檔案樹
+      </div>
+    }
   </mat-sidenav>
 
   <!-- 3. 右側：變數與呼叫堆疊 -->
@@ -92,7 +117,7 @@
 
     <!-- Monaco Editor 容器 -->
     <div class="editor-container">
-      <app-editor class="monaco-editor-instance" />
+      <app-editor class="monaco-editor-instance" [code]="currentCode" />
     </div>
 
     <!-- 底部 Console 區域 -->

@@ -93,6 +93,59 @@
   margin-top: 16px;
 }
 
+/* 檔案樹樣式 */
+.file-tree {
+  margin-top: 16px;
+  background: transparent;
+}
+
+.file-node-btn {
+  display: flex !important;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  border-radius: 4px;
+  color: var(--mat-sys-on-surface-variant);
+  padding: 0 8px;
+  font-size: 14px;
+  
+  &:hover {
+    background-color: var(--mat-sys-surface-container-highest);
+  }
+
+  &.active-file {
+    font-weight: bold;
+    color: var(--mat-sys-primary);
+    background-color: var(--mat-sys-primary-container);
+  }
+}
+
+.file-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.folder-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  color: #ffca28; /* Material yellow folder color */
+}
+
+.folder-name {
+  font-size: 14px;
+  color: var(--mat-sys-on-surface);
+}
+
+/* 處理 mat-tree-node 的預設 padding/margin，讓點擊區域更大 */
+mat-tree-node {
+  min-height: 32px;
+}
+
 /* 右側面板區塊樣式 */
 .panel-section {
   display: flex;

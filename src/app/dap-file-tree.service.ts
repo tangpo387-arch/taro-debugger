@@ -21,7 +21,7 @@ export class DapFileTreeService extends FileTreeService {
   }
 
   readFile(path: string): Observable<string> {
-    return from(this.dapSession.sendRequest('source', { source: { path } })).pipe(
+    return from(this.dapSession.sendRequest('source', { sourceReference: 0, source: { path } })).pipe(
       map(response => (response.body?.content || '') as string),
       catchError((err) => {
         console.warn('DAP source request failed', err);
@@ -46,13 +46,13 @@ export class DapFileTreeService extends FileTreeService {
 
       for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
-        
+
         if (i === 0 && p.startsWith('/')) {
-            currentPath += '/' + part;
+          currentPath += '/' + part;
         } else if (i === 0 && p.match(/^[a-zA-Z]:/)) {
-            currentPath += part;
+          currentPath += part;
         } else {
-            currentPath += (currentPath.endsWith('/') || currentPath.endsWith('\\') ? '' : '/') + part;
+          currentPath += (currentPath.endsWith('/') || currentPath.endsWith('\\') ? '' : '/') + part;
         }
 
         const isFile = i === parts.length - 1;

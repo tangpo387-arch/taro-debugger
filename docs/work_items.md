@@ -217,7 +217,7 @@
   - 點擊檔案 → 載入原始碼至 Monaco Editor
   - 當前開啟檔案高亮顯示
 - **依賴**：WI-15
-- **狀態**：⏳ 待處理
+- **狀態**：✅ 已完成
 
 ---
 
@@ -452,7 +452,7 @@ graph TD
     style WI14 fill:#a78bfa,stroke:#7c3aed
 
     style WI15 fill:#4ade80,stroke:#16a34a
-    style WI16 fill:#facc15,stroke:#ca8a04
+    style WI16 fill:#4ade80,stroke:#16a34a
 
     style WI17 fill:#f472b6,stroke:#db2777
     style WI18 fill:#f472b6,stroke:#db2777

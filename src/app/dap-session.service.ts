@@ -18,6 +18,7 @@ export class DapSessionService {
   private messageSubscription?: Subscription;
 
   public readonly fileTree: FileTreeService;
+  public capabilities: any = {};
   private transport?: DapTransportService;
   private connectionStatusSubject = new BehaviorSubject<boolean>(false);
   private transportStatusSubscription?: Subscription;
@@ -114,7 +115,7 @@ export class DapSessionService {
     );
 
     // Step 1: 發送 initialize request
-    await this.sendRequest('initialize', {
+    const initResponse = await this.sendRequest('initialize', {
       clientID: 'gdb-frontend',
       clientName: 'Angular GDB/DAP Frontend',
       adapterID: 'gdb',
@@ -125,6 +126,7 @@ export class DapSessionService {
       supportsVariablePaging: true,
       supportsRunInTerminalRequest: false
     });
+    this.capabilities = initResponse.body || {};
 
     // Step 2: 等待 initialized event
     await initializedPromise;
