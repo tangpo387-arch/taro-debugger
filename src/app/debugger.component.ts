@@ -22,9 +22,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { EditorComponent } from './editor.component';
 import { ErrorDialog, ErrorDialogData } from './error-dialog/error-dialog';
 import { DapConfigService, DapConfig } from './dap-config.service';
-import { DapSessionService } from './dap-session.service';
-import { DapTransportService } from './dap-transport.service';
-import { WebSocketTransportService } from './websocket-transport.service';
+import { DapSessionService, ExecutionState } from './dap-session.service';
 import { DapEvent } from './dap.types';
 
 @Component({
@@ -48,7 +46,6 @@ import { DapEvent } from './dap.types';
   ],
   providers: [
     DapSessionService,
-    { provide: DapTransportService, useClass: WebSocketTransportService }
   ],
   templateUrl: './debugger.component.html',
   styleUrls: ['./debugger.component.scss']
@@ -65,7 +62,11 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   /** 綁定 DAP 連線狀態 */
   public readonly connectionStatus$: Observable<boolean> = this.dapSession.connectionStatus$;
 
+  /** 綁定執行狀態 */
+  public readonly executionState$: Observable<ExecutionState> = this.dapSession.executionState$;
+
   private eventSubscription?: Subscription;
+  private stateSubscription?: Subscription;
 
   // ViewChildren for auto-scrolling
   @ViewChildren(CdkVirtualScrollViewport) viewports!: QueryList<CdkVirtualScrollViewport>;
@@ -73,14 +74,15 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   /** 儲存當前 DAP 之完整組態，供 HTML 模板綁定顯示 */
   public currentConfig: DapConfig = {
     serverAddress: '',
+    transportType: 'websocket',
     launchMode: 'launch',
     executablePath: '',
     sourcePath: '',
     programArgs: ''
   };
 
-  /** 當前執行狀態 */
-  public executionState: 'starting' | 'running' | 'stopped' | 'terminated' = 'starting';
+  /** 當前執行狀態（用於非 async pipe 的場景） */
+  public executionState: ExecutionState = 'idle';
 
   /** DAP 輸出紀錄 */
   public dapLogs: LogEntry[] = [];
@@ -108,6 +110,12 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // 訂閱執行狀態變化
+    this.stateSubscription = this.dapSession.executionState$.subscribe(state => {
+      this.executionState = state;
+      this.cdr.detectChanges();
+    });
+
     await this.startSession();
   }
 
@@ -122,12 +130,9 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         this.handleDapEvent(event);
       });
 
-      await this.dapSession.initializeSession();
+      await this.dapSession.startSession();
 
-      this.appendDapLog(`Launching in ${this.currentConfig.launchMode} mode...`, 'console');
-      await this.dapSession.launchOrAttach();
-
-      // 注意：configurationDone 移至 initialized 事件處理
+      this.appendDapLog(`Session started in ${this.currentConfig.launchMode} mode.`, 'console');
     } catch (error: any) {
       // 1. 清理有問題的會話
       this.dapSession.disconnect();
@@ -167,27 +172,16 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     switch (event.event) {
       case 'initialized':
         this.appendDapLog("Configuration Done.", 'console');
-        this.dapSession.configurationDone().catch(err => {
-          this.appendDapLog(`[Error] configurationDone failed: ${err}`, 'stderr');
-        });
-        break;
-      case 'stopped':
-        this.executionState = 'stopped';
-        // TODO: 觸發 stackTrace / scopes / variables 查詢
-        break;
-      case 'continued':
-        this.executionState = 'running';
         break;
       case 'terminated':
       case 'exited':
-        this.executionState = 'terminated';
         this.snackBar.open('偵錯會話已終止', 'OK', { duration: 3000 });
         break;
       case 'output':
         if (event.body) {
           const body = event.body as any;
           const outMsg = body.output;
-          const category = body.category || 'console'; // 'console', 'stdout', 'stderr', 'telemetry'
+          const category = body.category || 'console';
           if (category === 'stdout' || category === 'stderr') {
             this.appendProgramLog(outMsg, category);
           } else {
@@ -255,9 +249,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public async onStop(): Promise<void> {
     try {
       await this.dapSession.disconnect();
-      // 註：disconnect 後通常會觸發 terminated 事件或連線中斷，
-      // 但保險起見這裡也可以手動更新狀態或導航
-      this.executionState = 'terminated';
       this.snackBar.open('偵錯已停止', 'OK', { duration: 2000 });
     } catch (e: any) {
       this.appendDapLog(`[Error] Stop failed: ${e.message}`, 'stderr');
@@ -334,6 +325,9 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public ngOnDestroy(): void {
     if (this.eventSubscription) {
       this.eventSubscription.unsubscribe();
+    }
+    if (this.stateSubscription) {
+      this.stateSubscription.unsubscribe();
     }
     this.dapSession.disconnect();
   }

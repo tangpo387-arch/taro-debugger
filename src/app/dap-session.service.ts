@@ -1,11 +1,15 @@
 import { Injectable } from '@angular/core';
-import { Observable, Subject, Subscription, firstValueFrom } from 'rxjs';
+import { Observable, Subject, BehaviorSubject, Subscription, firstValueFrom } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { DapTransportService } from './dap-transport.service';
+import { createTransport } from './transport.factory';
 import { DapConfigService } from './dap-config.service';
 import { DapRequest, DapResponse, DapEvent } from './dap.types';
 import { FileTreeService } from './file-tree.service';
 import { DapFileTreeService } from './dap-file-tree.service';
+
+/** 偵錯執行狀態 */
+export type ExecutionState = 'idle' | 'starting' | 'running' | 'stopped' | 'terminated';
 
 @Injectable()
 export class DapSessionService {
@@ -14,42 +18,72 @@ export class DapSessionService {
   private messageSubscription?: Subscription;
 
   public readonly fileTree: FileTreeService;
+  private transport?: DapTransportService;
+  private connectionStatusSubject = new BehaviorSubject<boolean>(false);
+  private transportStatusSubscription?: Subscription;
+
+  /** Session 層級的事件 Subject，經過內部處理後再發出 */
+  private eventSubject = new Subject<DapEvent>();
+
+  /** 當前偵錯執行狀態 */
+  private executionStateSubject = new BehaviorSubject<ExecutionState>('idle');
+
+  get executionState$(): Observable<ExecutionState> {
+    return this.executionStateSubject.asObservable();
+  }
 
   constructor(
-    private transportStatus: DapTransportService,
     private configService: DapConfigService
-  ) { 
+  ) {
     this.fileTree = new DapFileTreeService(this);
   }
 
+
   /**
-   * 取得 Transport 層的連線狀態 Observable
+   * 取得連線狀態 Observable（在 transport 建立前為 false）
    */
   get connectionStatus$(): Observable<boolean> {
-    return this.transportStatus.connectionStatus$;
+    return this.connectionStatusSubject.asObservable();
   }
 
   /**
-   * 初始化 Session。這會先建立底層連線，接著開始監聽 Message 並發送 initialize 請求。
+   * 啟動完整的 DAP Session。
+   * 
+   * 遵循 DAP 協議標準訊息流：
+   * 1. 建立底層連線 (Transport)
+   * 2. 發送 initialize request
+   * 3. 等待 initialized event（內部自動處理 configurationDone）
+   * 4. 發送 launch/attach request（response 會在 configurationDone 之後才回來）
    */
-  async initializeSession(): Promise<DapResponse> {
+  async startSession(): Promise<DapResponse> {
     const config = this.configService.getConfig();
     if (!config.serverAddress) {
       throw new Error('Server address is empty');
     }
 
+    // 根據組態建立對應的 Transport 實例
+    this.transport = createTransport(config.transportType);
+
+    // 橋接 transport 連線狀態至 Session 層級
+    this.transportStatusSubscription?.unsubscribe();
+    this.transportStatusSubscription = this.transport.connectionStatus$.subscribe(
+      status => this.connectionStatusSubject.next(status)
+    );
+
     try {
       // 等待連線建立完成
-      await firstValueFrom(this.transportStatus.connect(config.serverAddress));
+      await firstValueFrom(this.transport.connect(config.serverAddress));
     } catch (e) {
-      throw new Error(`websocket 連線失敗`);
+      throw new Error(`${config.transportType} 連線失敗`);
     }
 
     if (this.messageSubscription) {
       this.messageSubscription.unsubscribe();
     }
 
-    this.messageSubscription = this.transportStatus.onMessage().subscribe({
+    this.executionStateSubject.next('starting');
+
+    this.messageSubscription = this.transport.onMessage().subscribe({
       next: (msg) => {
         if (msg.type === 'response') {
           const response = msg as DapResponse;
@@ -62,11 +96,12 @@ export class DapSessionService {
               handler.reject(new Error(response.message || `Command ${response.command} failed`));
             }
           }
+        } else if (msg.type === 'event') {
+          this.handleTransportEvent(msg as DapEvent);
         }
       },
       error: (err) => {
         console.error('DAP Session subscription error:', err);
-        // 若有未回應的請求，全部清除並 reject
         for (const [seq, handler] of this.pendingRequests.entries()) {
           handler.reject(err);
           this.pendingRequests.delete(seq);
@@ -74,11 +109,15 @@ export class DapSessionService {
       }
     });
 
-    // 1. 建立 DAP initialize 請求
-    const initResponse = await this.sendRequest('initialize', {
+    const initializedPromise = firstValueFrom(
+      this.eventSubject.pipe(filter(e => e.event === 'initialized'))
+    );
+
+    // Step 1: 發送 initialize request
+    await this.sendRequest('initialize', {
       clientID: 'gdb-frontend',
       clientName: 'Angular GDB/DAP Frontend',
-      adapterID: 'gdb', // 也可以支援多個 adapter，這裡暫時寫死
+      adapterID: 'gdb',
       pathFormat: 'path',
       linesStartAt1: true,
       columnsStartAt1: true,
@@ -87,17 +126,30 @@ export class DapSessionService {
       supportsRunInTerminalRequest: false
     });
 
-    return initResponse;
+    // Step 2: 等待 initialized event
+    await initializedPromise;
+
+    // Step 3: 發送 launch/attach request（先送出，不等 response）
+    // 根據 DAP 規範，launch/attach 的 response 會在 configurationDone 之後才回來
+    const launchPromise = this.launchOrAttach();
+
+    // Step 4: 發送 configurationDone
+    await this.sendRequest('configurationDone');
+
+    // Step 5: 等待 launch/attach response（此時 Server 才會回覆）
+    const launchResponse = await launchPromise;
+    this.executionStateSubject.next('running');
+
+    return launchResponse;
   }
 
   /**
-   * 根據組態決定呼叫 launch 或 attach
+   * 根據組態決定呼叫 launch 或 attach（內部使用）
    */
-  async launchOrAttach(): Promise<DapResponse> {
+  private async launchOrAttach(): Promise<DapResponse> {
     const config = this.configService.getConfig();
     const command = config.launchMode;
 
-    // 將 args 字串拆分為陣列
     const argsArray = config.programArgs ? config.programArgs.split(' ').filter(a => a.length > 0) : [];
 
     const args = {
@@ -111,18 +163,11 @@ export class DapSessionService {
   }
 
   /**
-   * 告知 DAP Server 前端設定完畢，可以開始執行了
-   */
-  async configurationDone(): Promise<DapResponse> {
-    return this.sendRequest('configurationDone');
-  }
-
-  /**
    * 中斷連線
    */
   async disconnect(): Promise<void> {
     try {
-      if (this.transportStatus.connectionStatus$) {
+      if (this.transport) {
         // 先發送 disconnect request 給 DAP Server
         await this.sendRequest('disconnect', {
           restart: false,
@@ -143,7 +188,12 @@ export class DapSessionService {
         this.pendingRequests.delete(seq);
       }
 
-      this.transportStatus.disconnect();
+      this.transportStatusSubscription?.unsubscribe();
+      this.transportStatusSubscription = undefined;
+      this.transport?.disconnect();
+      this.transport = undefined;
+      this.connectionStatusSubject.next(false);
+      this.executionStateSubject.next('idle');
     }
   }
 
@@ -190,6 +240,11 @@ export class DapSessionService {
    * @param timeoutMs 逾時時間 (預設 5000ms)
    */
   sendRequest(command: string, args?: any, timeoutMs: number = 5000): Promise<DapResponse> {
+    const transport = this.transport;
+    if (!transport) {
+      return Promise.reject(new Error('Transport not initialized. Call startSession() first.'));
+    }
+
     return new Promise((resolve, reject) => {
       const currentSeq = this.seq++;
 
@@ -218,14 +273,44 @@ export class DapSessionService {
       };
 
       this.pendingRequests.set(currentSeq, { resolve: resolveWrapper, reject: rejectWrapper });
-      this.transportStatus.sendRequest(request);
+      transport.sendRequest(request);
     });
   }
 
   /**
-   * 開放取得 Session 事件串流
+   * 開放取得 Session 層級事件串流（已經過 Session 內部處理）
    */
   onEvent(): Observable<DapEvent> {
-    return this.transportStatus.onEvent();
+    return this.eventSubject.asObservable();
+  }
+
+  // ── Session 層級事件處理 ─────────────────────────────────────────
+
+  /**
+   * 處理來自 Transport 層的原始 DAP 事件。
+   * Session 先做內部狀態更新與必要的自動回應，處理完畢後再轉發給外部訂閱者。
+   */
+  private handleTransportEvent(event: DapEvent): void {
+    switch (event.event) {
+      case 'initialized':
+        // initialized 事件的後續處理（launch + configurationDone）由 startSession() 流程控制
+        break;
+
+      case 'stopped':
+        this.executionStateSubject.next('stopped');
+        break;
+
+      case 'continued':
+        this.executionStateSubject.next('running');
+        break;
+
+      case 'terminated':
+      case 'exited':
+        this.executionStateSubject.next('terminated');
+        break;
+    }
+
+    // 處理完畢後，將事件轉發給外部訂閱者（Component 等）
+    this.eventSubject.next(event);
   }
 }

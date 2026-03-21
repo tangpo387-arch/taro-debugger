@@ -40,7 +40,7 @@
 
       <!-- 停止按鈕：只要 Session 還在且不是正在啟動中即可用 -->
       <button mat-icon-button title="Stop" color="warn" (click)="onStop()"
-        [disabled]="executionState === 'terminated' || executionState === 'starting'">
+        [disabled]="executionState === 'terminated' || executionState === 'starting' || executionState === 'idle'">
         <mat-icon>stop</mat-icon>
       </button>
     </div>

@@ -4,9 +4,15 @@ import { Injectable } from '@angular/core';
  * 完整的 DAP 連線組態介面
  * 涵蓋伺服器位址、啟動模式、路徑及程式引數
  */
+/** 支援的傳輸層類型 */
+export type TransportType = 'websocket' | 'serial' | 'tcp';
+
 export interface DapConfig {
   /** DAP Server 連線位址，格式為 host:port（例如 localhost:4711） */
   serverAddress: string;
+
+  /** 傳輸層類型：websocket、serial 或 tcp */
+  transportType: TransportType;
 
   /** 啟動模式：launch 由偵錯器啟動程序，attach 附加至已執行程序 */
   launchMode: 'launch' | 'attach';
@@ -33,6 +39,7 @@ export interface DapConfig {
 export class DapConfigService {
   private config: DapConfig = {
     serverAddress: '',
+    transportType: 'websocket',
     launchMode: 'launch',
     executablePath: '',
     sourcePath: '',

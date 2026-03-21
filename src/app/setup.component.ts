@@ -127,6 +127,7 @@ export class SetupComponent implements OnInit, OnDestroy {
     // 1. 將設定參數委託給 DapConfigService 進行全域暫存
     this.configService.setConfig({
       serverAddress,
+      transportType: 'websocket', // TODO: 未來由 UI 選擇
       launchMode,
       executablePath,
       sourcePath,
