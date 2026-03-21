@@ -95,6 +95,14 @@ npm install -g @angular/cli
 npm install
 ```
 
+### Start DAP Server (GDB)
+
+Use `websocketd` to wrap the local GDB DAP interface. For example:
+
+```bash
+websocketd --address 127.0.0.1 --port 4711 --binary --loglevel=debug /path/to/gdb -ex "set debug dap-log-file /path/to/dap.log"  -ex "set debug dap-log-level 2"  -i=dap
+```
+
 ### Development Server
 
 ```bash

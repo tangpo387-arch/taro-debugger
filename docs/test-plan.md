@@ -19,7 +19,7 @@
 
 ## 2. 自動化測試項目規劃 (Test Items / Scope)
 
-測試範圍依據 `work_items.md` 與 `specification.md` 分為單元、整合及 E2E 三個層級。
+測試範圍依據 `work-items.md` 與 `system-specification.md` 分為單元、整合及 E2E 三個層級。
 
 ### 2.1 單元測試 (Unit Tests)
 
