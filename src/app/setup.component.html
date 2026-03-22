@@ -1,45 +1,45 @@
-<!-- 設定頁面主容器：佔滿全螢幕並將內容置中 -->
+<!-- Setup page main container: Fill screen and center content -->
 <div class="setup-container">
-  <!-- 使用 Angular Material 的卡片元件包裝表單 -->
+  <!-- Wrap form in Angular Material Card component -->
   <mat-card class="setup-card">
     <mat-card-header class="setup-header">
       <mat-icon color="primary" class="header-icon">bug_report</mat-icon>
-      <mat-card-title class="header-title">TaroDAP 偵錯器</mat-card-title>
-      <mat-card-subtitle>請設定 DAP 連線環境</mat-card-subtitle>
+      <mat-card-title class="header-title">TaroDAP Debugger</mat-card-title>
+      <mat-card-subtitle>Configure DAP Connection</mat-card-subtitle>
     </mat-card-header>
 
     <mat-card-content class="setup-content">
-      <!-- 表單綁定至 Reactive FormGroup -->
+      <!-- Form bound to Reactive FormGroup -->
       <form [formGroup]="form" (ngSubmit)="onConnect()" novalidate>
 
-        <!-- ── 區段一：DAP Server 連線 ── -->
-        <div class="section-label">連線設定</div>
+        <!-- ── Section 1: DAP Server Connection ── -->
+        <div class="section-label">Connection Settings</div>
 
-        <!-- DAP Server 連線位址 -->
+        <!-- DAP Server Address -->
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>DAP Server 位址</mat-label>
+          <mat-label>DAP Server Address</mat-label>
           <input matInput id="serverAddressInput" formControlName="serverAddress"
-                 placeholder="例如: localhost:4711">
+                 placeholder="e.g., localhost:4711">
           <mat-icon matSuffix>dns</mat-icon>
-          <!-- 驗證成功時顯示格式提示；有錯誤時 Angular Material 會自動隱藏 hint -->
+          <!-- Display format hint when validation is successful -->
           @if (!form.controls.serverAddress.errors) {
-            <mat-hint>格式: host:port</mat-hint>
+            <mat-hint>Format: host:port</mat-hint>
           }
-          <!-- 行內錯誤訊息：只有欄位被接觸（touched）後才顯示 -->
+          <!-- Inline error message: only displayed after field is touched -->
           @if (form.controls.serverAddress.touched) {
             @if (form.controls.serverAddress.hasError('required')) {
-              <mat-error>連線位址為必填欄位</mat-error>
+              <mat-error>Connection address is required</mat-error>
             } @else if (form.controls.serverAddress.hasError('invalidFormat')) {
-              <mat-error>格式不正確，請改用 host:port（例如 localhost:4711）</mat-error>
+              <mat-error>Invalid format, please use host:port (e.g., localhost:4711)</mat-error>
             }
           }
         </mat-form-field>
 
-        <!-- 啟動模式選擇器 -->
+        <!-- Launch Mode Selector -->
         <div class="mode-selector-wrapper">
-          <span class="mode-label">啟動模式</span>
+          <span class="mode-label">Launch Mode</span>
           <mat-button-toggle-group formControlName="launchMode" id="launchModeToggle"
-                                   class="mode-toggle" aria-label="啟動模式">
+                                   class="mode-toggle" aria-label="Launch Mode">
             <mat-button-toggle value="launch">
               <mat-icon>play_arrow</mat-icon>
               Launch
@@ -50,54 +50,54 @@
             </mat-button-toggle>
           </mat-button-toggle-group>
           @if (launchMode === 'launch') {
-            <p class="mode-hint">由偵錯器啟動並附加至新程序</p>
+            <p class="mode-hint">The debugger launches and attaches to a new process</p>
           } @else {
-            <p class="mode-hint">附加至一個已在執行中的程序</p>
+            <p class="mode-hint">Attach to an already running process</p>
           }
         </div>
 
         <mat-divider class="section-divider"></mat-divider>
 
-        <!-- ── 區段二：程式設定 ── -->
-        <div class="section-label">程式設定</div>
+        <!-- ── Section 2: Program Settings ── -->
+        <div class="section-label">Program Settings</div>
 
-        <!-- 執行檔路徑（Launch 模式，必填） -->
+        <!-- Executable Path (Required in Launch mode) -->
         @if (launchMode === 'launch') {
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>執行檔路徑 <span class="required-mark">*</span></mat-label>
+            <mat-label>Executable Path <span class="required-mark">*</span></mat-label>
             <input matInput id="execPathInput" formControlName="executablePath"
-                   placeholder="例如：/workspace/build/main.out">
+                   placeholder="e.g., /workspace/build/main.out">
             <mat-icon matSuffix>terminal</mat-icon>
             @if (form.controls.executablePath.touched &&
                  form.controls.executablePath.hasError('required')) {
-              <mat-error>啟動模式下，執行檔路徑為必填欄位</mat-error>
+              <mat-error>Executable path is required in Launch mode</mat-error>
             }
           </mat-form-field>
 
-          <!-- 程式引數（Launch 模式，選填） -->
+          <!-- Program Arguments (Optional in Launch mode) -->
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>程式引數</mat-label>
+            <mat-label>Program Arguments</mat-label>
             <input matInput id="programArgsInput" formControlName="programArgs"
-                   placeholder="例如：--config app.cfg --verbose">
+                   placeholder="e.g., --config app.cfg --verbose">
             <mat-icon matSuffix>format_list_bulleted</mat-icon>
-            <mat-hint>選填，傳遞給被偵錯程式的命令列引數</mat-hint>
+            <mat-hint>Optional, command-line arguments passed to the debuggee</mat-hint>
           </mat-form-field>
         }
 
-        <!-- 原始碼路徑（選填，Launch / Attach 皆顯示） -->
+        <!-- Source Path (Optional, shown in both modes) -->
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>原始碼路徑</mat-label>
+          <mat-label>Source Path</mat-label>
           <input matInput id="sourcePathInput" formControlName="sourcePath"
-                 placeholder="例如：/workspace/src">
+                 placeholder="e.g., /workspace/src">
           <mat-icon matSuffix>folder</mat-icon>
-          <mat-hint>選填，用於原始碼對應</mat-hint>
+          <mat-hint>Optional, used for source mapping</mat-hint>
         </mat-form-field>
 
       </form>
     </mat-card-content>
 
     <mat-card-actions class="setup-actions">
-      <!-- 連線按鈕：文字與圖示隨 Launch Mode 動態切換；表單無效時 disable -->
+      <!-- Connect Button: Text and icon switch based on Launch Mode -->
       <button mat-flat-button color="primary" id="connectButton"
               class="connect-button"
               [disabled]="form.invalid"

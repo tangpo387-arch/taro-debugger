@@ -1,19 +1,19 @@
-/* 確保類別名稱與 HTML 中的 class 保持一致 */
+/* Ensure class names match those in the HTML */
 .editor-container {
   display: block;
-  flex-grow: 1;    /* 自動填滿剩餘的所有空間 */
+  flex-grow: 1;    /* Automatically fill all remaining space */
   width: 100%;
   height: 100%;
   border: 1px solid #333;
 }
 
-/* 針對 Monaco Editor 內部的基本修正 */
+/* Basic fixes for Monaco Editor internals */
 ngx-monaco-editor {
   width: 100%;
   height: 100%;
 }
 
-/* 編輯器當前執行行背景顏色 (使用 ::ng-deep 以突破 Angular View Encapsulation，讓 Monaco Editor 吃到這組樣式) */
+/* Current execution line background color (uses ::ng-deep to bypass Angular View Encapsulation for Monaco Editor) */
 ::ng-deep .current-line-highlight {
   background-color: rgba(255, 255, 0, 0.2) !important;
 }

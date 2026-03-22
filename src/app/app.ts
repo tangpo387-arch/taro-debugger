@@ -7,15 +7,15 @@ import { RouterOutlet } from '@angular/router';
   imports: [RouterOutlet],
   template: `
     <!--
-      應用程式的根路由容器
-      根據當前網址，這裡將會動態掛載：
-      1. SetupComponent (路徑: /setup)
-      2. DebuggerComponent (路徑: /debug)
+      The root router container for the application.
+      Based on the current URL, the following will be dynamically mounted here:
+      1. SetupComponent (Path: /setup)
+      2. DebuggerComponent (Path: /debug)
     -->
     <router-outlet></router-outlet>
   `,
   styles: [`
-    /* 確保根元件佔滿整個視窗空間，做為最底層的畫布 */
+    /* Ensure the root component fills the entire window space as the base canvas */
     :host {
       display: block;
       width: 100vw;
@@ -23,12 +23,14 @@ import { RouterOutlet } from '@angular/router';
       margin: 0;
       padding: 0;
       overflow: hidden;
-      background-color: #f9fafb; /* 預設淺色背景，可視需求調整 */
+      background-color: #f9fafb; /* Default light background, adjustable as needed */
     }
   `]
 })
 export class App {
-  // 此為應用的核心進入點。
-  // 在目前的架構下，狀態管理與介面邏輯由各別的頁面元件與 Service 負責，
-  // 因此這裡保持簡潔即可。
+  /**
+   * Core entry point of the application.
+   * State management and UI logic are handled by individual components and services,
+   * so this entry point remains simple.
+   */
 }

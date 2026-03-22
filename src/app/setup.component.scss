@@ -1,4 +1,4 @@
-/* 設定頁面主容器樣式 */
+/* Setup page main container style */
 .setup-container {
   display: flex;
   align-items: center;
@@ -9,7 +9,7 @@
   box-sizing: border-box;
 }
 
-/* 設定卡片樣式 */
+/* Setup card style */
 .setup-card {
   width: 100%;
   max-width: 520px;
@@ -18,7 +18,7 @@
   border-radius: 16px;
 }
 
-/* 卡片標頭樣式 */
+/* Card header style */
 .setup-header {
   display: flex;
   flex-direction: column;
@@ -40,7 +40,7 @@
   letter-spacing: 0.3px;
 }
 
-/* 區段標籤 */
+/* Section labels */
 .section-label {
   font-size: 11px;
   font-weight: 600;
@@ -51,12 +51,12 @@
   margin-top: 4px;
 }
 
-/* 分隔線 */
+/* Divider style */
 .section-divider {
   margin: 8px 0 16px !important;
 }
 
-/* 表單內容區樣式 */
+/* Form content area style */
 .setup-content {
   display: flex;
   flex-direction: column;
@@ -67,7 +67,7 @@
   width: 100%;
 }
 
-/* 啟動模式選擇器包裝 */
+/* Launch mode selector wrapper */
 .mode-selector-wrapper {
   display: flex;
   flex-direction: column;
@@ -105,12 +105,12 @@
   min-height: 16px;
 }
 
-/* 必填星號 */
+/* Required field marker */
 .required-mark {
   color: #ef4444;
 }
 
-/* 按鈕區樣式 */
+/* Button area style */
 .setup-actions {
   display: flex;
   justify-content: flex-end;

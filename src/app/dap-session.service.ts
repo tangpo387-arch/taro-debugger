@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable, Subject, BehaviorSubject, Subscription, firstValueFrom } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { DapTransportService } from './dap-transport.service';
@@ -8,13 +8,14 @@ import { DapRequest, DapResponse, DapEvent } from './dap.types';
 import { FileTreeService } from './file-tree.service';
 import { DapFileTreeService } from './dap-file-tree.service';
 
-/** 偵錯執行狀態 */
+/** Execution State */
 export type ExecutionState = 'idle' | 'starting' | 'running' | 'stopped' | 'terminated';
 
 @Injectable()
 export class DapSessionService {
+  private readonly configService = inject(DapConfigService);
   private seq = 1;
-  private pendingRequests = new Map<number, { resolve: (response: DapResponse) => void; reject: (error: any) => void }>();
+  private readonly pendingRequests = new Map<number, { resolve: (response: DapResponse) => void; reject: (error: any) => void }>();
   private messageSubscription?: Subscription;
 
   public readonly fileTree: FileTreeService;
@@ -23,38 +24,36 @@ export class DapSessionService {
   private connectionStatusSubject = new BehaviorSubject<boolean>(false);
   private transportStatusSubscription?: Subscription;
 
-  /** Session 層級的事件 Subject，經過內部處理後再發出 */
+  /** Session-level event Subject, emitted after internal processing */
   private eventSubject = new Subject<DapEvent>();
 
-  /** 當前偵錯執行狀態 */
+  /** Current debug execution state */
   private executionStateSubject = new BehaviorSubject<ExecutionState>('idle');
 
   get executionState$(): Observable<ExecutionState> {
     return this.executionStateSubject.asObservable();
   }
 
-  constructor(
-    private configService: DapConfigService
-  ) {
+  constructor() {
     this.fileTree = new DapFileTreeService(this);
   }
 
 
   /**
-   * 取得連線狀態 Observable（在 transport 建立前為 false）
+   * Get connection status Observable (false until transport is established)
    */
   get connectionStatus$(): Observable<boolean> {
     return this.connectionStatusSubject.asObservable();
   }
 
   /**
-   * 啟動完整的 DAP Session。
+   * Starts a complete DAP Session.
    * 
-   * 遵循 DAP 協議標準訊息流：
-   * 1. 建立底層連線 (Transport)
-   * 2. 發送 initialize request
-   * 3. 等待 initialized event（內部自動處理 configurationDone）
-   * 4. 發送 launch/attach request（response 會在 configurationDone 之後才回來）
+   * Follows the standard DAP message flow:
+   * 1. Establish underlying Transport connection
+   * 2. Send initialize request
+   * 3. Wait for initialized event (configurationDone is handled internally)
+   * 4. Send launch/attach request (response returns after configurationDone)
    */
   async startSession(): Promise<DapResponse> {
     const config = this.configService.getConfig();
@@ -62,20 +61,20 @@ export class DapSessionService {
       throw new Error('Server address is empty');
     }
 
-    // 根據組態建立對應的 Transport 實例
+    // Create corresponding Transport instance based on configuration
     this.transport = createTransport(config.transportType);
 
-    // 橋接 transport 連線狀態至 Session 層級
+    // Bridge transport connection status to the Session level
     this.transportStatusSubscription?.unsubscribe();
     this.transportStatusSubscription = this.transport.connectionStatus$.subscribe(
       status => this.connectionStatusSubject.next(status)
     );
 
     try {
-      // 等待連線建立完成
+      // Wait for the connection to be established
       await firstValueFrom(this.transport.connect(config.serverAddress));
     } catch (e) {
-      throw new Error(`${config.transportType} 連線失敗`);
+      throw new Error(`${config.transportType} connection failed`);
     }
 
     if (this.messageSubscription) {
@@ -114,7 +113,7 @@ export class DapSessionService {
       this.eventSubject.pipe(filter(e => e.event === 'initialized'))
     );
 
-    // Step 1: 發送 initialize request
+    // Step 1: Send initialize request
     const initResponse = await this.sendRequest('initialize', {
       clientID: 'gdb-frontend',
       clientName: 'taro-debugger',
@@ -128,17 +127,17 @@ export class DapSessionService {
     });
     this.capabilities = initResponse.body || {};
 
-    // Step 2: 等待 initialized event
+    // Step 2: Wait for initialized event
     await initializedPromise;
 
-    // Step 3: 發送 launch/attach request（先送出，不等 response）
-    // 根據 DAP 規範，launch/attach 的 response 會在 configurationDone 之後才回來
+    // Step 3: Send launch/attach request (fire-and-forget, don't wait for response yet)
+    // According to DAP spec, launch/attach response returns after configurationDone
     const launchPromise = this.launchOrAttach();
 
-    // Step 4: 發送 configurationDone
+    // Step 4: Send configurationDone
     await this.sendRequest('configurationDone');
 
-    // Step 5: 等待 launch/attach response（此時 Server 才會回覆）
+    // Step 5: Wait for launch/attach response (the Server will reply at this point)
     const launchResponse = await launchPromise;
     this.executionStateSubject.next('running');
 
@@ -146,7 +145,7 @@ export class DapSessionService {
   }
 
   /**
-   * 根據組態決定呼叫 launch 或 attach（內部使用）
+   * Decides whether to call launch or attach based on configuration (internal use)
    */
   private async launchOrAttach(): Promise<DapResponse> {
     const config = this.configService.getConfig();
@@ -165,12 +164,12 @@ export class DapSessionService {
   }
 
   /**
-   * 中斷連線
+   * Disconnect the session
    */
   async disconnect(): Promise<void> {
     try {
       if (this.transport) {
-        // 先發送 disconnect request 給 DAP Server
+        // Send disconnect request to DAP Server
         await this.sendRequest('disconnect', {
           restart: false,
           terminateDebuggee: true
@@ -179,7 +178,7 @@ export class DapSessionService {
     } catch (e) {
       console.warn('Failed to send disconnect request cleanly', e);
     } finally {
-      // 停止接收訊息
+      // Stop receiving messages
       if (this.messageSubscription) {
         this.messageSubscription.unsubscribe();
         this.messageSubscription = undefined;
@@ -200,77 +199,80 @@ export class DapSessionService {
   }
 
   /**
-   * 繼續執行 (Continue)
+   * Continue execution
    */
   async continue(): Promise<DapResponse> {
-    // 註：目前暫不指定 threadId，由 DAP Server 決定 (通常為當前停止的 thread)
+    // Note: threadId is currently hardcoded to 1, let DAP server decide (usually the stopped thread)
     return this.sendRequest('continue', { threadId: 1 });
   }
 
   /**
-   * 單步執行 (Step Over / Next)
+   * Step Over (Next)
    */
   async next(): Promise<DapResponse> {
     return this.sendRequest('next', { threadId: 1 });
   }
 
   /**
-   * 進入函式 (Step Into)
+   * Step Into
    */
   async stepIn(): Promise<DapResponse> {
     return this.sendRequest('stepIn', { threadId: 1 });
   }
 
   /**
-   * 跳出函式 (Step Out)
+   * Step Out
    */
   async stepOut(): Promise<DapResponse> {
     return this.sendRequest('stepOut', { threadId: 1 });
   }
 
   /**
-   * 暫停執行 (Pause)
+   * Pause execution
    */
   async pause(): Promise<DapResponse> {
     return this.sendRequest('pause', { threadId: 1 });
   }
 
   /**
-   * 獲取執行緒清單
+   * Get thread list
    */
   async threads(): Promise<DapResponse> {
     return this.sendRequest('threads');
   }
 
   /**
-   * 獲取指定執行緒的呼叫堆疊
-   * @param threadId 執行緒 ID
+   * Get stack trace of a specific thread
+   * @param threadId Thread ID
    */
   async stackTrace(threadId: number): Promise<DapResponse> {
+    this.ensureStopped();
     return this.sendRequest('stackTrace', { threadId });
   }
 
   /**
-   * 獲取指定堆疊層級（frame）的作用域清單
-   * @param frameId 堆疊疊代 ID
+   * Get scopes for a specific stack frame
+   * @param frameId Stack frame ID
    */
   async scopes(frameId: number): Promise<DapResponse> {
+    this.ensureStopped();
     return this.sendRequest('scopes', { frameId });
   }
 
   /**
-   * 獲取指定 scope 的變數清單
-   * @param variablesReference Variables Reference (從 scopes response 中取得)
+   * Get variables for a specific scope
+   * @param variablesReference Variables Reference (from scopes response)
    */
   async variables(variablesReference: number): Promise<DapResponse> {
+    this.ensureStopped();
     return this.sendRequest('variables', { variablesReference });
   }
 
   /**
-   * 封裝發送 Request 並等待對應 Response 的邏輯
-   * @param command DAP 指令名稱
-   * @param args DAP 指令的 arguments (optional)
-   * @param timeoutMs 逾時時間 (預設 5000ms)
+   * Wrapper for sending a request and waiting for its response.
+   * @param command DAP command name
+   * @param args DAP command arguments (optional)
+   * @param timeoutMs Timeout in milliseconds (default 5000ms)
    */
   sendRequest(command: string, args?: any, timeoutMs: number = 5000): Promise<DapResponse> {
     const transport = this.transport;
@@ -311,22 +313,32 @@ export class DapSessionService {
   }
 
   /**
-   * 開放取得 Session 層級事件串流（已經過 Session 內部處理）
+   * Provides the session-level event stream (pre-processed by the Session)
    */
   onEvent(): Observable<DapEvent> {
     return this.eventSubject.asObservable();
   }
 
-  // ── Session 層級事件處理 ─────────────────────────────────────────
+  // ── Session Event Handling ─────────────────────────────────────────
 
   /**
-   * 處理來自 Transport 層的原始 DAP 事件。
-   * Session 先做內部狀態更新與必要的自動回應，處理完畢後再轉發給外部訂閱者。
+   * Check if current state is 'stopped', otherwise throw error (per R6 spec)
+   */
+  private ensureStopped(): void {
+    if (this.executionStateSubject.value !== 'stopped') {
+      throw new Error(`Invalid state: operation requires the execution to be 'stopped', but current state is '${this.executionStateSubject.value}'`);
+    }
+  }
+
+  /**
+   * Handles raw DAP events from the Transport layer.
+   * The Session updates internal state and performs automatic responses,
+   * then forwards the event to external subscribers.
    */
   private handleTransportEvent(event: DapEvent): void {
     switch (event.event) {
       case 'initialized':
-        // initialized 事件的後續處理（launch + configurationDone）由 startSession() 流程控制
+        // The initialized event processing (launch + configurationDone) is managed by startSession()
         break;
 
       case 'stopped':
@@ -343,7 +355,7 @@ export class DapSessionService {
         break;
     }
 
-    // 處理完畢後，將事件轉發給外部訂閱者（Component 等）
+    // Forward processed event to external subscribers (Components, etc.)
     this.eventSubject.next(event);
   }
 }

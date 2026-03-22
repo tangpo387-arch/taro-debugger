@@ -11,8 +11,8 @@ export class WebSocketTransportService extends DapTransportService {
 
   private static readonly INITIAL_BUFFER_CAPACITY = 4096;
 
-  private buffer = new Uint8Array(WebSocketTransportService.INITIAL_BUFFER_CAPACITY); // 預分配初始容量
-  private bufferLength = 0;             // buffer 中實際使用的位元組數
+  private buffer = new Uint8Array(WebSocketTransportService.INITIAL_BUFFER_CAPACITY); // Pre-allocated initial capacity
+  private bufferLength = 0;             // Actual number of bytes used in the buffer
   private messageQueue: Promise<void> = Promise.resolve();
 
   override get connectionStatus$(): Observable<boolean> {
@@ -21,11 +21,11 @@ export class WebSocketTransportService extends DapTransportService {
 
   override connect(address: string): Observable<void> {
     return new Observable<void>(observer => {
-      // 重置狀態，避免舊連線的非同步操作污染新連線
+      // Reset state to avoid asynchronous operations from old connections contaminating the new one
       this.bufferLength = 0;
       this.messageQueue = Promise.resolve();
 
-      // 若舊 socket 仍存在，清除其所有 handler 後關閉，防止記憶體洩漏與事件重複觸發
+      // If an old socket exists, clear all its handlers and close it to prevent memory leaks and duplicate event triggering
       if (this.socket) {
         this.socket.onopen = null;
         this.socket.onmessage = null;
@@ -35,7 +35,7 @@ export class WebSocketTransportService extends DapTransportService {
         this.socket = undefined;
       }
 
-      // 若沒有加上 ws:// 或 wss://，則預設加上 ws://
+      // Default to ws:// if ws:// or wss:// is not provided
       const wsUrl = address.startsWith('ws') ? address : `ws://${address}`;
       this.socket = new WebSocket(wsUrl);
 
@@ -46,7 +46,8 @@ export class WebSocketTransportService extends DapTransportService {
       };
 
       this.socket.onmessage = (event: MessageEvent) => {
-        // 使用 Promise Queue 確保 WebSocket 事件依序被處理，避免 Blob 解析的非同步造成亂序
+        // Use a Promise Queue to ensure WebSocket events are processed sequentially, 
+        // avoiding out-of-order execution during asynchronous Blob parsing
         this.messageQueue = this.messageQueue.then(async () => {
           try {
             if (event.data instanceof Blob) {
@@ -89,11 +90,11 @@ export class WebSocketTransportService extends DapTransportService {
     }
 
     const payload = JSON.stringify(request);
-    // 使用 TextEncoder 將 payload 轉為 Uint8Array 計算真實位元組長度
+    // Use TextEncoder to convert payload to Uint8Array for accurate byte length calculation
     const payloadBytes = new TextEncoder().encode(payload);
     const header = `Content-Length: ${payloadBytes.byteLength}\r\n\r\n`;
 
-    // 陣列中直接合併字串與 Uint8Array 生成單一 Blob，避免字串被重複編碼
+    // Merge string and Uint8Array directly in an array to generate a single Blob, avoiding redundant encoding
     this.socket.send(new Blob([header, payloadBytes], { type: 'application/json' }));
   }
 
@@ -109,13 +110,14 @@ export class WebSocketTransportService extends DapTransportService {
   }
 
   /**
-   * 處理來自 WebSocket 的資料流，基於 Uint8Array 解析，避免多位元組字元（例如中文）長度計算錯誤及截斷
+   * Processes the data stream from WebSocket, parsing based on Uint8Array to avoid 
+   * length calculation errors or truncation for multi-byte characters.
    */
   private handleData(data: Uint8Array): void {
-    // 將新接收到的 byte 以容量加倍策略寫入 buffer，避免每次都重新分配記憶體
+    // Append newly received bytes to buffer using a capacity-doubling strategy to minimize memory reallocations
     const required = this.bufferLength + data.length;
     if (required > this.buffer.length) {
-      // 容量加倍直到足夠（攤銷 O(1) 的分配次數）
+      // Double capacity until sufficient (amortized O(1) allocation frequency)
       let newCapacity = this.buffer.length || WebSocketTransportService.INITIAL_BUFFER_CAPACITY;
       while (newCapacity < required) newCapacity *= 2;
       const grown = new Uint8Array(newCapacity);
@@ -126,7 +128,7 @@ export class WebSocketTransportService extends DapTransportService {
     this.bufferLength += data.length;
 
     while (this.bufferLength >= 14) {
-      // DAP 訊息必須以 'Content-Length' 開頭 ('C' 的 ASCII 為 67)
+      // DAP messages must start with 'Content-Length' ('C' ASCII is 67)
       if (this.buffer[0] !== 67) {
         this.messageSubject.error(new Error(`Protocol error: DAP stream must start with 'Content-Length'. Received byte: ${this.buffer[0]}`));
         this.bufferLength = 0;
@@ -135,7 +137,7 @@ export class WebSocketTransportService extends DapTransportService {
 
       let headerEndIndex = -1;
 
-      // 尋找 \r\n\r\n 作為 header 的結尾
+      // Find \r\n\r\n as the end of the header
       for (let i = 0; i < this.bufferLength - 3; i++) {
         if (this.buffer[i] === 13 && this.buffer[i + 1] === 10 &&
           this.buffer[i + 2] === 13 && this.buffer[i + 3] === 10) {
@@ -145,18 +147,17 @@ export class WebSocketTransportService extends DapTransportService {
       }
 
       if (headerEndIndex === -1) {
-        // 如果 Buffer 已經累積了一定長度卻還沒找到 Header 結尾 (\r\n\r\n)
-        // 這通常代表協定錯誤或資料損毀
+        // If buffer has accumulated significant length without finding Header end (\r\n\r\n),
+        // it usually indicates a protocol error or data corruption.
         if (this.bufferLength > 256) {
           this.messageSubject.error(new Error('DAP Header not found within 256 bytes of data'));
           this.bufferLength = 0;
         }
-        break; // 等待更多資料
+        break; // Wait for more data
       }
 
-      // 提取 Header 字串並解析 Content-Length
+      // Extract Header string and parse Content-Length
       const headerString = new TextDecoder().decode(this.buffer.subarray(0, headerEndIndex));
-      //const headerString = new TextDecoder().decode(this.buffer.subarray(0, this.bufferLength));
       const headerMatch = headerString.match(/Content-Length: (\d+)/i);
 
       if (!headerMatch) {
@@ -169,16 +170,16 @@ export class WebSocketTransportService extends DapTransportService {
       const contentLength = parseInt(headerMatch[1], 10);
       const totalLength = headerEndIndex + contentLength;
 
-      // 如果尚未接收到足夠的 payload，則等待下個 chunk
+      // Wait for next chunk if the full payload has not been received
       if (this.bufferLength < totalLength) {
         break;
       }
 
-      // 擷取 JSON payload 並轉為字串
+      // Extract JSON payload and convert to string
       const payloadBytes = this.buffer.subarray(headerEndIndex, totalLength);
       const payloadString = new TextDecoder().decode(payloadBytes);
 
-      // 將剩餘資料移到 buffer 開頭，更新 bufferLength
+      // Move remaining data to the start of the buffer and update bufferLength
       this.buffer.copyWithin(0, totalLength, this.bufferLength);
       this.bufferLength -= totalLength;
 

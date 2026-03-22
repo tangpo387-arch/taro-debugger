@@ -1,4 +1,4 @@
-/* 全螢幕最外層容器 */
+/* Full screen outer container */
 .app-layout {
   height: 100vh;
   width: 100%;
@@ -6,21 +6,21 @@
   flex-direction: column;
 }
 
-/* 核心容器樣式，填滿剩餘高度 */
+/* Core container style, fills remaining height */
 .debugger-container {
-  flex: 1; /* 佔滿 toolbar 以外的剩餘空間 */
+  flex: 1; /* Fill remaining space outside the toolbar */
   width: 100%;
   background-color: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
 }
 
-/* --- 頂部工具列樣式 --- */
+/* --- Top toolbar style --- */
 .top-toolbar {
   flex-shrink: 0;
   z-index: 10;
   box-shadow: var(--mat-sys-level2-shadow);
   
-  /* 縮減預設高度 (Angular Material 預設為 64px) */
+  /* Reduce default height (Angular Material defaults to 64px) */
   min-height: 48px;
   height: 48px;
   padding: 0 16px;
@@ -34,7 +34,7 @@
 .loaded-file {
   margin-left: 16px;
   font-size: 0.75rem;
-  /* 半透明背景 */
+  /* Semi-transparent background */
   background-color: var(--mat-sys-surface-variant);
   color: var(--mat-sys-on-surface-variant);
   padding: 4px 8px;
@@ -51,7 +51,7 @@
   gap: 8px;
 }
 
-/* --- 側邊欄共用與個別樣式 --- */
+/* --- Sidenav shared and individual styles --- */
 .sidenav-left,
 .sidenav-right {
   padding: 16px;
@@ -85,7 +85,7 @@
   color: var(--mat-sys-on-surface-variant);
   white-space: nowrap;
   overflow: hidden;
-  /* 路徑過長時顯示省略號 */
+  /* Show ellipsis when path is too long */
   text-overflow: ellipsis;
 }
 
@@ -93,7 +93,7 @@
   margin-top: 16px;
 }
 
-/* 檔案樹樣式 */
+/* File tree style */
 .file-tree {
   margin-top: 16px;
   background: transparent;
@@ -141,12 +141,12 @@
   color: var(--mat-sys-on-surface);
 }
 
-/* 處理 mat-tree-node 的預設 padding/margin，讓點擊區域更大 */
+/* Handle mat-tree-node default padding/margin for a larger click area */
 mat-tree-node {
   min-height: 32px;
 }
 
-/* 右側面板區塊樣式 */
+/* Right panel section styles */
 .panel-section {
   display: flex;
   flex-direction: column;
@@ -170,7 +170,7 @@ mat-tree-node {
   color: var(--mat-sys-on-surface-variant);
 }
 
-/* --- 中央編輯器區域樣式 --- */
+/* --- Center editor area style --- */
 .main-content {
   display: flex;
   flex-direction: column;
@@ -179,7 +179,7 @@ mat-tree-node {
 }
 
 .editor-container {
-  /* 填滿剩餘空間 */
+  /* Fill remaining space */
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -193,7 +193,7 @@ mat-tree-node {
   display: block;
 }
 
-/* --- 控制面板區域樣式 --- */
+/* --- Console panel area style --- */
 .consoles-container {
   height: 250px;
   flex-shrink: 0;
@@ -224,7 +224,7 @@ mat-tree-node {
   }
 
   ::ng-deep .mat-mdc-tab-body-content {
-    /* 強制內容區塊填滿高度 */
+    /* Force content section to fill the height */
     height: 100% !important;
     display: flex;
     flex-direction: column;
@@ -272,7 +272,7 @@ mat-tree-node {
   }
 }
 
-/* 底部命令輸入區域 */
+/* Bottom command input area */
 .console-input-area {
   display: flex;
   align-items: center;
@@ -302,7 +302,7 @@ mat-tree-node {
   }
 }
 
-/* 底部狀態列樣式 */
+/* Bottom status bar style */
 .status-bar {
   height: 32px;
   flex-shrink: 0;
@@ -328,7 +328,7 @@ mat-tree-node {
   margin-right: 8px;
 
   &.online {
-    /* 上線為主要顏色或特定成功顏色，這裡用 primary-container 或是自定義 */
+    /* Online status indicator: success color */
     background-color: #4ade80;
   }
   

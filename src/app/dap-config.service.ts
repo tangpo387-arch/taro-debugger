@@ -1,37 +1,37 @@
 import { Injectable } from '@angular/core';
 
 /**
- * 完整的 DAP 連線組態介面
- * 涵蓋伺服器位址、啟動模式、路徑及程式引數
+ * Interface for the complete DAP connection configuration.
+ * Includes server address, launch mode, path, and program arguments.
  */
-/** 支援的傳輸層類型 */
+/** Supported transport layer types */
 export type TransportType = 'websocket' | 'serial' | 'tcp';
 
 export interface DapConfig {
-  /** DAP Server 連線位址，格式為 host:port（例如 localhost:4711） */
+  /** DAP Server connection address, format host:port (e.g., localhost:4711) */
   serverAddress: string;
 
-  /** 傳輸層類型：websocket、serial 或 tcp */
+  /** Transport type: websocket, serial, or tcp */
   transportType: TransportType;
 
-  /** 啟動模式：launch 由偵錯器啟動程序，attach 附加至已執行程序 */
+  /** Launch mode: 'launch' starts the process, 'attach' attaches to an existing one */
   launchMode: 'launch' | 'attach';
 
-  /** 被偵錯程式的可執行檔路徑 */
+  /** Path to the executable being debugged */
   executablePath: string;
 
-  /** 原始碼根目錄路徑 */
+  /** Path to the root source code directory */
   sourcePath: string;
 
-  /** 傳遞給被偵錯程式的命令列引數（可選） */
+  /** Command-line arguments passed to the debuggee (optional) */
   programArgs: string;
 }
 
 /**
  * DapConfigService
  *
- * 狀態管理服務，負責在設定頁面（SetupComponent）與
- * 偵錯頁面（DebuggerComponent）之間傳遞完整的 DAP 連線組態。
+ * State management service, responsible for passing the DAP configuration between
+ * the setup page (SetupComponent) and the debugger page (DebuggerComponent).
  */
 @Injectable({
   providedIn: 'root'
@@ -47,16 +47,16 @@ export class DapConfigService {
   };
 
   /**
-   * 儲存完整的 DAP 組態。
-   * @param config 完整的 DapConfig 物件
+   * Save the complete DAP configuration.
+   * @param config A complete DapConfig object
    */
   setConfig(config: DapConfig): void {
     this.config = { ...config };
-    console.log('DAP 設定已儲存:', this.config);
+    console.log('DAP configuration saved:', this.config);
   }
 
   /**
-   * 取得當前的 DAP 組態（回傳副本，防止外部直接修改）。
+   * Get the current DAP configuration (returns a copy to prevent external direct modification).
    */
   getConfig(): DapConfig {
     return { ...this.config };

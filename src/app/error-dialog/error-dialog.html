@@ -1,14 +1,14 @@
 <h2 mat-dialog-title>
   <mat-icon color="warn" style="vertical-align: middle; margin-right: 8px;">error_outline</mat-icon>
-  {{ data.title || '連線錯誤' }}
+  {{ data.title || 'Connection Error' }}
 </h2>
 <mat-dialog-content>
   <p>{{ data.message }}</p>
   <p style="color: #666; font-size: 0.9em; margin-top: 16px;">
-    請確認您的 DAP 伺服器 (如 lldb-dap) 是否正在執行且連線位址正確。
+    Please check if your DAP server (e.g., lldb-dap) is running and the connection address is correct.
   </p>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
-  <button mat-button (click)="onGoBack()">返回設定</button>
-  <button mat-raised-button color="primary" (click)="onRetry()">重試連線</button>
+  <button mat-button (click)="onGoBack()">Back to Setup</button>
+  <button mat-raised-button color="primary" (click)="onRetry()">Retry</button>
 </mat-dialog-actions>

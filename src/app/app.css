@@ -2,31 +2,31 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  overflow: hidden; /* 確保主視窗不晃動 */
+  overflow: hidden; /* Ensure the main window remains stable */
 }
 
 .main-header {
   flex-shrink: 0;
   z-index: 10;
-  /* 增加一點邊界感 */
+  /* Add a subtle border */
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 3px 5px -1px rgba(0,0,0,.3);
 }
 
 .main-container {
   flex-grow: 1;
-  /* 重要：必須設定為 hidden 或 auto，防止內部代碼編輯器撐破容器 */
+  /* Important: Must be set to hidden or auto to prevent internal code editors from overflowing the container */
   overflow: hidden;
-  background-color: #1e1e1e; /* 讓內容區背景與編輯器融為一體 */
+  background-color: #1e1e1e; /* Ensures content area background blends with the editor */
 
-  /* 若內部有元件需要自己捲動，確保它是相對定位 */
+  /* If internal components need to scroll themselves, ensure relative positioning */
   position: relative;
 }
 
 .status-bar {
   flex-shrink: 0;
-  background: #181818; /* 比背景再深一點，更有層次 */
-  padding: 4px 12px;   /* 稍微縮減高度，讓偵錯區空間更大 */
+  background: #181818; /* Slightly darker than background for a tiered effect */
+  padding: 4px 12px;   /* Reduce height slightly to maximize debug area space */
   color: #cccccc;
   font-size: 12px;
   display: flex;

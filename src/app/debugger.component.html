@@ -1,44 +1,44 @@
-<!-- 全螢幕的最外層容器 -->
+<!-- Full screen outer container -->
 <div class="app-layout">
 
-  <!-- 1. 頂部工具與導航列 -->
+  <!-- 1. Top toolbar and navigation -->
   <mat-toolbar color="primary" class="top-toolbar">
     <span class="brand-title">TaroDAP</span>
-    <!-- 顯示當前載入的執行檔，從 Service 取得 -->
+    <!-- Show current loaded executable path from configuration -->
     <span class="loaded-file">
-      {{ currentConfig.executablePath || '未載入檔案' }}
+      {{ currentConfig.executablePath || 'No file loaded' }}
     </span>
 
     <span class="spacer"></span>
 
-    <!-- 偵錯控制按鈕群 -->
+    <!-- Debug control buttons -->
     <div class="debug-controls">
-      <!-- 暫停按鈕：僅在 Running 狀態下可用 -->
+      <!-- Pause button: Available only in 'running' state -->
       <button mat-icon-button title="Pause" (click)="onPause()" [disabled]="executionState !== 'running'">
         <mat-icon>pause</mat-icon>
       </button>
 
-      <!-- 繼續按鈕：僅在 Stopped 狀態下可用 -->
+      <!-- Continue button: Available only in 'stopped' state -->
       <button mat-icon-button title="Continue" (click)="onResume()" [disabled]="executionState !== 'stopped'">
         <mat-icon>play_arrow</mat-icon>
       </button>
 
-      <!-- 單步執行：僅在 Stopped 狀態下可用 -->
+      <!-- Step Over button: Available only in 'stopped' state -->
       <button mat-icon-button title="Step Over" (click)="onStepOver()" [disabled]="executionState !== 'stopped'">
         <mat-icon>redo</mat-icon>
       </button>
 
-      <!-- 進入函式：僅在 Stopped 狀態下可用 -->
+      <!-- Step Into button: Available only in 'stopped' state -->
       <button mat-icon-button title="Step Into" (click)="onStepInto()" [disabled]="executionState !== 'stopped'">
         <mat-icon>arrow_downward</mat-icon>
       </button>
 
-      <!-- 跳出函式：僅在 Stopped 狀態下可用 -->
+      <!-- Step Out button: Available only in 'stopped' state -->
       <button mat-icon-button title="Step Out" (click)="onStepOut()" [disabled]="executionState !== 'stopped'">
         <mat-icon>arrow_upward</mat-icon>
       </button>
 
-      <!-- 停止按鈕：只要 Session 還在且不是正在啟動中即可用 -->
+      <!-- Stop button: Available unless session is terminated/idle/starting -->
       <button mat-icon-button title="Stop" color="warn" (click)="onStop()"
         [disabled]="executionState === 'terminated' || executionState === 'starting' || executionState === 'idle'">
         <mat-icon>stop</mat-icon>
@@ -47,28 +47,28 @@
 
     <span class="spacer"></span>
 
-    <!-- 返回設定頁按鈕 -->
+    <!-- Back to setup settings button -->
     <button mat-button (click)="goBack()">
-      <mat-icon>settings</mat-icon> 重新設定
+      <mat-icon>settings</mat-icon> Reset
     </button>
   </mat-toolbar>
 
-  <!-- 核心佈局容器：包含側邊欄與主要內容區 -->
+  <!-- Core layout container: Sidenavs and main content area -->
   <mat-sidenav-container class="debugger-container">
 
-  <!-- 2. 左側：檔案總管 -->
+  <!-- 2. Left sidenav: File Explorer -->
   <mat-sidenav mode="side" opened position="start" class="sidenav-left">
     <div class="sidenav-header">
-      <h3>檔案清單</h3>
+      <h3>Files</h3>
       <div class="source-path" title="{{ currentConfig.sourcePath }}">
-        來源：{{ currentConfig.sourcePath || '未指定' }}
+        Source: {{ currentConfig.sourcePath || 'Not specified' }}
       </div>
     </div>
 
     @if (fileTreeSupported) {
-      <!-- 動態檔案樹 -->
+      <!-- Dynamic File Tree -->
       <mat-tree #tree="matTree" [dataSource]="fileDataSource" [childrenAccessor]="childrenAccessor" class="file-tree">
-        <!-- 檔案節點 -->
+        <!-- File Node -->
         <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
           <button mat-button class="file-node-btn"
                   [class.active-file]="activeFilePath === node.path"
@@ -78,7 +78,7 @@
           </button>
         </mat-tree-node>
 
-        <!-- 目錄節點 -->
+        <!-- Directory Node -->
         <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding>
           <button mat-icon-button matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name">
             <mat-icon class="mat-icon-rtl-mirror">
@@ -92,20 +92,20 @@
     } @else {
       <div class="unsupported-message" style="padding: 16px; color: var(--mat-sys-on-surface-variant); font-size: 0.875rem; display: flex; align-items: center; justify-content: center; text-align: center; flex-direction: column; opacity: 0.8; margin-top: 32px;">
         <mat-icon style="margin-bottom: 8px; font-size: 32px; width: 32px; height: 32px;">info</mat-icon>
-        DAP Server 不支援 loadedSources 請求<br>無法顯示檔案樹
+        DAP Server does not support loadedSources requests<br>File tree cannot be displayed
       </div>
     }
   </mat-sidenav>
 
-  <!-- 3. 右側：變數與呼叫堆疊 -->
+  <!-- 3. Right sidenav: Variables and Call Stack -->
   <mat-sidenav mode="side" opened position="end" class="sidenav-right">
-    <!-- 變數檢視區 -->
+    <!-- Variables View Section -->
     <div class="panel-section variables-section">
       <h3 class="panel-title">Variables</h3>
-      <div class="placeholder-content">變數樹狀圖預留區...</div>
+      <div class="placeholder-content">Variables tree placeholder...</div>
     </div>
 
-    <!-- 呼叫堆疊區 -->
+    <!-- Call Stack Section -->
     <div class="panel-section">
       <h3 class="panel-title">Call Stack</h3>
       @if (stackFrames.length > 0) {
@@ -120,20 +120,20 @@
           }
         </mat-action-list>
       } @else {
-        <div class="placeholder-content">無可用的堆疊資訊</div>
+        <div class="placeholder-content">No call stack information available</div>
       }
     </div>
   </mat-sidenav>
 
-  <!-- 4. 中央：核心編輯器與主控台 -->
+  <!-- 4. Center: Core Editor and Consoles -->
   <mat-sidenav-content class="main-content">
 
-    <!-- Monaco Editor 容器 -->
+    <!-- Monaco Editor Container -->
     <div class="editor-container">
       <app-editor class="monaco-editor-instance" [code]="currentCode" [activeLine]="activeFilePath === activeLineFilePath ? activeLine : null" />
     </div>
 
-    <!-- 底部 Console 區域 -->
+    <!-- Bottom Consoles Area -->
     <div class="consoles-container">
       <mat-tab-group animationDuration="0ms">
         <mat-tab label="DAP Console">
@@ -164,12 +164,12 @@
       </mat-tab-group>
     </div>
 
-    <!-- 底部狀態列 -->
+    <!-- Bottom Status Bar -->
     <footer class="status-bar">
       <div class="connection-status">
-        <!-- 連線指示燈：根據實際狀態切換 class -->
+        <!-- Connection indicator light -->
         <span class="indicator" [ngClass]="(connectionStatus$ | async) ? 'online' : 'offline'"></span>
-        <span>DAP {{ (connectionStatus$ | async) ? '已連線' : '未連線' }}</span>
+        <span>DAP {{ (connectionStatus$ | async) ? 'Connected' : 'Disconnected' }}</span>
         @if (currentConfig.serverAddress) {
         <span class="server-address">
           ({{ currentConfig.serverAddress }})
@@ -178,7 +178,7 @@
       </div>
       <span class="spacer"></span>
       <div class="execution-state">
-        狀態: {{ executionState | titlecase }}
+        State: {{ executionState | titlecase }}
       </div>
     </footer>
 

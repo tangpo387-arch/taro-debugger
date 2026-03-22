@@ -1,32 +1,32 @@
 import { Routes } from '@angular/router';
 
-// 匯入我們先前建立的兩個頁面元件
-// 【注意】：請根據您實際的檔案存放目錄結構，調整這裡的路徑
+// Import the two page components we created
+// [Note]: Adjust these paths based on your actual directory structure
 import { SetupComponent } from './setup.component';
 import { DebuggerComponent } from './debugger.component';
 
 export const routes: Routes = [
   {
-    // 當網址為 '/setup' 時，載入設定頁面
+    // Load setup page when the URL is '/setup'
     path: 'setup',
     component: SetupComponent,
-    title: '設定環境 - TaroDAP' // 這裡可以順便設定瀏覽器分頁標題
+    title: 'Setup - TaroDAP' // Sets the browser tab title
   },
   {
-    // 當網址為 '/debug' 時，載入核心偵錯主畫面
+    // Load the core debugger view when the URL is '/debug'
     path: 'debug',
     component: DebuggerComponent,
-    title: '偵錯主畫面 - TaroDAP'
+    title: 'Debugger - TaroDAP'
   },
   {
-    // 當網址為空（即根目錄）時，自動重新導向至設定頁面
+    // Automatically redirect to the setup page when the URL is empty (root)
     path: '',
     redirectTo: '/setup',
-    pathMatch: 'full' // 確保只有在路徑完全為空時才觸發導向
+    pathMatch: 'full' // Ensure redirect only triggers on exact empty path
   },
   {
-    // 萬用字元路由 (Catch-all)：
-    // 如果使用者輸入了不存在的網址，自動導向回設定頁面
+    // Catch-all route:
+    // Automatically redirect back to the setup page if the URL doesn't exist
     path: '**',
     redirectTo: '/setup'
   }

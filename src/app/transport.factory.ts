@@ -3,13 +3,13 @@ import { DapTransportService } from './dap-transport.service';
 import { WebSocketTransportService } from './websocket-transport.service';
 
 /**
- * Transport 工廠函式
- * 根據傳入的 TransportType 建立對應的 DapTransportService 實例。
+ * Transport Factory Function
+ * Creates the corresponding DapTransportService instance based on the provided TransportType.
  * 
- * 未來新增 Serial 或 TCP 傳輸時，只需：
- * 1. 建立新的 Service (e.g., SerialTransportService extends DapTransportService)
- * 2. 在此工廠新增對應的 case
- * 3. 在 TransportType 型別中加入新選項
+ * When adding Serial or TCP transport in the future:
+ * 1. Create a new Service (e.g., SerialTransportService extends DapTransportService)
+ * 2. Add the corresponding case in this factory
+ * 3. Add the new option to the TransportType type
  */
 export function createTransport(type: TransportType): DapTransportService {
   switch (type) {

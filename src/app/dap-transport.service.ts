@@ -3,37 +3,37 @@ import { DapRequest, DapEvent, DapMessage } from './dap.types';
 
 export abstract class DapTransportService {
   /**
-   * 連線至 DAP Server
-   * @param address 連線位址（例如：localhost:4711 或遠端 WebSocket URI）
-   * @returns 成功連線完成的 Observable
+   * Connect to the DAP Server
+   * @param address Connection address (e.g., localhost:4711 or remote WebSocket URI)
+   * @returns Observable that completes when connection is established
    */
   abstract connect(address: string): Observable<void>;
 
   /**
-   * 斷開 DAP Server 連線
+   * Disconnect from the DAP Server
    */
   abstract disconnect(): void;
 
   /**
-   * 發送 DAP 請求至 Server
-   * @param request 要發送的請求物件
+   * Send a DAP request to the Server
+   * @param request The request object to be sent
    */
   abstract sendRequest(request: DapRequest): void;
 
   /**
-   * 取得 DAP 事件串流 (Observable)
-   * 供前端視圖或服務監聽 Server 發佈的事件 (例如 stopped, breakpoint)
+   * Get the DAP event stream (Observable)
+   * For the UI or services to listen to Server-emitted events (e.g., stopped, breakpoint)
    */
   abstract onEvent(): Observable<DapEvent>;
 
   /**
-   * 取得所有來自 Server 的訊息串流 (Observable)
-   * 供 Session 層進行請求與回應 (response) 的配對
+   * Get all message streams from the Server (Observable)
+   * For the Session layer to match requests and responses
    */
   abstract onMessage(): Observable<DapMessage>;
 
   /**
-   * 取出連線狀態的串流 (Observable)
+   * Get the connection status stream (Observable)
    */
   abstract get connectionStatus$(): Observable<boolean>;
 }

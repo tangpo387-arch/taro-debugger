@@ -1,29 +1,28 @@
 <mat-toolbar color="primary" class="main-header">
   <nav class="nav-links">
-    <a routerLink="/debug" routerLinkActive="active">偵錯模式</a>
-    <a routerLink="/settings" routerLinkActive="active">設定</a>
+    <a routerLink="/debug" routerLinkActive="active">Debug Mode</a>
+    <a routerLink="/settings" routerLinkActive="active">Settings</a>
   </nav>
 
   <div class="debug-actions">
-    <button mat-icon-button (click)="onContinue()" title="繼續">
+    <button mat-icon-button (click)="onContinue()" title="Continue">
       <mat-icon>play_arrow</mat-icon>
     </button>
-    <button mat-icon-button (click)="onStepOver()" title="單步">
+    <button mat-icon-button (click)="onStepOver()" title="Step Over">
       <mat-icon>redo</mat-icon>
     </button>
-    <button mat-icon-button (click)="onStop()" color="warn" title="停止">
+    <button mat-icon-button (click)="onStop()" color="warn" title="Stop">
       <mat-icon>stop</mat-icon>
     </button>
   </div>
 </mat-toolbar>
 
 <main class="main-container">
-  <!-- 這裡會根據路由動態渲染 EditorComponent -->
+  <!-- Components will be rendered here based on the route -->
   <router-outlet></router-outlet>
 </main>
 
 <footer color="primary" class="status-bar">
   <span class="indicator" [class.online]="isDapConnected"></span>
-  <span>DAP 狀態: {{ dapStatusText }}</span>
+  <span>DAP Status: {{ dapStatusText }}</span>
 </footer>
-

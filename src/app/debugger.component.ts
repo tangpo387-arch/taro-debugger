@@ -5,7 +5,7 @@ import { Subscription, Observable, firstValueFrom } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { ViewChildren, QueryList } from '@angular/core';
 
-// 引入 Angular Material 相關模組
+// Import Angular Material modules
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -20,7 +20,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 
 import { MatTreeModule } from '@angular/material/tree';
 
-// 引入子元件與全域設定服務
+// Import child components and global configuration services
 import { EditorComponent } from './editor.component';
 import { ErrorDialog, ErrorDialogData } from './error-dialog/error-dialog';
 import { DapConfigService, DapConfig } from './dap-config.service';
@@ -55,7 +55,7 @@ import { FileNode } from './file-tree.service';
   styleUrls: ['./debugger.component.scss']
 })
 export class DebuggerComponent implements OnInit, OnDestroy {
-  // 注入依賴服務
+  // Inject dependency services
   private readonly configService = inject(DapConfigService);
   private readonly router = inject(Router);
   private readonly dapSession = inject(DapSessionService);
@@ -63,10 +63,10 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   private readonly dialog = inject(MatDialog);
   private readonly cdr = inject(ChangeDetectorRef);
 
-  /** 綁定 DAP 連線狀態 */
+  /** Bind DAP connection status */
   public readonly connectionStatus$: Observable<boolean> = this.dapSession.connectionStatus$;
 
-  /** 綁定執行狀態 */
+  /** Bind execution state */
   public readonly executionState$: Observable<ExecutionState> = this.dapSession.executionState$;
 
   private eventSubscription?: Subscription;
@@ -75,7 +75,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   // ViewChildren for auto-scrolling
   @ViewChildren(CdkVirtualScrollViewport) viewports!: QueryList<CdkVirtualScrollViewport>;
 
-  /** 儲存當前 DAP 之完整組態，供 HTML 模板綁定顯示 */
+  /** Current DAP full configuration for HTML template binding */
   public currentConfig: DapConfig = {
     serverAddress: '',
     transportType: 'websocket',
@@ -85,19 +85,19 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     programArgs: ''
   };
 
-  /** 當前執行狀態（用於非 async pipe 的場景） */
+  /** Current execution state (used for non-async pipe scenarios) */
   public executionState: ExecutionState = 'idle';
 
-  /** DAP 輸出紀錄 */
+  /** DAP output logs */
   public dapLogs: LogEntry[] = [];
 
-  /** Program 輸出紀錄 */
+  /** Program output logs */
   public programLogs: LogEntry[] = [];
 
-  /** 當前輸入的 evaluate 查詢語句 */
+  /** Current evaluate expression input string */
   public evaluateExpression: string = '';
 
-  /** 檔案樹狀態 */
+  /** File tree state */
   public fileDataSource: FileNode[] = [];
   public childrenAccessor = (node: FileNode) => node.children ?? [];
   public hasChild = (_: number, node: FileNode) => !!node.children && node.children.length > 0;
@@ -105,30 +105,30 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public currentCode: string = '// Editor is ready.';
   public fileTreeSupported: boolean = true;
 
-  /** 呼叫堆疊狀態 */
+  /** Call stack state */
   public stackFrames: any[] = [];
   public activeFrameId: number | null = null;
   public activeLine: number | null = null;
   public activeLineFilePath: string | null = null;
 
   /**
-   * 於元件初始化時執行
-   * 負責向 DapConfigService 獲取最新的配置資訊
+   * Executed on component initialization
+   * Responsible for fetching the latest configuration from DapConfigService
    */
   public async ngOnInit(): Promise<void> {
     this.currentConfig = this.configService.getConfig();
 
     this.appendDapLog("Start debugging session...", 'console');
 
-    // 防呆機制：若未獲取到執行檔路徑，自動導向回設定頁面
+    // Guard mechanism: If executable path is missing, automatically navigate back to setup page
     if (!this.currentConfig.executablePath) {
-      console.warn('偵測到未完整的設定參數，系統將自動導回設定頁面。');
-      this.snackBar.open('偵測到未完整的設定參數，返回設定頁面。', 'OK', { duration: 3000 });
+      console.warn('Incomplete configuration parameters detected. Navigating back to setup page.');
+      this.snackBar.open('Incomplete configuration parameters detected. Returning to setup page.', 'OK', { duration: 3000 });
       this.router.navigate(['/setup']);
       return;
     }
 
-    // 訂閱執行狀態變化
+    // Subscribe to execution state changes
     this.stateSubscription = this.dapSession.executionState$.subscribe(state => {
       this.executionState = state;
       this.cdr.detectChanges();
@@ -138,7 +138,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 啟動 DAP Session，包含錯誤捕獲與重試視窗
+   * Starts the DAP Session, including error handling and retry dialog
    */
   private async startSession(): Promise<void> {
     try {
@@ -152,29 +152,29 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
       this.appendDapLog(`Session started in ${this.currentConfig.launchMode} mode.`, 'console');
     } catch (error: any) {
-      // 1. 清理有問題的會話
+      // 1. Clean up problematic session
       this.dapSession.disconnect();
 
-      const msg = error?.message || '不明錯誤';
+      const msg = error?.message || 'Unknown error';
       this.appendDapLog(`[Error] Session failed: ${msg}`, 'stderr');
 
-      // 2. 顯示對話框
+      // 2. Show error dialog
       const dialogRef = this.dialog.open(ErrorDialog, {
         width: '400px',
-        disableClose: true, // 強制使用者選擇
+        disableClose: true, // Force user to make a choice
         data: {
-          title: 'DAP 握手失敗',
-          message: `無法建立 DAP 連線或會話：${msg}`
+          title: 'DAP Handshake Failed',
+          message: `Could not establish DAP connection or session: ${msg}`
         } as ErrorDialogData
       });
 
-      // 3. 處理對話框結果
+      // 3. Handle dialog result
       dialogRef.afterClosed().subscribe((result: string) => {
         if (result === 'retry') {
           this.appendDapLog("Retrying session...", 'console');
-          this.startSession(); // 重新嘗試
+          this.startSession(); // Retry
         } else {
-          // 'goback' 或其他關閉方式
+          // 'goback' or other close action
           this.goBack();
         }
       });
@@ -191,8 +191,8 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     const rootPath = this.currentConfig.sourcePath || '';
     this.dapSession.fileTree.getTree(rootPath).subscribe({
       next: (rootNode) => {
-        // 直接展開第一層 (root)，或者把 root 的 children 直接設定為 dataSource
-        // 如果 root 節點是一層沒意義的目錄，也可以跳過。這裡依照規格將其直接放進 array 即可
+        // Expand root or set children as dataSource.
+        // If root is redundant, it can be skipped. Here we put children in the array.
         this.fileDataSource = rootNode.children || [];
         this.cdr.detectChanges();
       },
@@ -229,7 +229,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         this.appendDapLog("Configuration Done.", 'console');
         break;
       case 'stopped':
-        // DA 處於暫停狀態時，安全地更新檔案樹（避免 Running 時請求失敗）
+        // Safely update file tree when DA is stopped (prevents request failure during Running state)
         this.loadTree();
         this.loadCallStack(event.body?.threadId);
         break;
@@ -237,13 +237,13 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         this.clearExecutionState();
         break;
       case 'loadedSource':
-        // DA 發送動態載入事件時更新檔案樹
+        // Update file tree on dynamic load source event
         this.loadTree();
         break;
       case 'terminated':
       case 'exited':
         this.clearExecutionState();
-        this.snackBar.open('偵錯會話已終止', 'OK', { duration: 3000 });
+        this.snackBar.open('Debug session terminated', 'OK', { duration: 3000 });
         break;
       case 'output':
         if (event.body) {
@@ -258,16 +258,16 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         }
         break;
       case 'breakpoint':
-        // TODO: 更新 UI 斷點狀態
+        // TODO: Update UI breakpoint state
         break;
     }
   }
 
-  /** 載入呼叫堆疊 */
+  /** Load call stack */
   private async loadCallStack(threadId?: number): Promise<void> {
     try {
       let targetThreadId = threadId;
-      // 如果沒有提供 threadId，取得所有的 threads 並拿第一個
+      // Get all threads and use the first one if threadId is not provided
       if (!targetThreadId) {
         const threadsRes = await this.dapSession.threads();
         const threads = threadsRes.body?.threads || [];
@@ -280,7 +280,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         const stackRes = await this.dapSession.stackTrace(targetThreadId);
         this.stackFrames = stackRes.body?.stackFrames || [];
 
-        // 取得成功後，預設載入最上層那一個 Frame 以顯示原始碼
+        // Load the top frame to show source code by default after success
         if (this.stackFrames.length > 0) {
           this.onFrameClick(this.stackFrames[0]);
         }
@@ -291,13 +291,13 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** 點擊 Frame 時觸發載入該 Frame 所屬檔案及行號 */
+  /** Trigger load file and line number when Frame is clicked */
   public async onFrameClick(frame: any): Promise<void> {
     this.activeFrameId = frame.id;
     this.activeLine = frame.line;
     this.activeLineFilePath = frame.source?.path || null;
 
-    // 載入所屬檔案
+    // Load associated file
     if (frame.source && frame.source.path) {
       this.activeFilePath = frame.source.path;
       this.currentCode = '// Loading source code...';
@@ -316,9 +316,9 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       this.currentCode = `// No source code available for this frame.${mod}${ref}`;
     }
 
-    // 觸發變數請求準備 (背景執行)，並記錄結果
+    // Trigger scope request (background) and log results
     this.dapSession.scopes(frame.id).then(res => {
-      // Scopes 請求成功，為了除錯目的先記錄到 dapLogs
+      // Log scope update for debugging purposes
       this.appendDapLog(`Scopes updated for frame: ${frame.name}.`, 'console');
     }).catch(e => {
       this.appendDapLog(`[Error] Scopes request failed: ${e.message}`, 'stderr');
@@ -327,7 +327,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  /** 繼續執行 */
+  /** Resume execution */
   public async onResume(): Promise<void> {
     if (this.executionState !== 'stopped') return;
     try {
@@ -337,7 +337,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** 暫停執行 */
+  /** Pause execution */
   public async onPause(): Promise<void> {
     if (this.executionState !== 'running') return;
     try {
@@ -347,7 +347,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** 單步執行 (Step Over) */
+  /** Step Over */
   public async onStepOver(): Promise<void> {
     if (this.executionState !== 'stopped') return;
     try {
@@ -357,7 +357,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** 進入函式 (Step Into) */
+  /** Step Into */
   public async onStepInto(): Promise<void> {
     if (this.executionState !== 'stopped') return;
     try {
@@ -367,7 +367,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** 跳出函式 (Step Out) */
+  /** Step Out */
   public async onStepOut(): Promise<void> {
     if (this.executionState !== 'stopped') return;
     try {
@@ -377,17 +377,17 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** 停止偵錯 */
+  /** Stop debugging */
   public async onStop(): Promise<void> {
     try {
       await this.dapSession.disconnect();
-      this.snackBar.open('偵錯已停止', 'OK', { duration: 2000 });
+      this.snackBar.open('Session stopped', 'OK', { duration: 2000 });
     } catch (e: any) {
       this.appendDapLog(`[Error] Stop failed: ${e.message}`, 'stderr');
     }
   }
 
-  /** 發送 evaluate 查詢請求 */
+  /** Send evaluate expression request */
   public async evaluateCommand(): Promise<void> {
     if (!this.evaluateExpression.trim() || this.executionState !== 'stopped') {
       return;
@@ -413,7 +413,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** 清除與當前執行點相關的 UI 狀態（堆疊、當前行等） */
+  /** Clear UI state related to the current execution point (stacks, current line, etc.) */
   private clearExecutionState(): void {
     this.stackFrames = [];
     this.activeFrameId = null;
@@ -426,7 +426,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     if (!message) return;
     const cleanMsg = message.endsWith('\n') ? message.slice(0, -1) : message;
 
-    // 不可變更新：建立新引用以觸發變更檢測
+    // Immutable update: create new reference to trigger change detection
     this.dapLogs = [...this.dapLogs, {
       timestamp: new Date(),
       message: cleanMsg,
@@ -440,7 +440,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     if (!message) return;
     const cleanMsg = message.endsWith('\n') ? message.slice(0, -1) : message;
 
-    // 不可變更新
+    // Immutable update
     this.programLogs = [...this.programLogs, {
       timestamp: new Date(),
       message: cleanMsg,
@@ -451,7 +451,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   }
 
   private scrollToBottom(): void {
-    // 強制下一幀滾動到底部
+    // Force scroll to bottom on the next frame
     setTimeout(() => {
       this.viewports.forEach(viewport => {
         viewport.scrollToIndex(viewport.getDataLength(), 'smooth');
@@ -474,11 +474,11 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 處理「重新設定」按鈕之點擊事件
-   * 此方法將中斷當前偵錯作業，並導航回設定視圖
+   * Handle 'Reset' button click event
+   * Disconnects current debug session and navigates back to setup view
    */
   public goBack(): void {
-    // 中斷連線與會話
+    // Disconnect session and connection
     this.dapSession.disconnect();
 
     this.router.navigate(['/setup']);

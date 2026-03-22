@@ -1,7 +1,7 @@
 import { Component, Input, inject, NgZone, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
-import { FormsModule } from '@angular/forms'; // 處理 [(ngModel)]
+import { FormsModule } from '@angular/forms'; // Handles [(ngModel)]
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { DapConfigService } from './dap-config.service';
 
@@ -26,16 +26,16 @@ export class EditorComponent implements OnChanges, OnDestroy {
     minimap: { enabled: false }
   };
 
-  @Input() code: string = '// Loading source code...'; // 編輯器顯示的內容
+  @Input() code: string = '// Loading source code...'; // Content displayed in the editor
   @Input() activeLine: number | null = null;
-  private editorInstance: any;               // 儲存 Monaco 實例以便後續操作
-  private breakpointIds: string[] = [];      // 追蹤當前的斷點 ID
-  private activeLineDecorationIds: string[] = []; // 追蹤當前執行行的高亮 ID
+  private editorInstance: any;               // Stores Monaco instance for future operations
+  private breakpointIds: string[] = [];      // Track current breakpoint IDs
+  private activeLineDecorationIds: string[] = []; // Track highlight IDs for the current execution line
   private readonly configService = inject(DapConfigService);
   private updateQueue$ = new Subject<void>();
 
   constructor(private zone: NgZone) {
-    // 可以在這裡存取設定
+    // Access configuration as needed
     this.updateQueue$.pipe(debounceTime(50)).subscribe(() => {
       this.updateActiveLineDecoration();
       if (this.activeLine) {
