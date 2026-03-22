@@ -127,6 +127,21 @@
 
 ---
 
+## Phase 5：編輯器進階功能 (Editor Features)
+
+### WI-14：執行行高亮標示 (Current Line Highlight)
+- **大小**：S
+- **說明**：根據規格書 §3.2.3，實作 `deltaDecorations` 標示當前執行行
+- **內容**：
+  - `stopped` 事件觸發時，根據 stackTrace 的 top frame 取得行號
+  - 使用 `deltaDecorations` 在該行加上背景高亮
+  - `continued` / `terminated` 時清除高亮
+  - 自動 `revealLineInCenter` 捲動到當前行
+- **依賴**：WI-11
+- **狀態**：✅ 已完成
+
+---
+
 ## Phase 6：檔案樹與原始碼載入 (File Explorer)
 
 ### WI-15：檔案樹服務抽象 (`FileTreeService`)
@@ -148,6 +163,21 @@
   - 點擊檔案 → 載入原始碼至 Monaco Editor
   - 當前開啟檔案高亮顯示
 - **依賴**：WI-15
+- **狀態**：✅ 已完成
+
+---
+
+## Phase 7：變數與呼叫堆疊 (Variables & Call Stack)
+
+### WI-17：呼叫堆疊面板 (Call Stack Panel)
+- **大小**：M
+- **說明**：根據規格書 §3.2.4，實作呼叫堆疊顯示
+- **內容**：
+  - `stopped` 事件觸發時發送 `threads` + `stackTrace` 請求
+  - 使用 `mat-list` 展示 stack frames（函式名稱、檔案名:行號）
+  - 點擊 frame → 切換 Monaco Editor 到對應檔案與行號
+  - 點擊 frame → 觸發 `scopes` + `variables` 請求更新變數面板
+- **依賴**：WI-11
 - **狀態**：✅ 已完成
 
 ---

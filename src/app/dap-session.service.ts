@@ -158,7 +158,7 @@ export class DapSessionService {
       program: config.executablePath,
       cwd: config.sourcePath || undefined,
       args: argsArray,
-      stopOnEntry: true
+      stopAtBeginningOfMainSubprogram: true
     };
 
     return this.sendRequest(command, args);
@@ -233,6 +233,37 @@ export class DapSessionService {
    */
   async pause(): Promise<DapResponse> {
     return this.sendRequest('pause', { threadId: 1 });
+  }
+
+  /**
+   * 獲取執行緒清單
+   */
+  async threads(): Promise<DapResponse> {
+    return this.sendRequest('threads');
+  }
+
+  /**
+   * 獲取指定執行緒的呼叫堆疊
+   * @param threadId 執行緒 ID
+   */
+  async stackTrace(threadId: number): Promise<DapResponse> {
+    return this.sendRequest('stackTrace', { threadId });
+  }
+
+  /**
+   * 獲取指定堆疊層級（frame）的作用域清單
+   * @param frameId 堆疊疊代 ID
+   */
+  async scopes(frameId: number): Promise<DapResponse> {
+    return this.sendRequest('scopes', { frameId });
+  }
+
+  /**
+   * 獲取指定 scope 的變數清單
+   * @param variablesReference Variables Reference (從 scopes response 中取得)
+   */
+  async variables(variablesReference: number): Promise<DapResponse> {
+    return this.sendRequest('variables', { variablesReference });
   }
 
   /**

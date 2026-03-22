@@ -105,6 +105,11 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public currentCode: string = '// Editor is ready.';
   public fileTreeSupported: boolean = true;
 
+  /** 呼叫堆疊狀態 */
+  public stackFrames: any[] = [];
+  public activeFrameId: number | null = null;
+  public activeLine: number | null = null;
+
   /**
    * 於元件初始化時執行
    * 負責向 DapConfigService 獲取最新的配置資訊
@@ -198,7 +203,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
   public async onFileNodeClick(node: FileNode): Promise<void> {
     if (node.type !== 'file') return;
-    
+
     this.activeFilePath = node.path;
     this.currentCode = '// Loading source code...';
     this.cdr.detectChanges();
@@ -225,6 +230,12 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       case 'stopped':
         // DA 處於暫停狀態時，安全地更新檔案樹（避免 Running 時請求失敗）
         this.loadTree();
+        this.loadCallStack(event.body?.threadId);
+        break;
+      case 'continued':
+        this.stackFrames = [];
+        this.activeFrameId = null;
+        this.activeLine = null;
         break;
       case 'loadedSource':
         // DA 發送動態載入事件時更新檔案樹
@@ -232,6 +243,8 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         break;
       case 'terminated':
       case 'exited':
+        this.activeFrameId = null;
+        this.activeLine = null;
         this.snackBar.open('偵錯會話已終止', 'OK', { duration: 3000 });
         break;
       case 'output':
@@ -250,6 +263,69 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         // TODO: 更新 UI 斷點狀態
         break;
     }
+  }
+
+  /** 載入呼叫堆疊 */
+  private async loadCallStack(threadId?: number): Promise<void> {
+    try {
+      let targetThreadId = threadId;
+      // 如果沒有提供 threadId，取得所有的 threads 並拿第一個
+      if (!targetThreadId) {
+        const threadsRes = await this.dapSession.threads();
+        const threads = threadsRes.body?.threads || [];
+        if (threads.length > 0) {
+          targetThreadId = threads[0].id;
+        }
+      }
+
+      if (targetThreadId) {
+        const stackRes = await this.dapSession.stackTrace(targetThreadId);
+        this.stackFrames = stackRes.body?.stackFrames || [];
+
+        // 取得成功後，預設載入最上層那一個 Frame 以顯示原始碼
+        if (this.stackFrames.length > 0) {
+          this.onFrameClick(this.stackFrames[0]);
+        }
+        this.cdr.detectChanges();
+      }
+    } catch (e: any) {
+      this.appendDapLog(`[Error] Failed to load call stack: ${e.message}`, 'stderr');
+    }
+  }
+
+  /** 點擊 Frame 時觸發載入該 Frame 所屬檔案及行號 */
+  public async onFrameClick(frame: any): Promise<void> {
+    this.activeFrameId = frame.id;
+    this.activeLine = frame.line;
+
+    // 載入所屬檔案
+    if (frame.source && frame.source.path) {
+      this.activeFilePath = frame.source.path;
+      this.currentCode = '// Loading source code...';
+      this.cdr.detectChanges();
+
+      try {
+        const code = await firstValueFrom(this.dapSession.fileTree.readFile(frame.source.path));
+        this.currentCode = code;
+      } catch (e: any) {
+        this.currentCode = `// Error loading file: ${e.message}`;
+      }
+    } else {
+      this.activeFilePath = null;
+      const ref = frame.instructionPointerReference ? `\nInstruction Pointer: ${frame.instructionPointerReference}` : '';
+      const mod = frame.moduleId ? `\nModule: ${frame.moduleId}` : '';
+      this.currentCode = `// No source code available for this frame.${mod}${ref}`;
+    }
+
+    // 觸發變數請求準備 (背景執行)，並記錄結果
+    this.dapSession.scopes(frame.id).then(res => {
+      // Scopes 請求成功，為了除錯目的先記錄到 dapLogs
+      this.appendDapLog(`Scopes updated for frame: ${frame.name} (.`, 'console');
+    }).catch(e => {
+      this.appendDapLog(`[Error] Scopes request failed: ${e.message}`, 'stderr');
+    });
+
+    this.cdr.detectChanges();
   }
 
   /** 繼續執行 */

@@ -1,6 +1,7 @@
 <div class="editor-container">
   <ngx-monaco-editor
     [options]="editorOptions"
-    [(ngModel)]="code">
+    [(ngModel)]="code"
+    (onInit)="onEditorInit($event)">
   </ngx-monaco-editor>
 </div>

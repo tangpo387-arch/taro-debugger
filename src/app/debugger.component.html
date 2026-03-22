@@ -108,7 +108,20 @@
     <!-- 呼叫堆疊區 -->
     <div class="panel-section">
       <h3 class="panel-title">Call Stack</h3>
-      <div class="placeholder-content">堆疊列表預留區...</div>
+      @if (stackFrames.length > 0) {
+        <mat-action-list class="stack-list" style="padding: 0;">
+          @for (frame of stackFrames; track frame.id) {
+            <button mat-list-item (click)="onFrameClick(frame)" [style.background-color]="activeFrameId === frame.id ? 'var(--mat-sys-surface-variant)' : 'transparent'">
+              <span matListItemTitle>{{ frame.name }}</span>
+              <span matListItemLine style="font-size: 0.75rem; color: var(--mat-sys-on-surface-variant);">
+                {{ frame.source?.name || 'Unknown' }}:{{ frame.line }}
+              </span>
+            </button>
+          }
+        </mat-action-list>
+      } @else {
+        <div class="placeholder-content">無可用的堆疊資訊</div>
+      }
     </div>
   </mat-sidenav>
 
@@ -117,7 +130,7 @@
 
     <!-- Monaco Editor 容器 -->
     <div class="editor-container">
-      <app-editor class="monaco-editor-instance" [code]="currentCode" />
+      <app-editor class="monaco-editor-instance" [code]="currentCode" [activeLine]="activeLine" />
     </div>
 
     <!-- 底部 Console 區域 -->

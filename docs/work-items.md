@@ -14,11 +14,11 @@
 | `DapConfigService` | ✅ 已完成 | 已擴充為完整的 DAP 連線組態介面（連線位址、啟動模式、引數等） |
 | `SetupComponent` | ✅ 已完成 | 表單欄位均已實作，且結合 Reactive Forms 具備即時格式與必填驗證 |
 | `DebuggerComponent` | ✅ 已完成 | 三段式佈局已整合動態檔案樹、偵錯控制按鈕、狀態指示器與主控台日誌 |
-| `EditorComponent` | ⚠️ 基礎版 | Monaco Editor 已嵌入，但尚未實作斷點互動或執行行高亮 |
+| `EditorComponent` | ⚠️ 基礎版 | Monaco Editor 已嵌入，已實作執行行高亮，但尚未實作斷點互動 |
 | DAP 通訊層 | ✅ 已完成 | `DapTransportService`、`WebSocketTransportService` 及 `DapSessionService` 皆已完成並具備超時機制 |
 | 檔案樹 | ✅ 已完成 | 左側邊欄透過 `loadedSources` 渲染，點擊檔案可向 Server 提取原始碼並顯示 |
 | 變數檢視器 | ❌ 未實作 | 右側為 placeholder 文字 |
-| 呼叫堆疊 | ❌ 未實作 | 右側為 placeholder 文字 |
+| 呼叫堆疊 | ✅ 已完成 | 實作於 DebuggerComponent 右側面板，自動監聽 stopped 事件並列出堆疊 |
 | 錯誤處理 | ❌ 未實作 | 尚未實作底層斷線重連機制及全域異常通知介面 |
 | Electron 整合 | ❌ 未實作 | 僅有 devDependency，尚未建立 Main Process 及 IPC |
 
@@ -34,9 +34,9 @@
 | **Phase 2** | ✅ 完成 | 建立 WebSocket 通訊層與 DAP 請求生命週期管理 | [前往檢視](changelog.md#phase-2dap-通訊層-transport-layer) |
 | **Phase 3** | ⏳ 待處理 | 搭建 Web 模式專用之 Node.js 中繼通訊伺服器 | [前往檢視](#phase-3websocket-bridge-web-模式用後端中介) |
 | **Phase 4** | ✅ 完成 | 實作 Toolbar 偵錯控制（Continue/Pause/Step）及狀態綁定 | [前往檢視](changelog.md#phase-4偵錯控制核心-debug-controls) |
-| **Phase 5** | ⏳ 待處理 | Monaco Editor 進階整合，實作斷點互動與執行行高亮 | [前往檢視](#phase-5編輯器進階功能-editor-features) |
+| **Phase 5** | 🔄 進行中 | Monaco Editor 進階整合，實作斷點互動與執行行高亮 | [前往檢視](#phase-5編輯器進階功能-editor-features) |
 | **Phase 6** | ✅ 完成 | 動態渲染專案檔案樹，點擊可載入原始碼 | [前往檢視](changelog.md#phase-6檔案樹與原始碼載入-file-explorer) |
-| **Phase 7** | ⏳ 待處理 | 呼叫堆疊清單，與處理巢狀變數檢視器 | [前往檢視](#phase-7變數與呼叫堆疊-variables--call-stack) |
+| **Phase 7** | 🔄 進行中 | 呼叫堆疊清單，與處理巢狀變數檢視器 | [前往檢視](#phase-7變數與呼叫堆疊-variables--call-stack) |
 | **Phase 8** | ✅ 完成 | 開發 UI 狀態列連線指示器與命令主控台介面 | [前往檢視](changelog.md#phase-8主控台與狀態列-console--status-bar) |
 | **Phase 9** | ⏳ 待處理 | 全域連線異常處理、發布錯誤 Snackbar 回饋 | [前往檢視](#phase-9錯誤處理與使用者回饋-error-handling) |
 | **Phase 10** | ⏳ 待處理 | Electron 桌面應用程式整合 (IPC, Main Process) | [前往檢視](#phase-10electron-桌面模式-optional) |
@@ -81,31 +81,9 @@
 - **依賴**：WI-06, WI-12
 - **狀態**：⏳ 待處理
 
-### WI-14：執行行高亮標示 (Current Line Highlight)
-- **大小**：S
-- **說明**：根據規格書 §3.2.3，實作 `deltaDecorations` 標示當前執行行
-- **內容**：
-  - `stopped` 事件觸發時，根據 stackTrace 的 top frame 取得行號
-  - 使用 `deltaDecorations` 在該行加上背景高亮
-  - `continued` / `terminated` 時清除高亮
-  - 自動 `revealLineInCenter` 捲動到當前行
-- **依賴**：WI-11
-- **狀態**：⏳ 待處理
-
 ---
 
 ## Phase 7：變數與呼叫堆疊 (Variables & Call Stack)
-
-### WI-17：呼叫堆疊面板 (Call Stack Panel)
-- **大小**：M
-- **說明**：根據規格書 §3.2.4，實作呼叫堆疊顯示
-- **內容**：
-  - `stopped` 事件觸發時發送 `threads` + `stackTrace` 請求
-  - 使用 `mat-list` 展示 stack frames（函式名稱、檔案名:行號）
-  - 點擊 frame → 切換 Monaco Editor 到對應檔案與行號
-  - 點擊 frame → 觸發 `scopes` + `variables` 請求更新變數面板
-- **依賴**：WI-11
-- **狀態**：⏳ 待處理
 
 ### WI-18：變數檢視器面板 (Variable Inspector)
 - **大小**：L
@@ -214,9 +192,11 @@
 ## 建議開發順序
 
 ### 圖表顏色說明
-| 顏色 | 代表意義 | 項目範例 |
+| 顏色 | 代表意義 | 項目狀態 |
 |---|---|---|
-| <span style="color:#4ade80">●</span> **綠色** | 已完成功能 (Core) | WI-01 ~ WI-08, WI-10, WI-11 |
+| <span style="background:#4ade80; border:1px solid #16a34a; padding:1px 3px; border-radius:2px;">Solid</span> | 該類別功能 (待實作) | 實心背景顏色代表該類別 |
+| <span style="background:#4ade80; border:2px solid #000; padding:1px 3px; border-radius:2px;">Black Border</span> | 該項目已完成 | 實心類別背景 + **粗黑框** 表示完成 |
+| <span style="color:#4ade80">●</span> **綠色** | 基礎核心 (Core) | WI-01 ~ WI-08, WI-10, WI-11 |
 | <span style="color:#60a5fa">●</span> **藍色** | 後端中繼層 (Bridge) | WI-09 |
 | <span style="color:#f97316">●</span> **橘色** | 偵錯控制 UI (Controls) | |
 | <span style="color:#a78bfa">●</span> **紫色** | 編輯器進階互動 (Editor) | WI-12 ~ WI-14 |
@@ -225,7 +205,7 @@
 | <span style="color:#2dd4bf">●</span> **青色** | 狀態與主控台 (UI) | WI-19 ~ WI-20 |
 | <span style="color:#fb923c">●</span> **深橘** | 異常處理 (Error Handling) | WI-21 ~ WI-22 |
 | <span style="color:#94a3b8">●</span> **灰色** | Electron 桌面專屬 (Bridge) | WI-23 ~ WI-25 |
-| <span style="color:#ffffff">●</span> **白色** | 自動化測試 (Testing) | TI-01 ~ TI-04 |
+| <span style="color:#ffffff; background:#334155; padding:1px 3px; border-radius:3px;">●</span> **白格** | 自動化測試 (Testing) | TI-01 ~ TI-04 |
 
 ```mermaid
 graph LR
@@ -269,32 +249,32 @@ graph LR
     WI05 -.-> TI03[TI-03 Transport 單元測試]
     WI15 -.-> TI04[TI-04 FileTree 單元測試]
 
-    style WI01 fill:#4ade80,stroke:#16a34a
-    style WI02 fill:#4ade80,stroke:#16a34a
-    style WI03 fill:#4ade80,stroke:#16a34a
-    style WI04 fill:#4ade80,stroke:#16a34a
-    style WI05 fill:#4ade80,stroke:#16a34a
-    style WI06 fill:#4ade80,stroke:#16a34a
+    style WI01 fill:#4ade80,stroke:#000,stroke-width:2.5px
+    style WI02 fill:#4ade80,stroke:#000,stroke-width:2.5px
+    style WI03 fill:#4ade80,stroke:#000,stroke-width:2.5px
+    style WI04 fill:#4ade80,stroke:#000,stroke-width:2.5px
+    style WI05 fill:#4ade80,stroke:#000,stroke-width:2.5px
+    style WI06 fill:#4ade80,stroke:#000,stroke-width:2.5px
 
-    style WI07 fill:#4ade80,stroke:#16a34a
-    style WI08 fill:#4ade80,stroke:#16a34a
+    style WI07 fill:#4ade80,stroke:#000,stroke-width:2.5px
+    style WI08 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI09 fill:#60a5fa,stroke:#2563eb
 
-    style WI10 fill:#4ade80,stroke:#16a34a
-    style WI11 fill:#4ade80,stroke:#16a34a
+    style WI10 fill:#f97316,stroke:#000,stroke-width:2.5px
+    style WI11 fill:#f97316,stroke:#000,stroke-width:2.5px
 
     style WI12 fill:#a78bfa,stroke:#7c3aed
     style WI13 fill:#a78bfa,stroke:#7c3aed
-    style WI14 fill:#a78bfa,stroke:#7c3aed
+    style WI14 fill:#a78bfa,stroke:#000,stroke-width:2.5px
 
-    style WI15 fill:#4ade80,stroke:#16a34a
-    style WI16 fill:#4ade80,stroke:#16a34a
+    style WI15 fill:#facc15,stroke:#000,stroke-width:2.5px
+    style WI16 fill:#facc15,stroke:#000,stroke-width:2.5px
 
-    style WI17 fill:#f472b6,stroke:#db2777
+    style WI17 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI18 fill:#f472b6,stroke:#db2777
 
-    style WI19 fill:#4ade80,stroke:#16a34a
-    style WI20 fill:#4ade80,stroke:#16a34a
+    style WI19 fill:#2dd4bf,stroke:#000,stroke-width:2.5px
+    style WI20 fill:#2dd4bf,stroke:#000,stroke-width:2.5px
 
     style WI21 fill:#fb923c,stroke:#ea580c
     style WI22 fill:#fb923c,stroke:#ea580c
@@ -306,7 +286,7 @@ graph LR
     style TI01 fill:#ffffff,stroke:#334155
     style TI02 fill:#ffffff,stroke:#334155
     style TI03 fill:#ffffff,stroke:#334155
-    style TI04 fill:#4ade80,stroke:#16a34a
+    style TI04 fill:#ffffff,stroke:#000,stroke-width:2.5px
 ```
 
 ---
