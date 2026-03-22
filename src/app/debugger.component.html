@@ -130,7 +130,7 @@
 
     <!-- Monaco Editor 容器 -->
     <div class="editor-container">
-      <app-editor class="monaco-editor-instance" [code]="currentCode" [activeLine]="activeLine" />
+      <app-editor class="monaco-editor-instance" [code]="currentCode" [activeLine]="activeFilePath === activeLineFilePath ? activeLine : null" />
     </div>
 
     <!-- 底部 Console 區域 -->

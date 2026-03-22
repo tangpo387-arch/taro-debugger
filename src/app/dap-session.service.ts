@@ -117,7 +117,7 @@ export class DapSessionService {
     // Step 1: 發送 initialize request
     const initResponse = await this.sendRequest('initialize', {
       clientID: 'gdb-frontend',
-      clientName: 'Angular GDB/DAP Frontend',
+      clientName: 'taro-debugger',
       adapterID: 'gdb',
       pathFormat: 'path',
       linesStartAt1: true,

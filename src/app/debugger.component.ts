@@ -109,6 +109,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public stackFrames: any[] = [];
   public activeFrameId: number | null = null;
   public activeLine: number | null = null;
+  public activeLineFilePath: string | null = null;
 
   /**
    * 於元件初始化時執行
@@ -233,9 +234,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         this.loadCallStack(event.body?.threadId);
         break;
       case 'continued':
-        this.stackFrames = [];
-        this.activeFrameId = null;
-        this.activeLine = null;
+        this.clearExecutionState();
         break;
       case 'loadedSource':
         // DA 發送動態載入事件時更新檔案樹
@@ -243,8 +242,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         break;
       case 'terminated':
       case 'exited':
-        this.activeFrameId = null;
-        this.activeLine = null;
+        this.clearExecutionState();
         this.snackBar.open('偵錯會話已終止', 'OK', { duration: 3000 });
         break;
       case 'output':
@@ -297,6 +295,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public async onFrameClick(frame: any): Promise<void> {
     this.activeFrameId = frame.id;
     this.activeLine = frame.line;
+    this.activeLineFilePath = frame.source?.path || null;
 
     // 載入所屬檔案
     if (frame.source && frame.source.path) {
@@ -320,7 +319,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     // 觸發變數請求準備 (背景執行)，並記錄結果
     this.dapSession.scopes(frame.id).then(res => {
       // Scopes 請求成功，為了除錯目的先記錄到 dapLogs
-      this.appendDapLog(`Scopes updated for frame: ${frame.name} (.`, 'console');
+      this.appendDapLog(`Scopes updated for frame: ${frame.name}.`, 'console');
     }).catch(e => {
       this.appendDapLog(`[Error] Scopes request failed: ${e.message}`, 'stderr');
     });
@@ -412,6 +411,15 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     } catch (e: any) {
       this.appendDapLog(`[Error] ${e.message}`, 'stderr');
     }
+  }
+
+  /** 清除與當前執行點相關的 UI 狀態（堆疊、當前行等） */
+  private clearExecutionState(): void {
+    this.stackFrames = [];
+    this.activeFrameId = null;
+    this.activeLine = null;
+    this.activeLineFilePath = null;
+    this.cdr.detectChanges();
   }
 
   private appendDapLog(message: string, category: string = 'console'): void {

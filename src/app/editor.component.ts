@@ -82,25 +82,8 @@ export class EditorComponent implements OnChanges, OnDestroy {
     );
   }
 
-  private activeDecorationIds: string[] = [];
-
   private scrollToLine(line: number) {
     this.editorInstance.revealLineInCenter(line);
     this.editorInstance.setPosition({ lineNumber: line, column: 1 });
-
-    // 增加執行行的高亮裝飾 (deltaDecorations)
-    this.activeDecorationIds = this.editorInstance.deltaDecorations(
-      this.activeDecorationIds,
-      [
-        {
-          range: { startLineNumber: line, startColumn: 1, endLineNumber: line, endColumn: 1 },
-          options: {
-            isWholeLine: true,
-            className: 'current-line-highlight',
-            glyphMarginClassName: 'current-line-glyph'
-          }
-        }
-      ]
-    );
   }
 }
