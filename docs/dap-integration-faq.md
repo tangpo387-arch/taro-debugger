@@ -40,14 +40,20 @@
 
 ### **關鍵約束條件 (Key Constraints)**
 
-1. **Constraint 1: Initialized 事件發送時機**  
+#### **Constraint 1: Initialized 事件發送時機**  
    Debug Adapter 必須在回傳 initialize 請求的 **response 之後**，才能發送 initialized 事件 (event)。  
    * *原因：* initialized 事件是用來通知 IDE：Adapter 已經準備好接收設定（如 setBreakpoints）。若過早發送，IDE 可能尚未處理完 initialize 的能力宣告（Capabilities）。  
-2. **Constraint 2: launch/attach 回應時機**  
+#### **Constraint 2: launch/attach 回應時機**  
    launch 或 attach 的 **response** 必須在 **configurationDone 的 response 發送之後** 才能送出給 IDE。  
    * *原因：* 當 IDE 收到 launch response 時，它會認為「啟動序列已完成」，並開始顯示除錯介面。如果在此之前 configurationDone 尚未處理完畢，可能會導致程式在斷點尚未完全載入時就開始執行（Race Condition）。
 
-### **正確的訊息流 (Standard Message Flow)**
+#### **Constraint 3: configurationDone 請求必須在 launch/attach 請求之後才能發送**
+
+configurationDone 的 **request** 必須在 launch 或 attach 的 **request** 發送之後才能送出。
+* *原因：* 許多 Debug Adapter 在收到 configurationDone 時，會檢查是否已經收到 launch/attach 請求。若 configurationDone 先到達，Adapter 會回傳錯誤（如 `"launch or attach not specified"`），因為它尚不知道要除錯的目標程式。
+* *常見錯誤：* 在收到 initialized 事件後立即非同步發送 configurationDone，而 launch/attach 的發送延遲到後續程式碼執行，導致 configurationDone 搶先送出。
+
+#### **正確的訊息流 (Standard Message Flow)**
 
 1. **IDE \-\> Adapter:** initialize request  
 2. **Adapter \-\> IDE:** initialize response (宣告功能)  
@@ -58,11 +64,27 @@
 7. **Adapter \-\> IDE:** configurationDone response  
 8. **Adapter \-\> IDE:** launch/attach response (正式結束啟動序列)
 
-### **Constraint 3: configurationDone 請求必須在 launch/attach 請求之後才能發送**
+#### **初始化時序圖 (Initialization Sequence Diagram)**
 
-configurationDone 的 **request** 必須在 launch 或 attach 的 **request** 發送之後才能送出。
-* *原因：* 許多 Debug Adapter 在收到 configurationDone 時，會檢查是否已經收到 launch/attach 請求。若 configurationDone 先到達，Adapter 會回傳錯誤（如 `"launch or attach not specified"`），因為它尚不知道要除錯的目標程式。
-* *常見錯誤：* 在收到 initialized 事件後立即非同步發送 configurationDone，而 launch/attach 的發送延遲到後續程式碼執行，導致 configurationDone 搶先送出。
+```mermaid
+sequenceDiagram
+    participant IDE as DebuggerComponent
+    participant Service as DapSessionService
+    participant Adapter as GDB Adapter
+    
+    IDE->>Service: startSession()
+    Service->>Adapter: initialize Request
+    Adapter-->>Service: initialize Response
+    Adapter-->>Service: (Event) initialized
+    Note over Service, Adapter: 進入設定階段 (收到 initialized 後)
+    Service->>Adapter: launch/attach Request (先送出，不等待 Response)
+    Service->>Adapter: setBreakpoints 等各式設定請求
+    Service->>Adapter: configurationDone Request (送出並等待 Response)
+    Adapter-->>Service: configurationDone Response
+    Adapter-->>Service: launch/attach Response (此時才抵達)
+    Service-->>IDE: startSession() Promise Resolve
+    Note over IDE, Adapter: 啟動完成，開始更新 UI
+```
 
 ### **含非同步控制之完整訊息流 (Annotated Message Flow)**
 
