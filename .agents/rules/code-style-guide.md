@@ -1,12 +1,11 @@
 ---
 trigger: always_on
-glob: "**/*.{ts,html,scss,css}"
-description: Follow these coding standards to maintain consistency in the gdb-frontend project.
+description: Follow these coding standards to maintain consistency in the taro-debugger-frontend project.
 ---
 
 # 專案程式碼風格指南 (Code Style Guide)
 
-本文件定義 `gdb-frontend` 專案的開發規範，旨在維持代碼的一致性、可讀性與現代 Angular 開發的最佳實踐。
+本文件定義 `taro-debugger-frontend` 專案的開發規範，旨在維持代碼的一致性、可讀性與現代 Angular 開發的最佳實踐。
 
 ## 1. 命名規範 (Naming Conventions)
 

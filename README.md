@@ -1,4 +1,4 @@
-# TaroDAP
+# Taro-Debugger-Frontend
 
 A universal debugger frontend built with Angular, supporting both **Electron desktop** and **Web browser** deployment modes. It provides a professional IDE-like debugging experience — comparable to Visual Studio Code — and works with any server that implements the [Debug Adapter Protocol (DAP)](https://microsoft.github.io/debug-adapter-protocol/).
 

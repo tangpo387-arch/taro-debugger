@@ -6,7 +6,7 @@ description: 規範全域狀態管理路徑，確保 DapSessionService 作為真
 
 # 狀態管理與 SSOT 規範 (State Management Rules)
 
-本文件定義 `gdb-frontend` 專案中，「狀態」應該存放的位置，旨在維持 Reactive 響應式架構，並避免 AI 在修改 UI 時引入過多的冗餘 Props 傳遞（Prop Drilling）。
+本文件定義 `taro-debugger-frontend` 專案中，「狀態」應該存放的位置，旨在維持 Reactive 響應式架構，並避免 AI 在修改 UI 時引入過多的冗餘 Props 傳遞（Prop Drilling）。
 
 ## 1. 真相來源 (Single Source of Truth, SSOT)
 

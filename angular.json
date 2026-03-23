@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "tarodap": {
+    "taro-debugger-frontend": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -60,10 +60,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "tarodap:build:production"
+              "buildTarget": "taro-debugger-frontend:build:production"
             },
             "development": {
-              "buildTarget": "tarodap:build:development"
+              "buildTarget": "taro-debugger-frontend:build:development"
             }
           },
           "defaultConfiguration": "development"

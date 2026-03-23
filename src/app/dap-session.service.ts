@@ -115,8 +115,8 @@ export class DapSessionService {
 
     // Step 1: Send initialize request
     const initResponse = await this.sendRequest('initialize', {
-      clientID: 'gdb-frontend',
-      clientName: 'taro-debugger',
+      clientID: 'taro-debugger-frontend',
+      clientName: 'Taro Debugger',
       adapterID: 'gdb',
       pathFormat: 'path',
       linesStartAt1: true,
