@@ -142,7 +142,7 @@ describe('DapFileTreeService', () => {
       const content = await firstValueFrom(svc.readFile('/project/main.c'));
 
       expect(content).toBe('#include <stdio.h>\nint main(){}');
-      expect(session.sendRequest).toHaveBeenCalledWith('source', { source: { path: '/project/main.c' } });
+      expect(session.sendRequest).toHaveBeenCalledWith('source', { sourceReference: 0, source: { path: '/project/main.c' } });
     });
 
     it('should return an empty string when body.content is missing', async () => {
