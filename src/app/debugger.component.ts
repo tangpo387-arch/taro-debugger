@@ -134,6 +134,11 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     });
 
+    // Subscribe to DAP events for the lifetime of the component
+    this.eventSubscription = this.dapSession.onEvent().subscribe((event) => {
+      this.handleDapEvent(event);
+    });
+
     await this.startSession();
   }
 
@@ -143,10 +148,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   private async startSession(): Promise<void> {
     try {
       this.appendDapLog("Initializing DAP Session...", 'console');
-
-      this.eventSubscription = this.dapSession.onEvent().subscribe((event) => {
-        this.handleDapEvent(event);
-      });
 
       await this.dapSession.startSession();
 
@@ -380,10 +381,25 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   /** Stop debugging */
   public async onStop(): Promise<void> {
     try {
-      await this.dapSession.disconnect();
-      this.snackBar.open('Session stopped', 'OK', { duration: 2000 });
+      await this.dapSession.terminate();
+      this.snackBar.open('Terminate requested', 'OK', { duration: 2000 });
     } catch (e: any) {
-      this.appendDapLog(`[Error] Stop failed: ${e.message}`, 'stderr');
+      this.appendDapLog(`[Error] Terminate failed: ${e.message}`, 'stderr');
+    }
+  }
+
+  /** Restart debugging */
+  public async onRestart(): Promise<void> {
+    const validStates: ExecutionState[] = ['running', 'stopped', 'terminated'];
+    if (!validStates.includes(this.executionState)) return;
+    try {
+      await this.dapSession.disconnect();
+      this.clearExecutionState();
+      this.appendDapLog('Restarting session...', 'console');
+      await this.startSession();
+      this.snackBar.open('Session restarted', 'OK', { duration: 2000 });
+    } catch (e: any) {
+      this.appendDapLog(`[Error] Restart failed: ${e.message}`, 'stderr');
     }
   }
 

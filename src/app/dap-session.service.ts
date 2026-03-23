@@ -9,7 +9,7 @@ import { FileTreeService } from './file-tree.service';
 import { DapFileTreeService } from './dap-file-tree.service';
 
 /** Execution State */
-export type ExecutionState = 'idle' | 'starting' | 'running' | 'stopped' | 'terminated';
+export type ExecutionState = 'idle' | 'starting' | 'running' | 'stopped' | 'terminated' | 'error';
 
 @Injectable()
 export class DapSessionService {
@@ -102,9 +102,20 @@ export class DapSessionService {
       },
       error: (err) => {
         console.error('DAP Session subscription error:', err);
+        this.executionStateSubject.next('error');
         for (const [seq, handler] of this.pendingRequests.entries()) {
           handler.reject(err);
           this.pendingRequests.delete(seq);
+        }
+      },
+      complete: () => {
+        if (this.executionStateSubject.value !== 'idle') {
+          console.warn('DAP Session unexpected disconnect (completed)');
+          this.executionStateSubject.next('error');
+          for (const [seq, handler] of this.pendingRequests.entries()) {
+            handler.reject(new Error('Connection abruptly closed'));
+            this.pendingRequests.delete(seq);
+          }
         }
       }
     });
@@ -164,11 +175,12 @@ export class DapSessionService {
   }
 
   /**
-   * Disconnect the session
+   * Disconnect the session calmly.
    */
   async disconnect(): Promise<void> {
     try {
-      if (this.transport) {
+      // 若狀態為 error 或 idle 則可能無須/無法送出正常的 disconnect 請求
+      if (this.transport && this.executionStateSubject.value !== 'error' && this.executionStateSubject.value !== 'idle') {
         // Send disconnect request to DAP Server
         await this.sendRequest('disconnect', {
           restart: false,
@@ -178,24 +190,52 @@ export class DapSessionService {
     } catch (e) {
       console.warn('Failed to send disconnect request cleanly', e);
     } finally {
-      // Stop receiving messages
-      if (this.messageSubscription) {
-        this.messageSubscription.unsubscribe();
-        this.messageSubscription = undefined;
-      }
-
-      for (const [seq, handler] of this.pendingRequests.entries()) {
-        handler.reject(new Error('Session stopped'));
-        this.pendingRequests.delete(seq);
-      }
-
-      this.transportStatusSubscription?.unsubscribe();
-      this.transportStatusSubscription = undefined;
-      this.transport?.disconnect();
-      this.transport = undefined;
-      this.connectionStatusSubject.next(false);
-      this.executionStateSubject.next('idle');
+      this.reset();
     }
+  }
+
+  /**
+   * Reset session completely to idle, without sending a DAP request.
+   * Clears resources directly (e.g., used to return from error to idle safely).
+   */
+  reset(): void {
+    // Stop receiving messages
+    if (this.messageSubscription) {
+      this.messageSubscription.unsubscribe();
+      this.messageSubscription = undefined;
+    }
+
+    for (const [seq, handler] of this.pendingRequests.entries()) {
+      handler.reject(new Error('Session reset'));
+      this.pendingRequests.delete(seq);
+    }
+
+    this.transportStatusSubscription?.unsubscribe();
+    this.transportStatusSubscription = undefined;
+    this.transport?.disconnect();
+    this.transport = undefined;
+    this.connectionStatusSubject.next(false);
+    this.executionStateSubject.next('idle');
+  }
+
+
+  /**
+   * Terminate the debuggee.
+   * If the adapter supports the terminate request, it is sent.
+   * Otherwise, it falls back to a disconnect request with terminateDebuggee.
+   */
+  async terminate(): Promise<void> {
+    if (this.capabilities?.supportsTerminateRequest) {
+      try {
+        await this.sendRequest('terminate');
+        return;
+      } catch (e) {
+        console.warn('Terminate request failed, falling back to disconnect', e);
+      }
+    }
+
+    // Fallback: Disconnect with termination
+    await this.disconnect();
   }
 
   /**

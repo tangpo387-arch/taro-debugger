@@ -36,5 +36,5 @@ description: 規範全域狀態管理路徑，確保 DapSessionService 作為真
 ## 4. 懶加載與清除規範
 
 *   **R_SM5: 元件銷毀時的狀態清理**
-    *   儲存在 Service 中的狀態（如 Log 紀錄）應在 `DapSessionService.disconnect()` 時統一清理。
+    *   儲存在 Service 中的狀態（如 Log 紀錄）應在 `DapSessionService.disconnect()` 或 `reset()` 退回 `idle` 時統一清理。
     *   UI 相關的局部 Subscription 必須在 `ngOnDestroy` 中取消。

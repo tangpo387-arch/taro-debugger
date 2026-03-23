@@ -38,9 +38,15 @@
         <mat-icon>arrow_upward</mat-icon>
       </button>
 
+      <!-- Restart button: Available in 'running', 'stopped', and 'terminated' states -->
+      <button mat-icon-button title="Restart" color="primary" (click)="onRestart()"
+        [disabled]="executionState !== 'terminated' && executionState !== 'stopped' && executionState !== 'running'">
+        <mat-icon>replay</mat-icon>
+      </button>
+
       <!-- Stop button: Available unless session is terminated/idle/starting -->
       <button mat-icon-button title="Stop" color="warn" (click)="onStop()"
-        [disabled]="executionState === 'terminated' || executionState === 'starting' || executionState === 'idle'">
+        [disabled]="executionState === 'terminated' || executionState === 'starting' || executionState === 'idle' || executionState === 'error'">
         <mat-icon>stop</mat-icon>
       </button>
     </div>
