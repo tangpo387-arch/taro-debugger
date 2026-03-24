@@ -66,11 +66,13 @@ export class WebSocketTransportService extends DapTransportService {
 
       this.socket.onerror = (error) => {
         this.connectionStatusSubject.next(false);
-        observer.error(error);
+        this.messageSubject.error(new Error('WebSocket connection error'));
+        if (!observer.closed) observer.error(error);
       };
 
       this.socket.onclose = () => {
         this.connectionStatusSubject.next(false);
+        this.messageSubject.complete();
       };
     });
   }
@@ -186,8 +188,9 @@ export class WebSocketTransportService extends DapTransportService {
       try {
         const message = JSON.parse(payloadString) as DapMessage;
         this.messageSubject.next(message);
-      } catch (e) {
+      } catch (e: any) {
         console.error('Failed to parse DAP message:', e, payloadString);
+        this.messageSubject.error(new Error(`DAP Protocol Error: Failed to parse JSON payload. ${e.message}`));
       }
     }
   }

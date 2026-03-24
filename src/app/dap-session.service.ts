@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, Subject, BehaviorSubject, Subscription, firstValueFrom } from 'rxjs';
-import { filter } from 'rxjs/operators';
+import { filter, timeout } from 'rxjs/operators';
 import { DapTransportService } from './dap-transport.service';
 import { createTransport } from './transport.factory';
 import { DapConfigService } from './dap-config.service';
@@ -71,9 +71,12 @@ export class DapSessionService {
     );
 
     try {
-      // Wait for the connection to be established
-      await firstValueFrom(this.transport.connect(config.serverAddress));
-    } catch (e) {
+      // Wait for the connection to be established (timeout 3000ms)
+      await firstValueFrom(this.transport.connect(config.serverAddress).pipe(timeout(3000)));
+    } catch (e: any) {
+      if (e.name === 'TimeoutError') {
+        throw new Error(`Connection to ${config.serverAddress} timed out`);
+      }
       throw new Error(`${config.transportType} connection failed`);
     }
 
@@ -93,8 +96,21 @@ export class DapSessionService {
             if (response.success) {
               handler.resolve(response);
             } else {
+              // Emit DAP error response as a synthetic event for UI-layer notification (R7)
+              this.eventSubject.next({
+                seq: 0,
+                type: 'event',
+                event: '_dapError',
+                body: {
+                  command: response.command,
+                  message: response.message || `Command '${response.command}' failed`
+                }
+              });
               handler.reject(new Error(response.message || `Command ${response.command} failed`));
             }
+          } else {
+            // Invalid response: no matching pending request (§7.2)
+            console.warn(`Received DAP response for unknown request_seq=${response.request_seq}, command='${response.command}'. Ignoring.`);
           }
         } else if (msg.type === 'event') {
           this.handleTransportEvent(msg as DapEvent);
@@ -102,6 +118,14 @@ export class DapSessionService {
       },
       error: (err) => {
         console.error('DAP Session subscription error:', err);
+        const errMsg = err?.message || 'Unknown transport error';
+        // Emit synthetic event for UI-layer notification before transitioning state
+        this.eventSubject.next({
+          seq: 0,
+          type: 'event',
+          event: '_transportError',
+          body: { reason: 'error', message: errMsg }
+        });
         this.executionStateSubject.next('error');
         for (const [seq, handler] of this.pendingRequests.entries()) {
           handler.reject(err);
@@ -111,6 +135,13 @@ export class DapSessionService {
       complete: () => {
         if (this.executionStateSubject.value !== 'idle') {
           console.warn('DAP Session unexpected disconnect (completed)');
+          // Emit synthetic event for UI-layer notification before transitioning state
+          this.eventSubject.next({
+            seq: 0,
+            type: 'event',
+            event: '_transportError',
+            body: { reason: 'disconnected', message: 'Connection to DAP Server was unexpectedly closed' }
+          });
           this.executionStateSubject.next('error');
           for (const [seq, handler] of this.pendingRequests.entries()) {
             handler.reject(new Error('Connection abruptly closed'));

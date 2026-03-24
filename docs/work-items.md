@@ -19,7 +19,7 @@
 | 檔案樹 | ✅ 已完成 | 左側邊欄透過 `loadedSources` 渲染，點擊檔案可向 Server 提取原始碼並顯示 |
 | 變數檢視器 | ❌ 未實作 | 右側為 placeholder 文字 |
 | 呼叫堆疊 | ✅ 已完成 | 實作於 DebuggerComponent 右側面板，自動監聽 stopped 事件並列出堆疊 |
-| 錯誤處理 | ❌ 未實作 | 尚未實作底層斷線重連機制及全域異常通知介面 |
+| 錯誤處理 | ✅ 已完成 | 已實作底層斷線重連機制、Timeout及全域異常通知介面 |
 | Electron 整合 | ❌ 未實作 | 僅有 devDependency，尚未建立 Main Process 及 IPC |
 
 ---
@@ -38,7 +38,7 @@
 | **Phase 6** | ✅ 完成 | 動態渲染專案檔案樹，點擊可載入原始碼 | [前往檢視](changelog.md#phase-6檔案樹與原始碼載入-file-explorer) |
 | **Phase 7** | 🔄 進行中 | 呼叫堆疊清單，與處理巢狀變數檢視器 | [前往檢視](#phase-7變數與呼叫堆疊-variables--call-stack) |
 | **Phase 8** | ✅ 完成 | 開發 UI 狀態列連線指示器與命令主控台介面 | [前往檢視](changelog.md#phase-8主控台與狀態列-console--status-bar) |
-| **Phase 9** | ⏳ 待處理 | 全域連線異常處理、發布錯誤 Snackbar 回饋 | [前往檢視](#phase-9錯誤處理與使用者回饋-error-handling) |
+| **Phase 9** | ✅ 完成 | 全域連線異常處理、發布錯誤 Snackbar 回饋 | [前往檢視](changelog.md#phase-9錯誤處理與使用者回饋-error-handling) |
 | **Phase 10** | ⏳ 待處理 | Electron 桌面應用程式整合 (IPC, Main Process) | [前往檢視](#phase-10electron-桌面模式-optional) |
 | **Phase 11** | 🔄 進行中 | 導入 Vitest 撰寫核心服務防呆等單元測試 | [前往檢視](#phase-11自動化測試-automation-tests) |
 
@@ -95,31 +95,6 @@
   - 整合 CDK Virtual Scroll 處理大量變數
   - 顯示變數名稱、型別、數值
 - **依賴**：WI-11
-- **狀態**：⏳ 待處理
-
----
-
-## Phase 9：錯誤處理與使用者回饋 (Error Handling)
-
-### WI-21：連線異常處理
-- **大小**：M
-- **說明**：根據規格書 §7.1，實作連線異常處理機制
-- **內容**：
-  - 連線逾時 → `MatDialog` 錯誤提示 + 重試按鈕
-  - 連線中斷 → 狀態指示器更新 + 主控台輸出原因
-  - 手動重連按鈕
-  - WebSocket `onerror` / `onclose` 事件處理
-- **依賴**：WI-05, WI-20
-- **狀態**：⏳ 待處理
-
-### WI-22：DAP Server 異常處理
-- **大小**：S
-- **說明**：根據規格書 §7.2，處理 DAP Server 異常
-- **內容**：
-  - 程序異常終止 → `MatSnackBar` 通知
-  - 無效 DAP 回應 → 記錄至主控台，忽略該訊息
-  - DAP error response → 顯示錯誤訊息給使用者
-- **依賴**：WI-06
 - **狀態**：⏳ 待處理
 
 ---
@@ -185,7 +160,24 @@
 - **依賴**：WI-05
 - **狀態**：⏳ 待處理
 
+### TI-04：`DapFileTreeService` 檔案樹單元測試
+- **大小**：S
+- **說明**：驗證 `loadedSources` 解析與檔案樹節點生成邏輯
+- **內容**：
+  - 驗證 Unix/Windows 路徑解析與層級合併
+  - 驗證節點排序邏輯（資料夾優先）
+- **依賴**：WI-15
+- **狀態**：⏳ 待處理
 
+### TI-05：連線異常與意圖偵測整合測試
+- **大小**：M
+- **說明**：驗證 Session 與 Transport 之間的錯誤傳遞、連線逾時以及使用者主動斷線的攔截邏輯
+- **內容**：
+  - **正常停止意圖攔截**：驗證 `isDisconnecting` 旗標是否能正確抑制多餘的異常回饋
+  - **連線逾時自動捕捉**：模擬 WebSocket 連線超時，啟動 `ErrorDialog`
+  - **斷線自動反應**：模擬伺服器崩潰，驗證聯動狀態轉移
+- **依賴**：WI-21, WI-22
+- **狀態**：⏳ 待處理
 
 ---
 
@@ -205,7 +197,7 @@
 | <span style="color:#2dd4bf">●</span> **青色** | 狀態與主控台 (UI) | WI-19 ~ WI-20 |
 | <span style="color:#fb923c">●</span> **深橘** | 異常處理 (Error Handling) | WI-21 ~ WI-22 |
 | <span style="color:#94a3b8">●</span> **灰色** | Electron 桌面專屬 (Bridge) | WI-23 ~ WI-25 |
-| <span style="color:#ffffff; background:#334155; padding:1px 3px; border-radius:3px;">●</span> **白格** | 自動化測試 (Testing) | TI-01 ~ TI-04 |
+| <span style="color:#ffffff; background:#334155; padding:1px 3px; border-radius:3px;">●</span> **白格** | 自動化測試 (Testing) | TI-01 ~ TI-05 |
 
 ```mermaid
 graph LR
@@ -238,6 +230,9 @@ graph LR
     WI05 --> WI21[WI-21 連線異常處理]
     WI20 --> WI21
     WI06 --> WI22[WI-22 DAP 異常處理]
+    
+    WI21 -.-> TI05[TI-05 異常處理整合測試]
+    WI22 -.-> TI05
     
     WI23[WI-23 Electron 主進程] --> WI24[WI-24 IPC 通訊層]
     WI04 --> WI24
@@ -276,8 +271,8 @@ graph LR
     style WI19 fill:#2dd4bf,stroke:#000,stroke-width:2.5px
     style WI20 fill:#2dd4bf,stroke:#000,stroke-width:2.5px
 
-    style WI21 fill:#fb923c,stroke:#ea580c
-    style WI22 fill:#fb923c,stroke:#ea580c
+    style WI21 fill:#fb923c,stroke:#000,stroke-width:2.5px
+    style WI22 fill:#fb923c,stroke:#000,stroke-width:2.5px
 
     style WI23 fill:#94a3b8,stroke:#64748b
     style WI24 fill:#94a3b8,stroke:#64748b
@@ -287,6 +282,7 @@ graph LR
     style TI02 fill:#ffffff,stroke:#334155
     style TI03 fill:#ffffff,stroke:#334155
     style TI04 fill:#ffffff,stroke:#000,stroke-width:2.5px
+    style TI05 fill:#ffffff,stroke:#334155
 ```
 
 ---
@@ -301,7 +297,7 @@ graph LR
 | **M4：全面資訊呈現** | WI-15 ~ WI-20 | 檔案樹、變數、堆疊、主控台、狀態列全面功能化 |
 | **M5：穩健性提升** | WI-21 ~ WI-22 | 連線異常處理、DAP 錯誤處理 |
 | **M6：Electron 桌面版** | WI-23 ~ WI-25 | 桌面應用可獨立運行、本機檔案存取 |
-| **M7：測試與品質保證** | TI-01 ~ TI-04 | 核心服務之單元測試，確保邊界與異常處理 |
+| **M7：測試與品質保證** | TI-01 ~ TI-05 | 核心服務之單元測試，確保邊界與異常處理 |
 
 > [!TIP]
 > **建議先從 Phase 1 + Phase 2 並行**開始：Phase 1 (UI 表單) 不依賴 DAP 通訊層，Phase 2 (通訊層) 也不依賴 UI 變更，兩者可同時進行。另外 **WI-12（斷點 UI）** 也可獨立開發，不依賴 DAP 層。

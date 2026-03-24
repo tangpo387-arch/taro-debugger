@@ -220,7 +220,8 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   }
 
   private handleDapEvent(event: DapEvent): void {
-    const skipLogs = ['output', 'breakpoint', 'loadedSource'];
+    // Internal synthetic events (prefixed with '_') are not logged as normal DAP events
+    const skipLogs = ['output', 'breakpoint', 'loadedSource', '_dapError', '_transportError'];
     if (!skipLogs.includes(event.event)) {
       this.appendDapLog(`[Event] ${event.event}`, 'console');
     }
@@ -242,10 +243,20 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         this.loadTree();
         break;
       case 'terminated':
-      case 'exited':
         this.clearExecutionState();
-        this.snackBar.open('Debug session terminated', 'OK', { duration: 3000 });
+        this.appendDapLog('Debug session terminated', 'console');
         break;
+      case 'exited': {
+        this.clearExecutionState();
+        const exitCode = event.body?.exitCode;
+        if (exitCode !== undefined && exitCode !== 0) {
+          // Abnormal exit: show warning snackbar with exit code (§7.2)
+          this.appendDapLog(`[Warning] Program exited with non-zero code: ${exitCode}`, 'console');
+        } else {
+          this.appendDapLog('Program exited normally', 'console');
+        }
+        break;
+      }
       case 'output':
         if (event.body) {
           const body = event.body as any;
@@ -261,6 +272,27 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       case 'breakpoint':
         // TODO: Update UI breakpoint state
         break;
+
+      // ── DAP Server Error Handling (§7.2) ────────────────────────
+
+      case '_dapError': {
+        // DAP error response: display error message to user via snackbar
+        const errBody = event.body as { command: string; message: string };
+        const errMsg = `DAP Error [${errBody.command}]: ${errBody.message}`;
+        this.appendDapLog(`[Error] ${errMsg}`, 'stderr');
+        this.snackBar.open(errMsg, 'Dismiss', { duration: 5000 });
+        break;
+      }
+      case '_transportError': {
+        // Abnormal transport disconnection: notify user (§7.1 / §7.2)
+        const body = event.body as { reason: string; message: string };
+        const reason = body.reason === 'disconnected'
+          ? 'Connection lost'
+          : 'Transport error';
+        this.appendDapLog(`[Error] ${reason}: ${body.message}`, 'stderr');
+        this.snackBar.open(`${reason}: ${body.message}`, 'Dismiss', { duration: 8000 });
+        break;
+      }
     }
   }
 
@@ -381,8 +413,8 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   /** Stop debugging */
   public async onStop(): Promise<void> {
     try {
+      this.appendDapLog('Debug session stopped by user', 'console');
       await this.dapSession.terminate();
-      this.snackBar.open('Terminate requested', 'OK', { duration: 2000 });
     } catch (e: any) {
       this.appendDapLog(`[Error] Terminate failed: ${e.message}`, 'stderr');
     }
@@ -390,16 +422,15 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
   /** Restart debugging */
   public async onRestart(): Promise<void> {
-    const validStates: ExecutionState[] = ['running', 'stopped', 'terminated'];
+    const validStates: ExecutionState[] = ['running', 'stopped', 'terminated', 'error'];
     if (!validStates.includes(this.executionState)) return;
     try {
       await this.dapSession.disconnect();
       this.clearExecutionState();
-      this.appendDapLog('Restarting session...', 'console');
+      this.appendDapLog(this.executionState === 'error' ? 'Reconnecting to session...' : 'Restarting session...', 'console');
       await this.startSession();
-      this.snackBar.open('Session restarted', 'OK', { duration: 2000 });
     } catch (e: any) {
-      this.appendDapLog(`[Error] Restart failed: ${e.message}`, 'stderr');
+      this.appendDapLog(`[Error] Restart/Reconnect failed: ${e.message}`, 'stderr');
     }
   }
 

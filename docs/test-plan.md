@@ -59,6 +59,10 @@
     *   模擬 WebSocket 收到 `output` 事件 → 驗證主控台 Log 陣列是否正確增加新紀錄，且自動分類 (category)。
 *   **斷點與編輯器同步 (Breakpoint Sync)**
     *   模擬 Monaco Editor 點擊 Glyph Margin 新增斷點 → 驗證系統是否透過 `DapSessionService` 送出對應檔案的 `setBreakpoints` 請求。
+*   **連線異常與意圖偵測 (Connection Error & Intent Handling)**
+    *   **正常停止與意圖攔截**：呼叫 `disconnect()` 後模擬傳輸層 `complete()`，驗證 `DapSessionService` 是否正確攔截該訊號而不發送 `_transportError` 合成事件。
+    *   **意外中斷偵測**：模擬傳輸層觸發 `error()`，驗證 `executionState` 是否轉移至 `error` 並發送 `_transportError` 讓 UI 顯示。
+    *   **連線逾時驗證**：模擬連線請求超時，驗證 `firstValueFrom` 是否能正確捕捉 RxJS `timeout` 拋出的錯誤。
 
 ---
 
@@ -86,6 +90,8 @@
     *   **互動動畫 (Ripple Effect)**：點擊啟用狀態的按鈕時，確認是否有 Material Design 的水波紋視覺按壓回饋。
     *   **顏色與灰階渲染**：確認 Stop 按鈕呈現警告色 (warn)，且按鈕處於禁用 (disabled) 狀態時的外觀 (opacity/color) 能夠讓使用者明確辨識為不可點擊狀態。
 
+*   **WI-21 & WI-22：連線與 DAP 異常處理 (Error Handling UI)**
+    *   **手動重連 (Reconnect UI)**：模擬進入 `error` 狀態後，驗證介面上原本的「重新啟動 (Restart)」按鈕是否已自動切換為具有 `sync` 圖示的「重新連線 (Reconnect)」按鍵，且滑鼠懸停提示內容正確。
 
 ---
 

@@ -276,7 +276,80 @@ type TransportType = 'websocket' | 'serial' | 'tcp';
 
 ---
 
-## 6. 檔案對照表
+## 6. 錯誤處理架構 (Error Handling Architecture)
+
+本節對應系統規格書 §7.1 與 §7.2 之錯誤處理需求，說明各層級之職責劃分與事件傳遞機制。
+
+### 6.1 連線異常處理 (Connection Error Handling)
+
+連線異常源自 Transport 層，處理流程跨越三層：
+
+```mermaid
+sequenceDiagram
+    participant T as Transport Layer
+    participant S as Session Layer
+    participant UI as UI Layer
+
+    Note over T: WebSocket onerror / onclose
+    T->>S: onMessage() error / complete
+    S->>S: Emit '_transportError' synthetic event
+    S->>S: executionState → 'error'
+    S->>S: Reject all pending requests
+    S->>UI: eventSubject.next('_transportError')
+    UI->>UI: MatSnackBar notification
+    UI->>UI: Append error to DAP Console
+```
+
+| 異常情境 | Transport 層行為 | Session 層行為 | UI 層行為 |
+|---|---|---|---|
+| **連線逾時** | `connect()` Observable error | `startSession()` reject | `ErrorDialog` (retry / go back) |
+| **連線中斷** | `connectionStatus$` → `false`<br/>`onMessage()` complete | 發送 `_transportError` 事件<br/>`executionState` → `error` | `MatSnackBar` 通知 + Console 日誌 |
+| **WebSocket 錯誤** | `onerror` → `connectionStatus$` `false`<br/>`onMessage()` error | 發送 `_transportError` 事件<br/>`executionState` → `error` | `MatSnackBar` 通知 + Console 日誌 |
+
+**復原流程**：使用者須透過 UI 層的 Reset 按鈕呼叫 `reset()` 返回 `idle`，再透過 `startSession()` 重新連線。
+
+### 6.2 DAP Server 異常處理 (DAP Server Error Handling)
+
+DAP 協定層面的錯誤由 Session 層偵測，透過 **Synthetic Event** 模式傳遞至 UI 層顯示，以遵守 R7（Service 不得注入 UI 元件）：
+
+```mermaid
+graph TD
+    subgraph Session_Layer ["Session Layer"]
+        A["Receive DAP response<br/>(success = false)"] --> B["Emit '_dapError' event"]
+        C["Unmatched response<br/>(no pending request)"] --> D["console.warn() + Ignore"]
+        E["Transport stream error<br/>or unexpected close"] --> F["Emit '_transportError' event"]
+    end
+
+    subgraph UI_Layer ["UI Layer"]
+        B --> G["MatSnackBar notification"]
+        B --> H["Append to DAP Console"]
+        F --> I["MatSnackBar notification"]
+        F --> J["Append to DAP Console"]
+    end
+
+    style Session_Layer fill:#f9f9f9,stroke:#333,stroke-dasharray: 5 5
+    style UI_Layer fill:#f9f9f9,stroke:#333,stroke-dasharray: 5 5
+```
+
+| 異常情境 | Session 層行為 | UI 層行為 |
+|---|---|---|
+| **DAP error response** (`success=false`) | 發送 `_dapError` synthetic event<br/>Reject 對應 Promise | `MatSnackBar` 顯示 command + error message |
+| **無效 DAP 回應** (unknown `request_seq`) | `console.warn()` 記錄並忽略 | 無（已在 Session 層處理） |
+| **程序異常終止** (`exited` event, exit code ≠ 0) | 正常轉發 `exited` 事件 | Console 日誌 |
+| **非預期斷線** (Transport stream 中斷) | 發送 `_transportError` synthetic event<br/>`executionState` → `error` | `MatSnackBar` 通知 + Console 日誌 |
+
+#### Synthetic Event 命名慣例
+
+為避免與標準 DAP 事件名稱衝突，所有 Session 層自行產生的合成事件均以底線 `_` 為前綴：
+
+| Synthetic Event | 觸發條件 | Body 結構 |
+|---|---|---|
+| `_dapError` | DAP Response `success=false` | `{ command: string; message: string }` |
+| `_transportError` | Transport stream error / complete | `{ reason: 'error' \| 'disconnected'; message: string }` |
+
+---
+
+## 7. 檔案對照表
 
 | 檔案 | 層級 | 說明 |
 |---|---|---|

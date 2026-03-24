@@ -38,10 +38,10 @@
         <mat-icon>arrow_upward</mat-icon>
       </button>
 
-      <!-- Restart button: Available in 'running', 'stopped', and 'terminated' states -->
-      <button mat-icon-button title="Restart" color="primary" (click)="onRestart()"
-        [disabled]="executionState !== 'terminated' && executionState !== 'stopped' && executionState !== 'running'">
-        <mat-icon>replay</mat-icon>
+      <!-- Restart / Reconnect button -->
+      <button mat-icon-button [title]="executionState === 'error' ? 'Reconnect' : 'Restart'" color="primary" (click)="onRestart()"
+        [disabled]="executionState === 'idle' || executionState === 'starting'">
+        <mat-icon>{{ executionState === 'error' ? 'sync' : 'replay' }}</mat-icon>
       </button>
 
       <!-- Stop button: Available unless session is terminated/idle/starting -->
