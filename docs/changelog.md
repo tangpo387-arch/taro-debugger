@@ -223,6 +223,16 @@
 - **依賴**：WI-15
 - **狀態**：✅ 已完成
 
+### TI-02：`DapSessionService` 會話管理單元測試
+- **大小**：M
+- **說明**：驗證會話生命週期與對應機制
+- **內容**：
+  - **Sequence ID 管理**：驗證發出 request 時 `seq` 是否正確遞增
+  - **Promise Mapping**：驗證 `sendRequest` 產生的 Promise 在收到 response 時能正確 resolve 或 reject
+  - **Timeout 機制**：模擬伺服器無回應，驗證 `sendRequest` 於設定時間後是否觸發 timeout 錯誤
+- **依賴**：WI-06, WI-07
+- **狀態**：✅ 已完成
+
 ---
 
 ## Phase 9：錯誤處理與使用者回饋 (Error Handling)

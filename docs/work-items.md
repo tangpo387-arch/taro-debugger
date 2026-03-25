@@ -140,16 +140,6 @@
   - 驗證 `setConfig()` 與 `getConfig()` 是否能正確存儲與回傳完整的 `DapConfig` 資料
 - **狀態**：⏳ 待處理
 
-### TI-02：`DapSessionService` 會話管理單元測試
-- **大小**：M
-- **說明**：根據 `test-plan.md` 規劃，驗證會話生命週期與對應機制
-- **內容**：
-  - **Sequence ID 管理**：驗證發出 request 時 `seq` 是否正確遞增
-  - **Promise Mapping**：驗證 `sendRequest` 產生的 Promise 在收到 response 時能正確 resolve 或 reject
-  - **Timeout 機制**：模擬伺服器無回應，驗證 `sendRequest` 於設定時間後是否觸發 timeout 錯誤
-- **依賴**：WI-06, WI-07
-- **狀態**：⏳ 待處理
-
 ### TI-03：`WebSocketTransportService` 傳輸層單元測試
 - **大小**：M
 - **說明**：根據 `test-plan.md` 規劃，驗證底層防呆機制與資料緩衝
@@ -279,7 +269,7 @@ graph LR
     style WI25 fill:#94a3b8,stroke:#64748b
 
     style TI01 fill:#ffffff,stroke:#334155
-    style TI02 fill:#ffffff,stroke:#334155
+    style TI02 fill:#ffffff,stroke:#000,stroke-width:2.5px
     style TI03 fill:#ffffff,stroke:#334155
     style TI04 fill:#ffffff,stroke:#000,stroke-width:2.5px
     style TI05 fill:#ffffff,stroke:#334155

@@ -2,9 +2,9 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, Subject, BehaviorSubject, Subscription, firstValueFrom } from 'rxjs';
 import { filter, timeout } from 'rxjs/operators';
 import { DapTransportService } from './dap-transport.service';
-import { createTransport } from './transport.factory';
 import { DapConfigService } from './dap-config.service';
 import { DapRequest, DapResponse, DapEvent } from './dap.types';
+import { TransportFactoryService } from './transport-factory.service';
 import { FileTreeService } from './file-tree.service';
 import { DapFileTreeService } from './dap-file-tree.service';
 import { DapLogService } from './dap-log.service';
@@ -16,6 +16,7 @@ export type ExecutionState = 'idle' | 'starting' | 'running' | 'stopped' | 'term
 export class DapSessionService {
   private readonly configService = inject(DapConfigService);
   private readonly logService = inject(DapLogService);
+  private readonly transportFactory = inject(TransportFactoryService);
   private seq = 1;
   private readonly pendingRequests = new Map<number, { resolve: (response: DapResponse) => void; reject: (error: any) => void }>();
   private messageSubscription?: Subscription;
@@ -64,7 +65,7 @@ export class DapSessionService {
     }
 
     // Create corresponding Transport instance based on configuration
-    this.transport = createTransport(config.transportType);
+    this.transport = this.transportFactory.createTransport(config.transportType);
 
     // Bridge transport connection status to the Session level
     this.transportStatusSubscription?.unsubscribe();
@@ -89,69 +90,11 @@ export class DapSessionService {
     this.executionStateSubject.next('starting');
 
     this.messageSubscription = this.transport.onMessage().subscribe({
-      next: (msg) => {
-        if (msg.type === 'response') {
-          const response = msg as DapResponse;
-          const handler = this.pendingRequests.get(response.request_seq);
-          if (handler) {
-            this.pendingRequests.delete(response.request_seq);
-            if (response.success) {
-              handler.resolve(response);
-            } else {
-              // Emit DAP error response as a synthetic event for UI-layer notification (R7)
-              this.eventSubject.next({
-                seq: 0,
-                type: 'event',
-                event: '_dapError',
-                body: {
-                  command: response.command,
-                  message: response.message || `Command '${response.command}' failed`
-                }
-              });
-              handler.reject(new Error(response.message || `Command ${response.command} failed`));
-            }
-          } else {
-            // Invalid response: no matching pending request (§7.2)
-            this.logService.consoleLog(`Received DAP response for unknown request_seq=${response.request_seq}, command='${response.command}'. Ignoring.`, 'error', 'system');
-          }
-        } else if (msg.type === 'event') {
-          this.handleTransportEvent(msg as DapEvent);
-        }
-      },
-      error: (err) => {
-        this.logService.consoleLog(`DAP Session subscription error: ${err?.message || 'Unknown error'}`, 'error', 'system');
-        const errMsg = err?.message || 'Unknown transport error';
-        // Emit synthetic event for UI-layer notification before transitioning state
-        this.eventSubject.next({
-          seq: 0,
-          type: 'event',
-          event: '_transportError',
-          body: { reason: 'error', message: errMsg }
-        });
-        this.executionStateSubject.next('error');
-        for (const [seq, handler] of this.pendingRequests.entries()) {
-          handler.reject(err);
-          this.pendingRequests.delete(seq);
-        }
-      },
-      complete: () => {
-        if (this.executionStateSubject.value !== 'idle') {
-          this.logService.consoleLog('DAP Session unexpected disconnect (completed)', 'error', 'system');
-          // Emit synthetic event for UI-layer notification before transitioning state
-          this.eventSubject.next({
-            seq: 0,
-            type: 'event',
-            event: '_transportError',
-            body: { reason: 'disconnected', message: 'Connection to DAP Server was unexpectedly closed' }
-          });
-          this.executionStateSubject.next('error');
-          for (const [seq, handler] of this.pendingRequests.entries()) {
-            handler.reject(new Error('Connection abruptly closed'));
-            this.pendingRequests.delete(seq);
-          }
-        }
-      }
+      next: (msg) => this.handleIncomingMessage(msg),
+      error: (err) => this.handleIncomingTransportError(err),
+      complete: () => this.handleIncomingTransportComplete()
     });
+// ... (rest of the code remains same until end of startSession)
 
     const initializedPromise = firstValueFrom(
       this.eventSubject.pipe(filter(e => e.event === 'initialized'))
@@ -400,6 +343,77 @@ export class DapSessionService {
   private ensureStopped(): void {
     if (this.executionStateSubject.value !== 'stopped') {
       throw new Error(`Invalid state: operation requires the execution to be 'stopped', but current state is '${this.executionStateSubject.value}'`);
+    }
+  }
+
+  // ── Message & Transport Handling ───────────────────────────────────
+
+  private handleIncomingMessage(msg: any): void {
+    if (msg.type === 'response') {
+      const response = msg as DapResponse;
+      const handler = this.pendingRequests.get(response.request_seq);
+      if (handler) {
+        this.pendingRequests.delete(response.request_seq);
+        if (response.success) {
+          handler.resolve(response);
+        } else {
+          // Emit DAP error response as a synthetic event for UI-layer notification (R7)
+          this.eventSubject.next({
+            seq: 0,
+            type: 'event',
+            event: '_dapError',
+            body: {
+              command: response.command,
+              message: response.message || `Command '${response.command}' failed`
+            }
+          });
+          handler.reject(new Error(response.message || `Command ${response.command} failed`));
+        }
+      } else {
+        // Invalid response: no matching pending request (§7.2)
+        this.logService.consoleLog(
+          `Received DAP response for unknown request_seq=${response.request_seq}, command='${response.command}'. Ignoring.`,
+          'error',
+          'system'
+        );
+      }
+    } else if (msg.type === 'event') {
+      this.handleTransportEvent(msg as DapEvent);
+    }
+  }
+
+  private handleIncomingTransportError(err: any): void {
+    this.logService.consoleLog(`DAP Session subscription error: ${err?.message || 'Unknown error'}`, 'error', 'system');
+    const errMsg = err?.message || 'Unknown transport error';
+    // Emit synthetic event for UI-layer notification before transitioning state
+    this.eventSubject.next({
+      seq: 0,
+      type: 'event',
+      event: '_transportError',
+      body: { reason: 'error', message: errMsg }
+    });
+    this.executionStateSubject.next('error');
+    for (const [seq, handler] of this.pendingRequests.entries()) {
+      handler.reject(err);
+      this.pendingRequests.delete(seq);
+    }
+  }
+
+  private handleIncomingTransportComplete(): void {
+    if (this.executionStateSubject.value !== 'idle') {
+      this.logService.consoleLog('DAP Session unexpected disconnect (completed)', 'error', 'system');
+      // Emit synthetic event for UI-layer notification before transitioning state
+      this.eventSubject.next({
+        seq: 0,
+        type: 'event',
+        event: '_transportError',
+        body: { reason: 'disconnected', message: 'Connection to DAP Server was unexpectedly closed' }
+      });
+      this.executionStateSubject.next('error');
+      for (const [seq, handler] of this.pendingRequests.entries()) {
+        handler.reject(new Error('Connection abruptly closed'));
+        this.pendingRequests.delete(seq);
+      }
     }
   }
 
