@@ -57,6 +57,7 @@
 .sidenav-right {
   padding: 16px;
   background-color: var(--mat-sys-surface-container);
+  overflow: auto;
 }
 
 .sidenav-left {
@@ -98,6 +99,9 @@
 .file-tree {
   margin-top: 16px;
   background: transparent;
+  display: block;
+  width: max-content;
+  min-width: 100%;
 }
 
 .file-node-btn {
@@ -110,12 +114,9 @@
   padding: 0 8px;
   font-size: 14px;
   white-space: nowrap;
-  overflow: hidden;
 
   // Use deep selector to target Material 3 button's internal label for truncation
   ::ng-deep .mdc-button__label {
-    overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
     display: flex;
     align-items: center;
@@ -154,16 +155,15 @@
   font-size: 14px;
   color: var(--mat-sys-on-surface);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   flex: 1;
 }
 
 /* Handle mat-tree-node default padding/margin for a larger click area */
 mat-tree-node {
   min-height: 32px;
-  overflow: hidden;
   white-space: nowrap;
+  width: max-content;
+  min-width: 100%;
 }
 
 /* Right panel section styles */
