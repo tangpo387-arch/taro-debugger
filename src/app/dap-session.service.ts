@@ -7,6 +7,7 @@ import { DapConfigService } from './dap-config.service';
 import { DapRequest, DapResponse, DapEvent } from './dap.types';
 import { FileTreeService } from './file-tree.service';
 import { DapFileTreeService } from './dap-file-tree.service';
+import { DapLogService } from './dap-log.service';
 
 /** Execution State */
 export type ExecutionState = 'idle' | 'starting' | 'running' | 'stopped' | 'terminated' | 'error';
@@ -14,6 +15,7 @@ export type ExecutionState = 'idle' | 'starting' | 'running' | 'stopped' | 'term
 @Injectable()
 export class DapSessionService {
   private readonly configService = inject(DapConfigService);
+  private readonly logService = inject(DapLogService);
   private seq = 1;
   private readonly pendingRequests = new Map<number, { resolve: (response: DapResponse) => void; reject: (error: any) => void }>();
   private messageSubscription?: Subscription;
@@ -110,14 +112,14 @@ export class DapSessionService {
             }
           } else {
             // Invalid response: no matching pending request (§7.2)
-            console.warn(`Received DAP response for unknown request_seq=${response.request_seq}, command='${response.command}'. Ignoring.`);
+            this.logService.consoleLog(`Received DAP response for unknown request_seq=${response.request_seq}, command='${response.command}'. Ignoring.`, 'error', 'system');
           }
         } else if (msg.type === 'event') {
           this.handleTransportEvent(msg as DapEvent);
         }
       },
       error: (err) => {
-        console.error('DAP Session subscription error:', err);
+        this.logService.consoleLog(`DAP Session subscription error: ${err?.message || 'Unknown error'}`, 'error', 'system');
         const errMsg = err?.message || 'Unknown transport error';
         // Emit synthetic event for UI-layer notification before transitioning state
         this.eventSubject.next({
@@ -134,7 +136,7 @@ export class DapSessionService {
       },
       complete: () => {
         if (this.executionStateSubject.value !== 'idle') {
-          console.warn('DAP Session unexpected disconnect (completed)');
+          this.logService.consoleLog('DAP Session unexpected disconnect (completed)', 'error', 'system');
           // Emit synthetic event for UI-layer notification before transitioning state
           this.eventSubject.next({
             seq: 0,

@@ -8,7 +8,8 @@
 
 /* Core container style, fills remaining height */
 .debugger-container {
-  flex: 1; /* Fill remaining space outside the toolbar */
+  flex: 1;
+  /* Fill remaining space outside the toolbar */
   width: 100%;
   background-color: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
@@ -19,7 +20,7 @@
   flex-shrink: 0;
   z-index: 10;
   box-shadow: var(--mat-sys-level2-shadow);
-  
+
   /* Reduce default height (Angular Material defaults to 64px) */
   min-height: 48px;
   height: 48px;
@@ -108,7 +109,7 @@
   color: var(--mat-sys-on-surface-variant);
   padding: 0 8px;
   font-size: 14px;
-  
+
   &:hover {
     background-color: var(--mat-sys-surface-container-highest);
   }
@@ -133,7 +134,8 @@
   width: 18px;
   height: 18px;
   margin-right: 8px;
-  color: #ffca28; /* Material yellow folder color */
+  color: #ffca28;
+  /* Material yellow folder color */
 }
 
 .folder-name {
@@ -262,12 +264,23 @@ mat-tree-node {
   }
 
   .log-message {
-    &.stderr {
-      color: var(--mat-sys-error);
+    &.system {
+      color: var(--mat-sys-primary);
+      /* Use primary color for system status */
+      font-weight: 500;
     }
-    &.telemetry {
-      color: var(--mat-sys-tertiary);
+
+    &.dap {
+      color: var(--mat-sys-secondary);
+      /* Use secondary color for DAP protocol events */
+      font-weight: 500;
+      opacity: 0.9;
     }
+
+    &.log-level-error {
+      color: var(--mat-sys-error) !important;
+    }
+
     // console and stdout inherits default color
   }
 }
@@ -281,7 +294,7 @@ mat-tree-node {
   flex-shrink: 0;
   border-top: 1px solid var(--mat-sys-outline-variant);
   background: var(--mat-sys-surface-container);
-  
+
   mat-icon {
     color: var(--mat-sys-primary);
     margin-right: 8px;
@@ -331,7 +344,7 @@ mat-tree-node {
     /* Online status indicator: success color */
     background-color: #4ade80;
   }
-  
+
   &.offline {
     background-color: var(--mat-sys-error, #f44336);
   }

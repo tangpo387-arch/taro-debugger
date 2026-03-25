@@ -39,8 +39,8 @@
       </button>
 
       <!-- Restart / Reconnect button -->
-      <button mat-icon-button [title]="executionState === 'error' ? 'Reconnect' : 'Restart'" color="primary" (click)="onRestart()"
-        [disabled]="executionState === 'idle' || executionState === 'starting'">
+      <button mat-icon-button [title]="executionState === 'error' ? 'Reconnect' : 'Restart'" color="primary"
+        (click)="onRestart()" [disabled]="executionState === 'idle' || executionState === 'starting'">
         <mat-icon>{{ executionState === 'error' ? 'sync' : 'replay' }}</mat-icon>
       </button>
 
@@ -62,23 +62,22 @@
   <!-- Core layout container: Sidenavs and main content area -->
   <mat-sidenav-container class="debugger-container">
 
-  <!-- 2. Left sidenav: File Explorer -->
-  <mat-sidenav mode="side" opened position="start" class="sidenav-left">
-    <div class="sidenav-header">
-      <h3>Files</h3>
-      <div class="source-path" title="{{ currentConfig.sourcePath }}">
-        Source: {{ currentConfig.sourcePath || 'Not specified' }}
+    <!-- 2. Left sidenav: File Explorer -->
+    <mat-sidenav mode="side" opened position="start" class="sidenav-left">
+      <div class="sidenav-header">
+        <h3>Files</h3>
+        <div class="source-path" title="{{ currentConfig.sourcePath }}">
+          Source: {{ currentConfig.sourcePath || 'Not specified' }}
+        </div>
       </div>
-    </div>
 
-    @if (fileTreeSupported) {
+      @if (fileTreeSupported) {
       <!-- Dynamic File Tree -->
       <mat-tree #tree="matTree" [dataSource]="fileDataSource" [childrenAccessor]="childrenAccessor" class="file-tree">
         <!-- File Node -->
         <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
-          <button mat-button class="file-node-btn"
-                  [class.active-file]="activeFilePath === node.path"
-                  (click)="onFileNodeClick(node)">
+          <button mat-button class="file-node-btn" [class.active-file]="activeFilePath === node.path"
+            (click)="onFileNodeClick(node)">
             <mat-icon class="file-icon">description</mat-icon>
             {{ node.name }}
           </button>
@@ -95,100 +94,103 @@
           <span class="folder-name">{{ node.name }}</span>
         </mat-tree-node>
       </mat-tree>
-    } @else {
-      <div class="unsupported-message" style="padding: 16px; color: var(--mat-sys-on-surface-variant); font-size: 0.875rem; display: flex; align-items: center; justify-content: center; text-align: center; flex-direction: column; opacity: 0.8; margin-top: 32px;">
+      } @else {
+      <div class="unsupported-message"
+        style="padding: 16px; color: var(--mat-sys-on-surface-variant); font-size: 0.875rem; display: flex; align-items: center; justify-content: center; text-align: center; flex-direction: column; opacity: 0.8; margin-top: 32px;">
         <mat-icon style="margin-bottom: 8px; font-size: 32px; width: 32px; height: 32px;">info</mat-icon>
         DAP Server does not support loadedSources requests<br>File tree cannot be displayed
       </div>
-    }
-  </mat-sidenav>
+      }
+    </mat-sidenav>
 
-  <!-- 3. Right sidenav: Variables and Call Stack -->
-  <mat-sidenav mode="side" opened position="end" class="sidenav-right">
-    <!-- Variables View Section -->
-    <div class="panel-section variables-section">
-      <h3 class="panel-title">Variables</h3>
-      <div class="placeholder-content">Variables tree placeholder...</div>
-    </div>
+    <!-- 3. Right sidenav: Variables and Call Stack -->
+    <mat-sidenav mode="side" opened position="end" class="sidenav-right">
+      <!-- Variables View Section -->
+      <div class="panel-section variables-section">
+        <h3 class="panel-title">Variables</h3>
+        <div class="placeholder-content">Variables tree placeholder...</div>
+      </div>
 
-    <!-- Call Stack Section -->
-    <div class="panel-section">
-      <h3 class="panel-title">Call Stack</h3>
-      @if (stackFrames.length > 0) {
+      <!-- Call Stack Section -->
+      <div class="panel-section">
+        <h3 class="panel-title">Call Stack</h3>
+        @if (stackFrames.length > 0) {
         <mat-action-list class="stack-list" style="padding: 0;">
           @for (frame of stackFrames; track frame.id) {
-            <button mat-list-item (click)="onFrameClick(frame)" [style.background-color]="activeFrameId === frame.id ? 'var(--mat-sys-surface-variant)' : 'transparent'">
-              <span matListItemTitle>{{ frame.name }}</span>
-              <span matListItemLine style="font-size: 0.75rem; color: var(--mat-sys-on-surface-variant);">
-                {{ frame.source?.name || 'Unknown' }}:{{ frame.line }}
-              </span>
-            </button>
+          <button mat-list-item (click)="onFrameClick(frame)"
+            [style.background-color]="activeFrameId === frame.id ? 'var(--mat-sys-surface-variant)' : 'transparent'">
+            <span matListItemTitle>{{ frame.name }}</span>
+            <span matListItemLine style="font-size: 0.75rem; color: var(--mat-sys-on-surface-variant);">
+              {{ frame.source?.name || 'Unknown' }}:{{ frame.line }}
+            </span>
+          </button>
           }
         </mat-action-list>
-      } @else {
+        } @else {
         <div class="placeholder-content">No call stack information available</div>
-      }
-    </div>
-  </mat-sidenav>
-
-  <!-- 4. Center: Core Editor and Consoles -->
-  <mat-sidenav-content class="main-content">
-
-    <!-- Monaco Editor Container -->
-    <div class="editor-container">
-      <app-editor class="monaco-editor-instance" [code]="currentCode" [activeLine]="activeFilePath === activeLineFilePath ? activeLine : null" />
-    </div>
-
-    <!-- Bottom Consoles Area -->
-    <div class="consoles-container">
-      <mat-tab-group animationDuration="0ms">
-        <mat-tab label="DAP Console">
-          <cdk-virtual-scroll-viewport itemSize="20" class="console-viewport" minBufferPx="200" maxBufferPx="400">
-            <div *cdkVirtualFor="let log of dapLogs; trackBy: trackByFn" class="console-line">
-              <span class="log-timestamp">[{{ log.timestamp | date:'HH:mm:ss.SSS' }}]</span>
-              <span class="log-message" [ngClass]="log.category">{{ log.message }}</span>
-            </div>
-          </cdk-virtual-scroll-viewport>
-          <!-- Evaluate input field -->
-          <div class="console-input-area">
-            <mat-icon>chevron_right</mat-icon>
-            <input matInput type="text" placeholder="Evaluate expression..." [(ngModel)]="evaluateExpression"
-              (keyup.enter)="evaluateCommand()">
-            <button mat-icon-button (click)="evaluateCommand()" [disabled]="executionState !== 'stopped'">
-              <mat-icon>send</mat-icon>
-            </button>
-          </div>
-        </mat-tab>
-        <mat-tab label="Program Console">
-          <cdk-virtual-scroll-viewport itemSize="20" class="console-viewport" minBufferPx="200" maxBufferPx="400">
-            <div *cdkVirtualFor="let log of programLogs; trackBy: trackByFn" class="console-line">
-              <span class="log-timestamp">[{{ log.timestamp | date:'HH:mm:ss.SSS' }}]</span>
-              <span class="log-message" [ngClass]="log.category">{{ log.message }}</span>
-            </div>
-          </cdk-virtual-scroll-viewport>
-        </mat-tab>
-      </mat-tab-group>
-    </div>
-
-    <!-- Bottom Status Bar -->
-    <footer class="status-bar">
-      <div class="connection-status">
-        <!-- Connection indicator light -->
-        <span class="indicator" [ngClass]="(connectionStatus$ | async) ? 'online' : 'offline'"></span>
-        <span>DAP {{ (connectionStatus$ | async) ? 'Connected' : 'Disconnected' }}</span>
-        @if (currentConfig.serverAddress) {
-        <span class="server-address">
-          ({{ currentConfig.serverAddress }})
-        </span>
         }
       </div>
-      <span class="spacer"></span>
-      <div class="execution-state">
-        State: {{ executionState | titlecase }}
-      </div>
-    </footer>
+    </mat-sidenav>
 
-  </mat-sidenav-content>
+    <!-- 4. Center: Core Editor and Consoles -->
+    <mat-sidenav-content class="main-content">
+
+      <!-- Monaco Editor Container -->
+      <div class="editor-container">
+        <app-editor class="monaco-editor-instance" [code]="currentCode"
+          [activeLine]="activeFilePath === activeLineFilePath ? activeLine : null" />
+      </div>
+
+      <!-- Bottom Consoles Area -->
+      <div class="consoles-container">
+        <mat-tab-group animationDuration="0ms">
+          <mat-tab label="Console">
+            <cdk-virtual-scroll-viewport itemSize="20" class="console-viewport" minBufferPx="200" maxBufferPx="400">
+              <div *cdkVirtualFor="let log of consoleLogs$ | async; trackBy: trackByFn" class="console-line">
+                <span class="log-timestamp">[{{ log.timestamp | date:'HH:mm:ss.SSS' }}]</span>
+                <span class="log-message" [ngClass]="log.category" [class.log-level-error]="log.level === 'error'">{{ log.message }}</span>
+              </div>
+            </cdk-virtual-scroll-viewport>
+            <!-- Evaluate input field -->
+            <div class="console-input-area">
+              <mat-icon>chevron_right</mat-icon>
+              <input matInput type="text" placeholder="Evaluate expression..." [(ngModel)]="evaluateExpression"
+                (keyup.enter)="evaluateCommand()">
+              <button mat-icon-button (click)="evaluateCommand()" [disabled]="executionState !== 'stopped'">
+                <mat-icon>send</mat-icon>
+              </button>
+            </div>
+          </mat-tab>
+          <mat-tab label="Program Console">
+            <cdk-virtual-scroll-viewport itemSize="20" class="console-viewport" minBufferPx="200" maxBufferPx="400">
+              <div *cdkVirtualFor="let log of programLogs$ | async; trackBy: trackByFn" class="console-line">
+                <span class="log-timestamp">[{{ log.timestamp | date:'HH:mm:ss.SSS' }}]</span>
+                <span class="log-message" [ngClass]="log.category" [class.log-level-error]="log.level === 'error'">{{ log.message }}</span>
+              </div>
+            </cdk-virtual-scroll-viewport>
+          </mat-tab>
+        </mat-tab-group>
+      </div>
+
+      <!-- Bottom Status Bar -->
+      <footer class="status-bar">
+        <div class="connection-status">
+          <!-- Connection indicator light -->
+          <span class="indicator" [ngClass]="(connectionStatus$ | async) ? 'online' : 'offline'"></span>
+          <span>DAP {{ (connectionStatus$ | async) ? 'Connected' : 'Disconnected' }}</span>
+          @if (currentConfig.serverAddress) {
+          <span class="server-address">
+            ({{ currentConfig.serverAddress }})
+          </span>
+          }
+        </div>
+        <span class="spacer"></span>
+        <div class="execution-state">
+          State: {{ executionState | titlecase }}
+        </div>
+      </footer>
+
+    </mat-sidenav-content>
 
   </mat-sidenav-container>
 </div>

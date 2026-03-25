@@ -25,8 +25,9 @@ import { EditorComponent } from './editor.component';
 import { ErrorDialog, ErrorDialogData } from './error-dialog/error-dialog';
 import { DapConfigService, DapConfig } from './dap-config.service';
 import { DapSessionService, ExecutionState } from './dap-session.service';
-import { DapEvent } from './dap.types';
+import { DapEvent, LogEntry } from './dap.types';
 import { FileNode } from './file-tree.service';
+import { DapLogService } from './dap-log.service';
 
 @Component({
   selector: 'app-debugger',
@@ -59,6 +60,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   private readonly configService = inject(DapConfigService);
   private readonly router = inject(Router);
   private readonly dapSession = inject(DapSessionService);
+  private readonly logService = inject(DapLogService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -71,6 +73,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
   private eventSubscription?: Subscription;
   private stateSubscription?: Subscription;
+  private logSubscription?: Subscription;
 
   // ViewChildren for auto-scrolling
   @ViewChildren(CdkVirtualScrollViewport) viewports!: QueryList<CdkVirtualScrollViewport>;
@@ -88,11 +91,11 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   /** Current execution state (used for non-async pipe scenarios) */
   public executionState: ExecutionState = 'idle';
 
-  /** DAP output logs */
-  public dapLogs: LogEntry[] = [];
+  /** Console output logs (System/DAP) */
+  public readonly consoleLogs$: Observable<LogEntry[]> = this.logService.consoleLogs$;
 
   /** Program output logs */
-  public programLogs: LogEntry[] = [];
+  public readonly programLogs$: Observable<LogEntry[]> = this.logService.programLogs$;
 
   /** Current evaluate expression input string */
   public evaluateExpression: string = '';
@@ -118,7 +121,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public async ngOnInit(): Promise<void> {
     this.currentConfig = this.configService.getConfig();
 
-    this.appendDapLog("Start debugging session...", 'console');
+    this.logService.consoleLog("Start debugging session...", 'info', 'system');
 
     // Guard mechanism: If executable path is missing, automatically navigate back to setup page
     if (!this.currentConfig.executablePath) {
@@ -134,10 +137,13 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     });
 
-    // Subscribe to DAP events for the lifetime of the component
     this.eventSubscription = this.dapSession.onEvent().subscribe((event) => {
       this.handleDapEvent(event);
     });
+
+    // Auto-scroll when logs update
+    this.logSubscription = this.consoleLogs$.subscribe(() => this.scrollToBottom());
+    this.logSubscription.add(this.logService.programLogs$.subscribe(() => this.scrollToBottom()));
 
     await this.startSession();
   }
@@ -147,17 +153,17 @@ export class DebuggerComponent implements OnInit, OnDestroy {
    */
   private async startSession(): Promise<void> {
     try {
-      this.appendDapLog("Initializing DAP Session...", 'console');
+      this.logService.consoleLog("Initializing DAP Session...", 'info', 'system');
 
       await this.dapSession.startSession();
 
-      this.appendDapLog(`Session started in ${this.currentConfig.launchMode} mode.`, 'console');
+      this.logService.consoleLog(`Session started in ${this.currentConfig.launchMode} mode.`, 'info', 'system');
     } catch (error: any) {
       // 1. Clean up problematic session
       this.dapSession.disconnect();
 
       const msg = error?.message || 'Unknown error';
-      this.appendDapLog(`[Error] Session failed: ${msg}`, 'stderr');
+      this.logService.consoleLog(`Start Session failed: ${msg}`, 'error', 'system');
 
       // 2. Show error dialog
       const dialogRef = this.dialog.open(ErrorDialog, {
@@ -172,7 +178,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       // 3. Handle dialog result
       dialogRef.afterClosed().subscribe((result: string) => {
         if (result === 'retry') {
-          this.appendDapLog("Retrying session...", 'console');
+          this.logService.consoleLog("Retrying session...", 'info', 'system');
           this.startSession(); // Retry
         } else {
           // 'goback' or other close action
@@ -223,12 +229,12 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     // Internal synthetic events (prefixed with '_') are not logged as normal DAP events
     const skipLogs = ['output', 'breakpoint', 'loadedSource', '_dapError', '_transportError'];
     if (!skipLogs.includes(event.event)) {
-      this.appendDapLog(`[Event] ${event.event}`, 'console');
+      this.logService.consoleLog(`[Event] ${event.event}`, 'info', 'dap');
     }
 
     switch (event.event) {
       case 'initialized':
-        this.appendDapLog("Configuration Done.", 'console');
+        this.logService.consoleLog("Configuration Done.", 'info', 'system');
         break;
       case 'stopped':
         // Safely update file tree when DA is stopped (prevents request failure during Running state)
@@ -244,16 +250,16 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         break;
       case 'terminated':
         this.clearExecutionState();
-        this.appendDapLog('Debug session terminated', 'console');
+        this.logService.consoleLog('Debug session terminated', 'info', 'system');
         break;
       case 'exited': {
         this.clearExecutionState();
         const exitCode = event.body?.exitCode;
         if (exitCode !== undefined && exitCode !== 0) {
           // Abnormal exit: show warning snackbar with exit code (§7.2)
-          this.appendDapLog(`[Warning] Program exited with non-zero code: ${exitCode}`, 'console');
+          this.logService.consoleLog(`[Warning] Program exited with non-zero code: ${exitCode}`, 'error', 'system');
         } else {
-          this.appendDapLog('Program exited normally', 'console');
+          this.logService.consoleLog('Program exited normally', 'info', 'system');
         }
         break;
       }
@@ -263,9 +269,9 @@ export class DebuggerComponent implements OnInit, OnDestroy {
           const outMsg = body.output;
           const category = body.category || 'console';
           if (category === 'stdout' || category === 'stderr') {
-            this.appendProgramLog(outMsg, category);
+            this.logService.appendProgramLog(outMsg, category);
           } else {
-            this.appendDapLog(outMsg, category);
+            this.logService.consoleLog(outMsg, 'info', category);
           }
         }
         break;
@@ -279,7 +285,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         // DAP error response: display error message to user via snackbar
         const errBody = event.body as { command: string; message: string };
         const errMsg = `DAP Error [${errBody.command}]: ${errBody.message}`;
-        this.appendDapLog(`[Error] ${errMsg}`, 'stderr');
+        this.logService.consoleLog(errMsg, 'error', 'system');
         this.snackBar.open(errMsg, 'Dismiss', { duration: 5000 });
         break;
       }
@@ -289,14 +295,17 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         const reason = body.reason === 'disconnected'
           ? 'Connection lost'
           : 'Transport error';
-        this.appendDapLog(`[Error] ${reason}: ${body.message}`, 'stderr');
+        this.logService.consoleLog(`${reason}: ${body.message}`, 'error', 'system');
         this.snackBar.open(`${reason}: ${body.message}`, 'Dismiss', { duration: 8000 });
         break;
       }
     }
+    this.cdr.detectChanges();
   }
 
-  /** Load call stack */
+  /**
+   * Refetches call stack when stopped
+   */
   private async loadCallStack(threadId?: number): Promise<void> {
     try {
       let targetThreadId = threadId;
@@ -320,7 +329,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       }
     } catch (e: any) {
-      this.appendDapLog(`[Error] Failed to load call stack: ${e.message}`, 'stderr');
+      this.logService.consoleLog(`Failed to load call stack: ${e.message}`, 'error', 'system');
     }
   }
 
@@ -352,9 +361,9 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     // Trigger scope request (background) and log results
     this.dapSession.scopes(frame.id).then(res => {
       // Log scope update for debugging purposes
-      this.appendDapLog(`Scopes updated for frame: ${frame.name}.`, 'console');
+      this.logService.consoleLog(`Scopes updated for frame: ${frame.name}.`, 'info', 'system');
     }).catch(e => {
-      this.appendDapLog(`[Error] Scopes request failed: ${e.message}`, 'stderr');
+      this.logService.consoleLog(`[Scopes request failed: ${e.message}`, 'error', 'system');
     });
 
     this.cdr.detectChanges();
@@ -366,7 +375,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     try {
       await this.dapSession.continue();
     } catch (e: any) {
-      this.appendDapLog(`[Error] Continue failed: ${e.message}`, 'stderr');
+      this.logService.consoleLog(`Continue failed: ${e.message}`, 'error', 'system');
     }
   }
 
@@ -376,7 +385,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     try {
       await this.dapSession.pause();
     } catch (e: any) {
-      this.appendDapLog(`[Error] Pause failed: ${e.message}`, 'stderr');
+      this.logService.consoleLog(`Pause failed: ${e.message}`, 'error', 'system');
     }
   }
 
@@ -386,7 +395,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     try {
       await this.dapSession.next();
     } catch (e: any) {
-      this.appendDapLog(`[Error] Step Over failed: ${e.message}`, 'stderr');
+      this.logService.consoleLog(`Step Over failed: ${e.message}`, 'error', 'system');
     }
   }
 
@@ -396,7 +405,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     try {
       await this.dapSession.stepIn();
     } catch (e: any) {
-      this.appendDapLog(`[Error] Step Into failed: ${e.message}`, 'stderr');
+      this.logService.consoleLog(`Step Into failed: ${e.message}`, 'error', 'system');
     }
   }
 
@@ -406,31 +415,31 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     try {
       await this.dapSession.stepOut();
     } catch (e: any) {
-      this.appendDapLog(`[Error] Step Out failed: ${e.message}`, 'stderr');
+      this.logService.consoleLog(`Step Out failed: ${e.message}`, 'error', 'system');
     }
   }
 
   /** Stop debugging */
   public async onStop(): Promise<void> {
     try {
-      this.appendDapLog('Debug session stopped by user', 'console');
+      this.logService.consoleLog('Debug session stopped by user', 'info', 'system');
       await this.dapSession.terminate();
     } catch (e: any) {
-      this.appendDapLog(`[Error] Terminate failed: ${e.message}`, 'stderr');
+      this.logService.consoleLog(`Terminate failed: ${e.message}`, 'error', 'system');
     }
   }
 
-  /** Restart debugging */
+  /** Reset session (Disconnect and restart) */
   public async onRestart(): Promise<void> {
     const validStates: ExecutionState[] = ['running', 'stopped', 'terminated', 'error'];
     if (!validStates.includes(this.executionState)) return;
     try {
       await this.dapSession.disconnect();
       this.clearExecutionState();
-      this.appendDapLog(this.executionState === 'error' ? 'Reconnecting to session...' : 'Restarting session...', 'console');
+      this.logService.consoleLog(this.executionState === 'error' ? 'Reconnecting to session...' : 'Restarting session...', 'info', 'system');
       await this.startSession();
     } catch (e: any) {
-      this.appendDapLog(`[Error] Restart/Reconnect failed: ${e.message}`, 'stderr');
+      this.logService.consoleLog(`Restart/Reconnect failed: ${e.message}`, 'error', 'system');
     }
   }
 
@@ -442,7 +451,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
     const expr = this.evaluateExpression;
     this.evaluateExpression = ''; // clear input
-    this.appendDapLog(`> ${expr}`, 'console');
+    this.logService.consoleLog(`> ${expr}`, 'info', 'system');
 
     try {
       const response = await this.dapSession.sendRequest('evaluate', {
@@ -451,12 +460,12 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       });
 
       if (response.success && response.body) {
-        this.appendDapLog(response.body.result, 'stdout');
+        this.logService.consoleLog(response.body.result, 'info', 'stdout');
       } else {
-        this.appendDapLog(response.message || 'Evaluate failed', 'stderr');
+        this.logService.consoleLog(response.message || 'Evaluate failed', 'error', 'system');
       }
     } catch (e: any) {
-      this.appendDapLog(`[Error] ${e.message}`, 'stderr');
+      this.logService.consoleLog(`Evaluate failed: ${e.message}`, 'error', 'system');
     }
   }
 
@@ -467,34 +476,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     this.activeLine = null;
     this.activeLineFilePath = null;
     this.cdr.detectChanges();
-  }
-
-  private appendDapLog(message: string, category: string = 'console'): void {
-    if (!message) return;
-    const cleanMsg = message.endsWith('\n') ? message.slice(0, -1) : message;
-
-    // Immutable update: create new reference to trigger change detection
-    this.dapLogs = [...this.dapLogs, {
-      timestamp: new Date(),
-      message: cleanMsg,
-      category
-    }];
-    this.cdr.detectChanges();
-    this.scrollToBottom();
-  }
-
-  private appendProgramLog(message: string, category: string = 'console'): void {
-    if (!message) return;
-    const cleanMsg = message.endsWith('\n') ? message.slice(0, -1) : message;
-
-    // Immutable update
-    this.programLogs = [...this.programLogs, {
-      timestamp: new Date(),
-      message: cleanMsg,
-      category
-    }];
-    this.cdr.detectChanges();
-    this.scrollToBottom();
   }
 
   private scrollToBottom(): void {
@@ -517,6 +498,9 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     if (this.stateSubscription) {
       this.stateSubscription.unsubscribe();
     }
+    if (this.logSubscription) {
+      this.logSubscription.unsubscribe();
+    }
     this.dapSession.disconnect();
   }
 
@@ -530,10 +514,4 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
     this.router.navigate(['/setup']);
   }
-}
-
-export interface LogEntry {
-  timestamp: Date;
-  message: string;
-  category: string;
 }
