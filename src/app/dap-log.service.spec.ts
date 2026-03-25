@@ -48,4 +48,20 @@ describe('DapLogService', () => {
     expect(consoleLogs.length).toBe(0);
     expect(progLogs.length).toBe(0);
   });
+
+  it('should limit memory size to approx 1MB', async () => {
+    // 256K chars * 2 bytes/char = 512KB
+    const largeMessage = 'a'.repeat(256 * 1024);
+
+    // Add 3 large messages (Total ~1.5MB)
+    service.consoleLog(largeMessage, 'info');
+    service.consoleLog(largeMessage, 'info');
+    service.consoleLog(largeMessage, 'info');
+
+    const logs = await firstValueFrom(service.consoleLogs$);
+
+    // Should have pruned the first message to stay under 1MB
+    // Total size should be ~1MB (2 messages)
+    expect(logs.length).toBe(2);
+  });
 });

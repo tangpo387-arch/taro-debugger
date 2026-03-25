@@ -15,6 +15,8 @@ export class DapLogService {
   /** Program Output Logs (Stdout/Stderr) */
   public readonly programLogs$: Observable<LogEntry[]> = this.programLogsSubject.asObservable();
 
+  private readonly MAX_LOG_MEMORY_SIZE = 1 * 1024 * 1024; // 1MB (approximate)
+
   /**
    * Append a log entry to the main console stream.
    * @param message Log message
@@ -25,7 +27,7 @@ export class DapLogService {
     if (!message) return;
     const cleanMsg = this.trimNewline(message);
 
-    this.consoleLogsSubject.next([
+    const newLogs: LogEntry[] = [
       ...this.consoleLogsSubject.value,
       {
         timestamp: new Date(),
@@ -33,7 +35,9 @@ export class DapLogService {
         category,
         level
       }
-    ]);
+    ];
+
+    this.consoleLogsSubject.next(this.limitMemorySize(newLogs));
   }
 
   /**
@@ -46,7 +50,7 @@ export class DapLogService {
     const cleanMsg = this.trimNewline(message);
     const level = category === 'stderr' ? 'error' : 'info';
 
-    this.programLogsSubject.next([
+    const newLogs: LogEntry[] = [
       ...this.programLogsSubject.value,
       {
         timestamp: new Date(),
@@ -54,7 +58,26 @@ export class DapLogService {
         category,
         level
       }
-    ]);
+    ];
+
+    this.programLogsSubject.next(this.limitMemorySize(newLogs));
+  }
+
+  /**
+   * Estimates memory size and trims oldest entries if limit is exceeded.
+   */
+  private limitMemorySize(logs: LogEntry[]): LogEntry[] {
+    let totalSize = logs.reduce((acc, log) => acc + log.message.length * 2, 0);
+    const result = [...logs];
+
+    while (totalSize > this.MAX_LOG_MEMORY_SIZE && result.length > 1) {
+      const removed = result.shift();
+      if (removed) {
+        totalSize -= removed.message.length * 2;
+      }
+    }
+
+    return result;
   }
 
   /**
