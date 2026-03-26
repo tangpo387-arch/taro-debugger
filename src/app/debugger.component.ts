@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription, Observable, firstValueFrom } from 'rxjs';
@@ -18,7 +18,7 @@ import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrollin
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 
-import { MatTreeModule } from '@angular/material/tree';
+import { MatTreeModule, MatTree } from '@angular/material/tree';
 
 // Import child components and global configuration services
 import { EditorComponent } from './editor.component';
@@ -64,6 +64,9 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
   private readonly cdr = inject(ChangeDetectorRef);
+
+  /** Access the mat-tree instance for programmatic control */
+  @ViewChild('tree') tree?: MatTree<FileNode>;
 
   /** Bind DAP connection status */
   public readonly connectionStatus$: Observable<boolean> = this.dapSession.connectionStatus$;
@@ -114,6 +117,18 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public activeLine: number | null = null;
   public activeLineFilePath: string | null = null;
 
+  /** Resizing state and dimensions */
+  public leftWidth: number = 250;
+  public rightWidth: number = 300;
+  public consoleHeight: number = 250;
+  public leftVisible: boolean = true;
+
+  private isResizingLeft = false;
+  private isResizingRight = false;
+  private isResizingBottom = false;
+
+  private readonly STORAGE_KEY = 'taro-debugger-layout-sizes';
+
   /**
    * Executed on component initialization
    * Responsible for fetching the latest configuration from DapConfigService
@@ -146,6 +161,87 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     this.logSubscription.add(this.logService.programLogs$.subscribe(() => this.scrollToBottom()));
 
     await this.startSession();
+
+    // Load persisted sizes
+    this.loadPersistedSizes();
+  }
+
+  private loadPersistedSizes(): void {
+    const data = localStorage.getItem(this.STORAGE_KEY);
+    if (data) {
+      try {
+        const sizes = JSON.parse(data);
+        if (sizes.left && typeof sizes.left === 'number') {
+          this.leftWidth = Math.max(150, Math.min(600, sizes.left));
+        }
+        if (sizes.right && typeof sizes.right === 'number') {
+          this.rightWidth = Math.max(200, Math.min(600, sizes.right));
+        }
+        if (sizes.bottom && typeof sizes.bottom === 'number') {
+          this.consoleHeight = Math.max(100, Math.min(window.innerHeight - 200, sizes.bottom));
+        }
+        if (sizes.leftVisible !== undefined) {
+          this.leftVisible = !!sizes.leftVisible;
+        }
+      } catch (e) {
+        console.warn('Failed to parse persisted layout sizes', e);
+      }
+    }
+  }
+
+  private savePersistedSizes(): void {
+    const data = {
+      left: this.leftWidth,
+      right: this.rightWidth,
+      bottom: this.consoleHeight,
+      leftVisible: this.leftVisible
+    };
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+  }
+
+  // ── Resizing Logic ─────────────────────────────────────────────────
+
+  public onResizeStart(event: MouseEvent, direction: 'left' | 'right' | 'bottom'): void {
+    event.preventDefault();
+
+    // Add global listeners
+    const mouseMove = (e: MouseEvent) => {
+      if (direction === 'left') {
+        this.leftWidth = Math.max(150, Math.min(600, e.clientX));
+      } else if (direction === 'right') {
+        const windowWidth = window.innerWidth;
+        this.rightWidth = Math.max(200, Math.min(600, windowWidth - e.clientX));
+      } else if (direction === 'bottom') {
+        const windowHeight = window.innerHeight;
+        const statusBarHeight = 32;
+        this.consoleHeight = Math.max(100, Math.min(windowHeight - 150, windowHeight - e.clientY - statusBarHeight));
+      }
+      this.cdr.detectChanges();
+    };
+
+    const mouseUp = () => {
+      this.savePersistedSizes();
+      window.removeEventListener('mousemove', mouseMove);
+      window.removeEventListener('mouseup', mouseUp);
+    };
+
+    window.addEventListener('mousemove', mouseMove);
+    window.addEventListener('mouseup', mouseUp);
+  }
+
+  /**
+   * Toggle the visibility of the left sidebar (File Explorer)
+   */
+  public toggleLeftSidenav(): void {
+    this.leftVisible = !this.leftVisible;
+    this.savePersistedSizes();
+  }
+
+  /**
+   * Collapse all expanded nodes in the file tree
+   */
+  public collapseAllNodes(): void {
+    this.tree?.collapseAll();
   }
 
   /**

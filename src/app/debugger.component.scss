@@ -27,9 +27,14 @@
   padding: 0 16px;
 }
 
+.sidebar-toggle-btn {
+  margin-right: 8px;
+}
+
 .brand-title {
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
 }
 
 .loaded-file {
@@ -61,24 +66,54 @@
 }
 
 .sidenav-left {
-  width: 250px;
   border-right: 1px solid var(--mat-sys-outline-variant);
+  min-width: 150px;
+  max-width: 80vw;
 }
 
 .sidenav-right {
-  width: 300px;
   border-left: 1px solid var(--mat-sys-outline-variant);
   display: flex;
   flex-direction: column;
+  min-width: 200px;
+  max-width: 80vw;
 }
 
 .sidenav-header {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 
-  h3 {
-    font-weight: bold;
-    color: var(--mat-sys-on-surface-variant);
-    margin: 0 0 8px 0;
+  .header-title-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+
+    h3 {
+      font-weight: 700;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--mat-sys-on-surface-variant);
+      margin: 0;
+      opacity: 0.8;
+    }
+  }
+
+  .header-action-btn {
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    padding: 0;
+    margin-left: 4px;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover {
+      background-color: var(--mat-sys-surface-variant);
+    }
   }
 }
 
@@ -215,12 +250,12 @@ mat-tree-node {
 
 /* --- Console panel area style --- */
 .consoles-container {
-  height: 250px;
   flex-shrink: 0;
   border-top: 1px solid var(--mat-sys-outline-variant);
   background-color: var(--mat-sys-surface-container-high);
   display: flex;
   flex-direction: column;
+  position: relative;
 
   mat-tab-group {
     height: 100%;
@@ -375,4 +410,42 @@ mat-tree-node {
 
 .execution-state {
   font-weight: 500;
+}
+/* --- Resize Handles --- */
+.resize-handle {
+  position: absolute;
+  z-index: 100;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: var(--mat-sys-primary);
+    opacity: 0.5;
+  }
+}
+
+.resize-handle-left {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
+  border-right: 1px solid var(--mat-sys-outline-variant);
+}
+
+.resize-handle-right {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
+  border-left: 1px solid var(--mat-sys-outline-variant);
+}
+
+.resize-handle-bottom {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  cursor: row-resize;
+  border-top: 1px solid var(--mat-sys-outline-variant);
 }

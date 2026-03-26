@@ -3,6 +3,9 @@
 
   <!-- 1. Top toolbar and navigation -->
   <mat-toolbar color="primary" class="top-toolbar">
+    <button mat-icon-button (click)="toggleLeftSidenav()" title="Toggle File Explorer" class="sidebar-toggle-btn">
+      <mat-icon>{{ leftVisible ? 'menu_open' : 'menu' }}</mat-icon>
+    </button>
     <span class="brand-title">Taro Debugger</span>
     <!-- Show current loaded executable path from configuration -->
     <span class="loaded-file">
@@ -60,12 +63,23 @@
   </mat-toolbar>
 
   <!-- Core layout container: Sidenavs and main content area -->
-  <mat-sidenav-container class="debugger-container">
+  <mat-sidenav-container class="debugger-container" autosize>
 
     <!-- 2. Left sidenav: File Explorer -->
-    <mat-sidenav mode="side" opened position="start" class="sidenav-left">
+    <mat-sidenav mode="side" [opened]="leftVisible" position="start" class="sidenav-left" [style.width.px]="leftWidth">
+      <!-- Left Resize Handle -->
+      <div class="resize-handle resize-handle-left" (mousedown)="onResizeStart($event, 'left')"></div>
       <div class="sidenav-header">
-        <h3>Files</h3>
+        <div class="header-title-row">
+          <h3>Files</h3>
+          <span class="spacer"></span>
+          <button mat-icon-button (click)="collapseAllNodes()" title="Collapse All Nodes" class="header-action-btn" [disabled]="!fileTreeSupported">
+            <mat-icon>unfold_less</mat-icon>
+          </button>
+          <button mat-icon-button (click)="toggleLeftSidenav()" title="Minimize Sidebar" class="header-action-btn">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+        </div>
         <div class="source-path" title="{{ currentConfig.sourcePath }}">
           Source: {{ currentConfig.sourcePath || 'Not specified' }}
         </div>
@@ -104,7 +118,9 @@
     </mat-sidenav>
 
     <!-- 3. Right sidenav: Variables and Call Stack -->
-    <mat-sidenav mode="side" opened position="end" class="sidenav-right">
+    <mat-sidenav mode="side" opened position="end" class="sidenav-right" [style.width.px]="rightWidth">
+      <!-- Right Resize Handle -->
+      <div class="resize-handle resize-handle-right" (mousedown)="onResizeStart($event, 'right')"></div>
       <!-- Variables View Section -->
       <div class="panel-section variables-section">
         <h3 class="panel-title">Variables</h3>
@@ -142,7 +158,9 @@
       </div>
 
       <!-- Bottom Consoles Area -->
-      <div class="consoles-container">
+      <div class="consoles-container" [style.height.px]="consoleHeight">
+        <!-- Bottom Resize Handle -->
+        <div class="resize-handle resize-handle-bottom" (mousedown)="onResizeStart($event, 'bottom')"></div>
         <mat-tab-group animationDuration="0ms">
           <mat-tab label="Console">
             <cdk-virtual-scroll-viewport itemSize="20" class="console-viewport" minBufferPx="200" maxBufferPx="400">
