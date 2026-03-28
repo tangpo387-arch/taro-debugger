@@ -2,7 +2,7 @@
 title: System Architecture (Session / Transport / UI Layers)
 scope: architecture, layers, state-machine, data-flow, error-handling
 audience: [Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-03-28
+last_updated: 2026-03-29
 related:
   - docs/system-specification.md
   - docs/dap-integration-faq.md
@@ -241,14 +241,16 @@ graph TD
     subgraph Layout ["DebuggerComponent Layout"]
         TB["Top Toolbar<br/>Brand title / Debug control buttons / Reset button"]
         LS["Left Sidenav<br/>File Explorer (File Tree)<br/>Toggle show/hide"]
-        MC["Main Content<br/>Monaco Editor + Console Area"]
-        RS["Right Sidenav<br/>Variables / Call Stack"]
+        MC["Main Content<br/>Monaco Editor (app-editor)"]
+        RS["Right Sidenav<br/>Variables (app-variables) / Call Stack"]
+        LV["Console Area<br/>(app-log-viewer)<br/>Dual-tab: Console + Program Console<br/>+ Evaluate input"]
         SB["Status Bar<br/>Connection status / Execution state"]
     end
 
     TB --> LS
     TB --> MC
     TB --> RS
+    MC --> LV
     MC --> SB
 
     style Layout fill:#f9f9f9,stroke:#333,stroke-dasharray: 5 5
@@ -275,7 +277,7 @@ graph TD
     end
 ```
 
-### 4.5 Logging Architecture (DapLogService)
+### 4.5 Logging Architecture (DapLogService + LogViewerComponent)
 
 `DapLogService` is a global singleton service (`providedIn: 'root'`) managing two independent log streams:
 
@@ -289,12 +291,37 @@ Log Category definitions (corresponding to `LogCategory` type):
 | Category | Description |
 |---|---|
 | `system` | Frontend system internal messages (e.g., "Connecting...", "Session started") |
-| `dap` | DAP protocol events (e.g., "[Event] stopped") |
+| `dap` | DAP protocol events (e.g., "[Event] stopped") — may carry a structured `data` payload |
 | `console` | General Debugger Console messages |
 | `stdout` | Debugged program standard output |
 | `stderr` | Debugged program standard error output |
 
 Log memory cap is **1 MB** (approximate); oldest records are automatically evicted when exceeded.
+
+#### LogEntry Structured Payload
+
+The `LogEntry` interface supports an optional `data?: any` field for attaching a raw structured object (e.g., a raw DAP event) to a log entry. This payload is **display-only** and is never used for state management:
+
+```typescript
+interface LogEntry {
+  timestamp: Date;
+  message: string;
+  category: LogCategory;
+  level: 'info' | 'error';
+  data?: any; // Optional structured payload for UI inspection only
+}
+```
+
+#### LogViewerComponent (UI Rendering)
+
+`LogViewerComponent` (`<app-log-viewer>`) is the dedicated standalone component responsible for rendering all console output. It adheres to the following architecture constraints:
+
+- **Injects `DapLogService` directly** — does not receive log data via `@Input()` from the parent `DebuggerComponent` (R_SM4 compliance).
+- **Injects `DapSessionService`** — for sending `evaluate` requests from the command input field.
+- **Manages expanded/collapsed state locally** via `private readonly expandedLogs = new Set<string>()`, keyed by `log.timestamp.getTime().toString()`. This UI state is **never** stored in any Service.
+- **Clears `expandedLogs` in `ngOnDestroy()`** per R_SM5 to prevent orphan key accumulation on component teardown.
+
+
 
 ---
 
@@ -413,8 +440,9 @@ To avoid conflicts with standard DAP event names, all synthetic events generated
 
 | File | Layer | Description |
 |---|---|---|
-| `debugger.component.ts` | UI | Main debug view component |
+| `debugger.component.ts` | UI | Main debug view component (layout orchestrator) |
 | `debugger.component.html` | UI | Main debug view template |
+| `log-viewer.component.ts` | UI | Standalone console log viewer: dual-tab console, evaluate input, expandable payload |
 | `setup.component.ts` | UI | Setup page component |
 | `dap-session.service.ts` | Session | DAP session management service |
 | `dap-config.service.ts` | Session | Configuration management service |

@@ -2,7 +2,7 @@
 title: System Specification v1.0
 scope: requirements, ui-layout, dap-scope, deployment, error-handling
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-03-28
+last_updated: 2026-03-29
 related:
   - docs/architecture.md
   - docs/work-items.md
@@ -75,10 +75,23 @@ A second `<mat-sidenav>` (set `position="end"`) dedicated to visualizing runtime
 
 #### 3.2.5 Status Bar & Console
 
-Deployed at the bottom of the layout, responsible for feedback on system runtime status and communication logs.
+Deployed at the bottom of the layout, responsible for feedback on system runtime status and communication logs. This section is encapsulated in the standalone `<app-log-viewer>` component (`LogViewerComponent`).
 
-* **Connection Status Indicator**: Dynamically bound to `isDapConnected`, using green/gray indicators to represent connection status.
-* **Debug Console**: Uses `cdk-virtual-scroll-viewport` underneath, displaying debug system logs and application output, with a custom command input field.
+* **Connection Status Indicator**: Dynamically bound to the `connectionStatus$` stream from `DapSessionService`, using green/gray/red indicators to represent connected, disconnected, or error states, shown in the `DebuggerComponent` footer.
+* **Debug Console (`app-log-viewer`)**: The `LogViewerComponent` manages all console rendering independently. It subscribes directly to `DapLogService` (SSOT) without receiving any `@Input()` from the parent `DebuggerComponent`.
+  * Uses `mat-tab-group` with two tabs: **Console** (DAP protocol events, system messages) and **Program Console** (debuggee stdout/stderr).
+  * Uses `cdk-virtual-scroll-viewport` for performant rendering of large log volumes.
+  * Includes a command input field at the bottom of the Console tab for sending `evaluate` DAP requests.
+  * Supports auto-scroll to the latest log entry on new output.
+
+#### 3.2.6 Log Entry Structured Payload Inspection
+
+Certain log entries (e.g., DAP events logged with category `dap`) may carry a structured data payload alongside the text message. The UI must support interactive inspection of this payload directly within the console panel.
+
+* **Expandable Disclosure**: When a log entry carries a structured payload, an expand/collapse toggle button is displayed inline after the message text.
+* **Payload Rendering**: On expand, the raw payload is rendered below the log entry's header row in a scrollable, monospaced code block (using `json` pipe formatting).
+* **Height Constraint**: The expanded payload block must be capped at `200px` with an internal vertical scrollbar, preventing the payload from disrupting the virtual scroll viewport's row-height calculation.
+* **UI State Isolation**: The expanded/collapsed state of each log entry is managed exclusively by the `LogViewerComponent`'s local state (a `Set<string>` keyed by timestamp), never stored in the `LogEntry` data model or any shared service.
 
 ## 4. Communication Architecture
 

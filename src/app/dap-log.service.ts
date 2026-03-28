@@ -23,7 +23,7 @@ export class DapLogService {
    * @param level Log level ('info' or 'error')
    * @param category Log category (internal classification)
    */
-  public consoleLog(message: string, level: 'info' | 'error' = 'info', category: LogCategory = 'console'): void {
+  public consoleLog(message: string, level: 'info' | 'error' = 'info', category: LogCategory = 'console', data?: any): void {
     if (!message) return;
     const cleanMsg = this.trimNewline(message);
 
@@ -33,7 +33,8 @@ export class DapLogService {
         timestamp: new Date(),
         message: cleanMsg,
         category,
-        level
+        level,
+        data,
       }
     ];
 

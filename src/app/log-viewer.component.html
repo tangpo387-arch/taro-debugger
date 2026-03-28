@@ -1,0 +1,68 @@
+<mat-tab-group animationDuration="0ms" class="log-tab-group">
+
+  <!-- ── Console Tab (DAP events, system messages) ──────────────────── -->
+  <mat-tab label="Console">
+    <cdk-virtual-scroll-viewport itemSize="20" class="console-viewport"
+                                 minBufferPx="200" maxBufferPx="400">
+      <div *cdkVirtualFor="let log of consoleLogs$ | async; trackBy: trackByLog"
+           class="console-line"
+           [class.expanded]="isLogExpanded(log)">
+
+        <!-- Header row: timestamp + message + optional expand toggle -->
+        <div class="log-line-header">
+          <span class="log-timestamp">[{{ log.timestamp | date:'HH:mm:ss.SSS' }}]</span>
+          <span class="log-message" [ngClass]="log.category" [class.log-level-error]="log.level === 'error'">
+            {{ log.message }}
+            @if (log.data) {
+              <button class="log-expand-btn" (click)="toggleLogExpand(log)"
+                      [attr.aria-label]="isLogExpanded(log) ? 'Collapse payload' : 'Expand payload'">
+                <mat-icon style="font-size: 14px; width: 14px; height: 14px; line-height: 14px;">
+                  {{ isLogExpanded(log) ? 'expand_less' : 'expand_more' }}
+                </mat-icon>
+              </button>
+            }
+          </span>
+        </div>
+
+        <!-- Expandable structured payload panel -->
+        @if (isLogExpanded(log) && log.data) {
+          <div class="log-data-view">{{ log.data | json }}</div>
+        }
+
+      </div>
+    </cdk-virtual-scroll-viewport>
+
+    <!-- Evaluate expression input -->
+    <div class="console-input-area">
+      <mat-icon>chevron_right</mat-icon>
+      <input matInput
+             type="text"
+             id="evaluate-expression-input"
+             placeholder="Evaluate expression..."
+             [(ngModel)]="evaluateExpression"
+             (keyup.enter)="evaluateCommand()">
+      <button mat-icon-button
+              id="evaluate-send-btn"
+              (click)="evaluateCommand()"
+              [disabled]="executionState !== 'stopped' || isEvaluating"
+              aria-label="Send evaluate command">
+        <mat-icon>send</mat-icon>
+      </button>
+    </div>
+  </mat-tab>
+
+  <!-- ── Program Console Tab (debuggee stdout/stderr) ───────────────── -->
+  <mat-tab label="Program Console">
+    <cdk-virtual-scroll-viewport itemSize="20" class="console-viewport"
+                                 minBufferPx="200" maxBufferPx="400">
+      <div *cdkVirtualFor="let log of programLogs$ | async; trackBy: trackByLog"
+           class="console-line">
+        <span class="log-timestamp">[{{ log.timestamp | date:'HH:mm:ss.SSS' }}]</span>
+        <span class="log-message" [ngClass]="log.category" [class.log-level-error]="log.level === 'error'">
+          {{ log.message }}
+        </span>
+      </div>
+    </cdk-virtual-scroll-viewport>
+  </mat-tab>
+
+</mat-tab-group>

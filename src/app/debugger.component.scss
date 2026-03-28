@@ -253,120 +253,17 @@ mat-tree-node {
   flex-shrink: 0;
   border-top: 1px solid var(--mat-sys-outline-variant);
   background-color: var(--mat-sys-surface-container-high);
-  display: flex;
-  flex-direction: column;
+  // position:relative is required so app-log-viewer can use position:absolute inset:0
   position: relative;
 
-  mat-tab-group {
-    height: 100%;
-  }
-
-  ::ng-deep .mat-mdc-tab-header {
-    background-color: var(--mat-sys-surface-container-highest);
-  }
-
-  ::ng-deep .mat-mdc-tab-body-wrapper {
-    flex: 1;
-    display: flex;
-    overflow: hidden;
-    height: 100%;
-  }
-
-  ::ng-deep .mat-mdc-tab-body {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-
-  ::ng-deep .mat-mdc-tab-body-content {
-    /* Force content section to fill the height */
-    height: 100% !important;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+  app-log-viewer {
+    position: absolute;
+    inset: 0;
   }
 }
 
-.console-viewport {
-  flex: 1;
-  width: 100%;
-  font-family: 'Consolas', 'Courier New', monospace;
-  font-size: 13px;
-  color: var(--mat-sys-on-surface);
-  // Use a slightly darker background for the viewport to make text pop
-  background-color: var(--mat-sys-surface-container-low);
-}
 
-.console-line {
-  height: 20px;
-  line-height: 20px;
-  padding: 0 16px;
-  white-space: pre;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--mat-sys-on-surface);
-
-  &:hover {
-    background-color: var(--mat-sys-surface-container-highest);
-  }
-
-  /* Different colors for log categories */
-  .log-timestamp {
-    color: var(--mat-sys-on-surface-variant);
-    margin-right: 8px;
-  }
-
-  .log-message {
-    &.system {
-      color: var(--mat-sys-primary);
-      /* Use primary color for system status */
-      font-weight: 500;
-    }
-
-    &.dap {
-      color: var(--mat-sys-secondary);
-      /* Use secondary color for DAP protocol events */
-      font-weight: 500;
-      opacity: 0.9;
-    }
-
-    &.log-level-error {
-      color: var(--mat-sys-error) !important;
-    }
-
-    // console and stdout inherits default color
-  }
-}
-
-/* Bottom command input area */
-.console-input-area {
-  display: flex;
-  align-items: center;
-  padding: 0 8px;
-  height: 40px;
-  flex-shrink: 0;
-  border-top: 1px solid var(--mat-sys-outline-variant);
-  background: var(--mat-sys-surface-container);
-
-  mat-icon {
-    color: var(--mat-sys-primary);
-    margin-right: 8px;
-  }
-
-  input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    outline: none;
-    color: var(--mat-sys-on-surface);
-    font-family: 'Consolas', 'Courier New', monospace;
-    font-size: 13px;
-
-    &::placeholder {
-      color: var(--mat-sys-outline);
-    }
-  }
-}
+/* Bottom command input area styles are now in log-viewer.component.scss */
 
 /* Bottom status bar style */
 .status-bar {

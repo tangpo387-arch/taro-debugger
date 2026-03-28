@@ -1,0 +1,163 @@
+// ── Host layout ───────────────────────────────────────────────────────────
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+// ── Tab group fills all available height ──────────────────────────────────
+// :host is sized via position:absolute;inset:0 in the parent (.consoles-container).
+// Three ::ng-deep overrides are required to propagate height through Material's
+// internal DOM layers — Material does not expose CSS variables for layout structure.
+.log-tab-group {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  // Layer 1: wrapper must grow to fill remaining space after tab header
+  :host & ::ng-deep .mat-mdc-tab-body-wrapper {
+    flex: 1;
+    min-height: 0; // Prevents flex children from overflowing
+    overflow: hidden;
+  }
+
+  // Layer 2: individual tab body must be a flex column
+  :host & ::ng-deep .mat-mdc-tab-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  // Layer 3: content area must fill the tab body and allow cdk-virtual-scroll to size
+  :host & ::ng-deep .mat-mdc-tab-body-content {
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+}
+
+// ── Virtual scroll viewport ───────────────────────────────────────────────
+.console-viewport {
+  flex: 1;
+  width: 100%;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 13px;
+  color: var(--mat-sys-on-surface);
+  background-color: var(--mat-sys-surface-container-low);
+}
+
+// ── Individual log row ────────────────────────────────────────────────────
+.console-line {
+  min-height: 20px;
+  padding: 0 16px;
+  overflow: hidden;
+  color: var(--mat-sys-on-surface);
+  box-sizing: border-box;
+
+  &.expanded {
+    background-color: var(--mat-sys-surface-container-highest);
+  }
+
+  &:hover {
+    background-color: var(--mat-sys-surface-container-highest);
+  }
+
+  .log-line-header {
+    height: 20px;
+    line-height: 20px;
+    display: flex;
+    align-items: center;
+    white-space: pre;
+  }
+
+  .log-timestamp {
+    color: var(--mat-sys-on-surface-variant);
+    margin-right: 8px;
+  }
+
+  .log-message {
+    &.system {
+      color: var(--mat-sys-primary);
+      font-weight: 500;
+    }
+
+    &.dap {
+      color: var(--mat-sys-secondary);
+      font-weight: 500;
+      opacity: 0.9;
+    }
+
+    &.log-level-error {
+      color: var(--mat-sys-error) !important;
+    }
+    // console and stdout inherit the default color
+  }
+}
+
+// ── Expand/collapse toggle button ─────────────────────────────────────────
+.log-expand-btn {
+  background: transparent;
+  border: none;
+  color: var(--mat-sys-on-surface-variant);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  margin-left: 8px;
+  opacity: 0.7;
+
+  &:hover {
+    opacity: 1;
+    color: var(--mat-sys-primary);
+  }
+}
+
+// ── Expanded JSON payload panel ───────────────────────────────────────────
+.log-data-view {
+  margin: 4px 0 8px 30px;
+  padding: 8px;
+  background-color: var(--mat-sys-surface-container);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 4px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--mat-sys-on-surface-variant);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  // Height cap to prevent virtual scroll offset corruption (§3.2.6)
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+// ── Evaluate command input row ────────────────────────────────────────────
+.console-input-area {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  height: 40px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface-container);
+
+  mat-icon {
+    color: var(--mat-sys-primary);
+    margin-right: 8px;
+  }
+
+  input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--mat-sys-on-surface);
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+
+    &::placeholder {
+      color: var(--mat-sys-outline);
+    }
+  }
+}

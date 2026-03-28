@@ -2,10 +2,8 @@ import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, ViewChild } fr
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription, Observable, firstValueFrom } from 'rxjs';
-import { FormsModule } from '@angular/forms';
-import { ViewChildren, QueryList } from '@angular/core';
 
-// Import Angular Material modules
+// Angular Material
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,20 +11,18 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
-import { MatTabsModule } from '@angular/material/tabs';
-import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-
 import { MatTreeModule, MatTree } from '@angular/material/tree';
 
 import { EditorComponent, BreakpointChangeEvent } from './editor.component';
 import { VariablesComponent } from './variables.component';
+import { LogViewerComponent } from './log-viewer.component';
 import { ErrorDialog, ErrorDialogData } from './error-dialog/error-dialog';
 import { DapConfigService, DapConfig } from './dap-config.service';
 import { DapSessionService, ExecutionState, VerifiedBreakpoint } from './dap-session.service';
 import { DapVariablesService } from './dap-variables.service';
-import { DapEvent, LogEntry } from './dap.types';
+import { DapEvent } from './dap.types';
 import { FileNode } from './file-tree.service';
 import { DapLogService } from './dap-log.service';
 
@@ -42,14 +38,12 @@ import { DapLogService } from './dap-log.service';
     MatFormFieldModule,
     MatSidenavModule,
     MatListModule,
-    MatTabsModule,
-    ScrollingModule,
     MatSnackBarModule,
     MatDialogModule,
     MatTreeModule,
-    FormsModule,
     EditorComponent,
     VariablesComponent,
+    LogViewerComponent,
   ],
   providers: [
     DapSessionService,
@@ -83,10 +77,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
   private eventSubscription?: Subscription;
   private stateSubscription?: Subscription;
-  private logSubscription?: Subscription;
-
-  // ViewChildren for auto-scrolling
-  @ViewChildren(CdkVirtualScrollViewport) viewports!: QueryList<CdkVirtualScrollViewport>;
 
   /** Current DAP full configuration for HTML template binding */
   public currentConfig: DapConfig = {
@@ -100,15 +90,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
   /** Current execution state (used for non-async pipe scenarios) */
   public executionState: ExecutionState = 'idle';
-
-  /** Console output logs (System/DAP) */
-  public readonly consoleLogs$: Observable<LogEntry[]> = this.logService.consoleLogs$;
-
-  /** Program output logs */
-  public readonly programLogs$: Observable<LogEntry[]> = this.logService.programLogs$;
-
-  /** Current evaluate expression input string */
-  public evaluateExpression: string = '';
 
   /** File tree state */
   public fileDataSource: FileNode[] = [];
@@ -162,10 +143,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     this.eventSubscription = this.dapSession.onEvent().subscribe((event) => {
       this.handleDapEvent(event);
     });
-
-    // Auto-scroll when logs update
-    this.logSubscription = this.consoleLogs$.subscribe(() => this.scrollToBottom());
-    this.logSubscription.add(this.logService.programLogs$.subscribe(() => this.scrollToBottom()));
 
     await this.startSession();
 
@@ -362,7 +339,8 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     // Internal synthetic events (prefixed with '_') are not logged as normal DAP events
     const skipLogs = ['output', 'breakpoint', 'loadedSource', '_dapError', '_transportError'];
     if (!skipLogs.includes(event.event)) {
-      this.logService.consoleLog(`[Event] ${event.event}`, 'info', 'dap');
+      const msg = `[Event] ${event.event}`;
+      this.logService.consoleLog(msg, 'info', 'dap', event);
     }
 
     switch (event.event) {
@@ -642,32 +620,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Send evaluate expression request */
-  public async evaluateCommand(): Promise<void> {
-    if (!this.evaluateExpression.trim() || this.executionState !== 'stopped') {
-      return;
-    }
-
-    const expr = this.evaluateExpression;
-    this.evaluateExpression = ''; // clear input
-    this.logService.consoleLog(`> ${expr}`, 'info', 'system');
-
-    try {
-      const response = await this.dapSession.sendRequest('evaluate', {
-        expression: expr,
-        context: 'repl'
-      });
-
-      if (response.success && response.body) {
-        this.logService.consoleLog(response.body.result, 'info', 'stdout');
-      } else {
-        this.logService.consoleLog(response.message || 'Evaluate failed', 'error', 'system');
-      }
-    } catch (e: any) {
-      this.logService.consoleLog(`Evaluate failed: ${e.message}`, 'error', 'system');
-    }
-  }
-
   /** Clear UI state related to the current execution point (stacks, current line, etc.) */
   private clearExecutionState(): void {
     this.stackFrames = [];
@@ -677,29 +629,9 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  private scrollToBottom(): void {
-    // Force scroll to bottom on the next frame
-    setTimeout(() => {
-      this.viewports.forEach(viewport => {
-        viewport.scrollToIndex(viewport.getDataLength(), 'smooth');
-      });
-    }, 50);
-  }
-
-  public trackByFn(index: number, item: LogEntry): string {
-    return item.timestamp.getTime() + item.message;
-  }
-
   public ngOnDestroy(): void {
-    if (this.eventSubscription) {
-      this.eventSubscription.unsubscribe();
-    }
-    if (this.stateSubscription) {
-      this.stateSubscription.unsubscribe();
-    }
-    if (this.logSubscription) {
-      this.logSubscription.unsubscribe();
-    }
+    this.eventSubscription?.unsubscribe();
+    this.stateSubscription?.unsubscribe();
     this.dapSession.disconnect();
   }
 

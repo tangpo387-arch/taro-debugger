@@ -158,37 +158,11 @@
           (breakpointsChange)="onBreakpointsChange($event)" />
       </div>
 
-      <!-- Bottom Consoles Area -->
+      <!-- Bottom Consoles Area — rendered by LogViewerComponent -->
       <div class="consoles-container" [style.height.px]="consoleHeight">
         <!-- Bottom Resize Handle -->
         <div class="resize-handle resize-handle-bottom" (mousedown)="onResizeStart($event, 'bottom')"></div>
-        <mat-tab-group animationDuration="0ms">
-          <mat-tab label="Console">
-            <cdk-virtual-scroll-viewport itemSize="20" class="console-viewport" minBufferPx="200" maxBufferPx="400">
-              <div *cdkVirtualFor="let log of consoleLogs$ | async; trackBy: trackByFn" class="console-line">
-                <span class="log-timestamp">[{{ log.timestamp | date:'HH:mm:ss.SSS' }}]</span>
-                <span class="log-message" [ngClass]="log.category" [class.log-level-error]="log.level === 'error'">{{ log.message }}</span>
-              </div>
-            </cdk-virtual-scroll-viewport>
-            <!-- Evaluate input field -->
-            <div class="console-input-area">
-              <mat-icon>chevron_right</mat-icon>
-              <input matInput type="text" placeholder="Evaluate expression..." [(ngModel)]="evaluateExpression"
-                (keyup.enter)="evaluateCommand()">
-              <button mat-icon-button (click)="evaluateCommand()" [disabled]="executionState !== 'stopped'">
-                <mat-icon>send</mat-icon>
-              </button>
-            </div>
-          </mat-tab>
-          <mat-tab label="Program Console">
-            <cdk-virtual-scroll-viewport itemSize="20" class="console-viewport" minBufferPx="200" maxBufferPx="400">
-              <div *cdkVirtualFor="let log of programLogs$ | async; trackBy: trackByFn" class="console-line">
-                <span class="log-timestamp">[{{ log.timestamp | date:'HH:mm:ss.SSS' }}]</span>
-                <span class="log-message" [ngClass]="log.category" [class.log-level-error]="log.level === 'error'">{{ log.message }}</span>
-              </div>
-            </cdk-virtual-scroll-viewport>
-          </mat-tab>
-        </mat-tab-group>
+        <app-log-viewer></app-log-viewer>
       </div>
 
       <!-- Bottom Status Bar -->

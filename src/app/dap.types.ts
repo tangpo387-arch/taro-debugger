@@ -40,4 +40,6 @@ export interface LogEntry {
   message: string;
   category: LogCategory;
   level: 'info' | 'error';
+  /** Optional structured payload (e.g. a raw DAP event object) for UI inspection. */
+  data?: any;
 }
