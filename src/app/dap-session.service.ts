@@ -7,7 +7,7 @@ import { DapRequest, DapResponse, DapEvent } from './dap.types';
 import { TransportFactoryService } from './transport-factory.service';
 import { FileTreeService } from './file-tree.service';
 import { DapFileTreeService } from './dap-file-tree.service';
-import { DapLogService } from './dap-log.service';
+
 
 /** A single verified breakpoint returned by the DAP adapter */
 export interface VerifiedBreakpoint {
@@ -27,7 +27,7 @@ export type ExecutionState = 'idle' | 'starting' | 'running' | 'stopped' | 'term
 @Injectable()
 export class DapSessionService {
   private readonly configService = inject(DapConfigService);
-  private readonly logService = inject(DapLogService);
+
   private readonly transportFactory = inject(TransportFactoryService);
   private seq = 1;
   private readonly pendingRequests = new Map<number, { resolve: (response: DapResponse) => void; reject: (error: any) => void }>();
@@ -406,12 +406,15 @@ export class DapSessionService {
           handler.reject(new Error(response.message || `Command ${response.command} failed`));
         }
       } else {
-        // Invalid response: no matching pending request (§7.2)
-        this.logService.consoleLog(
-          `Received DAP response for unknown request_seq=${response.request_seq}, command='${response.command}'. Ignoring.`,
-          'error',
-          'system'
-        );
+        // Invalid response: no matching pending request — emit as _sessionWarning (§7.2)
+        this.eventSubject.next({
+          seq: 0,
+          type: 'event',
+          event: '_sessionWarning',
+          body: {
+            message: `Received DAP response for unknown request_seq=${response.request_seq}, command='${response.command}'. Ignoring.`
+          }
+        });
       }
     } else if (msg.type === 'event') {
       this.handleTransportEvent(msg as DapEvent);
@@ -419,7 +422,6 @@ export class DapSessionService {
   }
 
   private handleIncomingTransportError(err: any): void {
-    this.logService.consoleLog(`DAP Session subscription error: ${err?.message || 'Unknown error'}`, 'error', 'system');
     const errMsg = err?.message || 'Unknown transport error';
     // Emit synthetic event for UI-layer notification before transitioning state
     this.eventSubject.next({
@@ -437,7 +439,6 @@ export class DapSessionService {
 
   private handleIncomingTransportComplete(): void {
     if (this.executionStateSubject.value !== 'idle') {
-      this.logService.consoleLog('DAP Session unexpected disconnect (completed)', 'error', 'system');
       // Emit synthetic event for UI-layer notification before transitioning state
       this.eventSubject.next({
         seq: 0,

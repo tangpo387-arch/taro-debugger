@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { DapSessionService, ExecutionState } from './dap-session.service';
 import { DapConfigService } from './dap-config.service';
-import { DapLogService } from './dap-log.service';
 import { TransportFactoryService } from './transport-factory.service';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Subject, of, BehaviorSubject } from 'rxjs';
@@ -9,7 +8,6 @@ import { Subject, of, BehaviorSubject } from 'rxjs';
 describe('DapSessionService', () => {
   let service: DapSessionService;
   let configService: any;
-  let logService: any;
   let transportFactory: any;
   let mockTransport: any;
   let mockMessage$: Subject<any>;
@@ -41,16 +39,11 @@ describe('DapSessionService', () => {
       })
     };
 
-    logService = {
-      consoleLog: vi.fn()
-    };
-
     TestBed.configureTestingModule({
       providers: [
         DapSessionService,
         { provide: TransportFactoryService, useValue: transportFactory },
-        { provide: DapConfigService, useValue: configService },
-        { provide: DapLogService, useValue: logService }
+        { provide: DapConfigService, useValue: configService }
       ]
     });
 
@@ -112,6 +105,10 @@ describe('DapSessionService', () => {
     it('should ignore responses with unknown request_seq', () => {
       (service as any).transport = mockTransport;
 
+      // The session should emit a _sessionWarning event instead of logging directly
+      const emittedEvents: any[] = [];
+      (service as any).eventSubject.subscribe((e: any) => emittedEvents.push(e));
+
       (service as any).handleIncomingMessage({
         type: 'response',
         request_seq: 999,
@@ -119,11 +116,9 @@ describe('DapSessionService', () => {
         command: 'unknown'
       });
 
-      expect(logService.consoleLog).toHaveBeenCalledWith(
-        expect.stringContaining('unknown request_seq=999'),
-        'error',
-        'system'
-      );
+      expect(emittedEvents).toHaveLength(1);
+      expect(emittedEvents[0].event).toBe('_sessionWarning');
+      expect(emittedEvents[0].body.message).toContain('unknown request_seq=999');
     });
   });
 

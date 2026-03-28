@@ -337,7 +337,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
   private handleDapEvent(event: DapEvent): void {
     // Internal synthetic events (prefixed with '_') are not logged as normal DAP events
-    const skipLogs = ['output', 'breakpoint', 'loadedSource', '_dapError', '_transportError'];
+    const skipLogs = ['output', 'breakpoint', 'loadedSource', '_dapError', '_transportError', '_sessionWarning'];
     if (!skipLogs.includes(event.event)) {
       const msg = `[Event] ${event.event}`;
       this.logService.consoleLog(msg, 'info', 'dap', event);
@@ -431,6 +431,12 @@ export class DebuggerComponent implements OnInit, OnDestroy {
           : 'Transport error';
         this.logService.consoleLog(`${reason}: ${body.message}`, 'error', 'system');
         this.snackBar.open(`${reason}: ${body.message}`, 'Dismiss', { duration: 8000 });
+        break;
+      }
+      case '_sessionWarning': {
+        // Session-layer protocol anomaly: log to console only (non-critical, no snackbar)
+        const warnBody = event.body as { message: string };
+        this.logService.consoleLog(warnBody.message, 'error', 'system');
         break;
       }
     }

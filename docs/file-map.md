@@ -34,7 +34,6 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 |---|---|---|
 | `dap-session.service.ts` | DAP session lifecycle, state machine, request/response pairing, event processing | `startSession()`, `disconnect()`, `reset()`, `executionState$`, `connectionStatus$`, `onEvent()`, `sendRequest()` |
 | `dap-config.service.ts` | Configuration persistence (localStorage), SSOT for DAP connection parameters | `setConfig()`, `getConfig()` |
-| `dap-log.service.ts` | Dual console log stream management (console + program output) | `consoleLogs$`, `programLogs$`, `consoleLog()`, `programLog()` |
 | `dap-file-tree.service.ts` | File tree construction from `loadedSources`, source file reading via `source` request | `getTree()`, `readFile()` |
 | `dap-variables.service.ts` | Derived state management for DAP scopes and variables, caching variable references | `getScopes()`, `getVariables()` |
 
@@ -52,6 +51,7 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 |---|---|---|
 | `dap.types.ts` | DAP protocol type definitions | `DapRequest`, `DapResponse`, `DapEvent`, `DapMessage`, `ExecutionState` |
 | `file-tree.service.ts` | Abstract file tree interface (implemented by `DapFileTreeService`) | `FileTreeService`, `FileNode` |
+| `dap-log.service.ts` | Dual console log stream management. Written to by `DebuggerComponent`; consumed by `LogViewerComponent`. Classified as Shared: no Session-layer service injects it after this refactor. | `consoleLogs$`, `programLogs$`, `consoleLog()`, `appendProgramLog()`, `clear()` |
 
 ## Layer Dependency Rules
 

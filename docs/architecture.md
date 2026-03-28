@@ -403,13 +403,14 @@ DAP protocol-level errors are detected by the Session layer and transmitted to t
 graph TD
     subgraph Session_Layer ["Session Layer"]
         A["Receive DAP response<br/>(success = false)"] --> B["Emit '_dapError' event"]
-        C["Unmatched response<br/>(no pending request)"] --> D["consoleLog() + Ignore"]
+        C["Unmatched response<br/>(no pending request)"] --> D["Emit '_sessionWarning' event"]
         E["Transport stream error<br/>or unexpected close"] --> F["Emit '_transportError' event"]
     end
 
     subgraph UI_Layer ["UI Layer"]
         B --> G["MatSnackBar notification"]
         B --> H["Append to DAP Console"]
+        D --> K["Console log (non-critical)"]
         F --> I["MatSnackBar notification"]
         F --> J["Append to DAP Console"]
     end
@@ -421,7 +422,7 @@ graph TD
 | Error Scenario | Session Layer Behavior | UI Layer Behavior |
 |---|---|---|
 | **DAP error response** (`success=false`) | Emit `_dapError` synthetic event<br/>Reject corresponding Promise | `MatSnackBar` displays command + error message |
-| **Invalid DAP response** (unknown `request_seq`) | `consoleLog()` record and ignore | None (handled at Session layer) |
+| **Invalid DAP response** (unknown `request_seq`) | Emit `_sessionWarning` synthetic event | Console log (non-critical) |
 | **Unexpected process termination** (`exited` event, exit code ≠ 0) | Forward `exited` event normally | Console log |
 | **Unexpected disconnect** (Transport stream interrupted) | Emit `_transportError` synthetic event<br/>`executionState` → `error` | `MatSnackBar` notification + Console log |
 
@@ -431,8 +432,9 @@ To avoid conflicts with standard DAP event names, all synthetic events generated
 
 | Synthetic Event | Trigger Condition | Body Structure |
 |---|---|---|
-| `_dapError` | DAP Response `success=false` | `{ command: string; message: string }` |
-| `_transportError` | Transport stream error / complete | `{ reason: 'error' \| 'disconnected'; message: string }` |
+| `_dapError`       | DAP Response `success=false`                          | `{ command: string; message: string }`                          |
+| `_transportError` | Transport stream error / complete                     | `{ reason: 'error' \| 'disconnected'; message: string }`        |
+| `_sessionWarning` | Session-layer internal protocol anomaly (e.g., unknown `request_seq`) | `{ message: string }` |
 
 ---
 
@@ -446,7 +448,7 @@ To avoid conflicts with standard DAP event names, all synthetic events generated
 | `setup.component.ts` | UI | Setup page component |
 | `dap-session.service.ts` | Session | DAP session management service |
 | `dap-config.service.ts` | Session | Configuration management service |
-| `dap-log.service.ts` | Session | DAP Console / Program Console log service |
+| `dap-log.service.ts` | Shared | DAP Console / Program Console log service. No Session-layer service injects it; consumed by `DebuggerComponent` (write) and `LogViewerComponent` (read). |
 | `dap-file-tree.service.ts` | Session | File tree service (created with Session) |
 | `dap-transport.service.ts` | Transport | Transport layer abstract base class |
 | `websocket-transport.service.ts` | Transport | WebSocket transport implementation |
