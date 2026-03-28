@@ -231,7 +231,8 @@ Transport instances are **lazily created** by Session via `TransportFactoryServi
 | Snackbar notifications (termination, errors) | **UI** | Displays user notifications upon receiving events |
 | Error retry dialog | **UI** | Displays `ErrorDialog` on connection failure (retry / go back) |
 | Debug control button states | **UI** | disabled/enabled based on `executionState` |
-| File tree & source code display | **UI** | Loads file list via `fileTree`, displays source code via Monaco editor |
+| File tree display & collapse | **UI** | `FileExplorerComponent` fetches via `dapSession.fileTree`, emits `fileSelected` |
+| File source loading & editor update | **UI** | `DebuggerComponent.onFileSelected()` calls DAP `source`, updates `EditorComponent` |
 | Layout size persistence | **UI** | Sidebar widths, visibility, console height stored in localStorage |
 
 ### 4.3 DebuggerComponent Layout Structure
@@ -240,7 +241,7 @@ Transport instances are **lazily created** by Session via `TransportFactoryServi
 graph TD
     subgraph Layout ["DebuggerComponent Layout"]
         TB["Top Toolbar<br/>Brand title / Debug control buttons / Reset button"]
-        LS["Left Sidenav<br/>File Explorer (File Tree)<br/>Toggle show/hide"]
+        LS["Left Sidenav<br/>File Explorer (app-file-explorer)<br/>Toggle show/hide"]
         MC["Main Content<br/>Monaco Editor (app-editor)"]
         RS["Right Sidenav<br/>Variables (app-variables) / Call Stack"]
         LV["Console Area<br/>(app-log-viewer)<br/>Dual-tab: Console + Program Console<br/>+ Evaluate input"]
@@ -444,6 +445,7 @@ To avoid conflicts with standard DAP event names, all synthetic events generated
 |---|---|---|
 | `debugger.component.ts` | UI | Main debug view component (layout orchestrator) |
 | `debugger.component.html` | UI | Main debug view template |
+| `file-explorer.component.ts` | UI | Standalone file explorer: fetches `loadedSources` tree, emits `fileSelected` on node click |
 | `log-viewer.component.ts` | UI | Standalone console log viewer: dual-tab console, evaluate input, expandable payload |
 | `setup.component.ts` | UI | Setup page component |
 | `dap-session.service.ts` | Session | DAP session management service |

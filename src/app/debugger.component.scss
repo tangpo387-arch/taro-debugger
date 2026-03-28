@@ -69,6 +69,10 @@
   border-right: 1px solid var(--mat-sys-outline-variant);
   min-width: 150px;
   max-width: 80vw;
+  /* Content layout: resize-handle + minimize-row + file-explorer component */
+  display: flex;
+  flex-direction: column;
+  padding: 0; /* FileExplorerComponent manages its own internal padding */
 }
 
 .sidenav-right {
@@ -79,31 +83,18 @@
   max-width: 80vw;
 }
 
-.sidenav-header {
-  margin-bottom: 12px;
-
-  .header-title-row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 4px;
-
-    h3 {
-      font-weight: 700;
-      font-size: 1rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--mat-sys-on-surface-variant);
-      margin: 0;
-      opacity: 0.8;
-    }
-  }
+/* Thin row housing the minimize-sidebar button, kept in DebuggerComponent
+   because it controls the sidenav (layout concern), not the tree content. */
+.sidenav-minimize-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 4px 8px 0;
 
   .header-action-btn {
     width: 28px;
     height: 28px;
     line-height: 28px;
     padding: 0;
-    margin-left: 4px;
 
     mat-icon {
       font-size: 18px;
@@ -115,90 +106,6 @@
       background-color: var(--mat-sys-surface-variant);
     }
   }
-}
-
-.source-path {
-  font-size: 0.875rem;
-  color: var(--mat-sys-on-surface-variant);
-  white-space: nowrap;
-  overflow: hidden;
-  /* Show ellipsis when path is too long */
-  text-overflow: ellipsis;
-}
-
-.file-list {
-  margin-top: 16px;
-}
-
-/* File tree style */
-.file-tree {
-  margin-top: 16px;
-  background: transparent;
-  display: block;
-  width: max-content;
-  min-width: 100%;
-}
-
-.file-node-btn {
-  display: flex !important;
-  align-items: center;
-  width: 100%;
-  text-align: left;
-  border-radius: 4px;
-  color: var(--mat-sys-on-surface-variant);
-  padding: 0 8px;
-  font-size: 14px;
-  white-space: nowrap;
-
-  // Use deep selector to target Material 3 button's internal label for truncation
-  ::ng-deep .mdc-button__label {
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    width: 100%;
-  }
-
-  &:hover {
-    background-color: var(--mat-sys-surface-container-highest);
-  }
-
-  &.active-file {
-    font-weight: bold;
-    color: var(--mat-sys-primary);
-    background-color: var(--mat-sys-primary-container);
-  }
-}
-
-.file-icon {
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
-  margin-right: 8px;
-  color: var(--mat-sys-on-surface-variant);
-}
-
-.folder-icon {
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
-  margin-right: 8px;
-  color: #ffca28;
-  /* Material yellow folder color */
-}
-
-.folder-name {
-  font-size: 14px;
-  color: var(--mat-sys-on-surface);
-  white-space: nowrap;
-  flex: 1;
-}
-
-/* Handle mat-tree-node default padding/margin for a larger click area */
-mat-tree-node {
-  min-height: 32px;
-  white-space: nowrap;
-  width: max-content;
-  min-width: 100%;
 }
 
 /* Right panel section styles */

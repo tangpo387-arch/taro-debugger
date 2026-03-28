@@ -153,6 +153,11 @@ Yes. The Client can send a **`pause` request**.
 * Note: After sending the `pause` request, you cannot immediately assume the target is paused.
 * You must wait for the DA's `pause` **Response** and the subsequent **`stopped` event** before confirming the target has officially entered the paused state.
 
+### Q6: How do C/C++ Debug Adapters (like GDB) handle `loadedSources` and dynamic loading (`dlopen`)?
+**Answer:** C/C++ Debug Adapters often have strict behavioral quirks regarding source listing:
+1. **`stopped` State Requirement:** In implementations like `gdb`, `loadedSources` can **only** be successfully requested when the target is in the `stopped` state. Requesting it while the target is running may result in failure or unexpected behavior.
+2. **Initial and Dynamic Load Triggers:** The client must **request `loadedSources` upon receiving the first `stopped` event** to obtain the initial source tree. Afterwards, if the target dynamically loads a shared library (e.g., via `dlopen`), the Adapter will actively force the target to enter the `stopped` state and send a `loadedSource` event. The client must rely on this `loadedSource` event as the trigger to pull updates, rather than polling on every subsequent step/pause.
+
 ## 4. References
 
 * [DAP Official Specification: Initialization](https://microsoft.github.io/debug-adapter-protocol/overview/#initialization)

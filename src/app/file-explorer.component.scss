@@ -1,0 +1,160 @@
+/* Host element: provides the 16px inset padding that sidenav-left no longer
+   applies. flex:1 + min-height:0 makes it fill the remaining column height
+   without creating a second scroll container (sidenav-left already owns that). */
+:host {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+/* ── Panel Header ──────────────────────────────────────────────────────────── */
+
+.sidenav-header {
+  margin-bottom: 12px;
+
+  .header-title-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+
+    h3 {
+      font-weight: 700;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--mat-sys-on-surface-variant);
+      margin: 0;
+      opacity: 0.8;
+    }
+
+    .spacer {
+      flex: 1 1 auto;
+    }
+
+    .header-action-btn {
+      width: 28px;
+      height: 28px;
+      line-height: 28px;
+      padding: 0;
+      margin-left: 4px;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+
+      &:hover {
+        background-color: var(--mat-sys-surface-variant);
+      }
+    }
+  }
+}
+
+.source-path {
+  font-size: 0.875rem;
+  color: var(--mat-sys-on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── File Tree ─────────────────────────────────────────────────────────────── */
+
+.file-tree {
+  margin-top: 16px;
+  background: transparent;
+  display: block;
+  width: max-content;
+  min-width: 100%;
+}
+
+/* mat-tree-node: ensure consistent row height and full-width click area */
+mat-tree-node {
+  min-height: 32px;
+  white-space: nowrap;
+  width: max-content;
+  min-width: 100%;
+}
+
+/* File node button */
+.file-node-btn {
+  display: flex !important;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  border-radius: 4px;
+  color: var(--mat-sys-on-surface-variant);
+  padding: 0 8px;
+  font-size: 14px;
+  white-space: nowrap;
+
+  &:hover {
+    background-color: var(--mat-sys-surface-container-highest);
+  }
+
+  &.active-file {
+    font-weight: bold;
+    color: var(--mat-sys-primary);
+    background-color: var(--mat-sys-primary-container);
+  }
+}
+
+// Material does not expose a CSS custom property for .mdc-button__label
+// flex/alignment — ::ng-deep required to align the icon + text inside the button.
+// Selector is at rule root (not nested inside .file-node-btn) so that :host
+// produces a valid [_nghost-xxx] .file-node-btn .mdc-button__label selector.
+:host .file-node-btn ::ng-deep .mdc-button__label {
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* Icons */
+.file-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.folder-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  color: #ffca28; /* Material yellow folder color */
+}
+
+.folder-name {
+  font-size: 14px;
+  color: var(--mat-sys-on-surface);
+  white-space: nowrap;
+  flex: 1;
+}
+
+/* ── Unsupported Fallback ───────────────────────────────────────────────────── */
+
+.unsupported-message {
+  padding: 16px;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex-direction: column;
+  opacity: 0.8;
+  margin-top: 32px;
+}
+
+.unsupported-icon {
+  margin-bottom: 8px;
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+}

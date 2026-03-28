@@ -13,9 +13,9 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatTreeModule, MatTree } from '@angular/material/tree';
 
 import { EditorComponent, BreakpointChangeEvent } from './editor.component';
+import { FileExplorerComponent } from './file-explorer.component';
 import { VariablesComponent } from './variables.component';
 import { LogViewerComponent } from './log-viewer.component';
 import { ErrorDialog, ErrorDialogData } from './error-dialog/error-dialog';
@@ -40,8 +40,8 @@ import { DapLogService } from './dap-log.service';
     MatListModule,
     MatSnackBarModule,
     MatDialogModule,
-    MatTreeModule,
     EditorComponent,
+    FileExplorerComponent,
     VariablesComponent,
     LogViewerComponent,
   ],
@@ -53,7 +53,7 @@ import { DapLogService } from './dap-log.service';
   styleUrls: ['./debugger.component.scss']
 })
 export class DebuggerComponent implements OnInit, OnDestroy {
-  // Inject dependency services
+  // ── Injected Services ────────────────────────────────────────────────────
   private readonly configService = inject(DapConfigService);
   private readonly router = inject(Router);
   private readonly dapSession = inject(DapSessionService);
@@ -62,9 +62,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
   private readonly cdr = inject(ChangeDetectorRef);
-
-  /** Access the mat-tree instance for programmatic control */
-  @ViewChild('tree') tree?: MatTree<FileNode>;
 
   /** Access the editor component for programmatic breakpoint updates */
   @ViewChild(EditorComponent) private editorComponent?: EditorComponent;
@@ -91,13 +88,35 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   /** Current execution state (used for non-async pipe scenarios) */
   public executionState: ExecutionState = 'idle';
 
-  /** File tree state */
-  public fileDataSource: FileNode[] = [];
-  public childrenAccessor = (node: FileNode) => node.children ?? [];
-  public hasChild = (_: number, node: FileNode) => !!node.children && node.children.length > 0;
+  // ── Editor State (orchestration) ─────────────────────────────────────────
+
+  /** Path of the file currently displayed in the Monaco editor. */
   public activeFilePath: string | null = null;
+
+  /** Source code content currently displayed in the Monaco editor. */
   public currentCode: string = '// Editor is ready.';
-  public fileTreeSupported: boolean = true;
+
+  // ── File Tree Reload Trigger ──────────────────────────────────────────────
+
+  /**
+   * Incrementing counter passed to FileExplorerComponent as [reloadTrigger].
+   *
+   * Two-phase trigger strategy (per R11 / C/C++ Source Listing 規範):
+   *   1. Incremented on the **first** `stopped` event to fetch the initial source tree.
+   *   2. Incremented on each `loadedSource` event for dynamic library loads (dlopen).
+   * General stepping pauses do NOT trigger a reload.
+   */
+  public fileTreeReloadTrigger: number = 0;
+
+  /**
+   * Guards against reloading the file tree on every `stopped` event.
+   * Reset only on session-level transitions (terminated, exited, disconnect/reconnect),
+   * NOT on ephemeral `continued` events — otherwise a Resume → StepOver cycle
+   * would incorrectly trigger a full tree reload on each stop.
+   */
+  private initialSourcesLoaded: boolean = false;
+
+  // ── Call Stack State ──────────────────────────────────────────────────────
 
   /** Call stack state */
   public stackFrames: any[] = [];
@@ -221,12 +240,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     this.savePersistedSizes();
   }
 
-  /**
-   * Collapse all expanded nodes in the file tree
-   */
-  public collapseAllNodes(): void {
-    this.tree?.collapseAll();
-  }
 
   /**
    * Starts the DAP Session, including error handling and retry dialog
@@ -298,30 +311,11 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     await Promise.allSettled(syncPromises);
   }
 
-  private loadTree(): void {
-    if (!this.dapSession.capabilities?.supportsLoadedSourcesRequest) {
-      this.fileTreeSupported = false;
-      return;
-    }
-    this.fileTreeSupported = true;
-
-    const rootPath = this.currentConfig.sourcePath || '';
-    this.dapSession.fileTree.getTree(rootPath).subscribe({
-      next: (rootNode) => {
-        // Expand root or set children as dataSource.
-        // If root is redundant, it can be skipped. Here we put children in the array.
-        this.fileDataSource = rootNode.children || [];
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.warn('Failed to load file tree', err);
-      }
-    });
-  }
-
-  public async onFileNodeClick(node: FileNode): Promise<void> {
-    if (node.type !== 'file') return;
-
+  /**
+   * Handles a file-selected event emitted by FileExplorerComponent.
+   * Issues a DAP `source` request to load the file content and updates the editor.
+   */
+  public async onFileSelected(node: FileNode): Promise<void> {
     this.activeFilePath = node.path;
     this.currentCode = '// Loading source code...';
     this.cdr.detectChanges();
@@ -348,22 +342,29 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         this.logService.consoleLog("Configuration Done.", 'info', 'system');
         break;
       case 'stopped':
-        // Safely update file tree when DA is stopped (prevents request failure during Running state)
-        this.loadTree();
+        // As per C/C++ Source Listing 規範 (Q6 & R11):
+        // 1. Request `loadedSources` on the FIRST `stopped` event.
+        // 2. Subsequent updates exclusively rely on the `loadedSource` event.
+        if (!this.initialSourcesLoaded) {
+          this.initialSourcesLoaded = true;
+          this.fileTreeReloadTrigger++;
+        }
         this.loadCallStack(event.body?.threadId);
         break;
       case 'continued':
         this.clearExecutionState();
         break;
       case 'loadedSource':
-        // Update file tree on dynamic load source event
-        this.loadTree();
+        // Increment trigger so FileExplorerComponent reloads on dynamic source load
+        this.fileTreeReloadTrigger++;
         break;
       case 'terminated':
+        this.initialSourcesLoaded = false;
         this.clearExecutionState();
         this.logService.consoleLog('Debug session terminated', 'info', 'system');
         break;
       case 'exited': {
+        this.initialSourcesLoaded = false;
         this.clearExecutionState();
         const exitCode = event.body?.exitCode;
         if (exitCode !== undefined && exitCode !== 0) {
@@ -462,11 +463,13 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         const stackRes = await this.dapSession.stackTrace(targetThreadId);
         this.stackFrames = stackRes.body?.stackFrames || [];
 
+        // Render the stack panel immediately before loading source + scopes.
+        this.cdr.detectChanges();
+
         // Load the top frame to show source code by default after success
         if (this.stackFrames.length > 0) {
-          this.onFrameClick(this.stackFrames[0]);
+          await this.onFrameClick(this.stackFrames[0]);
         }
-        this.cdr.detectChanges();
       }
     } catch (e: any) {
       this.logService.consoleLog(`Failed to load call stack: ${e.message}`, 'error', 'system');
@@ -616,10 +619,15 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public async onRestart(): Promise<void> {
     const validStates: ExecutionState[] = ['running', 'stopped', 'terminated', 'error'];
     if (!validStates.includes(this.executionState)) return;
+
+    // Cache the state BEFORE disconnect overrides it to 'idle'
+    const wasError = this.executionState === 'error';
+
     try {
       await this.dapSession.disconnect();
+      this.initialSourcesLoaded = false; // Full session restart — allow initial tree load on next stopped.
       this.clearExecutionState();
-      this.logService.consoleLog(this.executionState === 'error' ? 'Reconnecting to session...' : 'Restarting session...', 'info', 'system');
+      this.logService.consoleLog(wasError ? 'Reconnecting to session...' : 'Restarting session...', 'info', 'system');
       await this.startSession();
     } catch (e: any) {
       this.logService.consoleLog(`Restart/Reconnect failed: ${e.message}`, 'error', 'system');
@@ -632,6 +640,10 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     this.activeFrameId = null;
     this.activeLine = null;
     this.activeLineFilePath = null;
+    // Note: initialSourcesLoaded is intentionally NOT reset here.
+    // It is only reset on session-level events (terminated, exited) or explicit
+    // disconnect/reconnect — to prevent a Resume → StepOver cycle from triggering
+    // a redundant full file tree reload.
     this.cdr.detectChanges();
   }
 

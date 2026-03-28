@@ -25,7 +25,8 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | File | Responsibility | Key Interfaces | Related Template/Style |
 |---|---|---|---|
 | `setup.component.ts` | Configuration form, DAP connection setup, navigation to `/debug` | `onConnect()`, `form: FormGroup` | `setup.component.html`, `setup.component.scss` |
-| `debugger.component.ts` | Main debug view: toolbar, three-panel layout, event subscriptions | subscribes `executionState$`, `connectionStatus$`, `onEvent()` | `debugger.component.html`, `debugger.component.scss` |
+| `debugger.component.ts` | Main debug view: toolbar, three-panel layout, event subscriptions, file source loading | subscribes `executionState$`, `connectionStatus$`, `onEvent()`; handles `onFileSelected()` | `debugger.component.html`, `debugger.component.scss` |
+| `file-explorer.component.ts` | Left sidenav file explorer: fetches `loadedSources` tree, highlights active file, emits `fileSelected` | `@Input() activeFilePath`, `@Input() reloadTrigger`, `@Output() fileSelected` | `file-explorer.component.html`, `file-explorer.component.scss` |
 | `editor.component.ts` | Monaco Editor wrapper: source display, line highlight, breakpoint glyph margin | `openFile()`, `highlightLine()`, `clearHighlight()` | `editor.component.html`, `editor.component.scss` |
 
 ## Session Layer (Services)

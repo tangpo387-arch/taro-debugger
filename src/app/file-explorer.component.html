@@ -1,0 +1,58 @@
+<!-- Panel header: title, collapse-all, minimize buttons -->
+<div class="sidenav-header">
+  <div class="header-title-row">
+    <h3>Files</h3>
+    <span class="spacer"></span>
+    <button
+      mat-icon-button
+      (click)="collapseAll()"
+      title="Collapse All Nodes"
+      class="header-action-btn"
+      [disabled]="!fileTreeSupported"
+    >
+      <mat-icon>unfold_less</mat-icon>
+    </button>
+  </div>
+  <div class="source-path" [title]="sourcePath">
+    Source: {{ sourcePath || 'Not specified' }}
+  </div>
+</div>
+
+@if (fileTreeSupported) {
+<!-- Dynamic File Tree -->
+<mat-tree
+  #tree="matTree"
+  [dataSource]="fileDataSource"
+  [childrenAccessor]="childrenAccessor"
+  class="file-tree"
+>
+  <!-- File node -->
+  <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
+    <button
+      mat-button
+      class="file-node-btn"
+      [class.active-file]="activeFilePath === node.path"
+      (click)="onNodeClick(node)"
+    >
+      <mat-icon class="file-icon">description</mat-icon>
+      {{ node.name }}
+    </button>
+  </mat-tree-node>
+
+  <!-- Directory node -->
+  <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding>
+    <button mat-icon-button matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name">
+      <mat-icon class="mat-icon-rtl-mirror">
+        {{ tree.isExpanded(node) ? 'expand_more' : 'chevron_right' }}
+      </mat-icon>
+    </button>
+    <mat-icon class="folder-icon">folder</mat-icon>
+    <span class="folder-name">{{ node.name }}</span>
+  </mat-tree-node>
+</mat-tree>
+} @else {
+<div class="unsupported-message">
+  <mat-icon class="unsupported-icon">info</mat-icon>
+  DAP Server does not support loadedSources requests<br />File tree cannot be displayed
+</div>
+}

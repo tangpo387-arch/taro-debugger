@@ -24,3 +24,15 @@ This document outlines features scheduled for v1.1 and beyond. These items are t
   - Ensure updated values correctly sync back to the debugged process and trigger a refresh of the `DapVariablesService` cache.
 - **Dependencies**: WI-18.1, WI-18.2
 - **Status**: ⏳ Pending
+
+### V1.1-02: DAP 'terminated' Event `_restart` Payload Passing
+<!-- status: pending | size: S | phase: 13 | depends: none -->
+- **Size**: S
+- **Description**: Support context-aware session restart by forwarding the custom `_restart` field from the DAP `terminated` event to the subsequent `launch` request payload.
+- **Details**:
+  - **DAP Event Handling**: Update the `DapSessionService` to capture the `_restart` field from the `terminated` event payload (`event.body._restart`).
+  - **Lifecycle Management**: Ensure that before re-launching, the current session goes through a fully compliant `disconnect()` cycle to clean up stale RxJS subscriptions, pending requests, and execution state, avoiding memory leaks.
+  - **Launch Parameter Injection**: Modify the `startSession()` initialization sequence to accept and merge this cached `_restart` data into the arguments of the final `launch` request sent to the Debug Adapter.
+  - **Architecture Constraint**: Keep the `_restart` cache strictly within the `DapSessionService` (SSOT), decoupled from the UI rendering layer.
+- **Dependencies**: None
+- **Status**: ⏳ Pending

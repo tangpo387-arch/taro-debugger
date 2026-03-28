@@ -65,6 +65,19 @@ Fully isolated tests for individual components, services, or utility functions. 
 * **`SetupComponent`**
   * **Form Validation**: When required fields (DAP Server address, executable path) are not filled, the form should be invalid; when connection address format is incorrect, it should trigger the corresponding validation error.
   * **State switching**: When toggling Launch / Attach mode, button text and visible fields should change correctly.
+* **`FileExplorerComponent`**
+  * **TC-FE-01 — `reloadTrigger` first-change guard**: Create the component with `reloadTrigger = 0` (initial binding). Verify `DapSessionService.fileTree.getTree()` is **not** called on first render (DAP session not yet ready).
+  * **TC-FE-02 — `reloadTrigger` reload on increment**: After initial render, change `reloadTrigger` from `0` to `1`. Verify `getTree()` is called exactly once, and `fileDataSource` is populated with the returned root's children.
+  * **TC-FE-03 — Two consecutive increments call `getTree()` twice**: Change `reloadTrigger` from `1` to `2`, then `2` to `3`. Verify `getTree()` is called for each distinct value (counter pattern does not coalesce calls).
+  * **TC-FE-04 — `supportsLoadedSourcesRequest = false` → unsupported fallback**: Set `dapSession.capabilities.supportsLoadedSourcesRequest = false`, trigger a reload. Verify `fileTreeSupported = false` is set, `getTree()` is **not** called, and the template renders the unsupported message block.
+  * **TC-FE-05 — `supportsLoadedSourcesRequest = true` → supported path**: Set `dapSession.capabilities.supportsLoadedSourcesRequest = true`, mock `getTree()` to return a root with two children. Trigger reload. Verify `fileDataSource` has the two children (root is unwrapped) and the tree block renders.
+  * **TC-FE-06 — `fileSelected` emitted on file node click**: Call `onNodeClick()` with a node of `type: 'file'`. Verify `fileSelected` EventEmitter emits the node object.
+  * **TC-FE-07 — `fileSelected` NOT emitted on directory node click**: Call `onNodeClick()` with a node of `type: 'directory'`. Verify `fileSelected` does **not** emit.
+  * **TC-FE-08 — `activeFilePath` highlight binding**: Set `activeFilePath = '/foo/bar.cpp'`, populate `fileDataSource` with a node at path `/foo/bar.cpp`. Verify the rendered button has the CSS class `active-file`. Set `activeFilePath = null`. Verify the class is removed.
+  * **TC-FE-09 — `collapseAll()` delegates to mat-tree**: Call `collapseAll()`. Verify `matTree.collapseAll()` is called (spy on the `@ViewChild('tree')` instance).
+  * **TC-FE-10 — `sourcePath` getter reads from `DapConfigService`**: Mock `DapConfigService.getConfig()` to return `{ sourcePath: '/root/test' }`. Verify `sourcePath` getter returns `'/root/test'` and the template renders `Source: /root/test`.
+  * **TC-FE-11 — Subscription cancelled on component destroy**: Simulate a long-running `getTree()` Observable (never completes). Destroy the component. Verify the Observable is unsubscribed (no subscription-after-destroy; `takeUntilDestroyed` fires).
+  * **TC-FE-12 — `getTree()` error path**: Mock `getTree()` to throw an error. Trigger reload. Verify `fileDataSource` remains unchanged, and `console.warn` is called with the error message.
 * **`DebuggerComponent`**
   * Ensure the component correctly calls Session Service's `initialize` and `disconnect` during initialization and destruction.
   * **Control button state binding**: Simulate different `executionState` values (`stopped`, `running`, `terminated`), verify the corresponding control button (Continue, Pause, Step, etc.) `disabled` properties are correctly applied.
@@ -81,6 +94,14 @@ Tests for interactions and data flow between multiple Services or Components, ty
 * **Event-Driven State Sync**
   * Simulate WebSocket receiving a `stopped` event → verify `DapSessionService` sends `stackTrace` and other requests → verify UI state management switches to "paused" state.
   * Simulate WebSocket receiving an `output` event → verify console log array adds new entries with correct category classification.
+* **FileExplorer ↔ DebuggerComponent Integration**
+  * **TC-FE-INT-01 — `stopped` event increments `fileTreeReloadTrigger`**: Emit a `stopped` DAP event via `DapSessionService.onEvent()`. Verify `DebuggerComponent.fileTreeReloadTrigger` increments by `1`, causing `FileExplorerComponent.ngOnChanges` to fire and call `getTree()`.
+  * **TC-FE-INT-02 — `loadedSource` event increments trigger**: Emit a `loadedSource` DAP event. Verify `fileTreeReloadTrigger` increments and tree reloads.
+  * **TC-FE-INT-03 — Multiple rapid events accumulate correctly**: Emit `stopped` → `loadedSource` in sequence. Verify `fileTreeReloadTrigger` increments by `2` total (no coalescing; each event is independently documented).
+  * **TC-FE-INT-04 — `onFileSelected()` issues DAP `source` request**: Simulate `FileExplorerComponent` emitting `fileSelected` with `{ path: '/src/main.cpp', type: 'file', name: 'main.cpp' }`. Verify `DapSessionService.fileTree.readFile('/src/main.cpp')` is called, and `DebuggerComponent.currentCode` is updated to the resolved content.
+  * **TC-FE-INT-05 — `onFileSelected()` error path**: Mock `readFile()` to reject with `Error('source not found')`. Verify `currentCode` is set to `'// Error loading file: source not found'` and no unhandled rejection surfaces.
+  * **TC-FE-INT-06 — `activeFilePath` propagates to `FileExplorerComponent` after frame-click**: Call `DebuggerComponent.onFrameClick()` with a frame referencing `/src/foo.cpp`. Verify `activeFilePath` is updated in `DebuggerComponent` **and** the `[activeFilePath]` binding propagates to `FileExplorerComponent` (i.e., the corresponding tree node receives `active-file` CSS class).
+  * **TC-FE-INT-07 — `activeFilePath` propagates after file node click**: Simulate `fileSelected` output → `onFileSelected()`. Verify `DebuggerComponent.activeFilePath` is set, which is then passed back to `FileExplorerComponent` as `@Input()` to highlight the clicked node.
 * **Breakpoint & Editor Sync**
   * **Toggle → DAP request**: Simulate a Monaco Editor glyph-margin click while `executionState === 'running'` or `'stopped'` → verify `DapSessionService.setBreakpoints()` is called with the correct `sourcePath` and `lines` array.
   * **Verified decoration update**: Mock `setBreakpoints` response with `{ breakpoints: [{ line: 5, verified: true }] }` → verify `EditorComponent.setVerifiedBreakpoints()` is called with `[5]` and the glyph switches from `.breakpoint-glyph-unverified` (gray) to `.breakpoint-glyph` (red).
@@ -121,6 +142,19 @@ This section lists feature points that are difficult to automate or require huma
 
 * **Connection & DAP Error Handling (Error Handling UI)**
   * **Manual Reconnect (Reconnect UI)**: After simulating `error` state, verify that the original "Restart" button on the interface has automatically switched to a "Reconnect" button with a `sync` icon, and hover tooltip content is correct.
+
+* **FileExplorerComponent — Visual & Interaction Verification**
+
+  | Step | Action | Expected Result |
+  |---|---|---|
+  | MV-FE-01 | Open `/debug`, session enters `stopped` state | Left sidenav shows file tree with correct content; "Files" heading, source path, and "Collapse All" button render with 16px inset padding on all sides |
+  | MV-FE-02 | Hover over a long file path that exceeds panel width | Single horizontal scrollbar appears **at the sidenav level only** (not a double scrollbar); scrollbar is inside the sidenav container |
+  | MV-FE-03 | Click a file node | The clicked node gets the `active-file` highlight (primary color background); editor loads the file's source code |
+  | MV-FE-04 | Click a call-stack frame that references a different file | The file tree automatically highlights the corresponding file node (driven by `activeFilePath` @Input binding) |
+  | MV-FE-05 | Click "Collapse All" (`unfold_less` icon) | All expanded directory nodes collapse |
+  | MV-FE-06 | Click "Collapse All" when `fileTreeSupported = false` | Button is disabled (grayed out), no error |
+  | MV-FE-07 | Connect to a DAP server that does NOT support `loadedSources` | File tree area renders the unsupported-message block with the `info` icon and descriptive text; no tree nodes shown |
+  | MV-FE-08 | Click the minimize button (`chevron_left`) | Left sidenav collapses; click the header menu button to reopen; tree content reappears without data loss |
 
 * **Breakpoint DAP Synchronization — Live Integration Test**
 
