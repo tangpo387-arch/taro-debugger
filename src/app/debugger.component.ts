@@ -20,8 +20,8 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 
 import { MatTreeModule, MatTree } from '@angular/material/tree';
 
-// Import child components and global configuration services
 import { EditorComponent, BreakpointChangeEvent } from './editor.component';
+import { VariablesComponent } from './variables.component';
 import { ErrorDialog, ErrorDialogData } from './error-dialog/error-dialog';
 import { DapConfigService, DapConfig } from './dap-config.service';
 import { DapSessionService, ExecutionState, VerifiedBreakpoint } from './dap-session.service';
@@ -49,6 +49,7 @@ import { DapLogService } from './dap-log.service';
     MatTreeModule,
     FormsModule,
     EditorComponent,
+    VariablesComponent,
   ],
   providers: [
     DapSessionService,

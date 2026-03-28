@@ -48,8 +48,14 @@ export class DapVariablesService implements OnDestroy {
    * Request scopes for a given stack frame ID from the DAP Server.
    */
   public async fetchScopes(frameId: number): Promise<void> {
+    if (frameId < 0) {
+      console.warn(`fetchScopes called with invalid frameId: ${frameId}`);
+      this.scopesSubject.next([]);
+      return;
+    }
+
     this.variablesCache.clear();
-    
+
     try {
       const response = await this.dapSession.scopes(frameId);
       if (response.success && response.body?.scopes) {
@@ -57,7 +63,7 @@ export class DapVariablesService implements OnDestroy {
       } else {
         this.scopesSubject.next([]);
       }
-    } catch (e: any) {
+    } catch (e) {
       this.scopesSubject.next([]);
       throw e;
     }
@@ -68,6 +74,11 @@ export class DapVariablesService implements OnDestroy {
    * Caches results so multiple expansions of the same variable block don't trigger requests.
    */
   public async getVariables(variablesReference: number): Promise<DapVariable[]> {
+    if (variablesReference < 0) {
+      console.warn(`getVariables called with invalid variablesReference: ${variablesReference}`);
+      return [];
+    }
+
     if (this.variablesCache.has(variablesReference)) {
       return this.variablesCache.get(variablesReference)!;
     }
@@ -80,11 +91,12 @@ export class DapVariablesService implements OnDestroy {
           this.variablesCache.set(variablesReference, vars);
           return vars;
         }
-      } catch (e: any) {
+      } catch (e) {
         console.warn(`Failed to fetch variables for ref ${variablesReference}`, e);
+        throw e;
       }
     }
-    
+
     return [];
   }
 

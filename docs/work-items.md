@@ -28,7 +28,7 @@ related:
 | `EditorComponent` | ⚠️ Basic | Monaco Editor embedded, current line highlight and breakpoint interaction implemented |
 | DAP Communication Layer | ✅ Done | `DapTransportService`, `WebSocketTransportService`, and `DapSessionService` completed with timeout mechanism |
 | File Tree | ✅ Done | Left sidebar renders via `loadedSources`, clicking a file fetches source code from Server and displays it |
-| Variable Inspector | ❌ Not implemented | Right panel is placeholder text |
+| Variable Inspector | ✅ Done | Standalone `<app-variables>` with CDK virtual scroll, lazy-loading expansion, auto-expand first scope |
 | Call Stack | ✅ Done | Implemented in DebuggerComponent right panel, auto-listens to stopped events and lists stack frames |
 | Error Handling | ✅ Done | Connection disconnect/reconnect mechanism, timeout, and global error notification UI implemented |
 | Electron Integration | ❌ Not implemented | Only devDependency exists, no Main Process or IPC established |
@@ -47,7 +47,7 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 | **Phase 4** | ✅ Done | Implement toolbar debug controls (Continue/Pause/Step) and state binding | [View](changelog.md#phase-4-debug-controls) |
 | **Phase 5** | ✅ Done | Monaco Editor advanced integration, breakpoint interaction and line highlight | [View](changelog.md#phase-5-editor-features) |
 | **Phase 6** | ✅ Done | Dynamic project file tree rendering, click to load source code | [View](changelog.md#phase-6-file-explorer) |
-| **Phase 7** | 🔄 In Progress | Call stack list and nested variable inspector | [View](#phase-7-variables--call-stack) |
+| **Phase 7** | ✅ Done | Call stack list and nested variable inspector | [View](changelog.md#phase-7-variables--call-stack) |
 | **Phase 8** | ✅ Done | Develop UI status bar connection indicator and command console interface | [View](changelog.md#phase-8-console--status-bar) |
 | **Phase 9** | ✅ Done | Global connection error handling, error snackbar feedback | [View](changelog.md#phase-9-error-handling) |
 | **Phase 10** | ⏳ Pending | Electron desktop application integration (IPC, Main Process) | [View](#phase-10-electron-desktop-mode-optional) |
@@ -71,22 +71,6 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 ---
 
 ---
-
-## Phase 7: Variables & Call Stack
-
-### WI-18.2: Variables Tree UI Component
-<!-- status: pending | size: M | phase: 7 | depends: WI-18.1 -->
-- **Size**: M
-- **Description**: Implement an independent Angular Standalone Component (`<app-variables>`) to render the nested structure.
-- **Details**:
-  - Build `<app-variables>` standalone component in the right sidenav.
-  - Integrate Angular Material `mat-tree` and dynamically link it to `DapVariablesService`.
-  - Integrate CDK Virtual Scroll to support large struct/array object sets efficiently.
-  - Cleanly display variable `name`, `type`, and `value` metrics with expandable toggles for nested properties.
-  - Refactor `debugger.component.html` to instantiate the `<app-variables>` element instead of implementing logic directly inside `DebuggerComponent`.
-- **Dependencies**: WI-18.1
-- **Files to modify**: `src/app/variables.component.ts`, `src/app/variables.component.html`, `src/app/variables.component.scss`, `src/app/debugger.component.html`
-- **Status**: ⏳ Pending
 
 ---
 
@@ -240,7 +224,7 @@ graph LR
 
     style WI17 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI18_1 fill:#f472b6,stroke:#000,stroke-width:2.5px
-    style WI18_2 fill:#f472b6,stroke:#db2777
+    style WI18_2 fill:#f472b6,stroke:#000,stroke-width:2.5px
 
     style WI19 fill:#2dd4bf,stroke:#000,stroke-width:2.5px
     style WI20 fill:#2dd4bf,stroke:#000,stroke-width:2.5px

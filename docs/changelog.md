@@ -223,6 +223,21 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Files to modify**: `src/app/dap-variables.service.ts`
 - **Status**: ✅ Done
 
+### WI-18.2: Variables Tree UI Component
+<!-- status: done | size: M | phase: 7 | depends: WI-18.1 -->
+- **Size**: M
+- **Description**: Implement an independent Angular Standalone Component (`<app-variables>`) to render the nested variable/scope structure.
+- **Details**:
+  - Built `<app-variables>` standalone component with custom flat-tree virtual scrolling (`cdk-virtual-scroll-viewport` + `*cdkVirtualFor`)
+  - Implemented hierarchical-to-flat data model (`VariableNode` → `FlatVariableNode`) for efficient rendering
+  - Lazy-loads children on first expand via `DapVariablesService.getVariables()` for nodes with `variablesReference > 0`
+  - Auto-expands the first scope (e.g., 'Locals') on load for immediate visibility
+  - Displays variable `name`, `type`, and `value` with expand/collapse toggles and loading spinners
+  - Integrated into `debugger.component.html` right sidenav, replacing placeholder content
+- **Dependencies**: WI-18.1
+- **Files modified**: `src/app/variables.component.ts`, `src/app/variables.component.html`, `src/app/variables.component.scss`, `src/app/debugger.component.html`
+- **Status**: ✅ Done
+
 ---
 
 ## Phase 8: Console & Status Bar

@@ -1,0 +1,108 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+// ── Virtual Scroll Viewport ───────────────────────────────────────────
+
+.variables-viewport {
+  // Fill the parent panel-section height (set to 50% in debugger.component.scss)
+  height: 100%;
+  width: 100%;
+}
+
+// ── Row Layout ────────────────────────────────────────────────────────
+
+.variable-row {
+  display: flex;
+  align-items: center;
+  height: 28px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', Courier, monospace;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+  // padding-left is set dynamically via [style.padding-left.px] in the template
+
+  &:hover {
+    background-color: var(--mat-sys-surface-container-highest);
+  }
+
+  // ── Toggle Button / Spacer ──────────────────────────────────────────
+
+  .toggle-btn {
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    padding: 0;
+    margin-right: 2px;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      line-height: 16px;
+    }
+  }
+
+  .toggle-spacer {
+    display: inline-block;
+    width: 26px; // 24px button + 2px margin
+    flex-shrink: 0;
+  }
+
+  // ── Loading spinner animation ───────────────────────────────────────
+
+  .loading-spin {
+    animation: spin 1s linear infinite;
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  // ── Variable Segments ───────────────────────────────────────────────
+
+  .var-name {
+    color: var(--mat-sys-primary);
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+
+  .var-type {
+    color: var(--mat-sys-tertiary);
+    margin: 0 2px;
+    flex-shrink: 0;
+  }
+
+  .var-value {
+    color: var(--mat-sys-on-surface);
+    margin-left: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    // Allow the value to shrink and truncate when the panel is narrow
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+// ── Empty State ───────────────────────────────────────────────────────
+
+.placeholder-content {
+  padding: 16px;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.875rem;
+  text-align: center;
+  opacity: 0.8;
+}
+
+// ── Keyframes ─────────────────────────────────────────────────────────
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
