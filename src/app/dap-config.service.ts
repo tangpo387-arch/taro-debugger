@@ -37,8 +37,10 @@ export interface DapConfig {
   providedIn: 'root'
 })
 export class DapConfigService {
+  private static readonly STORAGE_KEY = 'taro_dap_config';
+
   private config: DapConfig = {
-    serverAddress: '',
+    serverAddress: 'localhost:4711',
     transportType: 'websocket',
     launchMode: 'launch',
     executablePath: '',
@@ -46,13 +48,18 @@ export class DapConfigService {
     programArgs: ''
   };
 
+  constructor() {
+    this.loadFromStorage();
+  }
+
   /**
-   * Save the complete DAP configuration.
+   * Save the complete DAP configuration and sync with localStorage.
    * @param config A complete DapConfig object
    */
   setConfig(config: DapConfig): void {
     this.config = { ...config };
-    console.log('DAP configuration saved:', this.config);
+    localStorage.setItem(DapConfigService.STORAGE_KEY, JSON.stringify(this.config));
+    console.log('DAP configuration saved and persisted:', this.config);
   }
 
   /**
@@ -61,4 +68,20 @@ export class DapConfigService {
   getConfig(): DapConfig {
     return { ...this.config };
   }
+
+  /**
+   * Load the initial configuration from localStorage.
+   */
+  private loadFromStorage(): void {
+    const stored = localStorage.getItem(DapConfigService.STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        this.config = { ...this.config, ...parsed };
+      } catch (e) {
+        console.error('Failed to parse stored DAP configuration:', e);
+      }
+    }
+  }
 }
+

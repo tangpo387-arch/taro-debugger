@@ -18,14 +18,24 @@ import { DapConfigService } from './dap-config.service';
 
 /**
  * Custom validator: Validate DAP Server address format (host:port)
- * Example allowed formats: localhost:4711, 192.168.1.1:1234, my-server.local:9090
+ * Support IPv4, IPv6 (basic brackets), and Hostname
  */
 function serverAddressValidator(control: AbstractControl): ValidationErrors | null {
   const value = (control.value as string)?.trim();
   if (!value) return null; // Let the required validator handle empty values
-  // host can contain letters, numbers, hyphens, dots; port is 1-5 digits
-  const pattern = /^[a-zA-Z0-9._-]+:\d{1,5}$/;
-  return pattern.test(value) ? null : { invalidFormat: true };
+
+  // Pattern: [IPv6] or host part, then a colon, then 1-5 digits
+  const pattern = /^(\[[a-fA-F0-9:]+\]|[a-zA-Z0-9._-]+):(\d{1,5})$/;
+  const match = value.match(pattern);
+
+  if (!match) return { invalidFormat: true };
+
+  const port = parseInt(match[2], 10);
+  if (port < 1 || port > 65535) {
+    return { invalidPort: true };
+  }
+
+  return null;
 }
 
 @Component({
@@ -49,10 +59,9 @@ export class SetupComponent implements OnInit, OnDestroy {
 
   /**
    * Main form group, using Reactive Forms to manage all field states and validation.
-   * nonNullable: true ensures that getRawValue() returns a type that does not contain null.
    */
   readonly form = new FormGroup({
-    serverAddress: new FormControl('localhost:4711', {
+    serverAddress: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, serverAddressValidator]
     }),
@@ -73,23 +82,41 @@ export class SetupComponent implements OnInit, OnDestroy {
   private readonly subscriptions = new Subscription();
 
   ngOnInit(): void {
-    // Listen for launchMode changes and dynamically adjust executablePath's required validator
+    // 1. Initial configuration load: restore last used settings if available
+    const existingConfig = this.configService.getConfig();
+    this.form.patchValue({
+      serverAddress: existingConfig.serverAddress,
+      launchMode: existingConfig.launchMode,
+      executablePath: existingConfig.executablePath,
+      sourcePath: existingConfig.sourcePath,
+      programArgs: existingConfig.programArgs
+    });
+
+    // 2. Adjust initial validation based on loaded launchMode
+    this.updateExecPathValidator(existingConfig.launchMode);
+
+    // 3. Listen for launchMode changes and dynamically adjust executablePath's required validator
     this.subscriptions.add(
       this.form.controls.launchMode.valueChanges.subscribe(mode => {
-        const execCtrl = this.form.controls.executablePath;
-        if (mode === 'launch') {
-          execCtrl.setValidators(Validators.required);
-        } else {
-          execCtrl.clearValidators();
-          execCtrl.setValue(''); // Clear path when switching to Attach
-        }
-        execCtrl.updateValueAndValidity();
+        this.updateExecPathValidator(mode);
       })
     );
   }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+  }
+
+  /** Centralized logic for updating executablePath validation rules */
+  private updateExecPathValidator(mode: 'launch' | 'attach'): void {
+    const execCtrl = this.form.controls.executablePath;
+    if (mode === 'launch') {
+      execCtrl.setValidators(Validators.required);
+    } else {
+      execCtrl.clearValidators();
+      // UX Decision: Do NOT clear the path value here to prevent data loss if the user toggles back
+    }
+    execCtrl.updateValueAndValidity();
   }
 
   // ── Convenience Getters: For Template usage ────────────────────────────
@@ -121,23 +148,14 @@ export class SetupComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const { serverAddress, launchMode, executablePath, sourcePath, programArgs } =
-      this.form.getRawValue();
-
-    // 1. Delegate configuration parameters to DapConfigService for global caching
+    // 1. Merge current configuration with form values to preserve non-UI state (like transportType)
+    const currentConfig = this.configService.getConfig();
     this.configService.setConfig({
-      serverAddress,
-      transportType: 'websocket', // TODO: Allow selection via UI in the future
-      launchMode,
-      executablePath,
-      sourcePath,
-      programArgs
+      ...currentConfig,
+      ...this.form.getRawValue()
     });
 
-    // 2. (Expansion placeholder) Call Electron IPC API to start underlying DAP process here
-    // window.electronAPI.startDap(executablePath);
-
-    // 3. Navigate to debug main view via Angular Router
+    // 2. Navigate to debug main view via Angular Router
     this.router.navigate(['/debug']);
   }
 }
