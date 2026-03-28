@@ -138,6 +138,16 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 
 ## Phase 5: Editor Features
 
+### WI-12: Monaco Editor Breakpoint Interaction
+- **Size**: M
+- **Description**: Implement Glyph Margin breakpoint operations per spec [§3.2.3](system-specification.md#323-main-content-area)
+- **Details**:
+  - Listen for Monaco `onMouseDown` events (glyph margin area clicks)
+  - Click on line number → add/remove breakpoint (red dot decoration)
+  - Maintain local breakpoint list (`Map<filename, Set<lineNumber>>`)
+  - Provide `getBreakpoints()` method for DAP communication use
+- **Status**: ✅ Done
+
 ### WI-14: Current Line Highlight
 - **Size**: S
 - **Description**: Implement `deltaDecorations` current execution line marking per spec [§3.2.3](system-specification.md#323-main-content-area)
@@ -265,4 +275,11 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
   - Invalid DAP response → Log to console, ignore the message
   - DAP error response → Display error message to user
 - **Dependencies**: WI-06
+- **Status**: ✅ Done
+
+### TI-01: `DapConfigService` Unit Tests
+- **Size**: S
+- **Description**: Verify global config access mechanism per [test-plan.md](test-plan.md)
+- **Details**:
+  - Verify `setConfig()` and `getConfig()` correctly store and return complete `DapConfig` data
 - **Status**: ✅ Done

@@ -13,10 +13,32 @@ ngx-monaco-editor {
   height: 100%;
 }
 
-/* Current execution line background color (uses ::ng-deep to bypass Angular View Encapsulation for Monaco Editor) */
+/* Current execution line highlight and glyph marker */
 ::ng-deep .current-line-highlight {
   background-color: rgba(255, 255, 0, 0.2) !important;
 }
 ::ng-deep .current-line-glyph {
-  background-color: rgba(255, 255, 0, 0.5) !important;
+  background-color: #ffd740 !important; /* Material Amber 400 */
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 2px;
+  margin-left: 5px;
+  box-shadow: 0 0 5px rgba(255, 215, 64, 0.5);
+}
+
+/* Breakpoint marker in the glyph margin */
+::ng-deep .breakpoint-glyph {
+  background: #ff5252 !important; /* Vibrant Red */
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 50%;
+  margin-left: 5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 8px rgba(255, 82, 82, 0.6);
+  cursor: pointer;
+  transition: transform 0.1s ease-in-out;
+}
+
+::ng-deep .breakpoint-glyph:hover {
+  transform: scale(1.2);
+  background: #ff1744 !important;
 }

@@ -25,7 +25,7 @@ related:
 | `DapConfigService` | ✅ Done | Extended to a complete DAP connection config interface (address, launch mode, args, etc.) |
 | `SetupComponent` | ✅ Done | All form fields implemented with Reactive Forms, real-time format and required validation |
 | `DebuggerComponent` | ✅ Done | Three-panel layout integrated with dynamic file tree, debug controls, status indicators, and console logs |
-| `EditorComponent` | ⚠️ Basic | Monaco Editor embedded, current line highlight implemented, but breakpoint interaction not yet implemented |
+| `EditorComponent` | ⚠️ Basic | Monaco Editor embedded, current line highlight and breakpoint interaction implemented |
 | DAP Communication Layer | ✅ Done | `DapTransportService`, `WebSocketTransportService`, and `DapSessionService` completed with timeout mechanism |
 | File Tree | ✅ Done | Left sidebar renders via `loadedSources`, clicking a file fetches source code from Server and displays it |
 | Variable Inspector | ❌ Not implemented | Right panel is placeholder text |
@@ -71,19 +71,6 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 ---
 
 ## Phase 5: Editor Features
-
-### WI-12: Monaco Editor Breakpoint Interaction
-<!-- status: pending | size: M | phase: 5 | depends: none -->
-- **Size**: M
-- **Description**: Implement Glyph Margin breakpoint operations per spec [§3.2.3](system-specification.md#323-main-content-area)
-- **Details**:
-  - Listen for Monaco `onMouseDown` events (glyph margin area clicks)
-  - Click on line number → add/remove breakpoint (red dot decoration)
-  - Maintain local breakpoint list (`Map<filename, Set<lineNumber>>`)
-  - Provide `getBreakpoints()` method for DAP communication use
-- **Dependencies**: None (can be developed independently from DAP layer)
-- **Files to modify**: `editor.component.ts`
-- **Status**: ⏳ Pending
 
 ### WI-13: Breakpoint DAP Synchronization
 <!-- status: pending | size: S | phase: 5 | depends: WI-06, WI-12 -->
@@ -153,13 +140,6 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 
 ## Phase 11: Automation Tests
 
-### TI-01: `DapConfigService` Unit Tests
-<!-- status: completed | size: S | phase: 11 | depends: WI-01 -->
-- **Size**: S
-- **Description**: Verify global config access mechanism per [test-plan.md](test-plan.md)
-- **Details**:
-  - Verify `setConfig()` and `getConfig()` correctly store and return complete `DapConfig` data
-- **Status**: ✅ Done
 
 ### TI-03: `WebSocketTransportService` Transport Layer Unit Tests
 <!-- status: pending | size: M | phase: 11 | depends: WI-05 -->
@@ -172,15 +152,6 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 - **Dependencies**: WI-05
 - **Status**: ⏳ Pending
 
-### TI-04: `DapFileTreeService` File Tree Unit Tests
-<!-- status: pending | size: S | phase: 11 | depends: WI-15 -->
-- **Size**: S
-- **Description**: Verify `loadedSources` parsing and file tree node generation logic
-- **Details**:
-  - Verify Unix/Windows path parsing and level merging
-  - Verify node sorting logic (directories first)
-- **Dependencies**: WI-15
-- **Status**: ⏳ Pending
 
 ### TI-05: Connection Error & Intent Detection Integration Tests
 <!-- status: pending | size: M | phase: 11 | depends: WI-21, WI-22 -->
@@ -272,7 +243,7 @@ graph LR
     style WI10 fill:#f97316,stroke:#000,stroke-width:2.5px
     style WI11 fill:#f97316,stroke:#000,stroke-width:2.5px
 
-    style WI12 fill:#a78bfa,stroke:#7c3aed
+    style WI12 fill:#a78bfa,stroke:#000,stroke-width:2.5px
     style WI13 fill:#a78bfa,stroke:#7c3aed
     style WI14 fill:#a78bfa,stroke:#000,stroke-width:2.5px
 
