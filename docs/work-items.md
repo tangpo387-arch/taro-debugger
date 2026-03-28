@@ -1,238 +1,262 @@
-# DAP 偵錯器前端 — 工作項目清單
+---
+title: Work Items
+scope: tasks, progress, dependencies, milestones, phases
+audience: [Product_Architect, Lead_Engineer]
+last_updated: 2026-03-28
+related:
+  - docs/system-specification.md
+  - docs/changelog.md
+  - docs/test-plan.md
+---
+
+# DAP Debugger Frontend — Work Items
 
 > [!NOTE]
-> 本清單基於 [system-specification.md v1.0](system-specification.md) 規格書與現有 codebase 差異分析而產生。
-> 每個項目大小適中，適合 incremental 方式逐步開發與交付。
+> This list is generated from a gap analysis between [system-specification.md v1.0](system-specification.md) and the existing codebase.
+> Each item is moderately sized, suitable for incremental development and delivery.
 
 ---
 
-## 現有 codebase 盤點
+## Existing Codebase Inventory
 
-| 元件/檔案 | 狀態 | 說明 |
+| Component / File | Status | Description |
 |---|---|---|
-| `app.routes.ts` | ✅ 已完成 | `/setup` → `/debug` 路由已建立 |
-| `DapConfigService` | ✅ 已完成 | 已擴充為完整的 DAP 連線組態介面（連線位址、啟動模式、引數等） |
-| `SetupComponent` | ✅ 已完成 | 表單欄位均已實作，且結合 Reactive Forms 具備即時格式與必填驗證 |
-| `DebuggerComponent` | ✅ 已完成 | 三段式佈局已整合動態檔案樹、偵錯控制按鈕、狀態指示器與主控台日誌 |
-| `EditorComponent` | ⚠️ 基礎版 | Monaco Editor 已嵌入，已實作執行行高亮，但尚未實作斷點互動 |
-| DAP 通訊層 | ✅ 已完成 | `DapTransportService`、`WebSocketTransportService` 及 `DapSessionService` 皆已完成並具備超時機制 |
-| 檔案樹 | ✅ 已完成 | 左側邊欄透過 `loadedSources` 渲染，點擊檔案可向 Server 提取原始碼並顯示 |
-| 變數檢視器 | ❌ 未實作 | 右側為 placeholder 文字 |
-| 呼叫堆疊 | ✅ 已完成 | 實作於 DebuggerComponent 右側面板，自動監聽 stopped 事件並列出堆疊 |
-| 錯誤處理 | ✅ 已完成 | 已實作底層斷線重連機制、Timeout及全域異常通知介面 |
-| Electron 整合 | ❌ 未實作 | 僅有 devDependency，尚未建立 Main Process 及 IPC |
+| `app.routes.ts` | ✅ Done | `/setup` → `/debug` routing established |
+| `DapConfigService` | ✅ Done | Extended to a complete DAP connection config interface (address, launch mode, args, etc.) |
+| `SetupComponent` | ✅ Done | All form fields implemented with Reactive Forms, real-time format and required validation |
+| `DebuggerComponent` | ✅ Done | Three-panel layout integrated with dynamic file tree, debug controls, status indicators, and console logs |
+| `EditorComponent` | ⚠️ Basic | Monaco Editor embedded, current line highlight implemented, but breakpoint interaction not yet implemented |
+| DAP Communication Layer | ✅ Done | `DapTransportService`, `WebSocketTransportService`, and `DapSessionService` completed with timeout mechanism |
+| File Tree | ✅ Done | Left sidebar renders via `loadedSources`, clicking a file fetches source code from Server and displays it |
+| Variable Inspector | ❌ Not implemented | Right panel is placeholder text |
+| Call Stack | ✅ Done | Implemented in DebuggerComponent right panel, auto-listens to stopped events and lists stack frames |
+| Error Handling | ✅ Done | Connection disconnect/reconnect mechanism, timeout, and global error notification UI implemented |
+| Electron Integration | ❌ Not implemented | Only devDependency exists, no Main Process or IPC established |
 
 ---
 
-## 開發階段導覽 (Phases Navigation)
+## Phase Navigation
 
-為便於追蹤進度，開發工作總共劃分為 11 個階段。已完工的階段已歸檔至 `changelog.md`，待處理之階段則保留於本清單。
+Development work is divided into 11 phases. Completed phases are archived to `changelog.md`; pending phases remain in this list.
 
-| 階段 (Phase) | 狀態 | 核心目標說明 | 快速連結 |
+| Phase | Status | Core Objective | Quick Link |
 |---|---|---|---|
-| **Phase 1** | ✅ 完成 | 實作 `/setup` 表單與連線組態介面 | [前往檢視](changelog.md#phase-1完善設定視圖-setup-view) |
-| **Phase 2** | ✅ 完成 | 建立 WebSocket 通訊層與 DAP 請求生命週期管理 | [前往檢視](changelog.md#phase-2dap-通訊層-transport-layer) |
-| **Phase 3** | ⏳ 待處理 | 搭建 Web 模式專用之 Node.js 中繼通訊伺服器 | [前往檢視](#phase-3websocket-bridge-web-模式用後端中介) |
-| **Phase 4** | ✅ 完成 | 實作 Toolbar 偵錯控制（Continue/Pause/Step）及狀態綁定 | [前往檢視](changelog.md#phase-4偵錯控制核心-debug-controls) |
-| **Phase 5** | 🔄 進行中 | Monaco Editor 進階整合，實作斷點互動與執行行高亮 | [前往檢視](#phase-5編輯器進階功能-editor-features) |
-| **Phase 6** | ✅ 完成 | 動態渲染專案檔案樹，點擊可載入原始碼 | [前往檢視](changelog.md#phase-6檔案樹與原始碼載入-file-explorer) |
-| **Phase 7** | 🔄 進行中 | 呼叫堆疊清單，與處理巢狀變數檢視器 | [前往檢視](#phase-7變數與呼叫堆疊-variables--call-stack) |
-| **Phase 8** | ✅ 完成 | 開發 UI 狀態列連線指示器與命令主控台介面 | [前往檢視](changelog.md#phase-8主控台與狀態列-console--status-bar) |
-| **Phase 9** | ✅ 完成 | 全域連線異常處理、發布錯誤 Snackbar 回饋 | [前往檢視](changelog.md#phase-9錯誤處理與使用者回饋-error-handling) |
-| **Phase 10** | ⏳ 待處理 | Electron 桌面應用程式整合 (IPC, Main Process) | [前往檢視](#phase-10electron-桌面模式-optional) |
-| **Phase 11** | 🔄 進行中 | 導入 Vitest 撰寫核心服務防呆等單元測試 | [前往檢視](#phase-11自動化測試-automation-tests) |
+| **Phase 1** | ✅ Done | Implement `/setup` form and connection config interface | [View](changelog.md#phase-1-setup-view) |
+| **Phase 2** | ✅ Done | Build WebSocket communication layer and DAP request lifecycle management | [View](changelog.md#phase-2-dap-transport-layer) |
+| **Phase 3** | ⏳ Pending | Build Node.js relay communication server for Web mode | [View](#phase-3-websocket-bridge-web-mode-backend-relay) |
+| **Phase 4** | ✅ Done | Implement toolbar debug controls (Continue/Pause/Step) and state binding | [View](changelog.md#phase-4-debug-controls) |
+| **Phase 5** | 🔄 In Progress | Monaco Editor advanced integration, breakpoint interaction and line highlight | [View](#phase-5-editor-features) |
+| **Phase 6** | ✅ Done | Dynamic project file tree rendering, click to load source code | [View](changelog.md#phase-6-file-explorer) |
+| **Phase 7** | 🔄 In Progress | Call stack list and nested variable inspector | [View](#phase-7-variables--call-stack) |
+| **Phase 8** | ✅ Done | Develop UI status bar connection indicator and command console interface | [View](changelog.md#phase-8-console--status-bar) |
+| **Phase 9** | ✅ Done | Global connection error handling, error snackbar feedback | [View](changelog.md#phase-9-error-handling) |
+| **Phase 10** | ⏳ Pending | Electron desktop application integration (IPC, Main Process) | [View](#phase-10-electron-desktop-mode-optional) |
+| **Phase 11** | 🔄 In Progress | Introduce Vitest for core service unit tests | [View](#phase-11-automation-tests) |
 
 ---
 
-## Phase 3：WebSocket Bridge (Web 模式用後端中介)
+## Phase 3: WebSocket Bridge (Web Mode Backend Relay)
 
-### WI-09：實作 Node.js WebSocket Bridge
-- **大小**：M
-- **說明**：實作一個簡易的 Node.js 伺服器，接收前端的 WebSocket 連線，並轉發給本地的 DAP 執行檔（如 `lldb-dap`）
-- **內容**：
-  - 使用 `ws` 模組建立 WebSocket Server (例如運行在 `:8080`)
-  - 收到連線時，根據協定啟動 `lldb-dap` 或 `gdb` 子程序 (Child Process)
-  - 雙向資料轉發：WebSocket 收到的 JSON 轉給 DAP `stdin`；DAP `stdout` 收到的 JSON 轉給 WebSocket 傳回前端
-  - 處理程序中斷與資源清理
-- **狀態**：⏳ 待處理
-
----
-
-## Phase 5：編輯器進階功能 (Editor Features)
-
-### WI-12：Monaco Editor 斷點互動
-- **大小**：M
-- **說明**：根據規格書 §3.2.3，實作 Glyph Margin 斷點操作
-- **內容**：
-  - 監聽 Monaco `onMouseDown` 事件（glyph margin 區域點擊）
-  - 點擊行號 → 新增/移除斷點（紅色圓點 decoration）
-  - 維護本地斷點清單（`Map<filename, Set<lineNumber>>`）
-  - 提供 `getBreakpoints()` 方法供 DAP 通訊使用
-- **依賴**：無（可獨立於 DAP 層開發 UI 互動）
-- **狀態**：⏳ 待處理
-
-### WI-13：斷點與 DAP Server 同步
-- **大小**：S
-- **說明**：將本地斷點變更同步至 DAP Server
-- **內容**：
-  - 斷點新增/移除時發送 `setBreakpoints` request
-  - 處理 `setBreakpoints` response，更新 verified 狀態（灰色 vs 紅色圓點）
-  - 處理 `breakpoint` 事件，反映 server 端斷點變更
-- **依賴**：WI-06, WI-12
-- **狀態**：⏳ 待處理
+### WI-09: Implement Node.js WebSocket Bridge
+<!-- status: pending | size: M | phase: 3 | depends: none -->
+- **Size**: M
+- **Description**: Implement a simple Node.js server that receives frontend WebSocket connections and forwards them to the local DAP executable (e.g., `lldb-dap`)
+- **Details**:
+  - Use the `ws` module to create a WebSocket Server (e.g., running on `:8080`)
+  - On connection, launch `lldb-dap` or `gdb` as a child process based on the protocol
+  - Bidirectional data forwarding: WebSocket → DAP `stdin`; DAP `stdout` → WebSocket back to frontend
+  - Handle process termination and resource cleanup
+- **Status**: ⏳ Pending
 
 ---
 
-## Phase 7：變數與呼叫堆疊 (Variables & Call Stack)
+## Phase 5: Editor Features
 
-### WI-18：變數檢視器面板 (Variable Inspector)
-- **大小**：L
-- **說明**：根據規格書 §3.2.4，實作巢狀變數樹狀檢視
-- **內容**：
-  - 根據選中的 stack frame，發送 `scopes` → `variables` 請求
-  - 使用 `mat-tree` 展示巢狀變數（支援展開結構體/陣列/物件）
-  - 展開子節點時 lazy load 對應的 `variables` 請求
-  - 整合 CDK Virtual Scroll 處理大量變數
-  - 顯示變數名稱、型別、數值
-- **依賴**：WI-11
-- **狀態**：⏳ 待處理
+### WI-12: Monaco Editor Breakpoint Interaction
+<!-- status: pending | size: M | phase: 5 | depends: none -->
+- **Size**: M
+- **Description**: Implement Glyph Margin breakpoint operations per spec [§3.2.3](system-specification.md#323-main-content-area)
+- **Details**:
+  - Listen for Monaco `onMouseDown` events (glyph margin area clicks)
+  - Click on line number → add/remove breakpoint (red dot decoration)
+  - Maintain local breakpoint list (`Map<filename, Set<lineNumber>>`)
+  - Provide `getBreakpoints()` method for DAP communication use
+- **Dependencies**: None (can be developed independently from DAP layer)
+- **Files to modify**: `editor.component.ts`
+- **Status**: ⏳ Pending
 
----
-
-## Phase 10：Electron 桌面模式 (Optional)
-
-### WI-23：Electron 主進程基礎架構
-- **大小**：M
-- **說明**：根據規格書 §6.1，建立 Electron 主進程
-- **內容**：
-  - 建立 `electron/main.ts` + `electron/preload.ts`
-  - `BrowserWindow` 載入 Angular 應用
-  - 配置 `contextBridge`，暴露 IPC API
-- **狀態**：⏳ 待處理
-
-### WI-24：Electron IPC 通訊層 (`IpcTransportService`)
-- **大小**：M
-- **說明**：根據規格書 §4.1，實作 IPC 通訊
-- **內容**：
-  - 實作 `DapTransportService` 的 IPC 版本
-  - Electron 主進程側：IPC 接收 → TCP 轉發至 DAP Server
-  - Angular renderer 側：透過 `contextBridge` 調用 IPC
-- **依賴**：WI-04, WI-23
-- **狀態**：⏳ 待處理
-
-### WI-25：Electron 本機檔案系統存取
-- **大小**：S
-- **說明**：根據規格書 §6.1，實作本機檔案讀取
-- **內容**：
-  - 實作 `FileTreeService` 的 Electron 版本
-  - 透過 IPC 呼叫 Node.js `fs` API 讀取檔案樹與檔案內容
-- **依賴**：WI-15, WI-23
-- **狀態**：⏳ 待處理
+### WI-13: Breakpoint DAP Synchronization
+<!-- status: pending | size: S | phase: 5 | depends: WI-06, WI-12 -->
+- **Size**: S
+- **Description**: Synchronize local breakpoint changes to the DAP Server
+- **Details**:
+  - Send `setBreakpoints` request when breakpoints are added/removed
+  - Handle `setBreakpoints` response, update verified status (gray vs red dot)
+  - Handle `breakpoint` event, reflect server-side breakpoint changes
+- **Dependencies**: WI-06, WI-12
+- **Status**: ⏳ Pending
 
 ---
 
-## Phase 11：自動化測試 (Automation Tests)
+## Phase 7: Variables & Call Stack
 
-### TI-01：`DapConfigService` 單元測試
-- **大小**：S
-- **說明**：根據 `test-plan.md` 規劃，驗證全域組態的存取機制
-- **內容**：
-  - 驗證 `setConfig()` 與 `getConfig()` 是否能正確存儲與回傳完整的 `DapConfig` 資料
-- **狀態**：⏳ 待處理
-
-### TI-03：`WebSocketTransportService` 傳輸層單元測試
-- **大小**：M
-- **說明**：根據 `test-plan.md` 規劃，驗證底層防呆機制與資料緩衝
-- **內容**：
-  - **Header 解析驗證**：確保封包能依 `Content-Length: ...\r\n\r\n` 被正確分割並觸發 message 事件
-  - **黏包/半包處理**：模擬 TCP 碎化封包，驗證 Buffer 拼接邏輯是否能正確拼出完整 JSON
-  - **防呆與錯誤隔離 (Fail-Fast)**：送入錯誤格式封包，驗證服務是否永久中斷 `Subject` 並拒絕後續訊息
-- **依賴**：WI-05
-- **狀態**：⏳ 待處理
-
-### TI-04：`DapFileTreeService` 檔案樹單元測試
-- **大小**：S
-- **說明**：驗證 `loadedSources` 解析與檔案樹節點生成邏輯
-- **內容**：
-  - 驗證 Unix/Windows 路徑解析與層級合併
-  - 驗證節點排序邏輯（資料夾優先）
-- **依賴**：WI-15
-- **狀態**：⏳ 待處理
-
-### TI-05：連線異常與意圖偵測整合測試
-- **大小**：M
-- **說明**：驗證 Session 與 Transport 之間的錯誤傳遞、連線逾時以及使用者主動斷線的攔截邏輯
-- **內容**：
-  - **正常停止意圖攔截**：驗證 `isDisconnecting` 旗標是否能正確抑制多餘的異常回饋
-  - **連線逾時自動捕捉**：模擬 WebSocket 連線超時，啟動 `ErrorDialog`
-  - **斷線自動反應**：模擬伺服器崩潰，驗證聯動狀態轉移
-- **依賴**：WI-21, WI-22
-- **狀態**：⏳ 待處理
+### WI-18: Variable Inspector Panel
+<!-- status: pending | size: L | phase: 7 | depends: WI-11 -->
+- **Size**: L
+- **Description**: Implement nested variable tree view per spec [§3.2.4](system-specification.md#324-right-sidenav)
+- **Details**:
+  - Based on selected stack frame, send `scopes` → `variables` requests
+  - Display nested variables using `mat-tree` (support expanding structs/arrays/objects)
+  - Lazy-load child nodes via `variables` request on expand
+  - Integrate CDK Virtual Scroll for large variable sets
+  - Display variable name, type, and value
+- **Dependencies**: WI-11
+- **Files to modify**: `debugger.component.ts`, `debugger.component.html`
+- **Status**: ⏳ Pending
 
 ---
 
-## 建議開發順序
+## Phase 10: Electron Desktop Mode (Optional)
 
-### 圖表顏色說明
-| 顏色 | 代表意義 | 項目狀態 |
+### WI-23: Electron Main Process Architecture
+<!-- status: pending | size: M | phase: 10 | depends: none -->
+- **Size**: M
+- **Description**: Establish Electron main process per spec [§6.1](system-specification.md#61-electron-desktop-mode)
+- **Details**:
+  - Create `electron/main.ts` + `electron/preload.ts`
+  - `BrowserWindow` loads the Angular application
+  - Configure `contextBridge`, expose IPC API
+- **Status**: ⏳ Pending
+
+### WI-24: Electron IPC Transport Layer (`IpcTransportService`)
+<!-- status: pending | size: M | phase: 10 | depends: WI-04, WI-23 -->
+- **Size**: M
+- **Description**: Implement IPC communication per spec [§4.1](system-specification.md#41-electron-desktop-mode)
+- **Details**:
+  - Implement `DapTransportService`'s IPC version
+  - Electron main process side: IPC receive → TCP forward to DAP Server
+  - Angular renderer side: Call IPC via `contextBridge`
+- **Dependencies**: WI-04, WI-23
+- **Status**: ⏳ Pending
+
+### WI-25: Electron Local File System Access
+<!-- status: pending | size: S | phase: 10 | depends: WI-15, WI-23 -->
+- **Size**: S
+- **Description**: Implement local file reading per spec [§6.1](system-specification.md#61-electron-desktop-mode)
+- **Details**:
+  - Implement `FileTreeService`'s Electron version
+  - Read file tree and file contents via IPC calling Node.js `fs` API
+- **Dependencies**: WI-15, WI-23
+- **Status**: ⏳ Pending
+
+---
+
+## Phase 11: Automation Tests
+
+### TI-01: `DapConfigService` Unit Tests
+<!-- status: pending | size: S | phase: 11 | depends: WI-01 -->
+- **Size**: S
+- **Description**: Verify global config access mechanism per [test-plan.md](test-plan.md)
+- **Details**:
+  - Verify `setConfig()` and `getConfig()` correctly store and return complete `DapConfig` data
+- **Status**: ⏳ Pending
+
+### TI-03: `WebSocketTransportService` Transport Layer Unit Tests
+<!-- status: pending | size: M | phase: 11 | depends: WI-05 -->
+- **Size**: M
+- **Description**: Verify low-level fail-safe mechanism and data buffering per [test-plan.md](test-plan.md)
+- **Details**:
+  - **Header parsing verification**: Ensure packets are correctly split by `Content-Length: ...\r\n\r\n` and trigger message events
+  - **Sticky/half packet handling**: Simulate TCP fragmented packets, verify buffer concatenation logic correctly assembles complete JSON
+  - **Fail-Fast & Error Isolation**: Feed malformed packets, verify service permanently terminates `Subject` and rejects subsequent messages
+- **Dependencies**: WI-05
+- **Status**: ⏳ Pending
+
+### TI-04: `DapFileTreeService` File Tree Unit Tests
+<!-- status: pending | size: S | phase: 11 | depends: WI-15 -->
+- **Size**: S
+- **Description**: Verify `loadedSources` parsing and file tree node generation logic
+- **Details**:
+  - Verify Unix/Windows path parsing and level merging
+  - Verify node sorting logic (directories first)
+- **Dependencies**: WI-15
+- **Status**: ⏳ Pending
+
+### TI-05: Connection Error & Intent Detection Integration Tests
+<!-- status: pending | size: M | phase: 11 | depends: WI-21, WI-22 -->
+- **Size**: M
+- **Description**: Verify error propagation, connection timeout, and user-initiated disconnect interception between Session and Transport
+- **Details**:
+  - **Normal stop intent interception**: Verify `isDisconnecting` flag correctly suppresses redundant error feedback
+  - **Connection timeout auto-catch**: Simulate WebSocket connection timeout, trigger `ErrorDialog`
+  - **Disconnect auto-reaction**: Simulate server crash, verify cascading state transition
+- **Dependencies**: WI-21, WI-22
+- **Status**: ⏳ Pending
+
+---
+
+## Recommended Development Order
+
+### Chart Color Legend
+| Color | Meaning | Item Status |
 |---|---|---|
-| <span style="background:#4ade80; border:1px solid #16a34a; padding:1px 3px; border-radius:2px;">Solid</span> | 該類別功能 (待實作) | 實心背景顏色代表該類別 |
-| <span style="background:#4ade80; border:2px solid #000; padding:1px 3px; border-radius:2px;">Black Border</span> | 該項目已完成 | 實心類別背景 + **粗黑框** 表示完成 |
-| <span style="color:#4ade80">●</span> **綠色** | 基礎核心 (Core) | WI-01 ~ WI-08, WI-10, WI-11 |
-| <span style="color:#60a5fa">●</span> **藍色** | 後端中繼層 (Bridge) | WI-09 |
-| <span style="color:#f97316">●</span> **橘色** | 偵錯控制 UI (Controls) | |
-| <span style="color:#a78bfa">●</span> **紫色** | 編輯器進階互動 (Editor) | WI-12 ~ WI-14 |
-| <span style="color:#facc15">●</span> **黃色** | 檔案資源管理 (Explorer) | WI-15 ~ WI-16 |
-| <span style="color:#f472b6">●</span> **粉色** | 偵錯資訊面板 (Inspector) | WI-17 ~ WI-18 |
-| <span style="color:#2dd4bf">●</span> **青色** | 狀態與主控台 (UI) | WI-19 ~ WI-20 |
-| <span style="color:#fb923c">●</span> **深橘** | 異常處理 (Error Handling) | WI-21 ~ WI-22 |
-| <span style="color:#94a3b8">●</span> **灰色** | Electron 桌面專屬 (Bridge) | WI-23 ~ WI-25 |
-| <span style="color:#ffffff; background:#334155; padding:1px 3px; border-radius:3px;">●</span> **白格** | 自動化測試 (Testing) | TI-01 ~ TI-05 |
+| Solid background | Category feature (to implement) | Solid background color represents the category |
+| Black border | Item completed | Solid category background + **thick black border** = completed |
+| 🟢 **Green** | Core Infrastructure | WI-01 ~ WI-08, WI-10, WI-11 |
+| 🔵 **Blue** | Backend Relay (Bridge) | WI-09 |
+| 🟠 **Orange** | Debug Control UI (Controls) | |
+| 🟣 **Purple** | Editor Advanced Interaction | WI-12 ~ WI-14 |
+| 🟡 **Yellow** | File Resource Management (Explorer) | WI-15 ~ WI-16 |
+| 🩷 **Pink** | Debug Info Panel (Inspector) | WI-17 ~ WI-18 |
+| 🔵 **Cyan** | Status & Console (UI) | WI-19 ~ WI-20 |
+| 🟠 **Deep Orange** | Error Handling | WI-21 ~ WI-22 |
+| ⬜ **Gray** | Electron Desktop (Bridge) | WI-23 ~ WI-25 |
+| ⬜ **White** | Automation Tests (Testing) | TI-01 ~ TI-05 |
 
 ```mermaid
 graph LR
-    WI01[WI-01 擴充組態模型] --> WI02[WI-02 表單欄位補齊]
-    WI02 --> WI03[WI-03 表單驗證]
-    
-    WI04[WI-04 Transport 抽象] --> WI05[WI-05 WebSocket 實作]
-    WI05 --> WI06[WI-06 DAP Session 管理]
-    
-    WI06 --> WI07[WI-07 Debugger 整合 DapSessionService]
-    WI06 --> WI08[WI-08 DAP Timeout 處理]
+    WI01[WI-01 Config Model] --> WI02[WI-02 Form Fields]
+    WI02 --> WI03[WI-03 Form Validation]
 
-    WI06 -.-> WI09[WI-09 Node.js WebSocket Bridge]
-    
-    WI07 --> WI10[WI-10 控制按鈕功能化]
-    WI07 --> WI11[WI-11 事件狀態管理]
-    
-    WI12[WI-12 斷點 UI] --> WI13[WI-13 斷點 DAP 同步]
+    WI04[WI-04 Transport Abstract] --> WI05[WI-05 WebSocket Impl]
+    WI05 --> WI06[WI-06 DAP Session Mgmt]
+
+    WI06 --> WI07[WI-07 Debugger Integration]
+    WI06 --> WI08[WI-08 DAP Timeout]
+
+    WI06 -.-> WI09[WI-09 Node.js WS Bridge]
+
+    WI07 --> WI10[WI-10 Control Buttons]
+    WI07 --> WI11[WI-11 Event State Mgmt]
+
+    WI12[WI-12 Breakpoint UI] --> WI13[WI-13 Breakpoint DAP Sync]
     WI06 --> WI13
-    WI11 --> WI14[WI-14 執行行高亮]
-    
-    WI15[WI-15 FileTree 抽象] --> WI16[WI-16 檔案樹 UI]
-    
-    WI11 --> WI17[WI-17 呼叫堆疊]
-    WI11 --> WI18[WI-18 變數檢視器]
-    
-    WI11 --> WI19[WI-19 主控台功能化]
-    WI05 --> WI20[WI-20 連線狀態指示器]
-    
-    WI05 --> WI21[WI-21 連線異常處理]
+    WI11 --> WI14[WI-14 Current Line Highlight]
+
+    WI15[WI-15 FileTree Abstract] --> WI16[WI-16 File Tree UI]
+
+    WI11 --> WI17[WI-17 Call Stack]
+    WI11 --> WI18[WI-18 Variable Inspector]
+
+    WI11 --> WI19[WI-19 Console]
+    WI05 --> WI20[WI-20 Connection Indicator]
+
+    WI05 --> WI21[WI-21 Connection Error Handling]
     WI20 --> WI21
-    WI06 --> WI22[WI-22 DAP 異常處理]
-    
-    WI21 -.-> TI05[TI-05 異常處理整合測試]
+    WI06 --> WI22[WI-22 DAP Error Handling]
+
+    WI21 -.-> TI05[TI-05 Error Integration Tests]
     WI22 -.-> TI05
-    
-    WI23[WI-23 Electron 主進程] --> WI24[WI-24 IPC 通訊層]
+
+    WI23[WI-23 Electron Main Process] --> WI24[WI-24 IPC Transport]
     WI04 --> WI24
-    WI23 --> WI25[WI-25 Electron 檔案系統]
+    WI23 --> WI25[WI-25 Electron File System]
     WI15 --> WI25
 
-    WI01 -.-> TI01[TI-01 Config 單元測試]
-    WI06 -.-> TI02[TI-02 Session 單元測試]
-    WI05 -.-> TI03[TI-03 Transport 單元測試]
-    WI15 -.-> TI04[TI-04 FileTree 單元測試]
+    WI01 -.-> TI01[TI-01 Config Unit Tests]
+    WI06 -.-> TI02[TI-02 Session Unit Tests]
+    WI05 -.-> TI03[TI-03 Transport Unit Tests]
+    WI15 -.-> TI04[TI-04 FileTree Unit Tests]
 
     style WI01 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI02 fill:#4ade80,stroke:#000,stroke-width:2.5px
@@ -277,18 +301,17 @@ graph LR
 
 ---
 
-## 開發里程碑摘要
+## Milestone Summary
 
-| 里程碑 | 涵蓋項目 | 交付物 |
+| Milestone | Items Covered | Deliverable |
 |---|---|---|
-| **M1：完整設定頁面** | WI-01 ~ WI-03 | 完整表單 + 驗證，可正確傳遞所有 DAP 參數 |
-| **M2：DAP 通訊建立** | WI-04 ~ WI-09 | WebSocket 連線 + Bridge + Timeout 機制完成 |
-| **M3：基礎偵錯體驗** | WI-10 ~ WI-14 | 可設斷點、暫停、逐步執行、看到當前行高亮 |
-| **M4：全面資訊呈現** | WI-15 ~ WI-20 | 檔案樹、變數、堆疊、主控台、狀態列全面功能化 |
-| **M5：穩健性提升** | WI-21 ~ WI-22 | 連線異常處理、DAP 錯誤處理 |
-| **M6：Electron 桌面版** | WI-23 ~ WI-25 | 桌面應用可獨立運行、本機檔案存取 |
-| **M7：測試與品質保證** | TI-01 ~ TI-05 | 核心服務之單元測試，確保邊界與異常處理 |
+| **M1: Complete Setup Page** | WI-01 ~ WI-03 | Full form + validation, correctly passes all DAP parameters |
+| **M2: DAP Communication** | WI-04 ~ WI-09 | WebSocket connection + Bridge + Timeout mechanism complete |
+| **M3: Basic Debug Experience** | WI-10 ~ WI-14 | Can set breakpoints, pause, step, see current line highlight |
+| **M4: Full Information Display** | WI-15 ~ WI-20 | File tree, variables, stack, console, status bar all functional |
+| **M5: Robustness** | WI-21 ~ WI-22 | Connection error handling, DAP error handling |
+| **M6: Electron Desktop** | WI-23 ~ WI-25 | Desktop app runs independently, local file access |
+| **M7: Testing & QA** | TI-01 ~ TI-05 | Core service unit tests, boundary and error handling coverage |
 
 > [!TIP]
-> **建議先從 Phase 1 + Phase 2 並行**開始：Phase 1 (UI 表單) 不依賴 DAP 通訊層，Phase 2 (通訊層) 也不依賴 UI 變更，兩者可同時進行。另外 **WI-12（斷點 UI）** 也可獨立開發，不依賴 DAP 層。
-
+> **Recommended start**: Phase 1 + Phase 2 in parallel — Phase 1 (UI form) has no dependency on the DAP communication layer, and Phase 2 (communication layer) doesn't depend on UI changes. Both can proceed simultaneously. Additionally, **WI-12 (Breakpoint UI)** can be developed independently without DAP layer dependency.

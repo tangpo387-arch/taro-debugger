@@ -1,150 +1,159 @@
-# **Debug Adapter Protocol (DAP) 技術指引**
+---
+title: Debug Adapter Protocol (DAP) Integration FAQ
+scope: dap, initialization, lifecycle, troubleshooting, sequence
+audience: [Lead_Engineer, Quality_Control_Reviewer]
+last_updated: 2026-03-28
+related:
+  - docs/architecture.md
+  - docs/system-specification.md
+  - .agents/rules/dap-protocol-specs.md
+---
 
-## **1\. 生命週期概覽 (Lifecycle Overview)**
+# Debug Adapter Protocol (DAP) — Technical Guide
 
-本節主要說明工作階段（Session）的建立、生命週期管理以及啟動請求（Launch Request）的行為規範，並針對實作 `launch` 請求時常見的邊界情況與開發者疑慮進行解答。
+## 1. Lifecycle Overview
 
-在 DAP 中，一個典型的除錯工作階段始於 initialize 請求，隨後是 launch 或 attach 請求。這決定了 Adapter 是要「啟動」一個新進程，還是「附加」到一個現有的進程上。
+This section describes session establishment, lifecycle management, and Launch Request behavior, and addresses common edge cases and developer concerns when implementing the `launch` request.
 
-### **Q1: launch 請求可以在同一個除錯工作階段 (Debug Session) 中重複發送嗎？**
+In DAP, a typical debug session begins with an `initialize` request, followed by a `launch` or `attach` request. This determines whether the Adapter will "launch" a new process or "attach" to an existing one.
 
-**回答：** 原則上 **不行**。在 DAP 規範中，launch 請求被視為「啟動」除錯目標（Debuggee）的單次行為。一旦 launch 成功返回 response，該 Session 就進入了運行或暫停狀態。在同一個 Session 識別碼下再次發送 launch 是不符合協議邏輯的，大多數的 Debug Adapter 會對重複的 launch 請求回傳錯誤（Error Response）。
+### Q1: Can the `launch` request be sent multiple times within the same debug session?
 
-### **Q2: 如果我需要「重新啟動」正在除錯的程式，應該如何操作？**
+**Answer:** In principle, **no**. In the DAP specification, the `launch` request is treated as a one-time action to start the debuggee. Once `launch` successfully returns a response, the session enters a running or paused state. Sending `launch` again under the same session identifier violates the protocol logic, and most Debug Adapters will return an Error Response for duplicate `launch` requests.
 
-**回答：** 您不應重複使用 launch，而應該使用 **restart 請求**。當用戶在 IDE（如 VS Code）中點擊「重新啟動」按鈕時，IDE 會先檢查 supportsRestartRequest 能力。如果支援，則發送 restart；如果不支援，IDE 會先發送 disconnect 結束當前 Session，然後建立一個全新的 Session 並再次發送 launch。
+### Q2: If I need to "restart" the program being debugged, what should I do?
 
-### **Q3: 如何在實作中宣告支援「重新啟動」功能？**
+**Answer:** You should not reuse `launch`. Instead, use the **`restart` request**. When a user clicks "Restart" in the IDE (e.g., VS Code), the IDE first checks the `supportsRestartRequest` capability. If supported, it sends `restart`; if not, the IDE sends `disconnect` to end the current session, then creates a brand-new session and sends `launch` again.
 
-**回答：** 在回應 initialize 請求時，必須在 Capabilities 物件中將 supportsRestartRequest 設為 true。
+### Q3: How do I declare support for the "restart" capability in my implementation?
 
-**JSON 範例：**
+**Answer:** In the `initialize` response, set `supportsRestartRequest` to `true` in the Capabilities object.
 
-{  
-    "type": "response",  
-    "command": "initialize",  
-    "success": true,  
-    "body": {  
-        "supportsRestartRequest": true,  
-        "supportsConfigurationDoneRequest": true  
-    }  
+**JSON Example:**
+
+```json
+{
+    "type": "response",
+    "command": "initialize",
+    "success": true,
+    "body": {
+        "supportsRestartRequest": true,
+        "supportsConfigurationDoneRequest": true
+    }
 }
+```
 
-### **Q4: 為什麼 launch 請求不設計成可以多次調用？**
+### Q4: Why isn't the `launch` request designed to be called multiple times?
 
-**回答：** 這涉及到 **資源管理** 與 **狀態機 (State Machine)** 的簡潔性。重複 launch 會導致多個進程並存，造成埠號（Port）衝突或記憶體競爭。此外，斷點設置（SetBreakpoints）通常發生在 launch 之後，若允許多次啟動，協議需要處理極度複雜的狀態重置問題。
+**Answer:** This relates to **resource management** and **state machine** simplicity. Duplicate `launch` calls would result in multiple processes coexisting, leading to port conflicts or memory contention. Additionally, breakpoint configuration (`setBreakpoints`) typically occurs after `launch`; if multiple launches were allowed, the protocol would need to handle extremely complex state reset scenarios.
 
-## **2\. 初始化序列與順序約束 (Sequence & Constraints)**
+## 2. Initialization Sequence & Constraints
 
-根據官方規範與實作最佳實踐，初始化過程必須遵循嚴格的順序，以確保「配置（Configuration）」在「程式執行」之前完成。此章節邏輯深受早期開發討論影響，可參考 [VS Code Issue \#4902: Debug protocol: configuration sequence](https://github.com/microsoft/vscode/issues/4902)。
+According to the official specification and implementation best practices, the initialization process must follow a strict order to ensure that "configuration" completes before "program execution." This section is heavily influenced by early development discussions; see [VS Code Issue #4902: Debug protocol: configuration sequence](https://github.com/microsoft/vscode/issues/4902).
 
-### **關鍵約束條件 (Key Constraints)**
+### Key Constraints
 
-#### **Constraint 1: Initialized 事件發送時機**  
-   Debug Adapter 必須在回傳 initialize 請求的 **response 之後**，才能發送 initialized 事件 (event)。  
-   * *原因：* initialized 事件是用來通知 IDE：Adapter 已經準備好接收設定（如 setBreakpoints）。若過早發送，IDE 可能尚未處理完 initialize 的能力宣告（Capabilities）。  
-#### **Constraint 2: launch/attach 回應時機**  
-   launch 或 attach 的 **response** 必須在 **configurationDone 的 response 發送之後** 才能送出給 IDE。  
-   * *原因：* 當 IDE 收到 launch response 時，它會認為「啟動序列已完成」，並開始顯示除錯介面。如果在此之前 configurationDone 尚未處理完畢，可能會導致程式在斷點尚未完全載入時就開始執行（Race Condition）。
+#### Constraint 1: `initialized` Event Timing
+The Debug Adapter must send the `initialized` event only **after** returning the `initialize` response.
+* *Reason:* The `initialized` event notifies the IDE that the Adapter is ready to receive configuration (such as `setBreakpoints`). If sent too early, the IDE may not have finished processing the Capabilities from the `initialize` response.
 
-#### **Constraint 3: configurationDone 請求必須在 launch/attach 請求之後才能發送**
+#### Constraint 2: `launch`/`attach` Response Timing
+The `launch` or `attach` **response** must be sent only **after** the `configurationDone` **response** has been sent to the IDE.
+* *Reason:* When the IDE receives the `launch` response, it considers the "launch sequence complete" and begins displaying the debug interface. If `configurationDone` hasn't been processed by then, the program may start executing before breakpoints are fully loaded (Race Condition).
 
-configurationDone 的 **request** 必須在 launch 或 attach 的 **request** 發送之後才能送出。
-* *原因：* 許多 Debug Adapter 在收到 configurationDone 時，會檢查是否已經收到 launch/attach 請求。若 configurationDone 先到達，Adapter 會回傳錯誤（如 `"launch or attach not specified"`），因為它尚不知道要除錯的目標程式。
-* *常見錯誤：* 在收到 initialized 事件後立即非同步發送 configurationDone，而 launch/attach 的發送延遲到後續程式碼執行，導致 configurationDone 搶先送出。
+#### Constraint 3: `configurationDone` Request Must Follow `launch`/`attach` Request
+The `configurationDone` **request** must be sent only **after** the `launch` or `attach` **request** has been sent.
+* *Reason:* Many Debug Adapters check whether a `launch`/`attach` request has been received when they get `configurationDone`. If `configurationDone` arrives first, the Adapter will return an error (e.g., `"launch or attach not specified"`) because it doesn't yet know the debug target.
+* *Common mistake:* Asynchronously sending `configurationDone` immediately upon receiving the `initialized` event, while the `launch`/`attach` send is delayed to later code execution, causing `configurationDone` to be sent first.
 
-#### **正確的訊息流 (Standard Message Flow)**
+#### Standard Message Flow
 
-1. **IDE \-\> Adapter:** initialize request  
-2. **Adapter \-\> IDE:** initialize response (宣告功能)  
-3. **Adapter \-\> IDE:** initialized event (觸發設定階段)  
-4. **IDE \-\> Adapter:** launch/attach request (此時不回傳 response)  
-5. **IDE \-\> Adapter:** 一系列設定請求 (setBreakpoints, setExceptionBreakpoints 等)  
-6. **IDE \-\> Adapter:** configurationDone request (通知設定完成)  
-7. **Adapter \-\> IDE:** configurationDone response  
-8. **Adapter \-\> IDE:** launch/attach response (正式結束啟動序列)
+1. **IDE → Adapter:** `initialize` request
+2. **Adapter → IDE:** `initialize` response (declares capabilities)
+3. **Adapter → IDE:** `initialized` event (triggers configuration phase)
+4. **IDE → Adapter:** `launch`/`attach` request (do not return response at this point)
+5. **IDE → Adapter:** Configuration requests (`setBreakpoints`, `setExceptionBreakpoints`, etc.)
+6. **IDE → Adapter:** `configurationDone` request (signals configuration complete)
+7. **Adapter → IDE:** `configurationDone` response
+8. **Adapter → IDE:** `launch`/`attach` response (formally ends the launch sequence)
 
-#### **初始化時序圖 (Initialization Sequence Diagram)**
+#### Initialization Sequence Diagram
 
 ```mermaid
 sequenceDiagram
     participant IDE as DebuggerComponent
     participant Service as DapSessionService
     participant Adapter as GDB Adapter
-    
+
     IDE->>Service: startSession()
     Service->>Adapter: initialize Request
     Adapter-->>Service: initialize Response
     Adapter-->>Service: (Event) initialized
-    Note over Service, Adapter: 進入設定階段 (收到 initialized 後)
-    Service->>Adapter: launch/attach Request (先送出，不等待 Response)
-    Service->>Adapter: setBreakpoints 等各式設定請求
-    Service->>Adapter: configurationDone Request (送出並等待 Response)
+    Note over Service, Adapter: Enter configuration phase (after initialized received)
+    Service->>Adapter: launch/attach Request (fire-and-forget, do not await Response)
+    Service->>Adapter: setBreakpoints and other configuration requests
+    Service->>Adapter: configurationDone Request (send and await Response)
     Adapter-->>Service: configurationDone Response
-    Adapter-->>Service: launch/attach Response (此時才抵達)
+    Adapter-->>Service: launch/attach Response (arrives only now)
     Service-->>IDE: startSession() Promise Resolve
-    Note over IDE, Adapter: 啟動完成，開始更新 UI
+    Note over IDE, Adapter: Launch complete, begin updating UI
 ```
 
-### **含非同步控制之完整訊息流 (Annotated Message Flow)**
+### Annotated Message Flow with Async Control
 
 ```
 IDE → Adapter:  initialize request
-Adapter → IDE:  initialize response           ← 等待完成後繼續
-Adapter → IDE:  initialized event             ← 等待此事件後繼續
-IDE → Adapter:  launch/attach request         ← 送出，不等待 response
-IDE → Adapter:  setBreakpoints 等設定請求
-IDE → Adapter:  configurationDone request     ← 送出並等待
-Adapter → IDE:  configurationDone response    ← 等待完成後繼續
-Adapter → IDE:  launch/attach response        ← 此時才等待此 response
+Adapter → IDE:  initialize response           ← await completion before continuing
+Adapter → IDE:  initialized event             ← await this event before continuing
+IDE → Adapter:  launch/attach request         ← send, do NOT await response
+IDE → Adapter:  setBreakpoints and other configuration requests
+IDE → Adapter:  configurationDone request     ← send and await
+Adapter → IDE:  configurationDone response    ← await completion before continuing
+Adapter → IDE:  launch/attach response        ← only NOW await this response
 ```
 
-> **⚠️ 注意：** launch/attach request 必須以「fire-and-forget」方式送出（送出後不立即等待 response），因為 Adapter 會在 configurationDone response 之後才回覆 launch/attach response。若立即等待 launch/attach response，將因 configurationDone 尚未送出而造成死鎖 (Deadlock)。
+> **⚠️ Warning:** The `launch`/`attach` request must be sent in a "fire-and-forget" manner (send without immediately awaiting the response), because the Adapter will only reply with the `launch`/`attach` response after the `configurationDone` response. If you immediately await the `launch`/`attach` response, you'll deadlock because `configurationDone` hasn't been sent yet.
 
-### **實作建議總結**
+### Implementation Recommendations Summary
 
-* **對 IDE 客戶端開發者：** 請務必優先考慮 restart 請求來處理重複啟動邏輯，並確保在收到 initialized 事件後才開始發送斷點設定。  
-* **對 Debug Adapter 實作者：** \* 嚴格遵守上述 **兩個約束條件**，這是防止除錯啟動時發生競爭條件（Race Condition）的唯一方法。  
-  * 在 launch response 送出前，確保底層除錯引擎已完全準備就緒。
+* **For IDE client developers:** Always prioritize the `restart` request for handling re-launch logic, and ensure you only start sending breakpoint configurations after receiving the `initialized` event.
+* **For Debug Adapter implementers:** Strictly adhere to the above **constraints** — this is the only way to prevent race conditions during debug startup. Ensure the underlying debug engine is fully ready before sending the `launch` response.
 
-## **3\. `loadedSources` 與執行狀態 (Execution State)**
+## 3. `loadedSources` & Execution State
 
-### **Q1: `loadedSources` 請求在什麼條件下才能成功執行？**
-要成功執行 `loadedSources` 請求，必須滿足以下三個核心條件：
+### Q1: Under what conditions can the `loadedSources` request succeed?
+To successfully execute the `loadedSources` request, the following three conditions must be met:
 
-1. **功能宣告 (Capability Check)**：
-   Debug Adapter (DA) 必須在 `initialize` 回應中將 `supportsLoadedSourcesRequest` 設為 `true`。如果未宣告，Client 通常不會發起此請求。
-2. **階段合法 (Session Active)**：
-   必須在偵錯工作階段啟動後（通常是 `configurationDone` 之後）發送。
-3. **環境支援 (Runtime Support)**：
-   目標環境（如 Python 偵測器、Node.js Runtime）必須具備追蹤動態載入模組的能力，DA 才能回傳正確的清單。
+1. **Capability Check**: The Debug Adapter must set `supportsLoadedSourcesRequest` to `true` in the `initialize` response. If not declared, the Client typically won't issue this request.
+2. **Session Active**: Must be sent after the debug session has started (typically after `configurationDone`).
+3. **Runtime Support**: The target environment (e.g., Python debugger, Node.js runtime) must be capable of tracking dynamically loaded modules for the DA to return an accurate list.
 
-### **Q2: `loadedSources` 通常在什麼時機被觸發？**
-除了 Client 主動請求更新外，最常見的觸發流程如下：
-* **動態載入事件**：當目標程式執行 `import` 或動態載入腳本時，DA 會發送 `loadedSource` (reason: 'new') 事件給 Client。
-* **UI 更新**：Client 接收到上述事件後，會發送 `loadedSources` 請求以獲取最新的原始碼清單並更新 IDE 介面（如 VS Code 的 "Loaded Scripts" 視圖）。
+### Q2: When is `loadedSources` typically triggered?
+In addition to explicit Client requests for updates, the most common trigger flow is:
+* **Dynamic load event**: When the target program executes `import` or dynamically loads a script, the DA sends a `loadedSource` (reason: `'new'`) event to the Client.
+* **UI update**: Upon receiving the above event, the Client sends a `loadedSources` request to get the latest source list and update the IDE interface (e.g., VS Code's "Loaded Scripts" view).
 
-### **Q3: 如何確認偵錯目標 (Debuggee) 目前處於暫停 (Paused) 狀態？**
-在 DAP 規範中，確認狀態並非透過「輪詢 (Polling)」，而是透過 **事件驅動 (Event-driven)** 機制：
+### Q3: How do you confirm the debuggee is currently paused?
+In the DAP specification, state confirmation is not done through "polling" but through an **event-driven** mechanism:
 
-1. **監聽 `stopped` 事件**：當 Debuggee 遇到中斷點或異常而停止時，DA 會發送 `stopped` 事件。
-   * 收到此事件後，Client 才會認定目標處於暫停狀態。
-   * 事件中的 `threadId` 會指明是哪個執行緒停止。
-2. **檢查 `allThreadsStopped` 屬性**：
-   * 若為 `true`，表示整個進程皆已暫停。
-   * 若為 `false`，則只有特定執行緒停止，其他執行緒可能仍在運行。
+1. **Listen for the `stopped` event**: When the debuggee hits a breakpoint or encounters an exception, the DA sends a `stopped` event.
+   * Only after receiving this event does the Client consider the target to be in a paused state.
+   * The `threadId` in the event indicates which thread stopped.
+2. **Check the `allThreadsStopped` property**:
+   * If `true`, the entire process is paused.
+   * If `false`, only the specific thread has stopped; other threads may still be running.
 
-### **Q4: 當 Debuggee 處於「執行中 (Running)」時，發送 `loadedSources` 會失敗嗎？**
-**不一定會失敗**，但行為取決於 DA 的實作：
-* 許多 DA 允許在 Running 狀態下回傳已載入的清單。
-* 然而，像 `stackTrace`、`scopes` 或 `variables` 這種需要存取特定執行緒堆疊資訊的請求，**必須**在暫停狀態下發送，否則 DA 通常會回傳錯誤訊息。
+### Q4: Will sending `loadedSources` fail when the debuggee is "running"?
+**Not necessarily**, but behavior depends on the DA implementation:
+* Many DAs allow returning the loaded source list while in the Running state.
+* However, requests like `stackTrace`, `scopes`, or `variables` that need to access thread stack information **must** be sent while paused; otherwise, the DA will typically return an error message.
 
-### **Q5: 如果 Debuggee 沒有發送 `stopped` 事件，Client 可以強制它暫停嗎？**
-可以。Client 可以發送 **`pause` 請求**。
-* 注意：發送 `pause` 請求後，不能立即假設目標已暫停。
-* 必須等到收到 DA 回傳的 `pause` **Response** 以及隨後的 **`stopped` 事件**，才能確認目標已正式進入暫停狀態。
+### Q5: If the debuggee hasn't sent a `stopped` event, can the Client force it to pause?
+Yes. The Client can send a **`pause` request**.
+* Note: After sending the `pause` request, you cannot immediately assume the target is paused.
+* You must wait for the DA's `pause` **Response** and the subsequent **`stopped` event** before confirming the target has officially entered the paused state.
 
-## **4\. 參考資料 (References)**
+## 4. References
 
-* [DAP Official Specification: Initialization](https://www.google.com/search?q=https://microsoft.github.io/debug-adapter-protocol/overview/%23initialization)  
-* [GitHub Discussion: VS Code Issue \#4902](https://github.com/microsoft/vscode/issues/4902) \- 關於為什麼啟動回應必須等待配置完成的歷史討論。
+* [DAP Official Specification: Initialization](https://microsoft.github.io/debug-adapter-protocol/overview/#initialization)
+* [GitHub Discussion: VS Code Issue #4902](https://github.com/microsoft/vscode/issues/4902) — Historical discussion on why the launch response must wait for configuration completion.
