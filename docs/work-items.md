@@ -154,12 +154,12 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 ## Phase 11: Automation Tests
 
 ### TI-01: `DapConfigService` Unit Tests
-<!-- status: pending | size: S | phase: 11 | depends: WI-01 -->
+<!-- status: completed | size: S | phase: 11 | depends: WI-01 -->
 - **Size**: S
 - **Description**: Verify global config access mechanism per [test-plan.md](test-plan.md)
 - **Details**:
   - Verify `setConfig()` and `getConfig()` correctly store and return complete `DapConfig` data
-- **Status**: ⏳ Pending
+- **Status**: ✅ Done
 
 ### TI-03: `WebSocketTransportService` Transport Layer Unit Tests
 <!-- status: pending | size: M | phase: 11 | depends: WI-05 -->
@@ -292,7 +292,7 @@ graph LR
     style WI24 fill:#94a3b8,stroke:#64748b
     style WI25 fill:#94a3b8,stroke:#64748b
 
-    style TI01 fill:#ffffff,stroke:#334155
+    style TI01 fill:#ffffff,stroke:#000,stroke-width:2.5px
     style TI02 fill:#ffffff,stroke:#000,stroke-width:2.5px
     style TI03 fill:#ffffff,stroke:#334155
     style TI04 fill:#ffffff,stroke:#000,stroke-width:2.5px
