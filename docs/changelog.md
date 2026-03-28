@@ -263,6 +263,17 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Dependencies**: WI-06, WI-07
 - **Status**: ✅ Done
 
+### TI-03: `WebSocketTransportService` Transport Layer Unit Tests
+- **Size**: M
+- **Description**: Verify low-level fail-safe mechanism and data buffering logic
+- **Details**:
+  - **Header parsing verification**: Ensured packets are correctly split by `Content-Length` and trigger message events
+  - **Sticky/half packet handling**: Simulated TCP fragmented packets (split header/body) and verified buffer concatenation assembles complete JSON
+  - **Fail-Fast & Error Isolation**: Verified service emits error and terminates Subject on malformed packets (invalid prefix, long header, bad JSON)
+  - **Buffer Auto-expansion**: Verified buffer correctly doubles capacity when receiving payloads larger than 4KB
+- **Dependencies**: WI-05
+- **Status**: ✅ Done
+
 ---
 
 ## Phase 9: Error Handling

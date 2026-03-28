@@ -128,18 +128,6 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 ## Phase 11: Automation Tests
 
 
-### TI-03: `WebSocketTransportService` Transport Layer Unit Tests
-<!-- status: pending | size: M | phase: 11 | depends: WI-05 -->
-- **Size**: M
-- **Description**: Verify low-level fail-safe mechanism and data buffering per [test-plan.md](test-plan.md)
-- **Details**:
-  - **Header parsing verification**: Ensure packets are correctly split by `Content-Length: ...\r\n\r\n` and trigger message events
-  - **Sticky/half packet handling**: Simulate TCP fragmented packets, verify buffer concatenation logic correctly assembles complete JSON
-  - **Fail-Fast & Error Isolation**: Feed malformed packets, verify service permanently terminates `Subject` and rejects subsequent messages
-- **Dependencies**: WI-05
-- **Status**: ⏳ Pending
-
-
 ### TI-05: Connection Error & Intent Detection Integration Tests
 <!-- status: pending | size: M | phase: 11 | depends: WI-21, WI-22 -->
 - **Size**: M
@@ -252,7 +240,7 @@ graph LR
 
     style TI01 fill:#ffffff,stroke:#000,stroke-width:2.5px
     style TI02 fill:#ffffff,stroke:#000,stroke-width:2.5px
-    style TI03 fill:#ffffff,stroke:#334155
+    style TI03 fill:#ffffff,stroke:#000,stroke-width:2.5px
     style TI04 fill:#ffffff,stroke:#000,stroke-width:2.5px
     style TI05 fill:#ffffff,stroke:#334155
 ```
