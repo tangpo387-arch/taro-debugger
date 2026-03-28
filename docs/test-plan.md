@@ -22,7 +22,7 @@ The project follows the **Test Pyramid** principle, concentrating most tests on 
 
 ### 1.1 Toolchain
 
-* **Unit & Integration Tests**: Using **Vitest** + **jsdom**. Compared to the traditional Angular Karma + Jasmine setup, Vitest offers faster execution speed, making it suitable for the high-frequency abstract-layer logic validation in this project.
+* **Unit & Integration Tests**: Using **Vitest** + **jsdom** for the high-frequency abstract-layer logic validation in this project.
 * **End-to-End Tests (E2E)**: Recommending **Playwright**, due to its native and powerful support for WebSocket communication interception and Electron desktop application testing.
 * **Assertions & Mocking**: Using Vitest's built-in `expect` and `vi.mock()` / `vi.spyOn()` for isolated testing.
 
@@ -111,10 +111,11 @@ This section lists feature points that are difficult to automate or require huma
 ## 3. CI/CD Integration
 
 1. **Local Execution Commands**
-   * Unit/Integration tests: `npm run test` (runs Vitest underneath)
-   * Watch mode: `npx vitest watch`
+   * Unit/Integration tests: `ng test --watch=false`
+   * Run a single test file: `ng test --include=src/app/path/to/service.spec.ts --watch=false`
+   * Watch mode: `ng test`
 2. **Pull Request Validation**
-   * Every PR submitted to the main branch must run `npm run test` in headless mode on the CI Server (e.g., GitHub Actions); all tests must pass before merging.
+   * Every PR submitted to the main branch must run `ng test` in headless mode on the CI Server (e.g., GitHub Actions); all tests must pass before merging.
 3. **Coverage Requirements**
    * Unit test coverage (Line/Branch Coverage) for core business logic (such as `DapSessionService` and `WebSocketTransportService`) should target **85% or above**, to ensure the most fragile async data flows are protected.
 
