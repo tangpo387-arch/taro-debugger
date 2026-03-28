@@ -54,6 +54,51 @@ description: Follow these coding standards to maintain consistency in the taro-d
 *   **單例服務**：預設情況下，非共用狀態的 Service 不應在 `providedIn: 'root'`，而是依據使用情境注入（如在元件的 `providers` 中）。
 *   **響應式狀態**：使用 RxJS 的 `BehaviorSubject` 或 `Subject` 來管理元件間共享的狀態流。
 
+### SCSS Styling Rules
+
+#### `::ng-deep` Usage Policy
+
+`::ng-deep` is **deprecated** in Angular and must be treated as a **last resort**, not a default solution.
+
+**Permitted only when ALL of the following conditions are met:**
+1. The target CSS class is an Angular Material internal class (e.g., `.mat-mdc-*`) with **no corresponding CSS Custom Property** exposed by the library.
+2. The override is required for **structural layout** (flex growth, height propagation), not for cosmetic changes (colors, fonts, spacing).
+3. Every `::ng-deep` selector **must** be prefixed with `:host &` to constrain the style penetration to the current component's subtree only.
+
+```scss
+// ✅ Correct: scoped, justified, documented
+:host & ::ng-deep .mat-mdc-tab-body-wrapper {
+  flex: 1;
+  min-height: 0; // Required for flex shrink to work correctly
+}
+
+// ❌ Forbidden: unscoped, will leak to all instances globally
+::ng-deep .mat-mdc-tab-body-wrapper {
+  flex: 1;
+}
+
+// ❌ Forbidden: use for cosmetic overrides (use CSS variables instead)
+:host & ::ng-deep .mat-mdc-tab-label {
+  font-size: 12px;
+}
+```
+
+**Preferred alternatives (in priority order):**
+1. **Angular Material CSS Custom Properties** — check the component's theming API first (e.g., `--mat-tab-header-active-label-text-color`).
+2. **Layout restructuring (Method D)** — if the child component is sized via `position: absolute; inset: 0`, Material internals may inherit height without `::ng-deep`.
+3. **Global `styles.scss` with precise host selector** — use `app-my-component .mat-mdc-*` if the component is used in only one known context.
+4. **`::ng-deep` with `:host &` scope** — only if all alternatives above are not viable.
+
+**Mandatory comment**: Every permitted `::ng-deep` usage must include an inline comment explaining why no alternative exists:
+```scss
+// Material does not expose a CSS variable for .mat-mdc-tab-body-wrapper
+// flex growth — ::ng-deep required to propagate height through tab internals.
+:host & ::ng-deep .mat-mdc-tab-body-wrapper {
+  flex: 1;
+}
+```
+
+
 ## 3. TypeScript 規範
 
 ### 強型別定義
