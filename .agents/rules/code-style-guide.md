@@ -37,6 +37,19 @@ description: Follow these coding standards to maintain consistency in the taro-d
     private readonly router = inject(Router);
     ```
 
+### Angular Material Tree API
+*   **禁止使用已棄用 API**：禁止使用 `NestedTreeControl` (`@angular/cdk/tree`) 及 `MatTreeNestedDataSource` (`@angular/material/tree`)。此 API 已在 Angular Material v17+ 標記為 deprecated，將於 v22 移除。
+*   **統一使用 `childrenAccessor` 模式**：所有 `mat-tree` 必須使用現代的 `[childrenAccessor]` Input + 純陣列 `dataSource`，並搭配 `#tree="matTree"` 模板參考。不得引入 `TreeControl`。
+    ```typescript
+    // ✅ Correct: modern childrenAccessor pattern
+    public dataSource: MyNode[] = [];
+    public childrenAccessor = (node: MyNode): MyNode[] => node.children ?? [];
+
+    // ❌ Forbidden: deprecated TreeControl pattern
+    public treeControl = new NestedTreeControl<MyNode>(node => node.children);
+    public dataSource = new MatTreeNestedDataSource<MyNode>();
+    ```
+
 ### 服務與狀態管理
 *   **單例服務**：預設情況下，非共用狀態的 Service 不應在 `providedIn: 'root'`，而是依據使用情境注入（如在元件的 `providers` 中）。
 *   **響應式狀態**：使用 RxJS 的 `BehaviorSubject` 或 `Subject` 來管理元件間共享的狀態流。
