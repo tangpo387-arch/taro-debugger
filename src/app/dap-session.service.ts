@@ -106,7 +106,7 @@ export class DapSessionService {
       error: (err) => this.handleIncomingTransportError(err),
       complete: () => this.handleIncomingTransportComplete()
     });
-// ... (rest of the code remains same until end of startSession)
+    // ... (rest of the code remains same until end of startSession)
 
     const initializedPromise = firstValueFrom(
       this.eventSubject.pipe(filter(e => e.event === 'initialized'))
@@ -167,7 +167,7 @@ export class DapSessionService {
    */
   async disconnect(): Promise<void> {
     try {
-      // 若狀態為 error 或 idle 則可能無須/無法送出正常的 disconnect 請求
+      // Skip disconnect request if in error or idle state — transport may already be unavailable
       if (this.transport && this.executionStateSubject.value !== 'error' && this.executionStateSubject.value !== 'idle') {
         // Send disconnect request to DAP Server
         await this.sendRequest('disconnect', {

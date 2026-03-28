@@ -210,6 +210,19 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Dependencies**: WI-11
 - **Status**: ✅ Done
 
+### WI-18.1: Variables Data State Management
+<!-- status: done | size: M | phase: 7 | depends: WI-11, WI-17 -->
+- **Size**: M
+- **Description**: Manage derived variable state and DAP requests fetching dynamically.
+- **Details**:
+  - Implement a dedicated `DapVariablesService` to strictly handle derived runtime states.
+  - Trigger `scopes` → `variables` requests automatically based on the current execution context and selected stack frame.
+  - Provide a reactive `Observable` interface for lazy-loading expansion when a user interacts with nodes containing `variablesReference > 0`.
+  - Cache fetched variables reference to avoid redundant DAP `variables` requests.
+- **Dependencies**: WI-11, WI-17
+- **Files to modify**: `src/app/dap-variables.service.ts`
+- **Status**: ✅ Done
+
 ---
 
 ## Phase 8: Console & Status Bar

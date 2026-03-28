@@ -25,6 +25,7 @@ import { EditorComponent, BreakpointChangeEvent } from './editor.component';
 import { ErrorDialog, ErrorDialogData } from './error-dialog/error-dialog';
 import { DapConfigService, DapConfig } from './dap-config.service';
 import { DapSessionService, ExecutionState, VerifiedBreakpoint } from './dap-session.service';
+import { DapVariablesService } from './dap-variables.service';
 import { DapEvent, LogEntry } from './dap.types';
 import { FileNode } from './file-tree.service';
 import { DapLogService } from './dap-log.service';
@@ -51,6 +52,7 @@ import { DapLogService } from './dap-log.service';
   ],
   providers: [
     DapSessionService,
+    DapVariablesService,
   ],
   templateUrl: './debugger.component.html',
   styleUrls: ['./debugger.component.scss']
@@ -60,6 +62,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   private readonly configService = inject(DapConfigService);
   private readonly router = inject(Router);
   private readonly dapSession = inject(DapSessionService);
+  private readonly variablesService = inject(DapVariablesService);
   private readonly logService = inject(DapLogService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
@@ -510,12 +513,9 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       this.currentCode = `// No source code available for this frame.${mod}${ref}`;
     }
 
-    // Trigger scope request (background) and log results
-    this.dapSession.scopes(frame.id).then(res => {
-      // Log scope update for debugging purposes
-      this.logService.consoleLog(`Scopes updated for frame: ${frame.name}.`, 'info', 'system');
-    }).catch(e => {
-      this.logService.consoleLog(`[Scopes request failed: ${e.message}`, 'error', 'system');
+    // Trigger scope cache update for the newly selected frame
+    this.variablesService.fetchScopes(frame.id).catch(e => {
+      this.logService.consoleLog(`Scopes request failed: ${e.message}`, 'error', 'system');
     });
 
     this.cdr.detectChanges();

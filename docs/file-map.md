@@ -36,6 +36,7 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | `dap-config.service.ts` | Configuration persistence (localStorage), SSOT for DAP connection parameters | `setConfig()`, `getConfig()` |
 | `dap-log.service.ts` | Dual console log stream management (console + program output) | `consoleLogs$`, `programLogs$`, `consoleLog()`, `programLog()` |
 | `dap-file-tree.service.ts` | File tree construction from `loadedSources`, source file reading via `source` request | `getTree()`, `readFile()` |
+| `dap-variables.service.ts` | Derived state management for DAP scopes and variables, caching variable references | `getScopes()`, `getVariables()` |
 
 ## Transport Layer (Services)
 

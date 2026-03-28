@@ -74,18 +74,18 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 
 ## Phase 7: Variables & Call Stack
 
-### WI-18: Variable Inspector Panel
-<!-- status: pending | size: L | phase: 7 | depends: WI-11 -->
-- **Size**: L
-- **Description**: Implement nested variable tree view per spec [§3.2.4](system-specification.md#324-right-sidenav)
+### WI-18.2: Variables Tree UI Component
+<!-- status: pending | size: M | phase: 7 | depends: WI-18.1 -->
+- **Size**: M
+- **Description**: Implement an independent Angular Standalone Component (`<app-variables>`) to render the nested structure.
 - **Details**:
-  - Based on selected stack frame, send `scopes` → `variables` requests
-  - Display nested variables using `mat-tree` (support expanding structs/arrays/objects)
-  - Lazy-load child nodes via `variables` request on expand
-  - Integrate CDK Virtual Scroll for large variable sets
-  - Display variable name, type, and value
-- **Dependencies**: WI-11
-- **Files to modify**: `debugger.component.ts`, `debugger.component.html`
+  - Build `<app-variables>` standalone component in the right sidenav.
+  - Integrate Angular Material `mat-tree` and dynamically link it to `DapVariablesService`.
+  - Integrate CDK Virtual Scroll to support large struct/array object sets efficiently.
+  - Cleanly display variable `name`, `type`, and `value` metrics with expandable toggles for nested properties.
+  - Refactor `debugger.component.html` to instantiate the `<app-variables>` element instead of implementing logic directly inside `DebuggerComponent`.
+- **Dependencies**: WI-18.1
+- **Files to modify**: `src/app/variables.component.ts`, `src/app/variables.component.html`, `src/app/variables.component.scss`, `src/app/debugger.component.html`
 - **Status**: ⏳ Pending
 
 ---
@@ -127,7 +127,6 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 
 ## Phase 11: Automation Tests
 
-
 ### TI-05: Connection Error & Intent Detection Integration Tests
 <!-- status: pending | size: M | phase: 11 | depends: WI-21, WI-22 -->
 - **Size**: M
@@ -137,6 +136,17 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
   - **Connection timeout auto-catch**: Simulate WebSocket connection timeout, trigger `ErrorDialog`
   - **Disconnect auto-reaction**: Simulate server crash, verify cascading state transition
 - **Dependencies**: WI-21, WI-22
+- **Status**: ⏳ Pending
+
+### TI-06: Variables State Management Unit Tests
+<!-- status: pending | size: S | phase: 11 | depends: WI-18.1 -->
+- **Size**: S
+- **Description**: Verify the caching, state clearing, and reactive behavior of the DapVariablesService.
+- **Details**:
+  - Test that fetching scopes updates the `scopes$` observable correctly.
+  - Test that fetching variables utilizes the local variables reference cache to prevent redundant network requests.
+  - Test that the cache and scopes are cleared automatically when the execution state is no longer 'stopped', verifying SSOT memory safety.
+- **Dependencies**: WI-18.1
 - **Status**: ⏳ Pending
 
 ---
@@ -182,7 +192,9 @@ graph LR
     WI15[WI-15 FileTree Abstract] --> WI16[WI-16 File Tree UI]
 
     WI11 --> WI17[WI-17 Call Stack]
-    WI11 --> WI18[WI-18 Variable Inspector]
+    WI11 --> WI18_1[WI-18.1 Variables State]
+    WI17 --> WI18_1
+    WI18_1 --> WI18_2[WI-18.2 Variables UI]
 
     WI11 --> WI19[WI-19 Console]
     WI05 --> WI20[WI-20 Connection Indicator]
@@ -193,6 +205,7 @@ graph LR
 
     WI21 -.-> TI05[TI-05 Error Integration Tests]
     WI22 -.-> TI05
+    WI18_1 -.-> TI06[TI-06 Variables Unit Tests]
 
     WI23[WI-23 Electron Main Process] --> WI24[WI-24 IPC Transport]
     WI04 --> WI24
@@ -226,7 +239,8 @@ graph LR
     style WI16 fill:#facc15,stroke:#000,stroke-width:2.5px
 
     style WI17 fill:#f472b6,stroke:#000,stroke-width:2.5px
-    style WI18 fill:#f472b6,stroke:#db2777
+    style WI18_1 fill:#f472b6,stroke:#000,stroke-width:2.5px
+    style WI18_2 fill:#f472b6,stroke:#db2777
 
     style WI19 fill:#2dd4bf,stroke:#000,stroke-width:2.5px
     style WI20 fill:#2dd4bf,stroke:#000,stroke-width:2.5px
@@ -243,6 +257,7 @@ graph LR
     style TI03 fill:#ffffff,stroke:#000,stroke-width:2.5px
     style TI04 fill:#ffffff,stroke:#000,stroke-width:2.5px
     style TI05 fill:#ffffff,stroke:#334155
+    style TI06 fill:#ffffff,stroke:#334155
 ```
 
 ---
