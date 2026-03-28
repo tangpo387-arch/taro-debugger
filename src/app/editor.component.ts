@@ -1,6 +1,8 @@
 import { 
   Component, 
-  Input, 
+  Input,
+  Output,
+  EventEmitter,
   inject, 
   NgZone, 
   OnChanges, 
@@ -14,6 +16,14 @@ import { debounceTime } from 'rxjs/operators';
 import { FormsModule } from '@angular/forms';
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { DapConfigService } from './dap-config.service';
+
+/** Payload emitted when breakpoints change in the editor */
+export interface BreakpointChangeEvent {
+  /** Absolute path of the source file whose breakpoints changed */
+  file: string;
+  /** All current 1-based line numbers with breakpoints in this file */
+  lines: number[];
+}
 
 const UPDATE_DEBOUNCE_MS = 50;
 
@@ -44,10 +54,15 @@ export class EditorComponent implements OnChanges, OnDestroy {
   @Input() public code: string = '// Loading source code...';
   @Input() public activeLine: number | null = null;
 
+  /** Emits the full breakpoint list for a file whenever it changes */
+  @Output() public readonly breakpointsChange = new EventEmitter<BreakpointChangeEvent>();
+
   private editorInstance: any;
   private breakpointIds: string[] = [];
   private activeLineDecorationIds: string[] = [];
   private readonly breakpoints: Map<string, Set<number>> = new Map();
+  /** Verified breakpoints per file (line numbers confirmed by the DAP adapter) */
+  private readonly verifiedBreakpoints: Map<string, Set<number>> = new Map();
   private readonly updateQueue$ = new Subject<void>();
 
   // ── Dependencies ────────────────────────────────────────────────────
@@ -91,6 +106,25 @@ export class EditorComponent implements OnChanges, OnDestroy {
   }
 
   /**
+   * Updates the verified breakpoint set for a given file and refreshes decorations.
+   * Called by the parent component after receiving a `setBreakpoints` response.
+   * @param file Absolute file path
+   * @param verifiedLines 1-based line numbers that the DAP adapter confirmed as verified
+   */
+  public setVerifiedBreakpoints(file: string, verifiedLines: number[]): void {
+    if (verifiedLines.length === 0) {
+      // Remove the entry entirely to avoid accumulating empty Sets over a long session
+      this.verifiedBreakpoints.delete(file);
+    } else {
+      this.verifiedBreakpoints.set(file, new Set(verifiedLines));
+    }
+    // Only refresh decorations if this file is currently open
+    if (this.filename === file) {
+      this.updateBreakpointDecorations();
+    }
+  }
+
+  /**
    * Initializes the Monaco editor instance and sets up event handlers.
    * @param editor The Monaco editor instance.
    */
@@ -129,6 +163,12 @@ export class EditorComponent implements OnChanges, OnDestroy {
     }
 
     this.updateBreakpointDecorations();
+
+    // Notify parent so it can sync with the DAP adapter (WI-13)
+    this.breakpointsChange.emit({
+      file: this.filename,
+      lines: Array.from(fileBps)
+    });
   }
 
   private updateActiveLineDecoration(): void {
@@ -162,13 +202,16 @@ export class EditorComponent implements OnChanges, OnDestroy {
 
     if (this.filename) {
       const fileBps = this.breakpoints.get(this.filename);
+      const verifiedSet = this.verifiedBreakpoints.get(this.filename);
       if (fileBps) {
         fileBps.forEach((line) => {
+          const isVerified = verifiedSet ? verifiedSet.has(line) : false;
           decorations.push({
             range: new monaco.Range(line, 1, line, 1),
             options: {
               isWholeLine: false,
-              glyphMarginClassName: 'breakpoint-glyph'
+              // Use different CSS class depending on verification state
+              glyphMarginClassName: isVerified ? 'breakpoint-glyph' : 'breakpoint-glyph-unverified'
             }
           });
         });

@@ -154,7 +154,8 @@
       <!-- Monaco Editor Container -->
       <div class="editor-container">
         <app-editor class="monaco-editor-instance" [code]="currentCode" [filename]="activeFilePath"
-          [activeLine]="activeFilePath === activeLineFilePath ? activeLine : null" />
+          [activeLine]="activeFilePath === activeLineFilePath ? activeLine : null"
+          (breakpointsChange)="onBreakpointsChange($event)" />
       </div>
 
       <!-- Bottom Consoles Area -->

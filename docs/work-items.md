@@ -73,7 +73,7 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 ## Phase 5: Editor Features
 
 ### WI-13: Breakpoint DAP Synchronization
-<!-- status: pending | size: S | phase: 5 | depends: WI-06, WI-12 -->
+<!-- status: done | size: S | phase: 5 | depends: WI-06, WI-12 -->
 - **Size**: S
 - **Description**: Synchronize local breakpoint changes to the DAP Server
 - **Details**:
@@ -81,7 +81,7 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
   - Handle `setBreakpoints` response, update verified status (gray vs red dot)
   - Handle `breakpoint` event, reflect server-side breakpoint changes
 - **Dependencies**: WI-06, WI-12
-- **Status**: ⏳ Pending
+- **Status**: ✅ Done
 
 ---
 

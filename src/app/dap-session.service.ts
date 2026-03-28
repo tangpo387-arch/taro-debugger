@@ -9,6 +9,18 @@ import { FileTreeService } from './file-tree.service';
 import { DapFileTreeService } from './dap-file-tree.service';
 import { DapLogService } from './dap-log.service';
 
+/** A single verified breakpoint returned by the DAP adapter */
+export interface VerifiedBreakpoint {
+  /** The verified 1-based line number (may differ from the requested line) */
+  line: number;
+  /** Whether the adapter confirmed this breakpoint as verified */
+  verified: boolean;
+  /** Optional adapter-assigned breakpoint ID */
+  id?: number;
+  /** Optional message from the adapter (e.g., reason for unverified state) */
+  message?: string;
+}
+
 /** Execution State */
 export type ExecutionState = 'idle' | 'starting' | 'running' | 'stopped' | 'terminated' | 'error';
 
@@ -241,6 +253,30 @@ export class DapSessionService {
    */
   async stepOut(): Promise<DapResponse> {
     return this.sendRequest('stepOut', { threadId: 1 });
+  }
+
+  /**
+   * Synchronize breakpoints for a single source file with the DAP adapter.
+   * Per the DAP spec, this replaces all breakpoints for the given source.
+   * @param sourcePath Absolute path to the source file
+   * @param lines 1-based line numbers of all desired breakpoints in this file
+   * @returns Array of verified breakpoint results from the adapter
+   */
+  async setBreakpoints(sourcePath: string, lines: number[]): Promise<VerifiedBreakpoint[]> {
+    const breakpointArgs = lines.map(line => ({ line }));
+    const response = await this.sendRequest('setBreakpoints', {
+      source: { path: sourcePath },
+      breakpoints: breakpointArgs,
+      // Provide the deprecated lines field as well for older adapters
+      lines: lines
+    });
+    const rawBreakpoints: any[] = response.body?.breakpoints || [];
+    return rawBreakpoints.map((bp: any) => ({
+      line: bp.line ?? 0,
+      verified: bp.verified ?? false,
+      id: bp.id,
+      message: bp.message
+    }));
   }
 
   /**

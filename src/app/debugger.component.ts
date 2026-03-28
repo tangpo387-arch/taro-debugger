@@ -21,10 +21,10 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatTreeModule, MatTree } from '@angular/material/tree';
 
 // Import child components and global configuration services
-import { EditorComponent } from './editor.component';
+import { EditorComponent, BreakpointChangeEvent } from './editor.component';
 import { ErrorDialog, ErrorDialogData } from './error-dialog/error-dialog';
 import { DapConfigService, DapConfig } from './dap-config.service';
-import { DapSessionService, ExecutionState } from './dap-session.service';
+import { DapSessionService, ExecutionState, VerifiedBreakpoint } from './dap-session.service';
 import { DapEvent, LogEntry } from './dap.types';
 import { FileNode } from './file-tree.service';
 import { DapLogService } from './dap-log.service';
@@ -67,6 +67,9 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
   /** Access the mat-tree instance for programmatic control */
   @ViewChild('tree') tree?: MatTree<FileNode>;
+
+  /** Access the editor component for programmatic breakpoint updates */
+  @ViewChild(EditorComponent) private editorComponent?: EditorComponent;
 
   /** Bind DAP connection status */
   public readonly connectionStatus$: Observable<boolean> = this.dapSession.connectionStatus$;
@@ -371,9 +374,26 @@ export class DebuggerComponent implements OnInit, OnDestroy {
           }
         }
         break;
-      case 'breakpoint':
-        // TODO: Update UI breakpoint state
+      case 'breakpoint': {
+        // Server-side breakpoint notification: the adapter is informing us of a state change
+        // (e.g., breakpoint verified after lazy symbol load, or relocated to a valid line).
+        // We must NOT re-send setBreakpoints here — read the event body directly instead.
+        const bp = event.body?.breakpoint;
+        if (bp && bp.source?.path && this.editorComponent) {
+          const filePath: string = bp.source.path;
+          const allBps = this.editorComponent.getBreakpoints();
+          const fileBps = allBps.get(filePath);
+          if (fileBps && bp.line) {
+            // Build the new verified-lines set from local state,
+            // substituting the adapter's (possibly relocated) line.
+            const verifiedLines = Array.from(fileBps)
+              .filter(line => line !== bp.originalLine) // remove the original (pre-relocation) line
+              .concat(bp.verified ? [bp.line] : []);    // add the adapter-confirmed line if verified
+            this.editorComponent.setVerifiedBreakpoints(filePath, verifiedLines);
+          }
+        }
         break;
+      }
 
       // ── DAP Server Error Handling (§7.2) ────────────────────────
 
@@ -463,6 +483,52 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     });
 
     this.cdr.detectChanges();
+  }
+
+  /**
+   * Called by the editor when the user toggles a breakpoint.
+   * Sends the full updated breakpoint list for that file to the DAP adapter,
+   * then updates the editor's verified-state decorations from the response.
+   */
+  public async onBreakpointsChange(event: BreakpointChangeEvent): Promise<void> {
+    await this.syncBreakpointsForFile(event.file, event.lines);
+  }
+
+  /**
+   * Synchronizes breakpoints for a single file with the DAP adapter.
+   * Marks breakpoints as verified/unverified in the editor based on the response.
+   */
+  private async syncBreakpointsForFile(filePath: string, lines: number[]): Promise<void> {
+    if (!this.editorComponent) return;
+
+    const executionState = this.executionState;
+    // Only send the DAP request when the session is active (not idle/starting/error)
+    const activeStates: ExecutionState[] = ['running', 'stopped', 'terminated'];
+    if (!activeStates.includes(executionState)) {
+      // Session not ready — breakpoints are queued locally, no DAP sync yet
+      return;
+    }
+
+    try {
+      const verified: VerifiedBreakpoint[] = await this.dapSession.setBreakpoints(filePath, lines);
+      const verifiedLines = verified
+        .filter(bp => bp.verified)
+        .map(bp => bp.line);
+
+      this.editorComponent.setVerifiedBreakpoints(filePath, verifiedLines);
+
+      this.logService.consoleLog(
+        `Breakpoints synced: ${verifiedLines.length}/${lines.length} verified in ${filePath}`,
+        'info',
+        'system'
+      );
+    } catch (e: any) {
+      this.logService.consoleLog(
+        `Failed to sync breakpoints for ${filePath}: ${e.message}`,
+        'error',
+        'system'
+      );
+    }
   }
 
   /** Resume execution */
