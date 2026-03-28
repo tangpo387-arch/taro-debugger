@@ -45,7 +45,7 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 | **Phase 2** | ✅ Done | Build WebSocket communication layer and DAP request lifecycle management | [View](changelog.md#phase-2-dap-transport-layer) |
 | **Phase 3** | ⏳ Pending | Build Node.js relay communication server for Web mode | [View](#phase-3-websocket-bridge-web-mode-backend-relay) |
 | **Phase 4** | ✅ Done | Implement toolbar debug controls (Continue/Pause/Step) and state binding | [View](changelog.md#phase-4-debug-controls) |
-| **Phase 5** | 🔄 In Progress | Monaco Editor advanced integration, breakpoint interaction and line highlight | [View](#phase-5-editor-features) |
+| **Phase 5** | ✅ Done | Monaco Editor advanced integration, breakpoint interaction and line highlight | [View](changelog.md#phase-5-editor-features) |
 | **Phase 6** | ✅ Done | Dynamic project file tree rendering, click to load source code | [View](changelog.md#phase-6-file-explorer) |
 | **Phase 7** | 🔄 In Progress | Call stack list and nested variable inspector | [View](#phase-7-variables--call-stack) |
 | **Phase 8** | ✅ Done | Develop UI status bar connection indicator and command console interface | [View](changelog.md#phase-8-console--status-bar) |
@@ -69,19 +69,6 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 - **Status**: ⏳ Pending
 
 ---
-
-## Phase 5: Editor Features
-
-### WI-13: Breakpoint DAP Synchronization
-<!-- status: done | size: S | phase: 5 | depends: WI-06, WI-12 -->
-- **Size**: S
-- **Description**: Synchronize local breakpoint changes to the DAP Server
-- **Details**:
-  - Send `setBreakpoints` request when breakpoints are added/removed
-  - Handle `setBreakpoints` response, update verified status (gray vs red dot)
-  - Handle `breakpoint` event, reflect server-side breakpoint changes
-- **Dependencies**: WI-06, WI-12
-- **Status**: ✅ Done
 
 ---
 
@@ -244,7 +231,7 @@ graph LR
     style WI11 fill:#f97316,stroke:#000,stroke-width:2.5px
 
     style WI12 fill:#a78bfa,stroke:#000,stroke-width:2.5px
-    style WI13 fill:#a78bfa,stroke:#7c3aed
+    style WI13 fill:#a78bfa,stroke:#000,stroke-width:2.5px
     style WI14 fill:#a78bfa,stroke:#000,stroke-width:2.5px
 
     style WI15 fill:#facc15,stroke:#000,stroke-width:2.5px

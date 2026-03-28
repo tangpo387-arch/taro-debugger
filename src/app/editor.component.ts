@@ -106,6 +106,18 @@ export class EditorComponent implements OnChanges, OnDestroy {
   }
 
   /**
+   * Returns the current verified line numbers for a given file.
+   * Used by the parent to surgically update a single breakpoint's verified state
+   * without overwriting the entire verified set.
+   * @param file Absolute file path
+   * @returns A copy of the verified line numbers, or an empty array if none
+   */
+  public getVerifiedLines(file: string): number[] {
+    const verifiedSet = this.verifiedBreakpoints.get(file);
+    return verifiedSet ? Array.from(verifiedSet) : [];
+  }
+
+  /**
    * Updates the verified breakpoint set for a given file and refreshes decorations.
    * Called by the parent component after receiving a `setBreakpoints` response.
    * @param file Absolute file path

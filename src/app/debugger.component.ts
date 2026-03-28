@@ -257,6 +257,10 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       await this.dapSession.startSession();
 
       this.logService.consoleLog(`Session started in ${this.currentConfig.launchMode} mode.`, 'info', 'system');
+
+      // Re-push any locally-stored breakpoints to the new adapter session.
+      // On first boot this is a no-op; on restart it restores the user's breakpoints.
+      await this.resyncAllBreakpoints();
     } catch (error: any) {
       // 1. Clean up problematic session
       this.dapSession.disconnect();
@@ -285,6 +289,32 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         }
       });
     }
+  }
+
+  /**
+   * Re-sends all locally stored breakpoints to the current DAP adapter.
+   * Called after every successful session start so that the adapter is always
+   * in sync with the editor's breakpoint state, even after a restart.
+   * Errors per file are logged and swallowed so one bad file does not block others.
+   */
+  private async resyncAllBreakpoints(): Promise<void> {
+    if (!this.editorComponent) return;
+
+    const allBps = this.editorComponent.getBreakpoints();
+    if (allBps.size === 0) return;
+
+    this.logService.consoleLog(
+      `Re-syncing ${allBps.size} file(s) of breakpoints to new session...`,
+      'info',
+      'system'
+    );
+
+    const syncPromises = Array.from(allBps.entries()).map(([filePath, lines]) =>
+      this.syncBreakpointsForFile(filePath, Array.from(lines))
+    );
+
+    // Run all file syncs in parallel; individual failures are handled inside syncBreakpointsForFile
+    await Promise.allSettled(syncPromises);
   }
 
   private loadTree(): void {
@@ -379,18 +409,24 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         // (e.g., breakpoint verified after lazy symbol load, or relocated to a valid line).
         // We must NOT re-send setBreakpoints here — read the event body directly instead.
         const bp = event.body?.breakpoint;
-        if (bp && bp.source?.path && this.editorComponent) {
+        if (bp && bp.source?.path && bp.line && this.editorComponent) {
           const filePath: string = bp.source.path;
-          const allBps = this.editorComponent.getBreakpoints();
-          const fileBps = allBps.get(filePath);
-          if (fileBps && bp.line) {
-            // Build the new verified-lines set from local state,
-            // substituting the adapter's (possibly relocated) line.
-            const verifiedLines = Array.from(fileBps)
-              .filter(line => line !== bp.originalLine) // remove the original (pre-relocation) line
-              .concat(bp.verified ? [bp.line] : []);    // add the adapter-confirmed line if verified
-            this.editorComponent.setVerifiedBreakpoints(filePath, verifiedLines);
+          // Read the CURRENT verified set for this file so we can update only the affected line.
+          // We cannot use the local `breakpoints` Map here — that contains all toggled lines,
+          // not just verified ones — passing it to setVerifiedBreakpoints would incorrectly
+          // mark unverified (gray) breakpoints as verified (red).
+          const currentVerified = new Set(this.editorComponent.getVerifiedLines(filePath));
+
+          // Remove the old line in case the adapter relocated this breakpoint,
+          // then add the new line if the adapter confirmed it as verified.
+          // Note: DAP spec does not provide originalLine on the breakpoint event,
+          // so we remove by bp.line (the adapter's canonical line for this BP).
+          currentVerified.delete(bp.line);
+          if (bp.verified) {
+            currentVerified.add(bp.line);
           }
+
+          this.editorComponent.setVerifiedBreakpoints(filePath, Array.from(currentVerified));
         }
         break;
       }

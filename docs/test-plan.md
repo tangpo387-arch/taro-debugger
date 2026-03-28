@@ -71,7 +71,12 @@ Tests for interactions and data flow between multiple Services or Components, ty
   * Simulate WebSocket receiving a `stopped` event → verify `DapSessionService` sends `stackTrace` and other requests → verify UI state management switches to "paused" state.
   * Simulate WebSocket receiving an `output` event → verify console log array adds new entries with correct category classification.
 * **Breakpoint & Editor Sync**
-  * Simulate Monaco Editor Glyph Margin click to add a breakpoint → verify the system sends the corresponding file's `setBreakpoints` request via `DapSessionService`.
+  * **Toggle → DAP request**: Simulate a Monaco Editor glyph-margin click while `executionState === 'running'` or `'stopped'` → verify `DapSessionService.setBreakpoints()` is called with the correct `sourcePath` and `lines` array.
+  * **Verified decoration update**: Mock `setBreakpoints` response with `{ breakpoints: [{ line: 5, verified: true }] }` → verify `EditorComponent.setVerifiedBreakpoints()` is called with `[5]` and the glyph switches from `.breakpoint-glyph-unverified` (gray) to `.breakpoint-glyph` (red).
+  * **Unverified decoration stays gray**: Mock response with `{ verified: false }` → verify the line's glyph class remains `.breakpoint-glyph-unverified`.
+  * **Breakpoint removal clears Map entry**: Toggle the same line twice (add then remove) → verify `setBreakpoints` is called with an empty array and `setVerifiedBreakpoints` is called with `[]`, which triggers `verifiedBreakpoints.delete(file)` (no stale Map entry).
+  * **Session guard — idle state**: Simulate toggling a breakpoint while `executionState === 'idle'` → verify `setBreakpoints` DAP request is **not** sent (session not ready).
+  * **Re-sync on restart**: After populating `EditorComponent.breakpoints` with two files, call `resyncAllBreakpoints()` → verify `setBreakpoints` is called once per file in parallel.
 * **Connection Error & Intent Detection**
   * **Normal stop & intent interception**: Call `disconnect()` then simulate transport layer `complete()`, verify `DapSessionService` correctly intercepts the signal without emitting `_transportError` synthetic event.
   * **Unexpected disconnect detection**: Simulate transport layer triggering `error()`, verify `executionState` transitions to `error` and emits `_transportError` for UI display.
@@ -98,13 +103,30 @@ Launch the complete application (browser mode) from the user's perspective. To a
 
 This section lists feature points that are difficult to automate or require human sensory verification.
 
-* **WI-10: Debug Control Button Visual Feedback (UI/UX)**
+* **Debug Control Button Visual Feedback (UI/UX)**
   * **Tooltip display**: When hovering over each control button (Continue, Pause, Step Over, etc.), verify expected human-readable tooltip text appears.
   * **Ripple Effect**: When clicking an enabled button, confirm the Material Design ripple visual press feedback appears.
   * **Color & grayscale rendering**: Confirm the Stop button displays a warning color (warn), and buttons in disabled state have appearance (opacity/color) that clearly indicates they are non-clickable.
 
-* **WI-21 & WI-22: Connection & DAP Error Handling (Error Handling UI)**
+* **Connection & DAP Error Handling (Error Handling UI)**
   * **Manual Reconnect (Reconnect UI)**: After simulating `error` state, verify that the original "Restart" button on the interface has automatically switched to a "Reconnect" button with a `sync` icon, and hover tooltip content is correct.
+
+* **Breakpoint DAP Synchronization — Live Integration Test**
+
+  Requires a live DAP adapter (e.g., `lldb-dap` or `gdb`) connected to a compiled C/C++ binary.
+
+  | Step | Action | Expected Result |
+  |---|---|---|
+  | 1 | Open `/debug` with a valid C++ binary | Session starts; console logs `Session started in launch mode`; editor shows `// Editor is ready.` |
+  | 2 | Click a source file in the file tree | Source code loads in the Monaco Editor |
+  | 3 | Click the glyph margin on a source line **while state is `running`** | Gray dot (`.breakpoint-glyph-unverified`) appears immediately; no DAP request sent yet (session guard) |
+  | 4 | Pause execution via the Pause button | State transitions to `stopped` |
+  | 5 | Click the glyph margin on a source line **while state is `stopped`** | Gray dot appears instantly; within ~5 s the dot turns red (`.breakpoint-glyph`) once the adapter confirms `verified: true`; console logs `Breakpoints synced: 1/1 verified` |
+  | 6 | Click an **invalid line** (blank line or comment) | Gray dot appears and stays gray — adapter returns `verified: false` |
+  | 7 | Click the same **verified** breakpoint line again to remove it | Red dot disappears; console logs `Breakpoints synced: 0/0 verified` |
+  | 8 | Switch to a different source file via the file tree | Previous file's breakpoint dots are preserved in internal state; new file shows no dots |
+  | 9 | Click **Restart** | Session reconnects; all previously toggled breakpoints are re-sent; console logs `Re-syncing N file(s) of breakpoints to new session...`; dots reflect updated verified state |
+  | 10 | Simulate adapter relocating a breakpoint (via `breakpoint` DAP event with a different `line`) | Glyph moves to the new line without triggering an extra `setBreakpoints` round-trip (verify in browser Network / WebSocket frame inspector) |
 
 ---
 

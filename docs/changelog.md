@@ -148,6 +148,17 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
   - Provide `getBreakpoints()` method for DAP communication use
 - **Status**: ✅ Done
 
+### WI-13: Breakpoint DAP Synchronization
+- **Size**: S
+- **Description**: Synchronize local breakpoint changes to the DAP Server
+- **Details**:
+  - Send `setBreakpoints` request on any glyph margin toggle (supports multi-file sync)
+  - Distinguish **Verified** (red) vs. **Unverified** (gray) breakpoints in Monaco UI
+  - Surgical update logic for `breakpoint` events to handle server-side relocation/lazy-verification
+  - Automatic **Re-sync** of all breakpoints upon session restart or reconnect
+- **Dependencies**: WI-06, WI-12
+- **Status**: ✅ Done
+
 ### WI-14: Current Line Highlight
 - **Size**: S
 - **Description**: Implement `deltaDecorations` current execution line marking per spec [§3.2.3](system-specification.md#323-main-content-area)
