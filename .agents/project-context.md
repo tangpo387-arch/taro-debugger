@@ -17,7 +17,7 @@ This document provides core background information for the `taro-debugger` proje
 * **Goal**: Provide a modern, cross-platform web frontend debugging interface for GDB/LLDB.
 * **Tech Stack**:
   * **Frontend**: Angular 21+, Standalone Components.
-  * **Styling**: Vanilla CSS (TailwindCSS excluded).
+  * **Styling**: SCSS & Angular Material (TailwindCSS excluded).
   * **Editor**: Monaco Editor (data transmitted via WebSocket).
   * **Protocol**: Debug Adapter Protocol (DAP).
 * **Language Support Scope**: Currently focused on **C/C++** language debugging. Therefore, when handling paths, symbols, and pointers, consider Unix/Windows differences and C-style memory layout.
@@ -45,6 +45,7 @@ This document provides core background information for the `taro-debugger` proje
 * **Path handling**: C/C++ source code paths may use `/` (Unix) or `\` (Windows). Ensure `DapFileTreeService` and `EditorComponent` can parse both correctly.
 * **Async flow**: Strictly adhere to the `initialized` → `configurationDone` → `launch/attach` response sequence.
 * **Resource cleanup**: Any WebSocket subscriptions or timers must be cleaned up in `disconnect()` or `ngOnDestroy` to prevent buffer misalignment caused by multiple simultaneous sessions.
+* **Source Listing (GDB Restriction)**: In C/C++, fetching source trees is state-dependent. See rule **[R11]** in `rules/dap-protocol-specs.md` for strict implementation details.
 
 ## 5. Quick Navigation for Agents
 

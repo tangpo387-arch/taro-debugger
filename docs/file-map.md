@@ -28,6 +28,9 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | `debugger.component.ts` | Main debug view: toolbar, three-panel layout, event subscriptions, file source loading | subscribes `executionState$`, `connectionStatus$`, `onEvent()`; handles `onFileSelected()` | `debugger.component.html`, `debugger.component.scss` |
 | `file-explorer.component.ts` | Left sidenav file explorer: fetches `loadedSources` tree, highlights active file, emits `fileSelected` | `@Input() activeFilePath`, `@Input() reloadTrigger`, `@Output() fileSelected` | `file-explorer.component.html`, `file-explorer.component.scss` |
 | `editor.component.ts` | Monaco Editor wrapper: source display, line highlight, breakpoint glyph margin | `openFile()`, `highlightLine()`, `clearHighlight()` | `editor.component.html`, `editor.component.scss` |
+| `log-viewer.component.ts` | Bottom panel log viewer: console/program streams, auto-scroll, expression evaluation | subscribes `consoleLogs$`, `programLogs$`; `evaluateCommand()` | `log-viewer.component.html`, `log-viewer.component.scss` |
+| `variables.component.ts` | Right sidebar variables view: tree display for DAP scopes and local variables | subscribes `scopes$`; `toggleNode()` | `variables.component.html`, `variables.component.scss` |
+| `error-dialog/error-dialog.ts` | Dialog for showing connection and session errors | `ErrorDialogData`, `onRetry()`, `onGoBack()` | `error-dialog.html`, `error-dialog.css` |
 
 ## Session Layer (Services)
 

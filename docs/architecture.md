@@ -441,19 +441,4 @@ To avoid conflicts with standard DAP event names, all synthetic events generated
 
 ## 7. File Reference Table
 
-| File | Layer | Description |
-|---|---|---|
-| `debugger.component.ts` | UI | Main debug view component (layout orchestrator) |
-| `debugger.component.html` | UI | Main debug view template |
-| `file-explorer.component.ts` | UI | Standalone file explorer: fetches `loadedSources` tree, emits `fileSelected` on node click |
-| `log-viewer.component.ts` | UI | Standalone console log viewer: dual-tab console, evaluate input, expandable payload |
-| `setup.component.ts` | UI | Setup page component |
-| `dap-session.service.ts` | Session | DAP session management service |
-| `dap-config.service.ts` | Session | Configuration management service |
-| `dap-log.service.ts` | Shared | DAP Console / Program Console log service. No Session-layer service injects it; consumed by `DebuggerComponent` (write) and `LogViewerComponent` (read). |
-| `dap-file-tree.service.ts` | Session | File tree service (created with Session) |
-| `dap-transport.service.ts` | Transport | Transport layer abstract base class |
-| `websocket-transport.service.ts` | Transport | WebSocket transport implementation |
-| `transport-factory.service.ts` | Transport | Transport factory service (creates instances by `TransportType`) |
-| `dap.types.ts` | Shared | DAP protocol type definitions |
-| `file-tree.service.ts` | Shared | File tree abstract interface |
+> **Note:** For a complete and up-to-date mapping of source files to their architectural layers and responsibilities, please refer to the **[Source File Responsibility Map](file-map.md)**.
