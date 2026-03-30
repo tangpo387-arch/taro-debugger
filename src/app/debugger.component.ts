@@ -74,6 +74,8 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
   private eventSubscription?: Subscription;
   private stateSubscription?: Subscription;
+  /** Subscription for the diagnostic DAP traffic stream (architecture.md §4.6) */
+  private trafficSubscription?: Subscription;
 
   /** Current DAP full configuration for HTML template binding */
   public currentConfig: DapConfig = {
@@ -161,6 +163,26 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
     this.eventSubscription = this.dapSession.onEvent().subscribe((event) => {
       this.handleDapEvent(event);
+    });
+
+    // Subscribe to the diagnostic traffic stream and bridge to DapLogService (architecture.md §4.6)
+    this.trafficSubscription = this.dapSession.onTraffic$.subscribe((msg) => {
+      let label: string;
+      switch (msg.type) {
+        case 'request':
+          label = `[→ Request] ${msg.command}`;
+          break;
+        case 'response':
+          label = `[← Response] ${msg.command}`;
+          break;
+        case 'event':
+          label = `[← Event] ${msg.event}`;
+          break;
+        default:
+          label = `[← Unknown] ${typeof msg === 'object' ? JSON.stringify(msg).slice(0, 80) : msg}`;
+          break;
+      }
+      this.logService.consoleLog(label, 'info', 'dap', msg);
     });
 
     await this.startSession();
@@ -330,13 +352,9 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   }
 
   private handleDapEvent(event: DapEvent): void {
-    // Internal synthetic events (prefixed with '_') are not logged as normal DAP events
-    const skipLogs = ['output', 'breakpoint', 'loadedSource', '_dapError', '_transportError', '_sessionWarning'];
-    if (!skipLogs.includes(event.event)) {
-      const msg = `[Event] ${event.event}`;
-      this.logService.consoleLog(msg, 'info', 'dap', event);
-    }
-
+    // Note: All DAP events (including custom/synthetic events) are already logged
+    // by the onTraffic$ subscriber in ngOnInit. This handler is strictly for
+    // business-logic side-effects and state transitions.
     switch (event.event) {
       case 'initialized':
         this.logService.consoleLog("Configuration Done.", 'info', 'system');
@@ -650,6 +668,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public ngOnDestroy(): void {
     this.eventSubscription?.unsubscribe();
     this.stateSubscription?.unsubscribe();
+    this.trafficSubscription?.unsubscribe();
     this.dapSession.disconnect();
   }
 

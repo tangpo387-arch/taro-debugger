@@ -40,7 +40,18 @@ export class DapSessionService {
   private transportStatusSubscription?: Subscription;
 
   /** Session-level event Subject, emitted after internal processing */
-  private eventSubject = new Subject<DapEvent>();
+  private readonly eventSubject = new Subject<DapEvent>();
+
+  /**
+   * Diagnostic traffic Subject — emits every outgoing Request and incoming
+   * message (Response/Event) as raw payloads. Separate from eventSubject to
+   * avoid polluting the business event pipeline with high-frequency telemetry.
+   * (See architecture.md §4.6)
+   */
+  private readonly trafficSubject = new Subject<any>();
+
+  /** Opt-in diagnostic stream for raw DAP protocol traffic. */
+  public readonly onTraffic$: Observable<any> = this.trafficSubject.asObservable();
 
   /** Current debug execution state */
   private executionStateSubject = new BehaviorSubject<ExecutionState>('idle');
@@ -361,6 +372,8 @@ export class DapSessionService {
 
       this.pendingRequests.set(currentSeq, { resolve: resolveWrapper, reject: rejectWrapper });
       transport.sendRequest(request);
+      // Emit outgoing request to diagnostic traffic stream (§4.6)
+      this.trafficSubject.next(request);
     });
   }
 
@@ -385,6 +398,9 @@ export class DapSessionService {
   // ── Message & Transport Handling ───────────────────────────────────
 
   private handleIncomingMessage(msg: any): void {
+    // Emit all incoming messages to the diagnostic traffic stream before processing (§4.6)
+    this.trafficSubject.next(msg);
+
     if (msg.type === 'response') {
       const response = msg as DapResponse;
       const handler = this.pendingRequests.get(response.request_seq);
