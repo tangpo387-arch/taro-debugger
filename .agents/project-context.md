@@ -2,7 +2,7 @@
 title: Project Context & Terminology
 scope: context, terminology, tech-stack, constraints
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-03-28
+last_updated: 2026-03-30
 related:
   - ../docs/system-specification.md
   - ../docs/architecture.md
@@ -22,21 +22,12 @@ This document provides core background information for the `taro-debugger` proje
   * **Protocol**: Debug Adapter Protocol (DAP).
 * **Language Support Scope**: Currently focused on **C/C++** language debugging. Therefore, when handling paths, symbols, and pointers, consider Unix/Windows differences and C-style memory layout.
 
-## 2. Core Architecture Components
+## 2. Terminology
 
-* **DapSessionService**: The Single Source of Truth (SSOT) for the entire session. Responsible for coordinating `initialize`, `launch`, `configurationDone` and other requests, as well as `stopped`, `output` and other events.
-* **Transport Layer**: Currently uses an abstracted design, with the primary implementation being `WebSocketTransportService`. The design already reserves extensibility for other transport protocols (such as **Serial**, **TCP Direct**) through the `DapTransportService` abstract class and the `createTransport` factory pattern for decoupling.
-* **Monaco Editor**: Responsible for displaying source code, the breakpoint column (Glyph Margin), and current execution line highlighting.
-  * *Note: Monaco's `deltaDecorations` is the core mechanism for dynamic highlighting.*
-
-## 3. Terminology
+These two terms have project-specific meanings that differ from their general DAP usage:
 
 | Term | Definition / Role in DAP |
 | :--- | :--- |
-| **DAP (Debug Adapter Protocol)** | A standard debugging protocol defined by VS Code, serving as the bridge between the frontend and the debugger (Adapter). |
-| **Debug Adapter (DA)** | The intermediary layer responsible for translating DAP commands to a specific debugger (e.g., gdb-dap). |
-| **Stack Frame** | A single execution level when the program stops. Contains `line`, `column`, `source` and other information. |
-| **Thread** | One execution path within the program. Each `stopped` event typically carries a `threadId`. |
 | **Variables Reference** | A numeric ID used to lazy-load the member contents of complex objects or Scopes. |
 | **Source Reference** | An ID used when the source code is not from a physical path but is virtual content provided by the DA. |
 
@@ -51,28 +42,62 @@ This document provides core background information for the `taro-debugger` proje
 
 Use this decision tree to quickly find the right document based on your current task:
 
-| Task Type | Start Here |
-|---|---|
-| Add a new UI feature | [system-specification.md §3](../docs/system-specification.md#3-view-navigation--layout-specification) for layout spec |
-| Fix a DAP protocol bug | [dap-integration-faq.md](../docs/dap-integration-faq.md) + [dap-protocol-specs.md](rules/dap-protocol-specs.md) |
-| Add a new transport type | [architecture.md §2.3](../docs/architecture.md#23-extension-guide) for extension guide |
-| Write tests | [test-plan.md](../docs/test-plan.md) + [testing-protocol.md](rules/testing-protocol.md) |
-| What's next to build? | [work-items.md](../docs/work-items.md) for pending items |
-| Understand the state machine | [architecture.md §3.2](../docs/architecture.md#32-execution-state-machine) |
-| Review code for quality | [code-style-guide.md](rules/code-style-guide.md) + [state-management.md](rules/state-management.md) |
-| Find which file to modify | [file-map.md](../docs/file-map.md) for source file responsibility map |
+| Task Type | Primary Agent | Start Here |
+|---|---|---|
+| Define or update requirements | `Product_Architect` | [system-specification.md](../docs/system-specification.md) + [architecture.md](../docs/architecture.md) |
+| Add a new UI feature | `Lead_Engineer` | [system-specification.md §3](../docs/system-specification.md#3-view-navigation--layout-specification) for layout spec |
+| Fix a DAP protocol bug | `Lead_Engineer` | [dap-integration-faq.md](../docs/dap-integration-faq.md) + [dap-protocol-specs.md](rules/dap-protocol-specs.md) |
+| Add a new transport type | `Lead_Engineer` | [architecture.md §2.3](../docs/architecture.md#23-extension-guide) for extension guide |
+| Write tests | `Lead_Engineer` | [test-plan.md](../docs/test-plan.md) + [testing-protocol.md](rules/testing-protocol.md) |
+| What's next to build? | `Product_Architect` | [work-items.md](../docs/work-items.md) for pending items |
+| Check v1.0 scope boundary | All Agents | [future-roadmap.md](../docs/future-roadmap.md) — confirm a feature is **not** a v1.1+ item before implementing |
+| Understand the state machine | `Lead_Engineer` | [architecture.md §3.2](../docs/architecture.md#32-execution-state-machine) |
+| Review code for quality | `Quality_Control_Reviewer` | [code-style-guide.md](rules/code-style-guide.md) + [state-management.md](rules/state-management.md) |
+| Find which file to modify | All Agents | [file-map.md](../docs/file-map.md) for source file responsibility map |
 
 ## 6. File Naming Conventions
 
-All filenames use `kebab-case`. When creating new files, follow these patterns:
+All filenames use `kebab-case`. For the complete suffix patterns (component, service, spec, types, etc.) see [code-style-guide.md §1](rules/code-style-guide.md#1-naming-conventions).
 
-| Type | Pattern | Example |
-|---|---|---|
-| Component | `<feature>.component.ts` | `variables-panel.component.ts` |
-| Component Template | `<feature>.component.html` | `variables-panel.component.html` |
-| Component Style | `<feature>.component.scss` | `variables-panel.component.scss` |
-| Service | `<domain>-<function>.service.ts` | `dap-session.service.ts` |
-| Types / Interfaces | `<domain>.types.ts` | `dap.types.ts` |
-| Unit Tests | `<original-name>.spec.ts` | `dap-session.service.spec.ts` |
-| Documentation | `kebab-case.md` | `system-specification.md` |
-| Agent Rules | `kebab-case.md` (in `.agents/rules/`) | `dap-protocol-specs.md` |
+## 7. Build and Test Commands
+
+To maintain consistency across environments, use these standard commands for build and test operations:
+
+| Operation | Command | Description |
+| :--- | :--- | :--- |
+| **Build Project** | `npm run build` | Compiles the Angular application for production. |
+| **Run All Tests** | `npm run test -- --watch=false` | Executes all Vitest unit tests in single-run mode. |
+| **Test Single File** | `npm run test -- --include=<path/to/file.spec.ts> --watch=false` | Executes tests for a specific file. |
+| **Watch Mode** | `npm run test` | Starts the Vitest runner in interactive watch mode. |
+| **Dev Server** | `npm start` | Launches a local development server with hot reload. |
+
+> [!NOTE]
+> All test commands use **Vitest** via the Angular CLI (`ng test`). Ensure any new test files are named with the `.spec.ts` suffix to be automatically picked up by the runner.
+
+## 8. Team Roles & Boundaries
+
+This section summarises each Agent role's mandate and hard constraints so every agent understands where its authority ends and another's begins.
+
+### 8.1 Role Boundary Table
+
+| Role | Mandate | Hard Constraints |
+| :--- | :--- | :--- |
+| **Product_Architect** | Translate user ideas into technical specifications; validate modularity, component hierarchy, and DAP coupling. | ① Never writes code. ② Must pause for explicit user approval before finalising specs. ③ Rewrites specs based on feedback. |
+| **Lead_Engineer** | Implement production-ready Angular code strictly from approved specifications. | ① Must not deviate from approved architecture. ② Must not assume DAP behaviour not documented in context sources. ③ Follows all rules in `.agents/rules/`. |
+| **Quality_Control_Reviewer** | Scrutinise implementations for production-readiness, RxJS memory safety, and DAP sequencing correctness. | ① Never implements code. ② Only reviews, identifies issues, and suggests targeted fixes. |
+
+### 8.2 Agent Context Sources
+
+This table consolidates the authoritative reference documents each role relies on. All paths are relative to the project root.
+
+| Document | Product_Architect | Lead_Engineer | Quality_Control_Reviewer |
+| :--- | :---: | :---: | :---: |
+| `docs/README.md` | ✅ | ✅ | ✅ |
+| `docs/system-specification.md` | ✅ | — | — |
+| `docs/architecture.md` | ✅ | — | — |
+| `docs/file-map.md` | ✅ | ✅ | ✅ |
+| `.agents/rules/dap-protocol-specs.md` | — | ✅ | ✅ |
+| `.agents/rules/code-style-guide.md` | — | ✅ | ✅ |
+| `.agents/rules/state-management.md` | — | ✅ | ✅ |
+| `.agents/rules/testing-protocol.md` | — | ✅ | ✅ |
+| `docs/future-roadmap.md` | ✅ | ✅ | — |

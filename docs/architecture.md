@@ -322,8 +322,6 @@ interface LogEntry {
 - **Manages expanded/collapsed state locally** via `private readonly expandedLogs = new Set<string>()`, keyed by `log.timestamp.getTime().toString()`. This UI state is **never** stored in any Service.
 - **Clears `expandedLogs` in `ngOnDestroy()`** per R_SM5 to prevent orphan key accumulation on component teardown.
 
-
-
 ---
 
 ## 5. Configuration Flow (DapConfig)
