@@ -2,7 +2,7 @@
 title: Changelog Archive
 scope: history, completed-phases, archived-tasks
 audience: [Product_Architect, Lead_Engineer]
-last_updated: 2026-03-28
+last_updated: 2026-03-29
 related:
   - docs/work-items.md
 ---
@@ -302,6 +302,35 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Dependencies**: WI-05
 - **Status**: ✅ Done
 
+### TI-06: Variables State Management Unit Tests
+- **Size**: S
+- **Description**: Verify the caching, state clearing, and reactive behavior of the DapVariablesService.
+- **Details**:
+  - **Scopes Fetching**: Verified that fetching scopes updates the `scopes$` observable correctly with various response scenarios.
+  - **Caching Logic**: Verified that `getVariables` utilizes the local cache to prevent redundant DAP requests.
+  - **Implicit Clear (R_SM5)**: Verified that cache and scopes are cleared automatically when the execution state transitions out of 'stopped' (e.g., to 'running', 'terminated').
+  - **Edge-case Memory Safety**: Verified that stopped-to-stopped transitions do not trigger redundant clears, and that the service clears state on instantiation if starting in a non-stopped state.
+- **Dependencies**: WI-18.1
+- **Status**: ✅ Done
+
+### TI-01: `DapConfigService` Unit Tests
+- **Size**: S
+- **Description**: Verify global config access mechanism per [test-plan.md](test-plan.md)
+- **Details**:
+  - Verify `setConfig()` and `getConfig()` correctly store and return complete `DapConfig` data
+- **Status**: ✅ Done
+
+### TI-05: Connection Error & Intent Detection Integration Tests
+<!-- status: done | size: M | phase: 11 | depends: WI-21, WI-22 -->
+- **Size**: M
+- **Description**: Verify error propagation, connection timeout, and user-initiated disconnect interception between Session and Transport
+- **Details**:
+  - **Normal stop intent interception**: Verify `isDisconnecting` flag correctly suppresses redundant error feedback
+  - **Connection timeout auto-catch**: Simulate WebSocket connection timeout, trigger `ErrorDialog`
+  - **Disconnect auto-reaction**: Simulate server crash, verify cascading state transition
+- **Dependencies**: WI-21, WI-22
+- **Status**: ✅ Done — `src/app/connection-error-integration.spec.ts` (12 tests)
+
 ---
 
 ## Phase 9: Error Handling
@@ -327,9 +356,3 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Dependencies**: WI-06
 - **Status**: ✅ Done
 
-### TI-01: `DapConfigService` Unit Tests
-- **Size**: S
-- **Description**: Verify global config access mechanism per [test-plan.md](test-plan.md)
-- **Details**:
-  - Verify `setConfig()` and `getConfig()` correctly store and return complete `DapConfig` data
-- **Status**: ✅ Done

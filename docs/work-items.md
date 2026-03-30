@@ -2,7 +2,7 @@
 title: Work Items
 scope: tasks, progress, dependencies, milestones, phases
 audience: [Product_Architect, Lead_Engineer]
-last_updated: 2026-03-28
+last_updated: 2026-03-29
 related:
   - docs/system-specification.md
   - docs/changelog.md
@@ -51,7 +51,7 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 | **Phase 8** | ✅ Done | Develop UI status bar connection indicator and command console interface | [View](changelog.md#phase-8-console--status-bar) |
 | **Phase 9** | ✅ Done | Global connection error handling, error snackbar feedback | [View](changelog.md#phase-9-error-handling) |
 | **Phase 10** | ⏳ Pending | Electron desktop application integration (IPC, Main Process) | [View](#phase-10-electron-desktop-mode-optional) |
-| **Phase 11** | 🔄 In Progress | Introduce Vitest for core service unit tests | [View](#phase-11-automation-tests) |
+| **Phase 11** | ✅ Done | Introduce Vitest for core service unit tests | [View](#phase-11-automation-tests) |
 
 ---
 
@@ -67,10 +67,6 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
   - Bidirectional data forwarding: WebSocket → DAP `stdin`; DAP `stdout` → WebSocket back to frontend
   - Handle process termination and resource cleanup
 - **Status**: ⏳ Pending
-
----
-
----
 
 ---
 
@@ -105,32 +101,6 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
   - Implement `FileTreeService`'s Electron version
   - Read file tree and file contents via IPC calling Node.js `fs` API
 - **Dependencies**: WI-15, WI-23
-- **Status**: ⏳ Pending
-
----
-
-## Phase 11: Automation Tests
-
-### TI-05: Connection Error & Intent Detection Integration Tests
-<!-- status: pending | size: M | phase: 11 | depends: WI-21, WI-22 -->
-- **Size**: M
-- **Description**: Verify error propagation, connection timeout, and user-initiated disconnect interception between Session and Transport
-- **Details**:
-  - **Normal stop intent interception**: Verify `isDisconnecting` flag correctly suppresses redundant error feedback
-  - **Connection timeout auto-catch**: Simulate WebSocket connection timeout, trigger `ErrorDialog`
-  - **Disconnect auto-reaction**: Simulate server crash, verify cascading state transition
-- **Dependencies**: WI-21, WI-22
-- **Status**: ⏳ Pending
-
-### TI-06: Variables State Management Unit Tests
-<!-- status: pending | size: S | phase: 11 | depends: WI-18.1 -->
-- **Size**: S
-- **Description**: Verify the caching, state clearing, and reactive behavior of the DapVariablesService.
-- **Details**:
-  - Test that fetching scopes updates the `scopes$` observable correctly.
-  - Test that fetching variables utilizes the local variables reference cache to prevent redundant network requests.
-  - Test that the cache and scopes are cleared automatically when the execution state is no longer 'stopped', verifying SSOT memory safety.
-- **Dependencies**: WI-18.1
 - **Status**: ⏳ Pending
 
 ---
@@ -240,8 +210,8 @@ graph LR
     style TI02 fill:#ffffff,stroke:#000,stroke-width:2.5px
     style TI03 fill:#ffffff,stroke:#000,stroke-width:2.5px
     style TI04 fill:#ffffff,stroke:#000,stroke-width:2.5px
-    style TI05 fill:#ffffff,stroke:#334155
-    style TI06 fill:#ffffff,stroke:#334155
+    style TI05 fill:#ffffff,stroke:#000,stroke-width:2.5px
+    style TI06 fill:#ffffff,stroke:#000,stroke-width:2.5px
 ```
 
 ---
