@@ -199,6 +199,7 @@ Transport instances are **lazily created** by Session via `TransportFactoryServi
 | `connectionStatus$` | `Observable<boolean>` | Connection status (defaults to `false` before Transport is created) |
 | `executionState$` | `Observable<ExecutionState>` | Debug execution state |
 | `onEvent()` | `Observable<DapEvent>` | Processed event stream |
+| `onTraffic$` | `Observable<any>` | Diagnostic traffic stream for raw DAP protocol messages |
 | `fileTree` | `FileTreeService` | File tree service dedicated to this Session (created with Session) |
 | `capabilities` | `any` | Capabilities obtained from the Server |
 | `startSession()` | `Promise<DapResponse>` | Complete startup flow (connect → initialize → launch) |
@@ -321,6 +322,14 @@ interface LogEntry {
 - **Injects `DapSessionService`** — for sending `evaluate` requests from the command input field.
 - **Manages expanded/collapsed state locally** via `private readonly expandedLogs = new Set<string>()`, keyed by `log.timestamp.getTime().toString()`. This UI state is **never** stored in any Service.
 - **Clears `expandedLogs` in `ngOnDestroy()`** per R_SM5 to prevent orphan key accumulation on component teardown.
+
+### 4.6 Diagnostic Traffic Stream (onTraffic$)
+
+To prevent high-frequency raw protocol telemetry from polluting the core business event pipeline (`onEvent`), the Session Layer (`DapSessionService`) exposes a dedicated `onTraffic$` observable.
+
+- **Isolation**: All outgoing requests (`sendRequest`) and incoming messages (`handleIncomingMessage`) are emitted to the internal `trafficSubject` immediately upon sending/receiving, before any state machine processing.
+- **Opt-in Telemetry**: The UI Layer (`DebuggerComponent`) subscribes to `onTraffic$` and forwards these raw payloads to `DapLogService` as structured `LogEntry` items with the `dap` category.
+- **Separation of Concerns**: This ensures the core `onEvent()` stream only emits structurally significant state events (e.g., `stopped`, `terminated`) required for state machine updates, while `onTraffic$` purely serves diagnostic logging purposes.
 
 ---
 
