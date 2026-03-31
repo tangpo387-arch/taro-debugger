@@ -62,7 +62,6 @@
 .sidenav-right {
   padding: 16px;
   background-color: var(--mat-sys-surface-container);
-  overflow: auto;
 }
 
 .sidenav-left {
@@ -72,7 +71,17 @@
   /* Content layout: resize-handle + minimize-row + file-explorer component */
   display: flex;
   flex-direction: column;
-  padding: 0; /* FileExplorerComponent manages its own internal padding */
+  padding: 0;
+  overflow: hidden;
+  /* FileExplorerComponent manages its own internal padding */
+
+  /* Material does not expose a CSS variable for .mat-drawer-inner-container
+     Disable internal scroll to allow app-file-explorer to manage its own scrollbar. */
+  :host & ::ng-deep .mat-drawer-inner-container {
+    overflow: hidden !important;
+    display: flex;
+    flex-direction: column;
+  }
 }
 
 .sidenav-right {
@@ -81,6 +90,7 @@
   flex-direction: column;
   min-width: 200px;
   max-width: 80vw;
+  overflow: auto;
 }
 
 /* Thin row housing the minimize-sidebar button, kept in DebuggerComponent
@@ -215,6 +225,7 @@
 .execution-state {
   font-weight: 500;
 }
+
 /* --- Resize Handles --- */
 .resize-handle {
   position: absolute;

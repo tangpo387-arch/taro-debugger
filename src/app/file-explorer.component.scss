@@ -1,18 +1,21 @@
-/* Host element: provides the 16px inset padding that sidenav-left no longer
-   applies. flex:1 + min-height:0 makes it fill the remaining column height
-   without creating a second scroll container (sidenav-left already owns that). */
+/* Host element: provides the foundation for the file explorer.
+   flex:1 + min-height:0 makes it fill the remaining column height.
+   This component uses a fixed header and scrollable tree area. */
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-height: 0;
-  padding: 16px;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* ── Panel Header ──────────────────────────────────────────────────────────── */
 
 .sidenav-header {
+  padding: 16px 16px 0;
   margin-bottom: 12px;
+  flex: 0 0 auto;
 
   .header-title-row {
     display: flex;
@@ -61,56 +64,87 @@
   text-overflow: ellipsis;
 }
 
+/* ── Scroll Area ───────────────────────────────────────────────────────────── */
+
+.scroll-container {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  padding: 0 16px;
+}
+
 /* ── File Tree ─────────────────────────────────────────────────────────────── */
 
 .file-tree {
-  margin-top: 16px;
+  /* background: transparent is kept for theme compatibility */
   background: transparent;
-  display: block;
-  width: max-content;
+  display: inline-block;
   min-width: 100%;
+  padding-bottom: 16px;
+  width: auto; /* Allow inline-block to expand beyond 100% */
 }
 
-/* mat-tree-node: ensure consistent row height and full-width click area */
-mat-tree-node {
-  min-height: 32px;
-  white-space: nowrap;
-  width: max-content;
-  min-width: 100%;
-}
-
-/* File node button */
-.file-node-btn {
+/* Tree nodes: Full-width rows with consistent hover/active states */
+.tree-node {
+  width: 100%;
   display: flex !important;
   align-items: center;
-  width: 100%;
-  text-align: left;
-  border-radius: 4px;
-  color: var(--mat-sys-on-surface-variant);
-  padding: 0 8px;
-  font-size: 14px;
+  min-height: 28px;
+  cursor: pointer;
+  padding-right: 12px;
+  box-sizing: border-box;
   white-space: nowrap;
+  color: var(--mat-sys-on-surface-variant);
 
   &:hover {
     background-color: var(--mat-sys-surface-container-highest);
   }
 
-  &.active-file {
+  &.active-node {
     font-weight: bold;
     color: var(--mat-sys-primary);
     background-color: var(--mat-sys-primary-container);
   }
+
+  /* Focus indicator for keyboard navigation */
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: -2px;
+    background-color: var(--mat-sys-surface-container-high);
+  }
 }
 
-// Material does not expose a CSS custom property for .mdc-button__label
-// flex/alignment — ::ng-deep required to align the icon + text inside the button.
-// Selector is at rule root (not nested inside .file-node-btn) so that :host
-// produces a valid [_nghost-xxx] .file-node-btn .mdc-button__label selector.
-:host .file-node-btn ::ng-deep .mdc-button__label {
-  white-space: nowrap;
+/* Indent spacer: used with matTreeNodePadding to handle nesting logic without affecting row backgrounds */
+.indent-spacer {
+  flex-shrink: 0;
+  /* matTreeNodePadding adds padding-left here */
+}
+
+/* Toggle button: specifically sized to avoid overlapping with sibling icons */
+.node-toggle-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  margin: 0 4px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  width: 100%;
+  justify-content: center;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Node text: filename or folder name.
+   flex: 0 0 auto lets each row expand to its natural width, consistent with
+   the inline-block tree container that already expands to the widest child. */
+.node-text {
+  font-size: 14px;
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 /* Icons */
@@ -119,7 +153,9 @@ mat-tree-node {
   width: 18px;
   height: 18px;
   margin-right: 8px;
+  margin-left: 4px; /* Ensure small gap after indent */
   color: var(--mat-sys-on-surface-variant);
+  flex-shrink: 0;
 }
 
 .folder-icon {
@@ -127,14 +163,8 @@ mat-tree-node {
   width: 18px;
   height: 18px;
   margin-right: 8px;
-  color: #ffca28; /* Material yellow folder color */
-}
-
-.folder-name {
-  font-size: 14px;
-  color: var(--mat-sys-on-surface);
-  white-space: nowrap;
-  flex: 1;
+  color: #ffca28;
+  flex-shrink: 0;
 }
 
 /* ── Unsupported Fallback ───────────────────────────────────────────────────── */

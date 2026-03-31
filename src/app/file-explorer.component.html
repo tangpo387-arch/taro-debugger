@@ -18,6 +18,8 @@
   </div>
 </div>
 
+
+<div class="scroll-container">
 @if (fileTreeSupported) {
 <!-- Dynamic File Tree -->
 <mat-tree
@@ -27,27 +29,33 @@
   class="file-tree"
 >
   <!-- File node -->
-  <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
-    <button
-      mat-button
-      class="file-node-btn"
-      [class.active-file]="activeFilePath === node.path"
-      (click)="onNodeClick(node)"
-    >
-      <mat-icon class="file-icon">description</mat-icon>
-      {{ node.name }}
-    </button>
+  <mat-tree-node *matTreeNodeDef="let node" class="tree-node file-node"
+    role="treeitem"
+    tabindex="0"
+    [class.active-node]="node.path === activeFilePath"
+    (click)="onNodeClick(node)"
+    (keydown.enter)="onNodeClick(node); $event.preventDefault()">
+    <div class="indent-spacer" matTreeNodePadding></div>
+    <mat-icon class="file-icon">description</mat-icon>
+    <span class="node-text">{{ node.name }}</span>
   </mat-tree-node>
 
   <!-- Directory node -->
-  <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding>
-    <button mat-icon-button matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name">
+  <mat-tree-node *matTreeNodeDef="let node; when: hasChild" class="tree-node directory-node"
+    role="treeitem"
+    tabindex="0"
+    [attr.aria-expanded]="tree.isExpanded(node)"
+    (click)="tree.toggle(node)"
+    (keydown.enter)="tree.toggle(node); $event.preventDefault()"
+    (keydown.space)="tree.toggle(node); $event.preventDefault()">
+    <div class="indent-spacer" matTreeNodePadding></div>
+    <div class="node-toggle-btn" aria-hidden="true">
       <mat-icon class="mat-icon-rtl-mirror">
         {{ tree.isExpanded(node) ? 'expand_more' : 'chevron_right' }}
       </mat-icon>
-    </button>
+    </div>
     <mat-icon class="folder-icon">folder</mat-icon>
-    <span class="folder-name">{{ node.name }}</span>
+    <span class="node-text">{{ node.name }}</span>
   </mat-tree-node>
 </mat-tree>
 } @else {
@@ -56,3 +64,4 @@
   DAP Server does not support loadedSources requests<br />File tree cannot be displayed
 </div>
 }
+</div>
