@@ -137,12 +137,12 @@ export class DapSessionService {
     });
     this.capabilities = initResponse.body || {};
 
-    // Step 2: Wait for initialized event
-    await initializedPromise;
-
-    // Step 3: Send launch/attach request (fire-and-forget, don't wait for response yet)
+    // Step 2: Send launch/attach request (fire-and-forget, don't wait for response yet)
     // According to DAP spec, launch/attach response returns after configurationDone
     const launchPromise = this.launchOrAttach();
+
+    // Step 3: Wait for initialized event
+    await initializedPromise;
 
     // Step 4: Send configurationDone
     await this.sendRequest('configurationDone');

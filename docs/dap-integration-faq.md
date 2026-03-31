@@ -54,8 +54,20 @@ According to the official specification and implementation best practices, the i
 ### Key Constraints
 
 #### Constraint 1: `initialized` Event Timing
-The Debug Adapter must send the `initialized` event only **after** returning the `initialize` response.
-* *Reason:* The `initialized` event notifies the IDE that the Adapter is ready to receive configuration (such as `setBreakpoints`). If sent too early, the IDE may not have finished processing the Capabilities from the `initialize` response.
+The Debug Adapter must send the `initialized` event only **after** returning the `initialize` response. The DAP specification's exact wording is:
+
+> *"Since the debug adapter is expected to send the `initialized` event as soon as possible, the client can send configuration requests immediately upon receiving the `initialized` event."*
+
+The key phrase is **"as soon as possible"** — the spec does **not** mandate a fixed relationship between `initialized` and `launch`/`attach`. This intentional flexibility accommodates different debugger engine architectures, resulting in **two spec-compliant behaviors** observed in the wild:
+
+| Adapter | When `initialized` is sent | Reason |
+|---|---|---|
+| **GDB** (`gdb -i=dap`) | Immediately after `initialize` response | GDB can internally buffer breakpoint configuration without knowing the target binary; no `launch` info is required before accepting `setBreakpoints`. |
+| **LLDB** (`lldb-dap`) | Only **after** receiving the `launch`/`attach` request | LLDB's engine needs to know the target binary path (from `launch` args) before it can correctly resolve and mount breakpoints. It is not "ready" for configuration without this. |
+
+Both behaviors are fully spec-compliant. The DAP spec deliberately defers to the adapter's judgment on when it is truly ready.
+
+* **⚠️ Client-Side Implication:** A Frontend Client must **never assume** that the `initialized` event will arrive before or after `launch`/`attach`. The only safe strategy is the **fire-and-forget + await** pattern described below, which is compatible with both adapter types.
 
 #### Constraint 2: `launch`/`attach` Response Timing
 The `launch` or `attach` **response** must be sent only **after** the `configurationDone` **response** has been sent to the IDE.
@@ -66,18 +78,24 @@ The `configurationDone` **request** must be sent only **after** the `launch` or 
 * *Reason:* Many Debug Adapters check whether a `launch`/`attach` request has been received when they get `configurationDone`. If `configurationDone` arrives first, the Adapter will return an error (e.g., `"launch or attach not specified"`) because it doesn't yet know the debug target.
 * *Common mistake:* Asynchronously sending `configurationDone` immediately upon receiving the `initialized` event, while the `launch`/`attach` send is delayed to later code execution, causing `configurationDone` to be sent first.
 
-#### Standard Message Flow
+#### Standard Message Flow (Spec Reference)
+
+The following table shows the spec-defined ordering. Steps 3 and 4 may be interleaved differently depending on the adapter (see Constraint 1 above).
 
 1. **IDE → Adapter:** `initialize` request
 2. **Adapter → IDE:** `initialize` response (declares capabilities)
-3. **Adapter → IDE:** `initialized` event (triggers configuration phase)
-4. **IDE → Adapter:** `launch`/`attach` request (do not return response at this point)
+3. **IDE → Adapter:** `launch`/`attach` request *(fire-and-forget — send without awaiting response)*
+4. **Adapter → IDE:** `initialized` event *(may arrive before or after step 3, adapter-dependent)*
 5. **IDE → Adapter:** Configuration requests (`setBreakpoints`, `setExceptionBreakpoints`, etc.)
 6. **IDE → Adapter:** `configurationDone` request (signals configuration complete)
 7. **Adapter → IDE:** `configurationDone` response
 8. **Adapter → IDE:** `launch`/`attach` response (formally ends the launch sequence)
 
-#### Initialization Sequence Diagram
+#### Initialization Sequence Diagrams
+
+The following two diagrams show how the same `DapSessionService` implementation handles both adapter behaviors identically, because `launch` is always sent fire-and-forget before awaiting `initialized`.
+
+**Variant A — GDB** (`initialized` arrives before `launch` is processed by the adapter):
 
 ```mermaid
 sequenceDiagram
@@ -88,24 +106,50 @@ sequenceDiagram
     IDE->>Service: startSession()
     Service->>Adapter: initialize Request
     Adapter-->>Service: initialize Response
-    Adapter-->>Service: (Event) initialized
-    Note over Service, Adapter: Enter configuration phase (after initialized received)
-    Service->>Adapter: launch/attach Request (fire-and-forget, do not await Response)
+    Service->>Adapter: launch/attach Request (fire-and-forget)
+    Adapter-->>Service: (Event) initialized ← GDB sends this immediately after initialize response
+    Note over Service, Adapter: Enter configuration phase (await initialized before continuing)
     Service->>Adapter: setBreakpoints and other configuration requests
     Service->>Adapter: configurationDone Request (send and await Response)
     Adapter-->>Service: configurationDone Response
     Adapter-->>Service: launch/attach Response (arrives only now)
     Service-->>IDE: startSession() Promise Resolve
-    Note over IDE, Adapter: Launch complete, begin updating UI
+```
+
+**Variant B — lldb-dap** (`initialized` is held until adapter receives `launch`):
+
+```mermaid
+sequenceDiagram
+    participant IDE as DebuggerComponent
+    participant Service as DapSessionService
+    participant Adapter as lldb-dap Adapter
+
+    IDE->>Service: startSession()
+    Service->>Adapter: initialize Request
+    Adapter-->>Service: initialize Response
+    Service->>Adapter: launch/attach Request (fire-and-forget)
+    Adapter-->>Service: (Event) initialized ← lldb-dap sends this only AFTER receiving launch
+    Note over Service, Adapter: Enter configuration phase (await initialized before continuing)
+    Service->>Adapter: setBreakpoints and other configuration requests
+    Service->>Adapter: configurationDone Request (send and await Response)
+    Adapter-->>Service: configurationDone Response
+    Adapter-->>Service: launch/attach Response (arrives only now)
+    Service-->>IDE: startSession() Promise Resolve
 ```
 
 ### Annotated Message Flow with Async Control
 
+The following flow is the **universal compatible implementation** that works correctly with both GDB-style (early `initialized`) and lldb-dap-style (late `initialized`) adapters:
+
 ```
 IDE → Adapter:  initialize request
 Adapter → IDE:  initialize response           ← await completion before continuing
-Adapter → IDE:  initialized event             ← await this event before continuing
-IDE → Adapter:  launch/attach request         ← send, do NOT await response
+IDE → Adapter:  launch/attach request         ← send fire-and-forget (do NOT await response)
+
+                                              ← [GDB]      initialized event arrives HERE (early)
+                                              ← [lldb-dap] initialized event arrives HERE (after launch)
+
+IDE waits:      initialized event             ← await this event before continuing
 IDE → Adapter:  setBreakpoints and other configuration requests
 IDE → Adapter:  configurationDone request     ← send and await
 Adapter → IDE:  configurationDone response    ← await completion before continuing
@@ -113,6 +157,8 @@ Adapter → IDE:  launch/attach response        ← only NOW await this response
 ```
 
 > **⚠️ Warning:** The `launch`/`attach` request must be sent in a "fire-and-forget" manner (send without immediately awaiting the response), because the Adapter will only reply with the `launch`/`attach` response after the `configurationDone` response. If you immediately await the `launch`/`attach` response, you'll deadlock because `configurationDone` hasn't been sent yet.
+
+> **⚠️ Warning:** Never send `launch`/`attach` *after* awaiting the `initialized` event. If the adapter is `lldb-dap`, it will hold the `initialized` event until `launch` is received — creating a deadlock where both sides wait for each other indefinitely.
 
 ### Implementation Recommendations Summary
 
