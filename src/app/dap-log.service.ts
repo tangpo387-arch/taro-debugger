@@ -25,17 +25,27 @@ export class DapLogService {
    */
   public consoleLog(message: string, level: 'info' | 'error' = 'info', category: LogCategory = 'console', data?: any): void {
     if (!message) return;
-    const cleanMsg = this.trimNewline(message);
+    
+    const lines = message.split(/\r?\n/);
+    // Filter out trailing empty line caused by a final \n (mirrors appendProgramLog guard)
+    if (lines.length > 1 && lines[lines.length - 1] === '') {
+      lines.pop();
+    }
+    const now = new Date();
+    const newEntries: LogEntry[] = lines
+      .filter(line => line.length > 0) // QC Item 1: Filter out empty entries
+      .map((line, index) => ({
+        timestamp: now,
+        message: line,
+        category,
+        level,
+        // Only attach data to the first line to avoid redundant expansion UI
+        data: index === 0 ? data : undefined,
+      }));
 
     const newLogs: LogEntry[] = [
       ...this.consoleLogsSubject.value,
-      {
-        timestamp: new Date(),
-        message: cleanMsg,
-        category,
-        level,
-        data,
-      }
+      ...newEntries
     ];
 
     this.consoleLogsSubject.next(this.limitMemorySize(newLogs));
@@ -48,17 +58,27 @@ export class DapLogService {
    */
   public appendProgramLog(message: string, category: LogCategory = 'stdout'): void {
     if (!message) return;
-    const cleanMsg = this.trimNewline(message);
-    const level = category === 'stderr' ? 'error' : 'info';
+
+    const lines = message.split(/\r?\n/);
+    // Filter out trailing empty lines caused by final \n
+    if (lines.length > 1 && lines[lines.length - 1] === '') {
+      lines.pop();
+    }
+    
+    const now = new Date();
+    const level: 'info' | 'error' = category === 'stderr' ? 'error' : 'info';
+    const newEntries: LogEntry[] = lines
+      .filter(line => line.length > 0) // QC Item 1: Filter out empty entries
+      .map(line => ({
+        timestamp: now,
+        message: line,
+        category,
+        level
+      }));
 
     const newLogs: LogEntry[] = [
       ...this.programLogsSubject.value,
-      {
-        timestamp: new Date(),
-        message: cleanMsg,
-        category,
-        level
-      }
+      ...newEntries
     ];
 
     this.programLogsSubject.next(this.limitMemorySize(newLogs));
@@ -87,9 +107,5 @@ export class DapLogService {
   public clear(): void {
     this.consoleLogsSubject.next([]);
     this.programLogsSubject.next([]);
-  }
-
-  private trimNewline(msg: string): string {
-    return msg.endsWith('\n') ? msg.slice(0, -1) : msg;
   }
 }

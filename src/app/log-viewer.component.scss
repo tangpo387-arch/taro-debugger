@@ -50,13 +50,15 @@
 
 // ── Individual log row ────────────────────────────────────────────────────
 .console-line {
-  min-height: 20px;
+  height: 20px; // Match itemSize exactly to prevent virtual scroll jitter
   padding: 0 16px;
   overflow: hidden;
   color: var(--mat-sys-on-surface);
   box-sizing: border-box;
 
   &.expanded {
+    height: auto; // Allow expansion for JSON payload
+    min-height: 20px;
     background-color: var(--mat-sys-surface-container-highest);
   }
 
@@ -70,6 +72,9 @@
     display: flex;
     align-items: center;
     white-space: pre;
+    overflow-x: auto; // Allow horizontal scrolling for long lines
+    scrollbar-width: none; // Hide scrollbar for cleaner look
+    &::-webkit-scrollbar { display: none; }
   }
 
   .log-timestamp {

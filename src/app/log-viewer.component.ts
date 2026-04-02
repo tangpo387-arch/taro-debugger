@@ -16,7 +16,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
 
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, merge } from 'rxjs';
+import { auditTime } from 'rxjs/operators';
 
 import { DapLogService } from './dap-log.service';
 import { DapSessionService, ExecutionState } from './dap-session.service';
@@ -83,9 +84,11 @@ export class LogViewerComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     });
 
-    // Auto-scroll to bottom whenever either log stream emits
-    this.logSubscription = this.consoleLogs$.subscribe(() => this.scrollToBottom());
-    this.logSubscription.add(this.programLogs$.subscribe(() => this.scrollToBottom()));
+    // Auto-scroll to bottom whenever either log stream emits.
+    // auditTime(50) prevents scroll thrashing during high-frequency DAP traffic bursts.
+    this.logSubscription = merge(this.consoleLogs$, this.programLogs$)
+      .pipe(auditTime(50))
+      .subscribe(() => this.scrollToBottom());
   }
 
   public ngOnDestroy(): void {
@@ -150,13 +153,45 @@ export class LogViewerComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ── Private Helpers ──────────────────────────────────────────────────────
+  // ── Public Template Methods (Tab) ───────────────────────────────────────
 
-  /** Scroll all viewports to the bottom after a short delay to allow DOM update. */
-  private scrollToBottom(): void {
+  /**
+   * Called when the user switches between Console and Program Console tabs.
+   * CdkVirtualScrollViewport cannot calculate its size while hidden inside a
+   * mat-tab (mat-tab uses visibility:hidden, not ngIf). checkViewportSize()
+   * forces CDK to remeasure before scrolling to the correct position.
+   */
+  public onTabChange(): void {
     setTimeout(() => {
       this.viewports?.forEach(viewport => {
-        viewport.scrollToIndex(viewport.getDataLength(), 'smooth');
+        viewport.checkViewportSize();
+        const count = viewport.getDataLength();
+        if (count > 0) {
+          viewport.scrollToIndex(count - 1);
+        }
+      });
+    }, 50);
+  }
+
+  // ── Private Helpers ──────────────────────────────────────────────────────
+
+  /**
+   * Scrolls all virtual scroll viewports to the last item.
+   * checkViewportSize() is required because the viewport may have been
+   * hidden (inactive tab) when earlier scroll attempts were made.
+   * 'smooth' is intentionally omitted — rapid successive smooth-scroll
+   * requests fight each other and leave the viewport in an intermediate
+   * state. Instant jump is the correct behavior for a log console.
+   */
+  private scrollToBottom(): void {
+    // Use requestAnimationFrame or setTimeout to ensure DOM is ready
+    setTimeout(() => {
+      this.viewports?.forEach(viewport => {
+        viewport.checkViewportSize();
+        const count = viewport.getDataLength();
+        if (count > 0) {
+          viewport.scrollToIndex(count - 1);
+        }
       });
     }, 50);
   }
