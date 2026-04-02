@@ -50,6 +50,7 @@ Use this decision tree to quickly find the right document based on your current 
 | Add a new transport type | `Lead_Engineer` | [architecture.md §2.3](../docs/architecture.md#23-extension-guide) for extension guide |
 | Write tests | `Lead_Engineer` | [test-plan.md](../docs/test-plan.md) + [testing-protocol.md](rules/testing-protocol.md) |
 | What's next to build? | `Product_Architect` | [work-items.md](../docs/work-items.md) for pending items |
+| Manage work item lifecycle | `Product_Architect` | [project-management.md](../docs/project-management.md) for WI/TI naming, lifecycle, and archival process |
 | Check v1.0 scope boundary | All Agents | [future-roadmap.md](../docs/future-roadmap.md) — confirm a feature is **not** a v1.1+ item before implementing |
 | Understand the state machine | `Lead_Engineer` | [architecture.md §3.2](../docs/architecture.md#32-execution-state-machine) |
 | Review code for quality | `Quality_Control_Reviewer` | [code-style-guide.md](rules/code-style-guide.md) + [state-management.md](rules/state-management.md) |
@@ -101,3 +102,5 @@ This table consolidates the authoritative reference documents each role relies o
 | `.agents/rules/state-management.md` | — | ✅ | ✅ |
 | `.agents/rules/testing-protocol.md` | — | ✅ | ✅ |
 | `docs/future-roadmap.md` | ✅ | ✅ | — |
+| `docs/project-management.md` | ✅ | ✅ | — |
+

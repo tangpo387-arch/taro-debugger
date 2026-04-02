@@ -12,8 +12,8 @@ related:
 # DAP Debugger Frontend — Work Items
 
 > [!NOTE]
-> This list is generated from a gap analysis between [system-specification.md v1.0](system-specification.md) and the existing codebase.
-> Each item is moderately sized, suitable for incremental development and delivery.
+> Generated from a gap analysis between [system-specification.md v1.0](system-specification.md) and the existing codebase. Each item is moderately sized for incremental delivery.
+> Items use `WI-##` (e.g., `WI-01`, `WI-18.2`) and test items use `TI-##` (e.g., `TI-05`). For the full lifecycle process, see [project-management.md](project-management.md).
 
 ---
 
