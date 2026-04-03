@@ -20,5 +20,7 @@
 
 ---
 
-> For the authoritative mapping of which documents each role should consult, see
-> [`.agents/project-context.md` — §8.2 Agent Context Sources](.agents/project-context.md#82-agent-context-sources).
+## Mandatory Startup (All Roles)
+At the **beginning of every session**, before taking any action, **every agent MUST** read [`.agents/project-context.md`](.agents/project-context.md) in full.
+
+Failure to read this file first is a protocol violation.

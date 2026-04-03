@@ -14,18 +14,16 @@ The project uses **Vitest** as the primary test runner, integrated within the An
 
 ### 1.1 Common Execution Commands
 
-*   **Run all tests**:
-    ```bash
-    ng test --watch=false
-    ```
-*   **Run a single test file**:
-    ```bash
-    ng test --include=src/app/path/to/service.spec.ts --watch=false
-    ```
-*   **Watch mode**:
-    ```bash
-    ng test
-    ```
+To maintain consistency across environments, use these standard commands for Vitest unit tests:
+
+| Operation | Command | Description |
+| :--- | :--- | :--- |
+| **Run All Tests** | `npm run test -- --watch=false` | Executes all tests in single-run mode. |
+| **Test Single File** | `npm run test -- --include=<path/to/file.spec.ts> --watch=false` | Executes tests for a specific file. |
+| **Watch Mode** | `npm run test` | Starts the Vitest runner in interactive watch mode. |
+
+> [!NOTE]
+> All test commands use **Vitest** via the Angular CLI. The `--` separator is required to pass arguments through npm to the underlying test runner.
 
 ## 2. Mocking Strategy
 
