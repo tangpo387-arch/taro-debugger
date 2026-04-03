@@ -50,7 +50,7 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 | **Phase 7** | ✅ Done | Call stack list and nested variable inspector | [View](changelog.md#phase-7-variables--call-stack) |
 | **Phase 8** | ✅ Done | Develop UI status bar connection indicator and command console interface | [View](changelog.md#phase-8-console--status-bar) |
 | **Phase 9** | ✅ Done | Global connection error handling, error snackbar feedback | [View](changelog.md#phase-9-error-handling) |
-| **Phase 10** | ⏳ Pending | Electron desktop application integration (IPC, Main Process) | [View](#phase-10-electron-desktop-mode-optional) |
+| **Phase 10** | 🔄 In Progress | Electron desktop application integration (IPC, Main Process) | [WI-23 ✅](changelog.md#phase-10-electron-desktop-mode) · [Pending](#phase-10-electron-desktop-mode-optional) |
 | **Phase 11** | ✅ Done | Introduce Vitest for core service unit tests | [View](#phase-11-automation-tests) |
 
 ---
@@ -71,17 +71,6 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 ---
 
 ## Phase 10: Electron Desktop Mode (Optional)
-
-### WI-23: Electron Main Process Architecture
-<!-- status: pending | size: M | phase: 10 | depends: none -->
-- **Size**: M
-- **Description**: Establish Electron main process per spec [§6.1](system-specification.md#61-electron-desktop-mode)
-- **Details**:
-  - Create `electron/main.ts` + `electron/preload.ts`
-  - `BrowserWindow` loads the Angular application
-  - Configure `contextBridge`, expose a minimal, typed `electronAPI` object to the renderer
-  - **No third-party IPC wrapper** (e.g., `ngx-electron`) is used; follow the native `contextBridge` security pattern
-- **Status**: ⏳ Pending
 
 ### WI-24: Electron IPC Transport Layer (`IpcTransportService`)
 <!-- status: pending | size: M | phase: 10 | depends: WI-04, WI-23 -->
@@ -205,7 +194,7 @@ graph LR
     style WI21 fill:#fb923c,stroke:#000,stroke-width:2.5px
     style WI22 fill:#fb923c,stroke:#000,stroke-width:2.5px
 
-    style WI23 fill:#94a3b8,stroke:#64748b
+    style WI23 fill:#94a3b8,stroke:#000,stroke-width:2.5px
     style WI24 fill:#94a3b8,stroke:#64748b
     style WI25 fill:#94a3b8,stroke:#64748b
 

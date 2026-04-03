@@ -17,6 +17,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 ## Phase 1: Setup View
 
 ### WI-01: Extend `GdbConfigService` Configuration Model
+
 - **Size**: S
 - **Description**: Extend the config object into a complete DAP connection configuration interface
 - **Details**:
@@ -26,6 +27,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Status**: ✅ Done
 
 ### WI-02: Setup Form Field Completion
+
 - **Size**: M
 - **Description**: Complete all Setup form fields per spec [§3.1](system-specification.md#31-initialization-setup-view-setup)
 - **Details**:
@@ -37,6 +39,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Status**: ✅ Done
 
 ### WI-03: Setup Form Validation
+
 - **Size**: S
 - **Description**: Implement real-time form validation per spec [§7.3](system-specification.md#73-user-configuration-validation)
 - **Details**:
@@ -52,6 +55,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 ## Phase 2: DAP Transport Layer
 
 ### WI-04: Create `DapTransportService` Abstract Interface
+
 - **Size**: S
 - **Description**: Define a unified communication abstraction layer per spec [§4](system-specification.md#4-communication-architecture)
 - **Details**:
@@ -61,6 +65,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Status**: ✅ Done
 
 ### WI-05: Implement WebSocket Transport Layer (`WebSocketTransportService`)
+
 - **Size**: M
 - **Description**: Implement Web mode WebSocket communication per spec [§4.2](system-specification.md#42-web-browser-mode)
 - **Details**:
@@ -72,6 +77,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Status**: ✅ Done
 
 ### WI-06: DAP Session Management Service (`DapSessionService`)
+
 - **Size**: M
 - **Description**: Encapsulate the DAP protocol's request/response lifecycle
 - **Details**:
@@ -84,6 +90,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Status**: ✅ Done
 
 ### WI-07: DAP Request Timeout Mechanism
+
 - **Size**: S
 - **Description**: Implement timeout mechanism for `DapSessionService` requests, preventing permanent waits when the server is unresponsive
 - **Details**:
@@ -93,6 +100,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Status**: ✅ Done
 
 ### WI-08: Integrate DapSessionService in DebuggerComponent
+
 - **Size**: S
 - **Description**: Actually invoke DapSessionService in DebuggerComponent to start and terminate debug sessions
 - **Details**:
@@ -108,6 +116,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 ## Phase 4: Debug Controls
 
 ### WI-10: Debug Control Button Functionality
+
 - **Size**: M
 - **Description**: Connect toolbar control buttons to DAP requests
 - **Details**:
@@ -122,6 +131,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Status**: ✅ Done
 
 ### WI-11: DAP Event Handling & State Management
+
 - **Size**: M
 - **Description**: Handle DAP Server events and update frontend state
 - **Details**:
@@ -139,6 +149,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 ## Phase 5: Editor Features
 
 ### WI-12: Monaco Editor Breakpoint Interaction
+
 - **Size**: M
 - **Description**: Implement Glyph Margin breakpoint operations per spec [§3.2.3](system-specification.md#323-main-content-area)
 - **Details**:
@@ -149,6 +160,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Status**: ✅ Done
 
 ### WI-13: Breakpoint DAP Synchronization
+
 - **Size**: S
 - **Description**: Synchronize local breakpoint changes to the DAP Server
 - **Details**:
@@ -160,6 +172,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Status**: ✅ Done
 
 ### WI-14: Current Line Highlight
+
 - **Size**: S
 - **Description**: Implement `deltaDecorations` current execution line marking per spec [§3.2.3](system-specification.md#323-main-content-area)
 - **Details**:
@@ -175,6 +188,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 ## Phase 6: File Explorer
 
 ### WI-15: File Tree Service Abstraction (`FileTreeService`)
+
 - **Size**: S
 - **Description**: Define file tree data retrieval abstract interface per spec [§3.2.2](system-specification.md#322-left-sidenav)
 - **Details**:
@@ -185,6 +199,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Status**: ✅ Done
 
 ### WI-16: Left Sidenav File Tree UI
+
 - **Size**: M
 - **Description**: Replace left sidebar hardcoded content with dynamic file tree
 - **Details**:
@@ -200,6 +215,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 ## Phase 7: Variables & Call Stack
 
 ### WI-17: Call Stack Panel
+
 - **Size**: M
 - **Description**: Implement call stack display per spec [§3.2.4](system-specification.md#324-right-sidenav)
 - **Details**:
@@ -243,6 +259,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 ## Phase 8: Console & Status Bar
 
 ### WI-19: Debug Console Functionality
+
 - **Size**: M
 - **Description**: Complete bottom console per spec [§3.2.5](system-specification.md#325-status-bar--console)
 - **Details**:
@@ -254,6 +271,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Status**: ✅ Done
 
 ### WI-20: Connection Status Indicator Functionality
+
 - **Size**: S
 - **Description**: Make status bar dynamic per spec [§3.2.5](system-specification.md#325-status-bar--console)
 - **Details**:
@@ -269,6 +287,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 ## Phase 11: Automation Tests
 
 ### TI-04: `DapFileTreeService` File Tree Unit Tests
+
 - **Size**: M
 - **Description**: Verify `DapFileTreeService` file tree construction and file content reading logic via DAP requests
 - **Details**:
@@ -282,6 +301,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Status**: ✅ Done
 
 ### TI-02: `DapSessionService` Session Management Unit Tests
+
 - **Size**: M
 - **Description**: Verify session lifecycle and pairing mechanism
 - **Details**:
@@ -292,6 +312,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Status**: ✅ Done
 
 ### TI-03: `WebSocketTransportService` Transport Layer Unit Tests
+
 - **Size**: M
 - **Description**: Verify low-level fail-safe mechanism and data buffering logic
 - **Details**:
@@ -303,6 +324,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Status**: ✅ Done
 
 ### TI-06: Variables State Management Unit Tests
+
 - **Size**: S
 - **Description**: Verify the caching, state clearing, and reactive behavior of the DapVariablesService.
 - **Details**:
@@ -314,6 +336,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Status**: ✅ Done
 
 ### TI-01: `DapConfigService` Unit Tests
+
 - **Size**: S
 - **Description**: Verify global config access mechanism per [test-plan.md](test-plan.md)
 - **Details**:
@@ -336,6 +359,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 ## Phase 9: Error Handling
 
 ### WI-21: Connection Error Handling
+
 - **Size**: M
 - **Description**: Implement connection error handling mechanism per spec [§7.1](system-specification.md#71-connection-error-handling)
 - **Details**:
@@ -347,6 +371,7 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Status**: ✅ Done
 
 ### WI-22: DAP Server Error Handling
+
 - **Size**: S
 - **Description**: Handle DAP Server errors per spec [§7.2](system-specification.md#72-dap-server-error-handling)
 - **Details**:
@@ -356,3 +381,26 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
 - **Dependencies**: WI-06
 - **Status**: ✅ Done
 
+---
+
+## Phase 10: Electron Desktop Mode
+
+### WI-23: Electron Main Process Architecture
+
+- **Size**: M
+- **Description**: Establish Electron main process per spec [§6.1](system-specification.md#61-electron-desktop-mode)
+- **Details**:
+  - Created `electron/main.ts`: `BrowserWindow` with mandatory security config (`contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`). Environment-aware loading — dev mode loads `http://localhost:4200`, production loads built `dist/` assets via `loadFile()`. Uses `app.whenReady()` modern async pattern.
+  - Created `electron/preload.ts`: Exposes `window.electronAPI` via `contextBridge.exposeInMainWorld`. All three IPC methods (`send`, `on`, `invoke`) use strict channel whitelists and `unknown` typing (no `any`). `on()` has explicit `() => void` return type for safe cleanup.
+  - Created `tsconfig.electron.json`: Targeted `CommonJS` / `ES2022` for Node.js; overrides `angularCompilerOptions: {}` to prevent Angular template-checking options from propagating to the Electron build.
+  - Added `"main": "dist/electron/main.js"` and `electron:build` / `electron:run` / `electron:dev` / `electron:start` / `electron:package` scripts to `package.json`.
+  - Added `electron-builder` configuration for Linux (`AppImage`, `deb`) and Windows (`nsis`) packaging targets.
+  - Adopted `HashLocationStrategy` (`withHashLocation()` in `app.config.ts`) to resolve `file://` protocol routing incompatibility, replacing the temporary `<base href="./">` workaround.
+- **Files created/modified**:
+  - `electron/main.ts` *(new)*
+  - `electron/preload.ts` *(new)*
+  - `tsconfig.electron.json` *(new)*
+  - `src/app/app.config.ts` *(modified — added `withHashLocation()`)*
+  - `src/index.html` *(restored `base href="/"` — `HashLocationStrategy` makes workaround unnecessary)*
+  - `package.json` *(modified — added `"main"`, Electron scripts, and `electron-builder` config)*
+- **Status**: ✅ Done — QA reviewed, all issues resolved

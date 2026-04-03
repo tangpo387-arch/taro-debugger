@@ -1,13 +1,19 @@
 {
   "name": "taro-debugger-frontend",
   "version": "0.0.0",
+  "main": "dist/electron/main.js",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "postinstall": "node scripts/postinstall.js"
+    "postinstall": "node scripts/postinstall.js",
+    "electron:build": "tsc -p tsconfig.electron.json",
+    "electron:run": "electron . --no-sandbox",
+    "electron:dev": "npm run electron:build && electron . --no-sandbox",
+    "electron:start": "ng build && npm run electron:build && electron . --no-sandbox",
+    "electron:package": "ng build && npm run electron:build && electron-builder -lw"
   },
   "private": true,
   "license": "Apache-2.0",
@@ -33,9 +39,32 @@
     "@angular/material": "^21.2.1",
     "@tailwindcss/postcss": "^4.1.12",
     "electron": "^40.6.1",
+    "electron-builder": "^26.8.1",
     "jsdom": "^28.0.0",
     "prettier": "^3.8.1",
     "typescript": "~5.9.2",
     "vitest": "^4.0.8"
+  },
+  "build": {
+    "appId": "com.taro.debugger",
+    "productName": "Taro Debugger",
+    "directories": {
+      "output": "dist/release"
+    },
+    "files": [
+      "dist/electron/**/*",
+      "dist/taro-debugger-frontend/browser/**/*",
+      "package.json"
+    ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Development"
+    },
+    "win": {
+      "target": "nsis"
+    }
   }
 }
