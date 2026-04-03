@@ -41,7 +41,7 @@ These two terms have project-specific meanings that differ from their general DA
 Use this decision tree to quickly find the right document based on your current task:
 
 | Task Type | Primary Agent | Start Here |
-|---|---|---|
+| --- | --- | --- |
 | Define or update requirements | `Product_Architect` | [system-specification.md](../docs/system-specification.md) + [architecture.md](../docs/architecture.md) |
 | Add a new UI feature | `Lead_Engineer` | [system-specification.md §3](../docs/system-specification.md#3-view-navigation--layout-specification) for layout spec |
 | Fix a DAP protocol bug | `Lead_Engineer` | [dap-integration-faq.md](../docs/dap-integration-faq.md) + [dap-protocol-specs.md](rules/dap-protocol-specs.md) |
@@ -63,7 +63,7 @@ All filenames use `kebab-case`. For the complete suffix patterns (component, ser
 To maintain consistency across environments, use these standard commands for build and development operations:
 
 | Operation | Command | Description |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | **Build Project** | `npm run build` | Compiles the Angular application for production. |
 | **Dev Server** | `npm start` | Launches a local development server with hot reload. |
 
@@ -86,4 +86,3 @@ This table consolidates the authoritative reference documents each role relies o
 | `.agents/rules/testing-protocol.md` | — | ✅ | ✅ |
 | `docs/future-roadmap.md` | ✅ | ✅ | — |
 | `docs/project-management.md` | ✅ | ✅ | — |
-

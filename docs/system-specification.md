@@ -18,7 +18,7 @@ The core purpose of this project is to build a general-purpose debugger frontend
 ## 2. Tech Stack
 
 * **Core Framework**: Angular 21 or later, fully adopting the Standalone Components architecture for improved modularity and rendering performance.
-* **Desktop Application Framework**: Electron as the underlying framework, responsible for bridging OS-level resources and DAP server communication in desktop mode.
+* **Desktop Application Framework**: Electron as the underlying framework, bridging OS-level resources and DAP server communication via a native `contextBridge` / `IpcTransportService` pattern — no third-party IPC wrapper library is used.
 * **Web Communication Layer**: In web browser mode, WebSocket serves as the communication channel with the DAP Server, without requiring Electron support.
 * **UI Component Library**: Angular Material, for building modern and responsive user interface components.
 * **Editor Core**: Monaco Editor (via the `ngx-monaco-editor-v2` module), providing syntax highlighting and advanced code editing capabilities.

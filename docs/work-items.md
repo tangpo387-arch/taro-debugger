@@ -20,7 +20,7 @@ related:
 ## Existing Codebase Inventory
 
 | Component / File | Status | Description |
-|---|---|---|
+| --- | --- | --- |
 | `app.routes.ts` | ✅ Done | `/setup` → `/debug` routing established |
 | `DapConfigService` | ✅ Done | Extended to a complete DAP connection config interface (address, launch mode, args, etc.) |
 | `SetupComponent` | ✅ Done | All form fields implemented with Reactive Forms, real-time format and required validation |
@@ -40,7 +40,7 @@ related:
 Development work is divided into 11 phases. Completed phases are archived to `changelog.md`; pending phases remain in this list.
 
 | Phase | Status | Core Objective | Quick Link |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Phase 1** | ✅ Done | Implement `/setup` form and connection config interface | [View](changelog.md#phase-1-setup-view) |
 | **Phase 2** | ✅ Done | Build WebSocket communication layer and DAP request lifecycle management | [View](changelog.md#phase-2-dap-transport-layer) |
 | **Phase 3** | ⏳ Pending | Build Node.js relay communication server for Web mode | [View](#phase-3-websocket-bridge-web-mode-backend-relay) |
@@ -79,7 +79,8 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 - **Details**:
   - Create `electron/main.ts` + `electron/preload.ts`
   - `BrowserWindow` loads the Angular application
-  - Configure `contextBridge`, expose IPC API
+  - Configure `contextBridge`, expose a minimal, typed `electronAPI` object to the renderer
+  - **No third-party IPC wrapper** (e.g., `ngx-electron`) is used; follow the native `contextBridge` security pattern
 - **Status**: ⏳ Pending
 
 ### WI-24: Electron IPC Transport Layer (`IpcTransportService`)
@@ -87,9 +88,10 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 - **Size**: M
 - **Description**: Implement IPC communication per spec [§4.1](system-specification.md#41-electron-desktop-mode)
 - **Details**:
-  - Implement `DapTransportService`'s IPC version
-  - Electron main process side: IPC receive → TCP forward to DAP Server
-  - Angular renderer side: Call IPC via `contextBridge`
+  - Implement `DapTransportService`'s IPC version (`IpcTransportService`)
+  - `preload.ts` exposes `window.electronAPI` via `contextBridge` (native Electron API, no third-party wrapper)
+  - Angular renderer side: `IpcTransportService` calls `window.electronAPI` for all DAP message I/O
+  - Electron main process side: `ipcMain.handle` receives calls and forwards to the DAP Server via TCP socket
 - **Dependencies**: WI-04, WI-23
 - **Status**: ⏳ Pending
 
@@ -108,8 +110,9 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 ## Recommended Development Order
 
 ### Chart Color Legend
+
 | Color | Meaning | Item Status |
-|---|---|---|
+| --- | --- | --- |
 | Solid background | Category feature (to implement) | Solid background color represents the category |
 | Black border | Item completed | Solid category background + **thick black border** = completed |
 | 🟢 **Green** | Core Infrastructure | WI-01 ~ WI-08, WI-10, WI-11 |
@@ -219,7 +222,7 @@ graph LR
 ## Milestone Summary
 
 | Milestone | Items Covered | Deliverable |
-|---|---|---|
+| --- | --- | --- |
 | **M1: Complete Setup Page** | WI-01 ~ WI-03 | Full form + validation, correctly passes all DAP parameters |
 | **M2: DAP Communication** | WI-04 ~ WI-09 | WebSocket connection + Bridge + Timeout mechanism complete |
 | **M3: Basic Debug Experience** | WI-10 ~ WI-14 | Can set breakpoints, pause, step, see current line highlight |

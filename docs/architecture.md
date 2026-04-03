@@ -60,6 +60,7 @@ graph TD
 | --- | --- | --- |
 | `DapTransportService` | `dap-transport.service.ts` | **Abstract base class**, defines the transport layer interface |
 | `WebSocketTransportService` | `websocket-transport.service.ts` | WebSocket implementation, includes DAP binary stream parser |
+| `IpcTransportService` | `(Planned)` | Electron IPC implementation via native `contextBridge` preload pattern — no third-party wrapper |
 | `TransportFactoryService` | `transport-factory.service.ts` | Transport factory service, creates instances by `TransportType` |
 
 ### 2.3 Extension Guide
