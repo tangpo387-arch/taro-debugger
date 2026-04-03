@@ -57,7 +57,7 @@ graph TD
 ### 2.2 Class Structure
 
 | Class | File | Description |
-|---|---|---|
+| --- | --- | --- |
 | `DapTransportService` | `dap-transport.service.ts` | **Abstract base class**, defines the transport layer interface |
 | `WebSocketTransportService` | `websocket-transport.service.ts` | WebSocket implementation, includes DAP binary stream parser |
 | `TransportFactoryService` | `transport-factory.service.ts` | Transport factory service, creates instances by `TransportType` |
@@ -122,12 +122,13 @@ stateDiagram-v2
 ```
 
 `ExecutionState` type definition and state descriptions:
+
 ```typescript
 type ExecutionState = 'idle' | 'starting' | 'running' | 'stopped' | 'terminated' | 'error';
 ```
 
 | State | Description |
-|---|---|
+| --- | --- |
 | `idle` | No connection established, or the initial state after a safe disconnect. |
 | `starting` | Transitional state: establishing the connection, sending `initialize`, sending `launch`/`attach`, and waiting for handshake completion. |
 | `running` | The debug target is executing. DAP is in a busy state and does not accept `stackTrace` or `variables` query requests. |
@@ -187,7 +188,7 @@ graph TD
 Transport instances are **lazily created** by Session via `TransportFactoryService`, not hardcoded in the constructor:
 
 | Timing | Operation |
-|---|---|
+| --- | --- |
 | `constructor()` | Transport is not created (`transport = undefined`) |
 | `startSession()` | Created via `TransportFactoryService.createTransport()` based on `config.transportType` |
 | `disconnect()` | Calls `transport.disconnect()` then sets to `undefined`, resets all state |
@@ -195,7 +196,7 @@ Transport instances are **lazily created** by Session via `TransportFactoryServi
 ### 3.6 Public API
 
 | API | Type | Description |
-|---|---|---|
+| --- | --- | --- |
 | `connectionStatus$` | `Observable<boolean>` | Connection status (defaults to `false` before Transport is created) |
 | `executionState$` | `Observable<ExecutionState>` | Debug execution state |
 | `onEvent()` | `Observable<DapEvent>` | Processed event stream |
@@ -204,7 +205,7 @@ Transport instances are **lazily created** by Session via `TransportFactoryServi
 | `capabilities` | `any` | Capabilities obtained from the Server |
 | `startSession()` | `Promise<DapResponse>` | Complete startup flow (connect → initialize → launch) |
 | `continue() / next() / stepIn() / stepOut() / pause()` | `Promise<DapResponse>` | Debug control commands |
-| `threads() / stackTrace() / scopes() / variables()`| `Promise<DapResponse>` | Thread and variable exploration commands (available in `stopped` state) |
+| `threads() / stackTrace() / scopes() / variables()` | `Promise<DapResponse>` | Thread and variable exploration commands (available in `stopped` state) |
 | `sendRequest()` | `Promise<DapResponse>` | Generic DAP request |
 | `disconnect()` | `Promise<void>` | Disconnect and clean up resources |
 | `terminate()` | `Promise<void>` | Terminate the debug target (falls back to `disconnect` if `supportsTerminateRequest` is false) |
@@ -225,7 +226,7 @@ Transport instances are **lazily created** by Session via `TransportFactoryServi
 ### 4.2 Responsibility Separation Reference
 
 | Responsibility | Layer | Description |
-|---|---|---|
+| --- | --- | --- |
 | `configurationDone` auto-response | **Session** | Automatically executed after receiving `initialized` event |
 | `executionState` state transition | **Session** | Event-driven, UI only subscribes |
 | DAP Log / Program Log output | **UI** | Managed via `DapLogService` dual console log stream |
@@ -284,14 +285,14 @@ graph TD
 `DapLogService` is a global singleton service (`providedIn: 'root'`) managing two independent log streams:
 
 | Stream | Observable | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | **Console Log** | `consoleLogs$` | System status, DAP protocol events, general console messages |
 | **Program Log** | `programLogs$` | The debugged program's stdout / stderr output |
 
 Log Category definitions (corresponding to `LogCategory` type):
 
 | Category | Description |
-|---|---|
+| --- | --- |
 | `system` | Frontend system internal messages (e.g., "Connecting...", "Session started") |
 | `dap` | DAP protocol events (e.g., "[Event] stopped") — may carry a structured `data` payload |
 | `console` | General Debugger Console messages |
@@ -353,11 +354,13 @@ sequenceDiagram
 ```
 
 `TransportType` type definition:
+
 ```typescript
 type TransportType = 'websocket' | 'serial' | 'tcp';
 ```
 
 `DapConfig` full interface:
+
 ```typescript
 interface DapConfig {
   serverAddress: string;       // DAP Server connection address (e.g., localhost:4711)
@@ -396,7 +399,7 @@ sequenceDiagram
 ```
 
 | Error Scenario | Transport Layer Behavior | Session Layer Behavior | UI Layer Behavior |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Connection timeout** | `connect()` Observable error | `startSession()` reject | `ErrorDialog` (retry / go back) |
 | **Connection lost** | `connectionStatus$` → `false`<br/>`onMessage()` complete | Emit `_transportError` event<br/>`executionState` → `error` | `MatSnackBar` notification + Console log |
 | **WebSocket error** | `onerror` → `connectionStatus$` `false`<br/>`onMessage()` error | Emit `_transportError` event<br/>`executionState` → `error` | `MatSnackBar` notification + Console log |
@@ -428,7 +431,7 @@ graph TD
 ```
 
 | Error Scenario | Session Layer Behavior | UI Layer Behavior |
-|---|---|---|
+| --- | --- | --- |
 | **DAP error response** (`success=false`) | Emit `_dapError` synthetic event<br/>Reject corresponding Promise | `MatSnackBar` displays command + error message |
 | **Invalid DAP response** (unknown `request_seq`) | Emit `_sessionWarning` synthetic event | Console log (non-critical) |
 | **Unexpected process termination** (`exited` event, exit code ≠ 0) | Forward `exited` event normally | Console log |
@@ -439,9 +442,9 @@ graph TD
 To avoid conflicts with standard DAP event names, all synthetic events generated by the Session layer are prefixed with an underscore `_`:
 
 | Synthetic Event | Trigger Condition | Body Structure |
-|---|---|---|
-| `_dapError`       | DAP Response `success=false`                          | `{ command: string; message: string }`                          |
-| `_transportError` | Transport stream error / complete                     | `{ reason: 'error' \| 'disconnected'; message: string }`        |
+| --- | --- | --- |
+| `_dapError` | DAP Response `success=false` | `{ command: string; message: string }` |
+| `_transportError` | Transport stream error / complete | `{ reason: 'error' \| 'disconnected'; message: string }` |
 | `_sessionWarning` | Session-layer internal protocol anomaly (e.g., unknown `request_seq`) | `{ message: string }` |
 
 ---
