@@ -54,6 +54,7 @@ According to the official specification and implementation best practices, the i
 ### Key Constraints
 
 #### Constraint 1: `initialized` Event Timing
+
 The Debug Adapter must send the `initialized` event only **after** returning the `initialize` response. The DAP specification's exact wording is:
 
 > *"Since the debug adapter is expected to send the `initialized` event as soon as possible, the client can send configuration requests immediately upon receiving the `initialized` event."*
@@ -61,7 +62,7 @@ The Debug Adapter must send the `initialized` event only **after** returning the
 The key phrase is **"as soon as possible"** — the spec does **not** mandate a fixed relationship between `initialized` and `launch`/`attach`. This intentional flexibility accommodates different debugger engine architectures, resulting in **two spec-compliant behaviors** observed in the wild:
 
 | Adapter | When `initialized` is sent | Reason |
-|---|---|---|
+| --- | --- | --- |
 | **GDB** (`gdb -i=dap`) | Immediately after `initialize` response | GDB can internally buffer breakpoint configuration without knowing the target binary; no `launch` info is required before accepting `setBreakpoints`. |
 | **LLDB** (`lldb-dap`) | Only **after** receiving the `launch`/`attach` request | LLDB's engine needs to know the target binary path (from `launch` args) before it can correctly resolve and mount breakpoints. It is not "ready" for configuration without this. |
 
@@ -70,12 +71,17 @@ Both behaviors are fully spec-compliant. The DAP spec deliberately defers to the
 * **⚠️ Client-Side Implication:** A Frontend Client must **never assume** that the `initialized` event will arrive before or after `launch`/`attach`. The only safe strategy is the **fire-and-forget + await** pattern described below, which is compatible with both adapter types.
 
 #### Constraint 2: `launch`/`attach` Response Timing
+
 The `launch` or `attach` **response** must be sent only **after** the `configurationDone` **response** has been sent to the IDE.
+
 * *Reason:* When the IDE receives the `launch` response, it considers the "launch sequence complete" and begins displaying the debug interface. If `configurationDone` hasn't been processed by then, the program may start executing before breakpoints are fully loaded (Race Condition).
 
 #### Constraint 3: `configurationDone` Request Must Follow `launch`/`attach` Request
+
 The `configurationDone` **request** must be sent only **after** the `launch` or `attach` **request** has been sent.
+
 * *Reason:* Many Debug Adapters check whether a `launch`/`attach` request has been received when they get `configurationDone`. If `configurationDone` arrives first, the Adapter will return an error (e.g., `"launch or attach not specified"`) because it doesn't yet know the debug target.
+
 * *Common mistake:* Asynchronously sending `configurationDone` immediately upon receiving the `initialized` event, while the `launch`/`attach` send is delayed to later code execution, causing `configurationDone` to be sent first.
 
 #### Standard Message Flow (Spec Reference)
@@ -141,7 +147,7 @@ sequenceDiagram
 
 The following flow is the **universal compatible implementation** that works correctly with both GDB-style (early `initialized`) and lldb-dap-style (late `initialized`) adapters:
 
-```
+```text
 IDE → Adapter:  initialize request
 Adapter → IDE:  initialize response           ← await completion before continuing
 IDE → Adapter:  launch/attach request         ← send fire-and-forget (do NOT await response)
@@ -157,7 +163,7 @@ Adapter → IDE:  launch/attach response        ← only NOW await this response
 ```
 
 > **⚠️ Warning:** The `launch`/`attach` request must be sent in a "fire-and-forget" manner (send without immediately awaiting the response), because the Adapter will only reply with the `launch`/`attach` response after the `configurationDone` response. If you immediately await the `launch`/`attach` response, you'll deadlock because `configurationDone` hasn't been sent yet.
-
+>
 > **⚠️ Warning:** Never send `launch`/`attach` *after* awaiting the `initialized` event. If the adapter is `lldb-dap`, it will hold the `initialized` event until `launch` is received — creating a deadlock where both sides wait for each other indefinitely.
 
 ### Implementation Recommendations Summary
@@ -168,6 +174,7 @@ Adapter → IDE:  launch/attach response        ← only NOW await this response
 ## 3. `loadedSources` & Execution State
 
 ### Q1: Under what conditions can the `loadedSources` request succeed?
+
 To successfully execute the `loadedSources` request, the following three conditions must be met:
 
 1. **Capability Check**: The Debug Adapter must set `supportsLoadedSourcesRequest` to `true` in the `initialize` response. If not declared, the Client typically won't issue this request.
@@ -175,11 +182,14 @@ To successfully execute the `loadedSources` request, the following three conditi
 3. **Runtime Support**: The target environment (e.g., Python debugger, Node.js runtime) must be capable of tracking dynamically loaded modules for the DA to return an accurate list.
 
 ### Q2: When is `loadedSources` typically triggered?
+
 In addition to explicit Client requests for updates, the most common trigger flow is:
+
 * **Dynamic load event**: When the target program executes `import` or dynamically loads a script, the DA sends a `loadedSource` (reason: `'new'`) event to the Client.
 * **UI update**: Upon receiving the above event, the Client sends a `loadedSources` request to get the latest source list and update the IDE interface (e.g., VS Code's "Loaded Scripts" view).
 
 ### Q3: How do you confirm the debuggee is currently paused?
+
 In the DAP specification, state confirmation is not done through "polling" but through an **event-driven** mechanism:
 
 1. **Listen for the `stopped` event**: When the debuggee hits a breakpoint or encounters an exception, the DA sends a `stopped` event.
@@ -190,17 +200,23 @@ In the DAP specification, state confirmation is not done through "polling" but t
    * If `false`, only the specific thread has stopped; other threads may still be running.
 
 ### Q4: Will sending `loadedSources` fail when the debuggee is "running"?
+
 **Not necessarily**, but behavior depends on the DA implementation:
+
 * Many DAs allow returning the loaded source list while in the Running state.
 * However, requests like `stackTrace`, `scopes`, or `variables` that need to access thread stack information **must** be sent while paused; otherwise, the DA will typically return an error message.
 
 ### Q5: If the debuggee hasn't sent a `stopped` event, can the Client force it to pause?
+
 Yes. The Client can send a **`pause` request**.
+
 * Note: After sending the `pause` request, you cannot immediately assume the target is paused.
 * You must wait for the DA's `pause` **Response** and the subsequent **`stopped` event** before confirming the target has officially entered the paused state.
 
 ### Q6: How do C/C++ Debug Adapters (like GDB) handle `loadedSources` and dynamic loading (`dlopen`)?
+
 **Answer:** C/C++ Debug Adapters often have strict behavioral quirks regarding source listing:
+
 1. **`stopped` State Requirement:** In implementations like `gdb`, `loadedSources` can **only** be successfully requested when the target is in the `stopped` state. Requesting it while the target is running may result in failure or unexpected behavior.
 2. **Initial and Dynamic Load Triggers:** The client must **request `loadedSources` upon receiving the first `stopped` event** to obtain the initial source tree. Afterwards, if the target dynamically loads a shared library (e.g., via `dlopen`), the Adapter will actively force the target to enter the `stopped` state and send a `loadedSource` event. The client must rely on this `loadedSource` event as the trigger to pull updates, rather than polling on every subsequent step/pause.
 

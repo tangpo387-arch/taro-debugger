@@ -57,7 +57,7 @@ Every implementation or test file associated with a work item **must** include i
 
 A work item travels through the following states. Only `Product_Architect` may create or promote items; only `Lead_Engineer` may set an item to `in-progress` or `done`.
 
-```
+```text
 [Proposed] → [Pending] → [In Progress] → [Done] → [Archived]
 ```
 
@@ -160,7 +160,7 @@ A Phase is considered complete and eligible for archival only when **all** of th
 
 ## 7. Quick Reference
 
-```
+```text
 Create WI/TI   →  Product_Architect adds to work-items.md
 Implement      →  Lead_Engineer sets status to In Progress
 Complete       →  Lead_Engineer sets status to Done

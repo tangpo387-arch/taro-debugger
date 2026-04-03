@@ -14,7 +14,7 @@ This document outlines features scheduled for v1.1 and beyond. These items are t
 
 ---
 
-### V1.1-01: Local Variable Modification
+## V1.1-01: Local Variable Modification
 <!-- status: pending | size: M | phase: 12 | depends: WI-18.2 -->
 - **Size**: M
 - **Description**: Allow users to modify the values of local variables during a stopped debug session.
@@ -25,7 +25,7 @@ This document outlines features scheduled for v1.1 and beyond. These items are t
 - **Dependencies**: WI-18.1, WI-18.2
 - **Status**: ⏳ Pending
 
-### V1.1-02: DAP 'terminated' Event `_restart` Payload Passing
+## V1.1-02: DAP 'terminated' Event `_restart` Payload Passing
 <!-- status: pending | size: S | phase: 13 | depends: none -->
 - **Size**: S
 - **Description**: Support context-aware session restart by forwarding the custom `_restart` field from the DAP `terminated` event to the subsequent `launch` request payload.

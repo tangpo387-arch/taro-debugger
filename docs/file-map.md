@@ -15,7 +15,7 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 ## Application Bootstrap & Routing
 
 | File | Responsibility | Key Exports |
-|---|---|---|
+| --- | --- | --- |
 | `app.ts` | Root application component | `AppComponent` |
 | `app.config.ts` | Application-level providers and config | `appConfig` |
 | `app.routes.ts` | Route definitions (`/setup` → `/debug`) | `routes` |
@@ -23,7 +23,7 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 ## UI Layer (Components)
 
 | File | Responsibility | Key Interfaces | Related Template/Style |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `setup.component.ts` | Configuration form, DAP connection setup, navigation to `/debug` | `onConnect()`, `form: FormGroup` | `setup.component.html`, `setup.component.scss` |
 | `debugger.component.ts` | Main debug view: toolbar, three-panel layout, event subscriptions, file source loading | subscribes `executionState$`, `connectionStatus$`, `onEvent()`; handles `onFileSelected()` | `debugger.component.html`, `debugger.component.scss` |
 | `file-explorer.component.ts` | Left sidenav file explorer: fetches `loadedSources` tree, highlights active file, emits `fileSelected` | `@Input() activeFilePath`, `@Input() reloadTrigger`, `@Output() fileSelected` | `file-explorer.component.html`, `file-explorer.component.scss` |
@@ -35,7 +35,7 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 ## Session Layer (Services)
 
 | File | Responsibility | Key Interfaces |
-|---|---|---|
+| --- | --- | --- |
 | `dap-session.service.ts` | DAP session lifecycle, state machine, request/response pairing, event processing | `startSession()`, `disconnect()`, `reset()`, `executionState$`, `connectionStatus$`, `onEvent()`, `sendRequest()` |
 | `dap-config.service.ts` | Configuration persistence (localStorage), SSOT for DAP connection parameters | `setConfig()`, `getConfig()` |
 | `dap-file-tree.service.ts` | File tree construction from `loadedSources`, source file reading via `source` request | `getTree()`, `readFile()` |
@@ -44,7 +44,7 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 ## Transport Layer (Services)
 
 | File | Responsibility | Key Interfaces |
-|---|---|---|
+| --- | --- | --- |
 | `dap-transport.service.ts` | Abstract base class defining the transport layer contract | `connect()`, `disconnect()`, `sendRequest()`, `onMessage()`, `onEvent()`, `connectionStatus$` |
 | `websocket-transport.service.ts` | WebSocket implementation with Content-Length header parsing and binary buffer management | Implements all `DapTransportService` abstract methods |
 | `transport-factory.service.ts` | Factory service creating Transport instances based on `TransportType` | `createTransport(type, address)` |
@@ -52,14 +52,14 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 ## Shared / Cross-Cutting
 
 | File | Responsibility | Key Exports |
-|---|---|---|
+| --- | --- | --- |
 | `dap.types.ts` | DAP protocol type definitions | `DapRequest`, `DapResponse`, `DapEvent`, `DapMessage`, `ExecutionState` |
 | `file-tree.service.ts` | Abstract file tree interface (implemented by `DapFileTreeService`) | `FileTreeService`, `FileNode` |
 | `dap-log.service.ts` | Dual console log stream management. Written to by `DebuggerComponent`; consumed by `LogViewerComponent`. Classified as Shared: no Session-layer service injects it after this refactor. | `consoleLogs$`, `programLogs$`, `consoleLog()`, `appendProgramLog()`, `clear()` |
 
 ## Layer Dependency Rules
 
-```
+```text
 UI Layer (Components)
   │  Can inject: Session Layer services
   │  Cannot inject: Transport Layer services

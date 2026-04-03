@@ -49,12 +49,14 @@ A three-panel IDE layout:
 ## Communication Architecture
 
 ### Electron (Desktop) Mode
-```
+
+```text
 Angular UI  →  contextBridge (IPC)  →  Electron Main Process  →  DAP Server
 ```
 
 ### Web Browser Mode
-```
+
+```text
 Angular UI  →  WebSocket  →  DAP Server (or Relay Proxy)
 ```
 
@@ -63,9 +65,11 @@ Both modes share the same Angular codebase. The communication layer is abstracte
 ## Supported DAP Protocol
 
 ### Requests
+
 `initialize` · `launch` · `attach` · `setBreakpoints` · `configurationDone` · `continue` · `next` · `stepIn` · `stepOut` · `pause` · `stackTrace` · `scopes` · `variables` · `threads` · `disconnect`
 
 ### Events
+
 `initialized` · `stopped` · `continued` · `terminated` · `exited` · `output` · `breakpoint`
 
 ## Deployment Mode Comparison
