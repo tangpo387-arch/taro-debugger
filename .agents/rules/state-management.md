@@ -1,40 +1,42 @@
 ---
 trigger: always_on
 glob: "src/app/**/*.{ts,html}"
-description: 規範全域狀態管理路徑，確保 DapSessionService 作為真相來源 (SSOT)，避免冗餘的 Props 傳遞。
+description: Standardizes the global state management paths, ensuring DapSessionService acts as the Single Source of Truth (SSOT) and preventing redundant Props drilling.
 ---
 
-# 狀態管理與 SSOT 規範 (State Management Rules)
+# State Management and SSOT Rules
 
-本文件定義 `taro-debugger-frontend` 專案中，「狀態」應該存放的位置，旨在維持 Reactive 響應式架構，並避免 AI 在修改 UI 時引入過多的冗餘 Props 傳遞（Prop Drilling）。
+This document defines where "state" should be stored in the `taro-debugger-frontend` project. It aims to maintain a Reactive architecture and prevent AIs from introducing excessive redundant Prop passing (Prop Drilling) when modifying the UI.
 
-## 1. 真相來源 (Single Source of Truth, SSOT)
+## 1. Single Source of Truth (SSOT)
 
-*   **R_SM1: `DapSessionService` 作為核心真相來源**
-    *   所有關於 DAP 會話的「當前狀態」（例如：`executionState`, `connectionStatus`, `capabilities`, `stackFrames`）必須存放在 `DapSessionService` 中。
-    *   禁止在不同 Component 之間手動傳遞這些核心狀態的副本。
-*   **R_SM2: 雙向綁定限制**
-    *   UI Component 不應持有核心狀態的「寫入權限」，除非是透過調用 `DapSessionService` 的公開方法（如 `continue()`, `stepOver()`）來觸發狀態轉移。
+*   **R_SM1: `DapSessionService` as the Core SSOT**
+    *   All "current state" regarding the DAP session (e.g., `executionState`, `connectionStatus`, `capabilities`, `stackFrames`) must be stored in the `DapSessionService`.
+    *   It is forbidden to manually pass copies of these core states between different Components.
+*   **R_SM2: Two-Way Binding Restrictions**
+    *   UI Components should not hold "write access" to core states, unless they trigger state transitions by calling exposed methods on `DapSessionService` (like `continue()`, `stepOver()`).
 
-## 2. 狀態存放位置區分
+## 2. State Storage Location Breakdown
 
-| 狀態類型 | 建議存放位置 | 範例 | 存取方式 |
+| State Type | Recommended Storage Location | Examples | Access Method |
 | :--- | :--- | :--- | :--- |
-| **全域/會話狀態** | `DapSessionService` | `executionState`, `connectionStatus` | 透過 `inject(DapSessionService)` 訂閱 Observable |
-| **會話衍生狀態** | `DapSessionService` 或具邏輯的 Service | `stackFrames`, `scopes`, `variables` | Service 暴露 Subject/Observable，UI 使用 `async` pipe |
-| **UI 局部狀態** | `Component` 類別私有屬性 | `isSidebarExpanded`, `selectedTabIndex`, `hoveredLine` | 直連 HTML 模板 |
-| **輸入與快取狀態** | `Component` | `evaluateExpression` (Input 字串) | `[(ngModel)]` 或 `FormControl` |
+| **Global/Session State** | `DapSessionService` | `executionState`, `connectionStatus` | Subscribe to Observable via `inject(DapSessionService)` |
+| **Derived Session State** | `DapSessionService` or a logic-specific Service | `stackFrames`, `scopes`, `variables` | Service exposes Subject/Observable, UI uses the `async` pipe |
+| **Local UI State** | `Component` class private properties | `isSidebarExpanded`, `selectedTabIndex`, `hoveredLine` | Direct binding in HTML template |
+| **Input and Cache State** | `Component` | `evaluateExpression` (Input string) | `[(ngModel)]` or `FormControl` |
 
-## 3. 響應式存取規範
+## 3. Reactive Access Standards
 
-*   **R_SM3: 優先使用 Async Pipe**
-    *   在 HTML 模板中，應優先使用 `dapSession.executionState$ | async` 或 `dapSession.connectionStatus$ | async`。
-    *   避免在 Component 中手動 `subscribe` 並存入局部變數，除非該狀態需要結合複雜的過濾或組合邏輯。
-*   **R_SM4: 禁止冗餘的父子 Component Props**
-    *   若子元件需要 `executionState` 等全域狀態，應自行 `inject(DapSessionService)`，而非由父元件透過 `@Input()` 傳入。這樣可以確保系統解耦，並減少層層傳遞的維護負擔。
+*   **R_SM3: Prefer the Async Pipe**
+    *   In HTML templates, always prefer using `dapSession.executionState$ | async` or `dapSession.connectionStatus$ | async`.
+    *   Avoid manually calling `subscribe` in the Component and storing the value in a local variable, unless that state requires complex filtering or combination logic.
+*   **R_SM4: Forbid Redundant Parent-Child Component Props**
+    *   If a child component needs a global state like `executionState`, it should `inject(DapSessionService)` on its own, rather than inheriting it via `@Input()` from the parent component. This ensures system decoupling and reduces the maintenance burden of passing props through multiple layers.
+*   **R_SM6: Use State Selectors / Derived Observables**
+    *   UI components must receive pre-computed data from the service layer via derived Observables or "Selectors". For example, use a `hasActiveSession$` observable directly from the service rather than manually computing `executionState === 'running'` within the template or component logic.
 
-## 4. 懶加載與清除規範
+## 4. Lazy Loading and Cleanup Standards
 
-*   **R_SM5: 元件銷毀時的狀態清理**
-    *   儲存在 Service 中的狀態（如 Log 紀錄）應在 `DapSessionService.disconnect()` 或 `reset()` 退回 `idle` 時統一清理。
-    *   UI 相關的局部 Subscription 必須在 `ngOnDestroy` 中取消。
+*   **R_SM5: State Cleanup on Component Breakdown**
+    *   State stored in Services (such as Log records) must be unified and cleaned up during `DapSessionService.disconnect()` or when reverting to `idle` via `reset()`.
+    *   UI-related local Subscriptions must be cancelled within `ngOnDestroy`.

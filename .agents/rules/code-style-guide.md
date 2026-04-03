@@ -3,15 +3,15 @@ trigger: always_on
 description: Follow these coding standards to maintain consistency in the taro-debugger-frontend project.
 ---
 
-# 專案程式碼風格指南 (Code Style Guide)
+# Project Code Style Guide
 
-本文件定義 `taro-debugger-frontend` 專案的開發規範，旨在維持代碼的一致性、可讀性與現代 Angular 開發的最佳實踐。
+This document defines the development standards for the `taro-debugger-frontend` project, aiming to maintain code consistency, readability, and modern Angular best practices.
 
-## 1. 命名規範 (Naming Conventions)
+## 1. Naming Conventions
 
-### 檔案命名
-*   **檔名格式**：一律使用 `kebab-case`。
-*   **後綴規範**：
+### File Naming
+*   **File Name Format**: Always use `kebab-case`.
+*   **Suffix Conventions**:
     *   Component: `*.component.ts`
     *   Service: `*.service.ts`
     *   Pipe: `*.pipe.ts`
@@ -20,26 +20,26 @@ description: Follow these coding standards to maintain consistency in the taro-d
     *   Unit Test: `*.spec.ts`
     *   Type Definition: `*.types.ts`
 
-### 類別與變數命名
-*   **類別 (Classes/Interfaces)**：使用 `PascalCase`（例如：`DebuggerComponent`, `DapSessionService`）。
-*   **變數與方法**：使用 `camelCase`（例如：`executionState`, `ngOnInit()`, `startSession()`）。
-*   **常數**：全大寫蛇形命名法 `UPPER_SNAKE_CASE`（例如：`DEFAULT_TIMEOUT`）。
-*   **Observable 變數**：字尾加上 `$` 符號（例如：`connectionStatus$`, `executionState$`).
+### Class and Variable Naming
+*   **Classes/Interfaces**: Use `PascalCase` (e.g., `DebuggerComponent`, `DapSessionService`).
+*   **Variables and Methods**: Use `camelCase` (e.g., `executionState`, `ngOnInit()`, `startSession()`).
+*   **Constants**: Use `UPPER_SNAKE_CASE` (e.g., `DEFAULT_TIMEOUT`).
+*   **Observable Variables**: Suffix with `$` (e.g., `connectionStatus$`, `executionState$`).
 
-## 2. Angular 開發規範
+## 2. Angular Development Standards
 
-### 元件結構
-*   **Standalone 元件**：本專案採用 Angular 21+ 的 **Standalone Components**。不再使用 `NgModule` 宣告元件。
-*   **外置模板與樣式**：元件模板 (`.html`) 與樣式 (`.scss` 或 `.css`) 應與 `.ts` 檔案分開。
-*   **依賴注入 (DI)**：推薦使用現代的 `inject()` 函式而非建構子注入。
+### Component Structure
+*   **Standalone Components**: This project uses Angular 21+ **Standalone Components**. Do not use `NgModule` to declare components.
+*   **External Templates and Styles**: Component templates (`.html`) and styles (`.scss` or `.css`) must be kept separate from the `.ts` file.
+*   **Dependency Injection (DI)**: Prefer the modern `inject()` function over constructor injection.
     ```typescript
     private readonly configService = inject(DapConfigService);
     private readonly router = inject(Router);
     ```
 
 ### Angular Material Tree API
-*   **禁止使用已棄用 API**：禁止使用 `NestedTreeControl` (`@angular/cdk/tree`) 及 `MatTreeNestedDataSource` (`@angular/material/tree`)。此 API 已在 Angular Material v17+ 標記為 deprecated，將於 v22 移除。
-*   **統一使用 `childrenAccessor` 模式**：所有 `mat-tree` 必須使用現代的 `[childrenAccessor]` Input + 純陣列 `dataSource`，並搭配 `#tree="matTree"` 模板參考。不得引入 `TreeControl`。
+*   **Forbidden Deprecated API**: Do not use `NestedTreeControl` (`@angular/cdk/tree`) or `MatTreeNestedDataSource` (`@angular/material/tree`). This API was marked deprecated in Angular Material v17+ and will be removed in v22.
+*   **Use the `childrenAccessor` Pattern**: All `mat-tree` instances must use the modern `[childrenAccessor]` Input with a plain array `dataSource`, combined with the `#tree="matTree"` template reference. Do not introduce `TreeControl`.
     ```typescript
     // ✅ Correct: modern childrenAccessor pattern
     public dataSource: MyNode[] = [];
@@ -50,9 +50,9 @@ description: Follow these coding standards to maintain consistency in the taro-d
     public dataSource = new MatTreeNestedDataSource<MyNode>();
     ```
 
-### 服務與狀態管理
-*   **單例服務**：預設情況下，非共用狀態的 Service 不應在 `providedIn: 'root'`，而是依據使用情境注入（如在元件的 `providers` 中）。
-*   **響應式狀態**：使用 RxJS 的 `BehaviorSubject` 或 `Subject` 來管理元件間共享的狀態流。
+### Services and State Management
+*   **Singleton Services**: By default, services that do not manage shared state should not use `providedIn: 'root'`. Instead, provide them according to their usage context (e.g., in a component's `providers` array).
+*   **Reactive State**: Use RxJS `BehaviorSubject` or `Subject` to manage shared state streams between components.
 
 ### SCSS Styling Rules
 
@@ -99,44 +99,44 @@ description: Follow these coding standards to maintain consistency in the taro-d
 ```
 
 
-## 3. TypeScript 規範
+## 3. TypeScript Standards
 
-### 強型別定義
-*   **明確宣告**：公有屬性與公開方法應明確標記回傳類型或資料型別。
-*   **存取修飾詞**：明確使用 `public`, `private`, `protected` 修飾詞。預設注入的 Service 應設為 `private readonly`。
+### Strong Typing
+*   **Explicit Declarations**: Public properties and methods must explicitly declare their return types or data types.
+*   **Access Modifiers**: Always use explicit `public`, `private`, and `protected` modifiers. Injected services should default to `private readonly`.
 
-### 非同步處理
-*   **Async/Await**：對於有順序性的非同步邏輯（如 DAP 握手流程），推薦使用 `async/await`。
-*   **RxJS**：對於事件流（如 DAP 事件監聽）或狀態推播，應使用 `Observable`。
-*   **轉換**：若需將 Observable 轉為 Promise，使用 `firstValueFrom`。
+### Asynchronous Handling
+*   **Async/Await**: For sequential async logic (e.g., the DAP handshake flow), prefer `async/await`.
+*   **RxJS**: For event streams (e.g., DAP event listeners) or state broadcasting, use `Observable`.
+*   **Conversion**: To convert an Observable to a Promise, use `firstValueFrom`.
 
-## 4. 語言與註解 (Language & Documentation)
+## 4. Language & Documentation
 
-*   **全域語言規範**: 
-    *   所有 **程式碼註解** (Comments), **JSDoc**, 以及 **UI 顯示文字** (Template 中的文字) 必須統一使用 **美國英文 (US English)**。
-    *   禁止在 `*.ts`, `*.scss`, `*.html` 等檔案中包含任何中文內容。
-*   **註解規範**:
-    *   **邏輯說明**：針對複雜邏輯的流程說明，使用 **美國英文** 以方便國際開發團隊理解。
-    *   **JSDoc**：公開方法與介面描述使用 **English JSDoc**。
-*   **程式碼分段**：對於較長的 Service 或 Component，使用明顯的分隔線區分邏輯區塊：
+*   **Global Language Policy**:
+    *   All **code comments**, **JSDoc**, and **UI display text** (text in templates) must be written in **US English**.
+    *   Chinese content is forbidden in `*.ts`, `*.scss`, and `*.html` files.
+*   **Comment Standards**:
+    *   **Logic Explanation**: Use **US English** for complex logic descriptions to facilitate understanding by international team members.
+    *   **JSDoc**: Use **English JSDoc** for public method and interface descriptions.
+*   **Code Section Dividers**: For longer services or components, use a clear separator to delineate logical blocks:
     ```typescript
     // ── Session Event Handling ─────────────────────────────────────────
     ```
 
-## 5. 格式化規範 (Formatting)
+## 5. Formatting
 
-*   **縮排**：2 個空格。
-*   **引號**：單引號 `'`（TypeScript/JavaScript），雙引號 `"` (HTML)。
-*   **分號**：必須使用分號 `;`。
-*   **Import 排序**：
-    1.  Angular 核心與內建模組 (`@angular/*`)
-    2.  第三方函式庫 (RxJS, Angular Material)
-    3.  專案本地檔案 (Local imports)
+*   **Indentation**: 2 spaces.
+*   **Quotes**: Single quotes `'` (TypeScript/JavaScript), double quotes `"` (HTML).
+*   **Semicolons**: Required `;`.
+*   **Import Order**:
+    1.  Angular core and built-in modules (`@angular/*`)
+    2.  Third-party libraries (RxJS, Angular Material)
+    3.  Local project files
 
-## 6. RxJS 管理
+## 6. RxJS Management
 
-*   **資源回收**：在 `ngOnDestroy` 中必須正確呼叫 `unsubscribe()`，或使用 `takeUntil` 等運算子避免記憶體洩漏。
-*   **不可變性**：對於 UI 顯示的陣列（如 Log 紀錄），應使用展開運算子 `[...]` 建立新引用以觸發 Angular 的 `OnPush` 或缺設變更檢查。
+*   **Resource Cleanup**: In `ngOnDestroy`, always call `unsubscribe()` or use operators like `takeUntil` to prevent memory leaks.
+*   **Immutability**: For arrays displayed in the UI (e.g., log records), use the spread operator `[...]` to create a new reference and trigger Angular's `OnPush` or default change detection.
     ```typescript
     this.dapLogs = [...this.dapLogs, newEntry];
     ```
