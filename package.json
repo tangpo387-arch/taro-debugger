@@ -10,6 +10,7 @@
     "postinstall": "node scripts/postinstall.js"
   },
   "private": true,
+  "license": "Apache-2.0",
   "packageManager": "npm@11.9.0",
   "dependencies": {
     "@angular/cdk": "~21.2.1",

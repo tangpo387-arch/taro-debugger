@@ -1,17 +1,30 @@
-# Taro-Debugger-Frontend
+# Taro Debugger
 
-A universal debugger frontend built with Angular, supporting both **Electron desktop** and **Web browser** deployment modes. It provides a professional IDE-like debugging experience — comparable to Visual Studio Code — and works with any server that implements the [Debug Adapter Protocol (DAP)](https://microsoft.github.io/debug-adapter-protocol/).
+> Professional Remote C/C++ Debugging, Reimagined for the Web.
 
-## Features
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/nobra/gdb-frontend/actions)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
+[![Angular](https://img.shields.io/badge/Angular-21%2B-DD0031.svg)](https://angular.io/)
+[![DAP](https://img.shields.io/badge/Protocol-DAP-blue.svg)](https://microsoft.github.io/debug-adapter-protocol/)
 
-- 🖥️ **Dual Deployment Modes** — Runs as an Electron desktop app or a pure web application
-- 🔌 **DAP Compatible** — Connects to any DAP-compliant debug adapter (currently focused on C/C++)
-- ✏️ **Monaco Editor** — Full-featured code editor with syntax highlighting, glyph margin breakpoints, and line highlighting
-- 🎛️ **Full Debug Controls** — Continue, Step Over, Step Into, Step Out, Pause, and Stop
-- 📂 **File Explorer** — Sidebar file tree (local via Electron / remote via backend API)
-- 🔍 **Variable Inspector** — Nested variable tree with CDK Virtual Scroll for large datasets
-- 📋 **Call Stack** — View the current thread's call stack during a debug session
-- 💬 **Debug Console** — Scrollable output log with a custom command input
+Taro Debugger is a professional, cross-platform debugger frontend that delivers an IDE-grade experience. Whether you're working on a remote server or a local desktop, Taro provides the tools you need to debug C/C++ applications with precision and ease.
+
+![Taro Debugger Hero Screenshot](https://via.placeholder.com/1200x600?text=Taro+Debugger+Professional+UI+Screenshot)
+
+## Why Taro?
+
+- **Remote-First Architecture**: Connect to debug adapters over WebSockets, enabling real-time debugging of remote systems from any browser.
+- **Professional IDE Experience**: Powered by the **Monaco Editor**, featuring syntax highlighting, breakpoint management, and live execution tracking.
+- **Universal Deployment**: Run as a standalone **Electron** desktop app for local files or deploy as a **Web Application** for centralized access.
+- **DAP-Native**: Built from the ground up on the Debug Adapter Protocol, ensuring compatibility with GDB, LLDB, and other standard engines.
+
+## Key Features
+
+- 🖥️ **Dual Modes** — Seamlessly switch between Electron desktop and Web browser environments.
+- ✏️ **Advanced Editor** — Glyph margin breakpoints, line highlighting, and integrated terminal.
+- 📂 **Smart File Explorer** — Navigate local or remote source trees efficiently.
+- 🔍 **Variable Inspector** — Inspect complex nested objects with high-performance CDK Virtual Scroll.
+- 💬 **Integrated Console** — Separate streams for system diagnostics and program output.
 
 ## Tech Stack
 
@@ -62,98 +75,65 @@ Angular UI  →  WebSocket  →  DAP Server (or Relay Proxy)
 
 Both modes share the same Angular codebase. The communication layer is abstracted behind a `DapTransportService` so upper-level components remain mode-agnostic.
 
-## Supported DAP Protocol
+## Protocol Support
 
-### Requests
+Taro is fully compatible with the standard **Debug Adapter Protocol (DAP)**. It supports core debugging operations including:
 
-`initialize` · `launch` · `attach` · `setBreakpoints` · `configurationDone` · `continue` · `next` · `stepIn` · `stepOut` · `pause` · `stackTrace` · `scopes` · `variables` · `threads` · `disconnect`
+- **Execution Control**: Initialize, Launch/Attach, Continue, Step Over/In/Out, Pause, Disconnect.
+- **State Inspection**: Stack Trace, Variable Scopes, Thread management.
+- **Breakpoints**: Dynamic breakpoint setting and status updates.
 
-### Events
+## Quick Start
 
-`initialized` · `stopped` · `continued` · `terminated` · `exited` · `output` · `breakpoint`
-
-## Deployment Mode Comparison
-
-| Capability | Electron (Desktop) | Web Browser |
-|---|---|---|
-| Local File Access | ✅ Direct | ❌ Requires backend API |
-| DAP Server Launch | ❌ Must pre-start | ❌ Must pre-start |
-| Communication | IPC (contextBridge) | WebSocket |
-| Installation Required | Yes | Browser only |
-| Remote Debugging | ✅ Supported | ✅ Supported |
-
-## Getting Started
-
-### Prerequisites
+### 1. Prerequisites
 
 - [Node.js](https://nodejs.org/) (LTS recommended)
-- [Angular CLI](https://angular.dev/tools/cli)
+- [GDB](https://www.sourceware.org/gdb/) or [LLDB](https://lldb.llvm.org/) with DAP support
+- [websocketd](http://websocketd.com/) (to bridge GDB to the Web)
+
+### 2. Launch the DAP Server
+
+Taro communicates with GDB/LLDB via WebSockets. Use `websocketd` to bridge the gap:
 
 ```bash
-npm install -g @angular/cli
+websocketd --port 4711 --binary /usr/bin/gdb -i=dap
 ```
 
-### Install Dependencies
+### 3. Start the Frontend
+
+Clone the repo and launch the development server:
 
 ```bash
+git clone https://github.com/nobra/gdb-frontend.git
+cd gdb-frontend
 npm install
+npm start
 ```
 
-### Start DAP Server (GDB)
+Visit `http://localhost:4200` to start debugging!
 
-Use `websocketd` to wrap the local GDB DAP interface. For example:
+## Development
 
-```bash
-websocketd --address 127.0.0.1 --port 4711 --binary --loglevel=debug /path/to/gdb -ex "set debug dap-log-file /path/to/dap.log"  -ex "set debug dap-log-level 2"  -i=dap
-```
+### Project Commands
 
-### Development Server
+| Operation | Command |
+|---|---|
+| **Start Dev Server** | `npm start` |
+| **Build Production** | `npm run build` |
+| **Run Unit Tests** | `npm test` |
+| **Scaffold Component** | `ng generate component name` |
 
-```bash
-ng serve
-```
+### Environment Setup
 
-Open your browser at `http://localhost:4200/`. The app will auto-reload on source file changes.
+Taro uses [Vitest](https://vitest.dev/) for unit testing and follows a strict [DAP Implementation Policy](docs/dap-integration-faq.md). For detailed architectural insights, see [Architecture Overview](docs/architecture.md).
 
-## Building
+## Resources & Links
 
-```bash
-ng build
-```
-
-The compiled output is placed in the `dist/` directory, optimized for production.
-
-## Running Unit Tests
-
-```bash
-ng test
-```
-
-Uses [Vitest](https://vitest.dev/) as the test runner.
-
-## Running End-to-End Tests
-
-```bash
-ng e2e
-```
-
-Angular CLI does not bundle an e2e framework by default — choose one that fits your needs.
-
-## Code Scaffolding
-
-```bash
-ng generate component component-name
-```
-
-For a full list of available schematics:
-
-```bash
-ng generate --help
-```
-
-## Additional Resources
-
-- [Angular CLI Overview](https://angular.dev/tools/cli)
 - [Debug Adapter Protocol Specification](https://microsoft.github.io/debug-adapter-protocol/)
-- [Monaco Editor](https://microsoft.github.io/monaco-editor/)
-- [Electron Documentation](https://www.electronjs.org/docs)
+- [Monaco Editor Documentation](https://microsoft.github.io/monaco-editor/)
+- [Electron JS](https://www.electronjs.org/)
+- [Angular CLI Guide](https://angular.dev/tools/cli)
+
+---
+
+Developed with ❤️ by the Taro Team. Licensed under [Apache-2.0](LICENSE).
