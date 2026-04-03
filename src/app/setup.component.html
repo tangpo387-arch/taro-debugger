@@ -16,7 +16,7 @@
         <div class="section-label">Connection Settings</div>
 
         <!-- DAP Server Address -->
-        <mat-form-field appearance="outline" class="full-width">
+        <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
           <mat-label>DAP Server Address</mat-label>
           <input matInput id="serverAddressInput" formControlName="serverAddress"
                  placeholder="e.g., localhost:4711">
@@ -65,7 +65,7 @@
 
         <!-- Executable Path (Required in Launch mode) -->
         @if (launchMode === 'launch') {
-          <mat-form-field appearance="outline" class="full-width">
+          <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
             <mat-label>Executable Path <span class="required-mark">*</span></mat-label>
             <input matInput id="execPathInput" formControlName="executablePath"
                    placeholder="e.g., /workspace/build/main.out">
@@ -77,7 +77,7 @@
           </mat-form-field>
 
           <!-- Program Arguments (Optional in Launch mode) -->
-          <mat-form-field appearance="outline" class="full-width">
+          <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
             <mat-label>Program Arguments</mat-label>
             <input matInput id="programArgsInput" formControlName="programArgs"
                    placeholder="e.g., --config app.cfg --verbose">
@@ -87,7 +87,7 @@
         }
 
         <!-- Source Path (Optional, shown in both modes) -->
-        <mat-form-field appearance="outline" class="full-width">
+        <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
           <mat-label>Source Path</mat-label>
           <input matInput id="sourcePathInput" formControlName="sourcePath"
                  placeholder="e.g., /workspace/src">

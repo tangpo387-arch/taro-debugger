@@ -60,7 +60,13 @@
 .setup-content {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+
+  /* Target the form to provide consistent spacing for all input fields and dividers */
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
 }
 
 .full-width {
