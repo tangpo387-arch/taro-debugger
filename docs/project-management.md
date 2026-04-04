@@ -13,6 +13,8 @@ related:
 
 This document defines the authoritative process for managing work items in the `taro-debugger` project — from initial creation through implementation to final archival. All agents **must** follow this lifecycle to ensure consistency, traceability, and a clean project backlog.
 
+See [project-roadmap.md](project-roadmap.md) for the visual dependency map of all work items.
+
 ---
 
 ## 1. Naming Conventions
@@ -71,7 +73,8 @@ A **Feature Group** is a named domain category that groups related `WI-##` items
 | Automation Tests | ⬜ White | TI-01 ~ TI-06 |
 
 > [!NOTE]
-> Feature Group names and color assignments are derived from the Color Legend in `docs/work-items.md`. New groups are proposed by `Product_Architect` for clusters of related WIs that fall outside existing categories.
+> Feature Group names and color assignments defined in this table (§1.4) are the **SSOT** for the entire project.
+> `docs/project-roadmap.md` derives all node fill colors from this table. New groups must be proposed by `Product_Architect` and registered here before being added to the roadmap.
 
 ---
 
@@ -122,9 +125,9 @@ Add the item under its corresponding Feature Group section using the standard te
 > [!IMPORTANT]
 > The HTML comment `<!-- status: ... -->` on the second line is machine-readable metadata. Always keep it in sync with the visible `**Status**` field.
 
-### Step 3 — Update the Recommended Development Order graph
+### Step 3 — Update the Dependency Map
 
-Add the new WI node to the Mermaid dependency graph in `work-items.md` and add a matching `style` entry (fill color aligned with its Feature Group).
+Add the new WI node to the Mermaid dependency graph in `project-roadmap.md` and add a matching `style` entry (fill color aligned with its Feature Group).
 
 ---
 
@@ -140,17 +143,17 @@ Add the new WI node to the Mermaid dependency graph in `work-items.md` and add a
 
 ---
 
-## 5. Retiring a Completed Feature Group (Done → Retired)
+## 5. Retiring a Feature Group (Done → Retired)
 
-When a Feature Group is fully complete (all its `WI-##` items are `✅ Done`), `Product_Architect` initiates retirement.
+Retirement is a **deliberate decision made by `Product_Architect`**, not an automatic consequence of all work being done.
 
 ### Step 1 — Remove the Feature Group block from `work-items.md`
 
 Delete the entire Feature Group section (the `## Heading` + all `### WI-##` entries) from `docs/work-items.md`. WI IDs are permanently reserved and must not be reused.
 
-### Step 2 — Update the Mermaid graph in `work-items.md`
+### Step 2 — Update the Mermaid graph in `project-roadmap.md`
 
-Remove the retired WI nodes from the Mermaid dependency graph, or retain them with a distinct archived style (e.g., `stroke-dasharray: 5`) for historical reference.
+Update the retired WI nodes in the Mermaid dependency graph to use the distinct archived style (`stroke-dasharray: 5`) for historical reference.
 
 ### Step 3 — Record significant decisions (if any)
 
@@ -185,7 +188,7 @@ Complete       →  Lead_Engineer sets status to Done
 Review         →  Quality_Control_Reviewer approves
 Archive        →  Product_Architect removes Feature Group from work-items.md
                →  Records decisions in design-decisions.md (if applicable)
-               →  Updates Mermaid graph in work-items.md
+               →  Updates Mermaid graph in project-roadmap.md
 ```
 
 ---

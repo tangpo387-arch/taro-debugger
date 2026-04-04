@@ -2,12 +2,12 @@
 title: System Architecture (Session / Transport / UI Layers)
 scope: architecture, layers, state-machine, data-flow, error-handling
 audience: [Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-03-29
+last_updated: 2026-04-05
 related:
   - docs/system-specification.md
   - docs/dap-integration-faq.md
-  - .agents/rules/dap-protocol-specs.md
-  - .agents/rules/state-management.md
+  - .agents/skills/dap-implementation/dap-protocol-specs.md
+  - .agents/skills/state-management/state-management.md
 ---
 
 # System Architecture (Session / Transport / UI)
@@ -372,7 +372,8 @@ sequenceDiagram
 `TransportType` type definition:
 
 ```typescript
-type TransportType = 'websocket' | 'serial' | 'tcp';
+// 'ipc' = Electron IPC (WI-24); 'serial' = future use
+type TransportType = 'websocket' | 'ipc' | 'serial';
 ```
 
 `DapConfig` full interface:

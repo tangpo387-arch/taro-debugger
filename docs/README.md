@@ -22,12 +22,20 @@ To help new developers or maintainers get up to speed quickly, the recommended r
 
 ## 2. Engineering & Testing
 
+* 📄 **[Project Roadmap (project-roadmap.md)](project-roadmap.md)**
+  * **Contents**: The full atomic dependency map and strategic visual roadmap of all features, task groups, and implementation milestones.
+  * **When to read**: To understand how different modules depend on each other, determine development order, or visualize project scope and completed feature paths.
+
+* 📄 **[Project Management Guide (project-management.md)](project-management.md)**
+  * **Contents**: WI/TI lifecycle process, naming conventions, feature group definitions, and archival procedures. The authoritative process handbook for all project management operations.
+  * **When to read**: When creating, progressing, or retiring any work item, or when you need to understand feature group ownership and color assignments.
+
 * 📄 **[Test Plan (test-plan.md)](test-plan.md)**
   * **Contents**: Describes the project's test pyramid strategy, including the scope of unit tests, integration tests, and E2E tests, along with coverage requirements.
   * **When to read**: When you've finished developing a new feature and need to write tests, or when you want to understand the project's CI/CD testing standards.
 
 * 📄 **[Work Items (work-items.md)](work-items.md)**
-  * **Contents**: Phase-by-phase development breakdown from zero to one, milestones, and current task (WI-01 ~ WI-25) completion status tracking.
+  * **Contents**: Active backlog of pending and in-progress work items (WI-01 ~ WI-25), grouped by Feature Group with a strategic milestone progress view.
   * **When to read**: When looking for the next ticket to pick up, or to understand the overall project progress.
 
 ## 3. Troubleshooting & Technical Guides

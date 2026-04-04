@@ -32,27 +32,29 @@ These two terms have project-specific meanings that differ from their general DA
 ## 3. Behavioral Constraints
 
 * **Path handling**: C/C++ source code paths may use `/` (Unix) or `\` (Windows). Ensure `DapFileTreeService` and `EditorComponent` can parse both correctly.
-* **Async flow**: After `initialize` completes, send `launch`/`attach` as **fire-and-forget**, then `await initialized` event, then send `setBreakpoints` / `configurationDone`, then finally await the `launch`/`attach` response. See [dap-integration-faq.md §2](../docs/dap-integration-faq.md#2-initialization-sequence--constraints) and rule **[R1]** / **[R3]** in `rules/dap-protocol-specs.md`.
+* **Async flow**: After `initialize` completes, send `launch`/`attach` as **fire-and-forget**, then `await initialized` event, then send `setBreakpoints` / `configurationDone`, then finally await the `launch`/`attach` response. See [dap-integration-faq.md §2](../docs/dap-integration-faq.md#2-initialization-sequence--constraints) and rule **[R1]** / **[R3]** in **Skill: `dap-implementation`** → [`dap-protocol-specs.md`](skills/dap-implementation/dap-protocol-specs.md).
 * **Resource cleanup**: Any WebSocket subscriptions or timers must be cleaned up in `disconnect()` or `ngOnDestroy` to prevent buffer misalignment caused by multiple simultaneous sessions.
-* **Source Listing (GDB Restriction)**: In C/C++, fetching source trees is state-dependent. See rule **[R11]** in `rules/dap-protocol-specs.md` for strict implementation details.
+* **Source Listing (GDB Restriction)**: In C/C++, fetching source trees is state-dependent. See rule **[R11]** in **Skill: `dap-implementation`** → [`dap-protocol-specs.md`](skills/dap-implementation/dap-protocol-specs.md) for strict implementation details.
 
 ## 4. Quick Navigation for Agents
 
 Use this decision tree to quickly find the right document based on your current task:
 
-| Task Type | Primary Agent | Start Here |
-| --- | --- | --- |
-| Define or update requirements | `Product_Architect` | [system-specification.md](../docs/system-specification.md) + [architecture.md](../docs/architecture.md) |
-| Add a new UI feature | `Lead_Engineer` | [system-specification.md §3](../docs/system-specification.md#3-view-navigation--layout-specification) for layout spec |
-| Fix a DAP protocol bug | `Lead_Engineer` | [dap-integration-faq.md](../docs/dap-integration-faq.md) + [dap-protocol-specs.md](rules/dap-protocol-specs.md) |
-| Add a new transport type | `Lead_Engineer` | [architecture.md §2.3](../docs/architecture.md#23-extension-guide) for extension guide |
-| Write tests | `Lead_Engineer` | [test-plan.md](../docs/test-plan.md) + [testing-protocol.md](rules/testing-protocol.md) |
-| What's next to build? | `Product_Architect` | [work-items.md](../docs/work-items.md) for pending items |
-| Manage work item lifecycle | `Product_Architect` | [project-management.md](../docs/project-management.md) for WI/TI naming, lifecycle, and archival process |
-| Check v1.0 scope boundary | All Agents | [future-roadmap.md](../docs/future-roadmap.md) — confirm a feature is **not** a v1.1+ item before implementing |
-| Understand the state machine | `Lead_Engineer` | [architecture.md §3.2](../docs/architecture.md#32-execution-state-machine) |
-| Review code for quality | `Quality_Control_Reviewer` | [code-style-guide.md](rules/code-style-guide.md) + [state-management.md](rules/state-management.md) |
-| Find which file to modify | All Agents | [file-map.md](../docs/file-map.md) for source file responsibility map |
+| Task Type | Layer | Primary Agent | Start Here |
+| --- | --- | --- | --- |
+| Define or update requirements | — | `Product_Architect` | [system-specification.md](../docs/system-specification.md) + [architecture.md](../docs/architecture.md) |
+| Add a new UI feature | **UI** | `Lead_Engineer` | [system-specification.md §3](../docs/system-specification.md#3-view-navigation--layout-specification) for layout spec |
+| Modify component local state | **UI** | `Lead_Engineer` | **Skill: `state-management`** — load before touching `@Input`, `BehaviorSubject`, or `async` pipe patterns |
+| Modify service reactive state | **Session** | `Lead_Engineer` | **Skill: `state-management`** — load before touching `BehaviorSubject`, `Subject`, or `Observable` streams in services |
+| Implement or fix DAP protocol logic | **Session / Transport** | `Lead_Engineer` | **Skill: `dap-implementation`** |
+| Add a new transport type | **Transport** | `Lead_Engineer` | **Skill: `dap-implementation`** §6 Transport Extension Guide |
+| Write tests | — | `Lead_Engineer` | [test-plan.md](../docs/test-plan.md) + [testing-protocol.md](rules/testing-protocol.md) |
+| What's next to build? | — | `Product_Architect` | [work-items.md](../docs/work-items.md) for pending items |
+| Manage work item lifecycle | — | `Product_Architect` | **Skill: `work-item-management`** |
+| Check v1.0 scope boundary | — | All Agents | [future-roadmap.md](../docs/future-roadmap.md) — confirm a feature is **not** a v1.1+ item before implementing |
+| Understand the state machine | **Session** | `Lead_Engineer` | **Skill: `state-management`** |
+| Review code for quality | — | `Quality_Control_Reviewer` | [code-style-guide.md](rules/code-style-guide.md) + **Skills: `dap-implementation`, `state-management`** (as applicable) |
+| Find which file to modify | — | All Agents | [file-map.md](../docs/file-map.md) for source file responsibility map |
 
 ## 5. File Naming Conventions
 
@@ -74,15 +76,23 @@ To maintain consistency across environments, use these standard commands for bui
 
 This table consolidates the authoritative reference documents each role relies on. All paths are relative to the project root.
 
+**Always-on references** (loaded as User Rules or read at session start):
+
 | Document | Product_Architect | Lead_Engineer | Quality_Control_Reviewer |
 | :--- | :---: | :---: | :---: |
 | `docs/README.md` | ✅ | ✅ | ✅ |
-| `docs/system-specification.md` | ✅ | — | — |
+| `docs/system-specification.md` | ✅ | ✅ | — |
 | `docs/architecture.md` | ✅ | — | — |
 | `docs/file-map.md` | ✅ | ✅ | ✅ |
-| `.agents/rules/dap-protocol-specs.md` | — | ✅ | ✅ |
 | `.agents/rules/code-style-guide.md` | — | ✅ | ✅ |
-| `.agents/rules/state-management.md` | — | ✅ | ✅ |
 | `.agents/rules/testing-protocol.md` | — | ✅ | ✅ |
 | `docs/future-roadmap.md` | ✅ | ✅ | — |
 | `docs/project-management.md` | ✅ | ✅ | — |
+
+**On-demand Skills** (loaded only when the task matches the skill's trigger conditions):
+
+| Skill | Trigger | Lead_Engineer | Quality_Control_Reviewer |
+| :--- | :--- | :---: | :---: |
+| `dap-implementation` | Modifying DAP services, transport, session lifecycle | ✅ | ✅ |
+| `state-management` | Modifying component/service state flow | ✅ | ✅ |
+| `work-item-management` | Creating, progressing, or retiring WIs | — | — |
