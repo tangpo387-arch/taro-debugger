@@ -116,6 +116,7 @@ Applicable to pure web debugging applications. Communication path:
 #### 4.2.1 WebSocket Transport Layer Specifications & Safety Requirements
 
 Due to the nature of WebSocket data streams, the frontend buffer implementation must comply with the following strict specifications to ensure correctness and robustness:
+
 * **Strict Header Validation**: Incoming DAP data streams must be strictly led by a `Content-Length: <length>\r\n\r\n` header. The system must not attempt to parse the data stream without this valid header (e.g., blindly searching for `{}` braces to parse JSON is prohibited), and the first character must be `'C'`.
 * **Error Isolation & Fail-Fast Mechanism**: If the WebSocket transport layer detects any packet format anomaly (including: unsupported binary types, missing header fields, or failure to find a valid header terminator within 1KB), the system must **permanently terminate the current message bus** (the Message Subject is errored). This means: as soon as one packet is corrupted, the entire WebSocket message reception mechanism actively enters a failed state, no longer accepting subsequent packets of uncertain state, preventing the system from reading misaligned streams that could cause unpredictable errors in the user interface. Users must re-establish the connection (`connect()`) to resume debugging operations.
 
@@ -126,7 +127,7 @@ This system implements the following core requests and events based on the Debug
 ### 5.1 Supported DAP Requests
 
 | Request Type | Description |
-|---|---|
+| --- | --- |
 | `initialize` | Initialize the DAP session, exchange frontend/backend Capabilities |
 | `launch` | Launch the target program for debugging |
 | `attach` | Attach to an already running process |
@@ -148,7 +149,7 @@ This system implements the following core requests and events based on the Debug
 ### 5.2 Supported DAP Events
 
 | Event Type | Description |
-|---|---|
+| --- | --- |
 | `initialized` | DAP Server initialization complete, frontend may send configuration requests |
 | `stopped` | Program paused at a breakpoint, exception, or user action |
 | `continued` | Program resumed execution |
@@ -178,7 +179,7 @@ The system supports two deployment modes, sharing the same Angular frontend code
 ### 6.3 Mode Comparison Table
 
 | Capability | Electron Desktop Mode | Web Browser Mode |
-|---|---|---|
+| --- | --- | --- |
 | Source file access | ✅ DAP (`loadedSources` / `source`) | ✅ DAP (`loadedSources` / `source`) |
 | DAP Server startup | ❌ Must be pre-started | ❌ Must be pre-started |
 | Communication channel | IPC (`contextBridge`) | WebSocket |

@@ -2,7 +2,7 @@
 title: Source File Responsibility Map
 scope: file-map, navigation, ownership, layers
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-03-28
+last_updated: 2026-04-04
 related:
   - docs/architecture.md
   - .agents/project-context.md
@@ -17,7 +17,7 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | File | Responsibility | Key Exports |
 | --- | --- | --- |
 | `app.ts` | Root application component | `AppComponent` |
-| `app.config.ts` | Application-level providers and config | `appConfig` |
+| `app.config.ts` | Application-level providers | `appConfig` |
 | `app.routes.ts` | Route definitions (`/setup` → `/debug`) | `routes` |
 
 ## UI Layer (Components)
@@ -32,6 +32,14 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | `variables.component.ts` | Right sidebar variables view: tree display for DAP scopes and local variables | subscribes `scopes$`; `toggleNode()` | `variables.component.html`, `variables.component.scss` |
 | `error-dialog/error-dialog.ts` | Dialog for showing connection and session errors | `ErrorDialogData`, `onRetry()`, `onGoBack()` | `error-dialog.html`, `error-dialog.css` |
 
+## Electron Desktop Structural Files
+
+| File | Responsibility |
+| --- | --- |
+| `electron/main.ts` | Electron main process: window management, environment-aware loading, security config |
+| `electron/preload.ts` | Electron preload script: secure IPC exposure via `contextBridge` |
+| `tsconfig.electron.json` | TypeScript configuration for the Electron main/preload processes |
+
 ## Session Layer (Services)
 
 | File | Responsibility | Key Interfaces |
@@ -39,7 +47,7 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | `dap-session.service.ts` | DAP session lifecycle, state machine, request/response pairing, event processing | `startSession()`, `disconnect()`, `reset()`, `executionState$`, `connectionStatus$`, `onEvent()`, `sendRequest()` |
 | `dap-config.service.ts` | Configuration persistence (localStorage), SSOT for DAP connection parameters | `setConfig()`, `getConfig()` |
 | `dap-file-tree.service.ts` | File tree construction from `loadedSources`, source file reading via `source` request | `getTree()`, `readFile()` |
-| `dap-variables.service.ts` | Derived state management for DAP scopes and variables, caching variable references | `getScopes()`, `getVariables()` |
+| `dap-variables.service.ts` | Derived state management for DAP scopes and variables, caching variable references | `fetchScopes()`, `getVariables()`, `scopes$` |
 
 ## Transport Layer (Services)
 

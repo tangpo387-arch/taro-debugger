@@ -1,11 +1,11 @@
 ---
 title: Work Items
-scope: tasks, progress, dependencies, milestones, phases
+scope: tasks, progress, dependencies, milestones, feature-groups
 audience: [Product_Architect, Lead_Engineer]
 last_updated: 2026-03-29
 related:
   - docs/system-specification.md
-  - docs/changelog.md
+  - docs/design-decisions.md
   - docs/test-plan.md
 ---
 
@@ -17,48 +17,10 @@ related:
 
 ---
 
-## Existing Codebase Inventory
-
-| Component / File | Status | Description |
-| --- | --- | --- |
-| `app.routes.ts` | ✅ Done | `/setup` → `/debug` routing established |
-| `DapConfigService` | ✅ Done | Extended to a complete DAP connection config interface (address, launch mode, args, etc.) |
-| `SetupComponent` | ✅ Done | All form fields implemented with Reactive Forms, real-time format and required validation |
-| `DebuggerComponent` | ✅ Done | Three-panel layout integrated with dynamic file tree, debug controls, status indicators, and console logs |
-| `EditorComponent` | ⚠️ Basic | Monaco Editor embedded, current line highlight and breakpoint interaction implemented |
-| DAP Communication Layer | ✅ Done | `DapTransportService`, `WebSocketTransportService`, and `DapSessionService` completed with timeout mechanism |
-| File Tree | ✅ Done | Left sidebar renders via `loadedSources`, clicking a file fetches source code from Server and displays it |
-| Variable Inspector | ✅ Done | Standalone `<app-variables>` with CDK virtual scroll, lazy-loading expansion, auto-expand first scope |
-| Call Stack | ✅ Done | Implemented in DebuggerComponent right panel, auto-listens to stopped events and lists stack frames |
-| Error Handling | ✅ Done | Connection disconnect/reconnect mechanism, timeout, and global error notification UI implemented |
-| Electron Integration | ❌ Not implemented | Only devDependency exists, no Main Process or IPC established |
-
----
-
-## Phase Navigation
-
-Development work is divided into 11 phases. Completed phases are archived to `changelog.md`; pending phases remain in this list.
-
-| Phase | Status | Core Objective | Quick Link |
-| --- | --- | --- | --- |
-| **Phase 1** | ✅ Done | Implement `/setup` form and connection config interface | [View](changelog.md#phase-1-setup-view) |
-| **Phase 2** | ✅ Done | Build WebSocket communication layer and DAP request lifecycle management | [View](changelog.md#phase-2-dap-transport-layer) |
-| **Phase 3** | ⏳ Pending | Build Node.js relay communication server for Web mode | [View](#phase-3-websocket-bridge-web-mode-backend-relay) |
-| **Phase 4** | ✅ Done | Implement toolbar debug controls (Continue/Pause/Step) and state binding | [View](changelog.md#phase-4-debug-controls) |
-| **Phase 5** | ✅ Done | Monaco Editor advanced integration, breakpoint interaction and line highlight | [View](changelog.md#phase-5-editor-features) |
-| **Phase 6** | ✅ Done | Dynamic project file tree rendering, click to load source code | [View](changelog.md#phase-6-file-explorer) |
-| **Phase 7** | ✅ Done | Call stack list and nested variable inspector | [View](changelog.md#phase-7-variables--call-stack) |
-| **Phase 8** | ✅ Done | Develop UI status bar connection indicator and command console interface | [View](changelog.md#phase-8-console--status-bar) |
-| **Phase 9** | ✅ Done | Global connection error handling, error snackbar feedback | [View](changelog.md#phase-9-error-handling) |
-| **Phase 10** | 🔄 In Progress | Electron desktop application integration (IPC, Main Process) | [WI-23 ✅](changelog.md#phase-10-electron-desktop-mode) · [Pending](#phase-10-electron-desktop-mode-optional) |
-| **Phase 11** | ✅ Done | Introduce Vitest for core service unit tests | [View](#phase-11-automation-tests) |
-
----
-
-## Phase 3: WebSocket Bridge (Web Mode Backend Relay)
+## Backend Relay (Web Mode)
 
 ### WI-09: Implement Node.js WebSocket Bridge
-<!-- status: pending | size: M | phase: 3 | depends: none -->
+<!-- status: pending | size: M | depends: none -->
 - **Size**: M
 - **Description**: Implement a simple Node.js server that receives frontend WebSocket connections and forwards them to the local DAP executable (e.g., `lldb-dap`)
 - **Details**:
@@ -70,10 +32,10 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 
 ---
 
-## Phase 10: Electron Desktop Mode (Optional)
+## Electron Desktop Mode (Optional)
 
 ### WI-24: Electron IPC Transport Layer (`IpcTransportService`)
-<!-- status: pending | size: M | phase: 10 | depends: WI-04, WI-23 -->
+<!-- status: pending | size: M | depends: WI-04, WI-23 -->
 - **Size**: M
 - **Description**: Implement IPC communication per spec [§4.1](system-specification.md#41-electron-desktop-mode)
 - **Details**:
@@ -85,7 +47,7 @@ Development work is divided into 11 phases. Completed phases are archived to `ch
 - **Status**: ⏳ Pending
 
 ### WI-25: Electron Local File System Access
-<!-- status: pending | size: S | phase: 10 | depends: WI-15, WI-23 -->
+<!-- status: pending | size: S | depends: WI-15, WI-23 -->
 - **Size**: S
 - **Description**: Implement local file reading per spec [§6.1](system-specification.md#61-electron-desktop-mode)
 - **Details**:
@@ -205,20 +167,3 @@ graph LR
     style TI05 fill:#ffffff,stroke:#000,stroke-width:2.5px
     style TI06 fill:#ffffff,stroke:#000,stroke-width:2.5px
 ```
-
----
-
-## Milestone Summary
-
-| Milestone | Items Covered | Deliverable |
-| --- | --- | --- |
-| **M1: Complete Setup Page** | WI-01 ~ WI-03 | Full form + validation, correctly passes all DAP parameters |
-| **M2: DAP Communication** | WI-04 ~ WI-09 | WebSocket connection + Bridge + Timeout mechanism complete |
-| **M3: Basic Debug Experience** | WI-10 ~ WI-14 | Can set breakpoints, pause, step, see current line highlight |
-| **M4: Full Information Display** | WI-15 ~ WI-20 | File tree, variables, stack, console, status bar all functional |
-| **M5: Robustness** | WI-21 ~ WI-22 | Connection error handling, DAP error handling |
-| **M6: Electron Desktop** | WI-23 ~ WI-25 | Desktop app runs independently, local file access |
-| **M7: Testing & QA** | TI-01 ~ TI-05 | Core service unit tests, boundary and error handling coverage |
-
-> [!TIP]
-> **Recommended start**: Phase 1 + Phase 2 in parallel — Phase 1 (UI form) has no dependency on the DAP communication layer, and Phase 2 (communication layer) doesn't depend on UI changes. Both can proceed simultaneously. Additionally, **WI-12 (Breakpoint UI)** can be developed independently without DAP layer dependency.

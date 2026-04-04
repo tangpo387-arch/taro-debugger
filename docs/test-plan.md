@@ -109,7 +109,8 @@ Tests for interactions and data flow between multiple Services or Components, ty
   * **Breakpoint removal clears Map entry**: Toggle the same line twice (add then remove) → verify `setBreakpoints` is called with an empty array and `setVerifiedBreakpoints` is called with `[]`, which triggers `verifiedBreakpoints.delete(file)` (no stale Map entry).
   * **Session guard — idle state**: Simulate toggling a breakpoint while `executionState === 'idle'` → verify `setBreakpoints` DAP request is **not** sent (session not ready).
   * **Re-sync on restart**: After populating `EditorComponent.breakpoints` with two files, call `resyncAllBreakpoints()` → verify `setBreakpoints` is called once per file in parallel.
-* **Connection Error & Intent Detection**
+* **Connection Error & Intent Detection Integration Tests**
+  * **Verified implementation**: 12 logic-dense tests implemented in `src/app/connection-error-integration.spec.ts`.
   * **Normal stop & intent interception**: Call `disconnect()` then simulate transport layer `complete()`, verify `DapSessionService` correctly intercepts the signal without emitting `_transportError` synthetic event.
   * **Unexpected disconnect detection**: Simulate transport layer triggering `error()`, verify `executionState` transitions to `error` and emits `_transportError` for UI display.
   * **Connection timeout verification**: Simulate connection request timeout, verify `firstValueFrom` correctly catches the RxJS `timeout` error.
@@ -146,7 +147,7 @@ This section lists feature points that are difficult to automate or require huma
 * **FileExplorerComponent — Visual & Interaction Verification**
 
   | Step | Action | Expected Result |
-  |---|---|---|
+  | --- | --- | --- |
   | MV-FE-01 | Open `/debug`, session enters `stopped` state | Left sidenav shows file tree with correct content; "Files" heading, source path, and "Collapse All" button render with 16px inset padding on all sides |
   | MV-FE-02 | Hover over a long file path that exceeds panel width | Single horizontal scrollbar appears **at the sidenav level only** (not a double scrollbar); scrollbar is inside the sidenav container |
   | MV-FE-03 | Click a file node | The clicked node gets the `active-file` highlight (primary color background); editor loads the file's source code |
@@ -161,7 +162,7 @@ This section lists feature points that are difficult to automate or require huma
   Requires a live DAP adapter (e.g., `lldb-dap` or `gdb`) connected to a compiled C/C++ binary.
 
   | Step | Action | Expected Result |
-  |---|---|---|
+  | --- | --- | --- |
   | 1 | Open `/debug` with a valid C++ binary | Session starts; console logs `Session started in launch mode`; editor shows `// Editor is ready.` |
   | 2 | Click a source file in the file tree | Source code loads in the Monaco Editor |
   | 3 | Click the glyph margin on a source line **while state is `running`** | Gray dot (`.breakpoint-glyph-unverified`) appears immediately; no DAP request sent yet (session guard) |

@@ -27,14 +27,14 @@ graph TD
 
     subgraph Implementations ["Transport Implementations"]
         direction LR
-        WSS["WebSocketTransportService"]
+        WSS["WebSocketTransportService<br/>(Web Mode — Done)"]
+        IPC["IpcTransportService<br/>(Electron — WI-24 Pending)"]
         STS["(Future) SerialTransportService"]
-        TTS["(Future) TcpTransportService"]
     end
 
     Transport --> WSS
+    Transport -.-> IPC
     Transport -.-> STS
-    Transport -.-> TTS
 
     style UI fill:#f9f9f9,stroke:#333,stroke-width:2px
     style Session fill:#f9f9f9,stroke:#333,stroke-width:2px
@@ -59,8 +59,8 @@ graph TD
 | Class | File | Description |
 | --- | --- | --- |
 | `DapTransportService` | `dap-transport.service.ts` | **Abstract base class**, defines the transport layer interface |
-| `WebSocketTransportService` | `websocket-transport.service.ts` | WebSocket implementation, includes DAP binary stream parser |
-| `IpcTransportService` | `(Planned)` | Electron IPC implementation via native `contextBridge` preload pattern — no third-party wrapper |
+| `WebSocketTransportService` | `websocket-transport.service.ts` | WebSocket implementation, includes DAP binary stream parser with Content-Length header parsing. **Robustness**: Handles sticky/half packets via manual buffering; implements fail-fast error isolation for malformed packets; supports buffer auto-expansion (e.g., doubling capacity from 4KB). |
+| `IpcTransportService` | `ipc-transport.service.ts` *(WI-24, Pending)* | Electron IPC implementation: the Angular renderer-side service calls `window.electronAPI` (exposed via `electron/preload.ts` `contextBridge`) for all DAP message I/O. The main process side (`electron/main.ts`) forwards IPC calls to the DAP server via TCP. |
 | `TransportFactoryService` | `transport-factory.service.ts` | Transport factory service, creates instances by `TransportType` |
 
 ### 2.3 Extension Guide
@@ -333,6 +333,21 @@ To prevent high-frequency raw protocol telemetry from polluting the core busines
 - **Opt-in Telemetry**: The UI Layer (`DebuggerComponent`) subscribes to `onTraffic$` and forwards these raw payloads to `DapLogService` as structured `LogEntry` items with the `dap` category.
 - **Separation of Concerns**: This ensures the core `onEvent()` stream only emits structurally significant state events (e.g., `stopped`, `terminated`) required for state machine updates, while `onTraffic$` purely serves diagnostic logging purposes.
 
+### 4.7 Variable & Scope State Management
+
+The inspection of program variables follows a lazy-loading, reactive pattern to handle complex data structures efficiently without blocking the UI.
+
+#### Data Model & Rendering
+
+- **Hierarchical-to-Flat Transformation**: To support **Virtual Scrolling** (`cdk-virtual-scroll-viewport`), the `VariablesComponent` converts the nested DAP variable structure into a flattened array of `FlatVariableNode` items.
+- **Lazy Loading**: Nodes with `variablesReference > 0` are rendered with an expansion toggle. Children are only fetched from `DapVariablesService` (triggering a DAP `variables` request) upon the first user expansion.
+
+#### State & Caching (`DapVariablesService`)
+
+- **SSOT for Runtime Inspectables**: The `DapVariablesService` acts as the SSOT for derived variable states, exposing a `scopes$` Observable updated on every `stopped` event.
+- **Result Caching**: Successfully fetched variable sets are cached by their `variablesReference` ID within the service level.
+- **Implicit Lifecycle Cleanup (R_SM5)**: To prevent memory leaks and stale data display, the service automatically clears its internal cache and resets `scopes$` to an empty state whenever `executionState$` transitions out of `stopped` (e.g., to `running`, `terminated`, or `error`).
+
 ---
 
 ## 5. Configuration Flow (DapConfig)
@@ -372,6 +387,13 @@ interface DapConfig {
   programArgs: string;         // Command-line arguments passed to the debuggee
 }
 ```
+
+### 5.1 Electron Specifics (Bridge Management)
+
+To ensure compatibility with Electron's `file://` protocol and multi-mode architecture:
+
+- **HashLocationStrategy**: The application uses `withHashLocation()` in `app.config.ts` to prevent "file not found" errors when reloading inside Electron.
+- **Main Process Isolation**: All Node.js/Filesystem logic is abstracted into the Electron Main Process (`electron/main.ts`) and accessed via the secure Preload bridge (`electron/preload.ts`).
 
 ---
 
