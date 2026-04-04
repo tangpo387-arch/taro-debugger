@@ -32,9 +32,9 @@ These two terms have project-specific meanings that differ from their general DA
 ## 3. Behavioral Constraints
 
 * **Path handling**: C/C++ source code paths may use `/` (Unix) or `\` (Windows). Ensure `DapFileTreeService` and `EditorComponent` can parse both correctly.
-* **Async flow**: After `initialize` completes, send `launch`/`attach` as **fire-and-forget**, then `await initialized` event, then send `setBreakpoints` / `configurationDone`, then finally await the `launch`/`attach` response. See [dap-integration-faq.md §2](../docs/dap-integration-faq.md#2-initialization-sequence--constraints) and rule **[R1]** / **[R3]** in **Skill: `dap-implementation`** → [`dap-protocol-specs.md`](skills/dap-implementation/dap-protocol-specs.md).
+* **Async flow**: After `initialize` completes, send `launch`/`attach` as **fire-and-forget**, then `await initialized` event, then send `setBreakpoints` / `configurationDone`, then finally await the `launch`/`attach` response. See rule **[R1]** / **[R3]** in **Skill: `dap-implementation`**.
 * **Resource cleanup**: Any WebSocket subscriptions or timers must be cleaned up in `disconnect()` or `ngOnDestroy` to prevent buffer misalignment caused by multiple simultaneous sessions.
-* **Source Listing (GDB Restriction)**: In C/C++, fetching source trees is state-dependent. See rule **[R11]** in **Skill: `dap-implementation`** → [`dap-protocol-specs.md`](skills/dap-implementation/dap-protocol-specs.md) for strict implementation details.
+* **Source Listing (GDB Restriction)**: In C/C++, fetching source trees is state-dependent. See rule **[R11]** in **Skill: `dap-implementation`** for strict implementation details.
 
 ## 4. Quick Navigation for Agents
 
