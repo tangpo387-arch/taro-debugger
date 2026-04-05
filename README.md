@@ -127,6 +127,14 @@ Visit `http://localhost:4200` to start debugging!
 
 Taro uses [Vitest](https://vitest.dev/) for unit testing and follows a strict [DAP Implementation Policy](docs/dap-integration-faq.md). For detailed architectural insights, see [Architecture Overview](docs/architecture.md).
 
+## AI Coding Assistance
+
+This project is actively developed with the assistance of AI coding agents, including **Gemini** and **Claude**. To maintain code quality and architectural integrity, we use an autonomous development team framework defined in `.agents/AGENTS.md`.
+
+When working with AI assistants on this codebase:
+- Ensure the AI reads [`.agents/project-context.md`](.agents/project-context.md) before making changes.
+- Ensure the AI adheres to the established project style guide and documented DAP implementation rules.
+
 ## Resources & Links
 
 - [Debug Adapter Protocol Specification](https://microsoft.github.io/debug-adapter-protocol/)
