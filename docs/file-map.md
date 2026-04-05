@@ -24,7 +24,11 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 
 | File | Responsibility | Key Interfaces | Related Template/Style |
 | --- | --- | --- | --- |
-| `setup.component.ts` | Configuration form, DAP connection setup, navigation to `/debug` | `onConnect()`, `form: FormGroup` | `setup.component.html`, `setup.component.scss` |
+| `setup-web.component.ts` | Configuration form for Web mode, DAP connection setup, navigation to `/debug` | `onConnect()`, `form: FormGroup` | `setup-web.component.html`, `setup-web.component.scss` |
+| `setup-electron.component.ts` | Configuration form for Electron mode (IPC), navigation to `/debug` | `onConnect()`, `form: FormGroup` | `setup-electron.component.html`, `setup-electron.component.scss` |
+| `environment-detect.service.ts` | Detects whether the app is running in Electron or pure Web | `isElectron()` | - |
+| `setup.validators.ts` | Shared form validators for connection settings | `serverAddressValidator` | - |
+| `electron-redirect.guard.ts` | Route guard on `/setup` that redirects to web or electron setup page | `canActivate()` | - |
 | `debugger.component.ts` | Main debug view: toolbar, three-panel layout, event subscriptions, file source loading | subscribes `executionState$`, `connectionStatus$`, `onEvent()`; handles `onFileSelected()` | `debugger.component.html`, `debugger.component.scss` |
 | `file-explorer.component.ts` | Left sidenav file explorer: fetches `loadedSources` tree, highlights active file, emits `fileSelected` | `@Input() activeFilePath`, `@Input() reloadTrigger`, `@Output() fileSelected` | `file-explorer.component.html`, `file-explorer.component.scss` |
 | `editor.component.ts` | Monaco Editor wrapper: source display, line highlight, breakpoint glyph margin | `openFile()`, `highlightLine()`, `clearHighlight()` | `editor.component.html`, `editor.component.scss` |

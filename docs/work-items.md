@@ -29,20 +29,6 @@ related:
 
 ---
 
-## Desktop UI Extensions
-
-### WI-26: Setup Page Separation
-<!-- status: completed | size: S | depends: none -->
-- **Size**: S
-- **Description**: Separate the Setup page into Web (`/setup-web`) and Electron (`/setup-electron`) versions via route guards.
-- **Details**:
-  - Implement `EnvironmentDetectService` and `ElectronRedirectGuard`.
-  - Create `SetupWebComponent` (uses WebSocket) and `SetupElectronComponent` (uses IPC).
-- **Dependencies**: none
-- **Status**: ⏳ Pending
-
----
-
 ## Electron Desktop Mode
 
 ### WI-24: Electron IPC Transport Layer (`IpcTransportService`)

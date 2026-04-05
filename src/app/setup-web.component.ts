@@ -16,30 +16,10 @@ import { MatDividerModule } from '@angular/material/divider';
 // Import global configuration services
 import { DapConfigService } from './dap-config.service';
 
-/**
- * Custom validator: Validate DAP Server address format (host:port)
- * Support IPv4, IPv6 (basic brackets), and Hostname
- */
-function serverAddressValidator(control: AbstractControl): ValidationErrors | null {
-  const value = (control.value as string)?.trim();
-  if (!value) return null; // Let the required validator handle empty values
-
-  // Pattern: [IPv6] or host part, then a colon, then 1-5 digits
-  const pattern = /^(\[[a-fA-F0-9:]+\]|[a-zA-Z0-9._-]+):(\d{1,5})$/;
-  const match = value.match(pattern);
-
-  if (!match) return { invalidFormat: true };
-
-  const port = parseInt(match[2], 10);
-  if (port < 1 || port > 65535) {
-    return { invalidPort: true };
-  }
-
-  return null;
-}
+import { serverAddressValidator } from './setup.validators';
 
 @Component({
-  selector: 'app-setup',
+  selector: 'app-setup-web',
   standalone: true,
   imports: [
     CommonModule,
@@ -52,10 +32,10 @@ function serverAddressValidator(control: AbstractControl): ValidationErrors | nu
     MatButtonToggleModule,
     MatDividerModule,
   ],
-  templateUrl: './setup.component.html',
-  styleUrls: ['./setup.component.scss']
+  templateUrl: './setup-web.component.html',
+  styleUrls: ['./setup-web.component.scss']
 })
-export class SetupComponent implements OnInit, OnDestroy {
+export class SetupWebComponent implements OnInit, OnDestroy {
 
   /**
    * Main form group, using Reactive Forms to manage all field states and validation.
@@ -152,7 +132,8 @@ export class SetupComponent implements OnInit, OnDestroy {
     const currentConfig = this.configService.getConfig();
     this.configService.setConfig({
       ...currentConfig,
-      ...this.form.getRawValue()
+      ...this.form.getRawValue(),
+      transportType: 'websocket'
     });
 
     // 2. Navigate to debug main view via Angular Router

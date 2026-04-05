@@ -404,3 +404,13 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
   - `src/index.html` *(restored `base href="/"` — `HashLocationStrategy` makes workaround unnecessary)*
   - `package.json` *(modified — added `"main"`, Electron scripts, and `electron-builder` config)*
 - **Status**: ✅ Done — QA reviewed, all issues resolved
+
+### WI-26: Setup Page Separation
+<!-- status: completed | size: S | depends: none -->
+- **Size**: S
+- **Description**: Separate the Setup page into Web (`/setup-web`) and Electron (`/setup-electron`) versions via route guards.
+- **Details**:
+  - Implement `EnvironmentDetectService` and `ElectronRedirectGuard`.
+  - Create `SetupWebComponent` (uses WebSocket) and `SetupElectronComponent` (uses IPC).
+- **Dependencies**: none
+- **Status**: ✅ Done

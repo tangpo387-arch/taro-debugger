@@ -1,16 +1,27 @@
 import { Routes } from '@angular/router';
 
 // Import the two page components we created
-// [Note]: Adjust these paths based on your actual directory structure
-import { SetupComponent } from './setup.component';
+import { electronRedirectGuard } from './electron-redirect.guard';
+import { SetupWebComponent } from './setup-web.component';
+import { SetupElectronComponent } from './setup-electron.component';
 import { DebuggerComponent } from './debugger.component';
 
 export const routes: Routes = [
   {
-    // Load setup page when the URL is '/setup'
+    // Redirect gateway for setup
     path: 'setup',
-    component: SetupComponent,
-    title: 'Setup - Taro Debugger' // Sets the browser tab title
+    canActivate: [electronRedirectGuard],
+    children: [] // No component is rendered here
+  },
+  {
+    path: 'setup-web',
+    component: SetupWebComponent,
+    title: 'Setup - Taro Debugger (Web)'
+  },
+  {
+    path: 'setup-electron',
+    component: SetupElectronComponent,
+    title: 'Setup - Taro Debugger (Desktop)'
   },
   {
     // Load the core debugger view when the URL is '/debug'

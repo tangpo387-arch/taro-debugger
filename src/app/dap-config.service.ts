@@ -5,7 +5,7 @@ import { Injectable } from '@angular/core';
  * Includes server address, launch mode, path, and program arguments.
  */
 /** Supported transport layer types */
-export type TransportType = 'websocket' | 'serial' | 'tcp';
+export type TransportType = 'websocket' | 'ipc' | 'serial' | 'tcp';
 
 export interface DapConfig {
   /** DAP Server connection address, format host:port (e.g., localhost:4711) */
