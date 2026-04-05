@@ -1,18 +1,21 @@
 /* Setup page main container style */
 .setup-container {
   display: flex;
-  align-items: center;
   justify-content: center;
   min-height: 100vh;
   background-color: #f0f2f5;
   padding: 24px 16px;
   box-sizing: border-box;
+  /* Enable scrolling if content exceeds viewport */
+  overflow-y: auto;
 }
 
 /* Setup card style */
 .setup-card {
   width: 100%;
   max-width: 520px;
+  /* Flex margin-auto centers correctly while allowing overflow/scrolling */
+  margin: auto;
   padding: 24px;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 4px 10px -3px rgba(0, 0, 0, 0.07);
   border-radius: 16px;
