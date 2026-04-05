@@ -30,7 +30,10 @@ The system adopts a Dual-View navigation architecture to ensure that debugging e
 
 ### 3.1 Initialization Setup View (`/setup`)
 
-This view serves as the default landing page after system startup, dedicated to collecting environment parameters required to start the debugging session.
+This view serves as the default landing page after system startup, dedicated to collecting environment parameters required to start the debugging session. To handle the unique capabilities of Web and Desktop modes, the `/setup` route uses an `ElectronRedirectGuard` to dynamically route users to the appropriate endpoint:
+
+* **/setup-web**: Used in pure Web environments. Always uses WebSocket transport. Requires the user to enter the DAP Server Address (e.g., `localhost:4711`).
+* **/setup-electron**: Used in Electron environments. Always uses internal IPC transport, hiding the Server Address field. Supports native OS file pickers for selecting paths.
 
 * **Configuration Form**: Encapsulated in a `<mat-card>` form block, allowing users to input the following key parameters:
   * **DAP Server Connection Address**: The DAP Server's connection port or address (e.g., `localhost:4711`). Currently only supports C/C++ language debug adapters.

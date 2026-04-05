@@ -29,10 +29,24 @@ related:
 
 ---
 
+## Desktop UI Extensions
+
+### WI-26: Setup Page Separation
+<!-- status: completed | size: S | depends: none -->
+- **Size**: S
+- **Description**: Separate the Setup page into Web (`/setup-web`) and Electron (`/setup-electron`) versions via route guards.
+- **Details**:
+  - Implement `EnvironmentDetectService` and `ElectronRedirectGuard`.
+  - Create `SetupWebComponent` (uses WebSocket) and `SetupElectronComponent` (uses IPC).
+- **Dependencies**: none
+- **Status**: ⏳ Pending
+
+---
+
 ## Electron Desktop Mode
 
 ### WI-24: Electron IPC Transport Layer (`IpcTransportService`)
-<!-- status: pending | size: M | depends: WI-04, WI-23 -->
+<!-- status: pending | size: M | depends: WI-04, WI-23, WI-26 -->
 - **Size**: M
 - **Description**: Implement IPC communication per spec [§4.1](system-specification.md#41-electron-desktop-mode)
 - **Details**:
@@ -40,7 +54,7 @@ related:
   - `preload.ts` exposes `window.electronAPI` via `contextBridge` (native Electron API, no third-party wrapper)
   - Angular renderer side: `IpcTransportService` calls `window.electronAPI` for all DAP message I/O
   - Electron main process side: `ipcMain.handle` receives calls and forwards to the DAP Server via TCP socket
-- **Dependencies**: WI-04, WI-23
+- **Dependencies**: WI-04, WI-23, WI-26
 - **Status**: ⏳ Pending
 
 ### WI-25: Electron Local File System Access

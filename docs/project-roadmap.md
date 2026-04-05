@@ -2,7 +2,7 @@
 title: Project Roadmap & Dependency Map
 scope: milestones, dependencies, architecture-tracking
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-04
+last_updated: 2026-04-05
 related:
   - docs/project-management.md
   - docs/work-items.md
@@ -37,7 +37,7 @@ This document acts as the **Single Source of Truth (SSOT)** for the project's st
 | 🩷 **Pink** | Debug Info Panel | WI-17 ~ WI-18 | `#f472b6` |
 | 🔵 **Cyan** | Status & Console UI | WI-19 ~ WI-20 | `#2dd4bf` |
 | 🟠 **Deep Orange** | Error Handling | WI-21 ~ WI-22 | `#fb923c` |
-| ⬜ **Gray** | Electron Desktop Mode | WI-23 ~ WI-25 | `#94a3b8` |
+| ⬜ **Gray** | Electron Desktop Mode | WI-23 ~ WI-26 | `#94a3b8` |
 | ⬜ **White** | Automation Tests | TI-01 ~ TI-06 | `#ffffff` |
 
 ### Full Map
@@ -80,7 +80,8 @@ graph LR
     WI22 -.-> TI05
     WI18_1 -.-> TI06[TI-06 Variables Unit Tests]
 
-    WI23[WI-23 Electron Main Process] --> WI24[WI-24 IPC Transport]
+    WI26[WI-26 Setup Page Split] --> WI24[WI-24 IPC Transport]
+    WI23[WI-23 Electron Main Process] --> WI24
     WI04 --> WI24
     WI23 --> WI25[WI-25 Electron File System]
     WI15 --> WI25
@@ -124,6 +125,7 @@ graph LR
     style WI23 fill:#94a3b8,stroke:#000,stroke-width:2.5px
     style WI24 fill:#94a3b8,stroke:#64748b
     style WI25 fill:#94a3b8,stroke:#64748b
+    style WI26 fill:#94a3b8,stroke:#64748b
 
     style TI01 fill:#ffffff,stroke:#000,stroke-width:2.5px
     style TI02 fill:#ffffff,stroke:#000,stroke-width:2.5px
