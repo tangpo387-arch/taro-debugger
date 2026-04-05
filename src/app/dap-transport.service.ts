@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { DapRequest, DapEvent, DapMessage } from './dap.types';
+import { DapRequest, DapMessage } from './dap.types';
 
 export abstract class DapTransportService {
   /**
@@ -19,12 +19,6 @@ export abstract class DapTransportService {
    * @param request The request object to be sent
    */
   abstract sendRequest(request: DapRequest): void;
-
-  /**
-   * Get the DAP event stream (Observable)
-   * For the UI or services to listen to Server-emitted events (e.g., stopped, breakpoint)
-   */
-  abstract onEvent(): Observable<DapEvent>;
 
   /**
    * Get all message streams from the Server (Observable)

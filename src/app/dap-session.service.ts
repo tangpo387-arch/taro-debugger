@@ -83,7 +83,7 @@ export class DapSessionService {
    */
   async startSession(): Promise<DapResponse> {
     const config = this.configService.getConfig();
-    if (!config.serverAddress) {
+    if (config.transportType === 'websocket' && !config.serverAddress) {
       throw new Error('Server address is empty');
     }
 

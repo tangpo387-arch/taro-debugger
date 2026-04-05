@@ -6,12 +6,10 @@ import { contextBridge, ipcRenderer } from 'electron';
  */
 contextBridge.exposeInMainWorld('electronAPI', {
   /**
-   * Generic IPC message sending (two-way or fire-and-forget depending on implementation).
-   * Detailed implementations for DAP and File I/O will be added in Phase 10 (WI-24, WI-25).
+   * Fire-and-forget IPC message sending to the main process.
    */
   send: (channel: string, data: unknown): void => {
-    // Only allow specific channels for security
-    const validChannels = ['dap-request', 'file-tree-request', 'file-read-request'];
+    const validChannels = ['dap-request'];
     if (validChannels.includes(channel)) {
       ipcRenderer.send(channel, data);
     }
@@ -21,7 +19,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
    * Universal listener for messages coming from the main process.
    */
   on: (channel: string, func: (...args: unknown[]) => void): (() => void) => {
-    const validChannels = ['dap-event', 'dap-response', 'file-tree-response', 'file-read-response'];
+    const validChannels = ['dap-message', 'dap-error', 'dap-closed'];
     if (validChannels.includes(channel)) {
       // Deliberately strip event as it includes sender
       const subscription = (_event: unknown, ...args: unknown[]) => func(...args);
@@ -30,7 +28,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
       // Return cleanup function
       return () => ipcRenderer.removeListener(channel, subscription as Parameters<typeof ipcRenderer.on>[1]);
     }
-    return () => {};
+    return () => { };
   },
 
   /**

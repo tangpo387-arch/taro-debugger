@@ -31,18 +31,6 @@ related:
 
 ## Electron Desktop Mode
 
-### WI-24: Electron IPC Transport Layer (`IpcTransportService`)
-<!-- status: pending | size: M | depends: WI-04, WI-23, WI-26 -->
-- **Size**: M
-- **Description**: Implement IPC communication per spec [§4.1](system-specification.md#41-electron-desktop-mode)
-- **Details**:
-  - Implement `DapTransportService`'s IPC version (`IpcTransportService`)
-  - `preload.ts` exposes `window.electronAPI` via `contextBridge` (native Electron API, no third-party wrapper)
-  - Angular renderer side: `IpcTransportService` calls `window.electronAPI` for all DAP message I/O
-  - Electron main process side: `ipcMain.handle` receives calls and forwards to the DAP Server via TCP socket
-- **Dependencies**: WI-04, WI-23, WI-26
-- **Status**: ⏳ Pending
-
 ### WI-25: Electron Local File System Access
 <!-- status: pending | size: S | depends: WI-15, WI-23 -->
 - **Size**: S

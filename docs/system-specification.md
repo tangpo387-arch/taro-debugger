@@ -106,7 +106,8 @@ Applicable to desktop applications packaged with Electron. Communication path:
 
 1. **UI Layer (Angular)**: Captures and sends user operation commands.
 2. **IPC Layer (Electron)**: The Angular application calls Inter-Process Communication (IPC) methods via `contextBridge`.
-3. **DAP Layer**: The Electron main process translates IPC commands into standard DAP messages, communicates with the language-specific DAP Server, and returns results to the frontend.
+3. **WebSocket Relay Layer**: The Electron main process translates IPC commands into standard DAP messages and forwards them to the DAP Server via a **WebSocket connection** (e.g., to a local WebSocket relay running on `ws://localhost:8080`). This relay is responsible for bridging WebSocket traffic to the underlying DAP process.
+4. **DAP Layer**: The DAP Server receives the WebSocket-relayed DAP messages, performs debug operations, and streams results back through the relay to the frontend.
 
 ### 4.2 Web Browser Mode
 

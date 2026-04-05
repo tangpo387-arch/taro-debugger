@@ -414,3 +414,15 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
   - Create `SetupWebComponent` (uses WebSocket) and `SetupElectronComponent` (uses IPC).
 - **Dependencies**: none
 - **Status**: ✅ Done
+
+### WI-24: Electron IPC Transport Layer (`IpcTransportService`)
+<!-- status: done | size: M | depends: WI-04, WI-23, WI-26 -->
+- **Size**: M
+- **Description**: Implement IPC communication per spec [§4.1](system-specification.md#41-electron-desktop-mode)
+- **Details**:
+  - Implement `DapTransportService`'s IPC version (`IpcTransportService`)
+  - `preload.ts` exposes `window.electronAPI` via `contextBridge` (native Electron API, no third-party wrapper)
+  - Angular renderer side: `IpcTransportService` calls `window.electronAPI` for all DAP message I/O
+  - Electron main process side: `ipcMain.handle` receives calls and forwards to the DAP Server via **WebSocket relay** (same relay as Web Browser Mode, WI-09); no direct TCP socket connection
+- **Dependencies**: WI-04, WI-23, WI-26
+- **Status**: ✅ Done

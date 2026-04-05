@@ -27,13 +27,13 @@ graph TD
 
     subgraph Implementations ["Transport Implementations"]
         direction LR
-        WSS["WebSocketTransportService<br/>(Web Mode — Done)"]
-        IPC["IpcTransportService<br/>(Electron — WI-24 Pending)"]
+        WSS["WebSocketTransportService<br/>"]
+        IPC["IpcTransportService<br/>"]
         STS["(Future) SerialTransportService"]
     end
 
     Transport --> WSS
-    Transport -.-> IPC
+    Transport --> IPC
     Transport -.-> STS
 
     style UI fill:#f9f9f9,stroke:#333,stroke-width:2px
@@ -51,7 +51,7 @@ graph TD
 
 - Manage **low-level connections** to the DAP Server (establish, disconnect)
 - **Serialize/deserialize** DAP protocol messages (including `Content-Length` header handling)
-- Provide raw **message streams** (`onMessage()`) and **event streams** (`onEvent()`)
+- Provide raw **message streams** (`onMessage()`)
 - Publish **connection status** (`connectionStatus$`)
 
 ### 2.2 Class Structure
@@ -60,7 +60,7 @@ graph TD
 | --- | --- | --- |
 | `DapTransportService` | `dap-transport.service.ts` | **Abstract base class**, defines the transport layer interface |
 | `WebSocketTransportService` | `websocket-transport.service.ts` | WebSocket implementation, includes DAP binary stream parser with Content-Length header parsing. **Robustness**: Handles sticky/half packets via manual buffering; implements fail-fast error isolation for malformed packets; supports buffer auto-expansion (e.g., doubling capacity from 4KB). |
-| `IpcTransportService` | `ipc-transport.service.ts` *(WI-24, Pending)* | Electron IPC implementation: the Angular renderer-side service calls `window.electronAPI` (exposed via `electron/preload.ts` `contextBridge`) for all DAP message I/O. The main process side (`electron/main.ts`) forwards IPC calls to the DAP server via TCP. |
+| `IpcTransportService` | `ipc-transport.service.ts` | Electron IPC implementation: the Angular renderer-side service calls `window.electronAPI` (exposed via `electron/preload.ts` `contextBridge`) for all DAP message I/O. The main process side (`electron/main.ts`) forwards IPC calls to the DAP server via a WebSocket Relay. **Strict Relay Contract**: The Relay Server must send all binary frames as `Blob` type; no client-side fallback is implemented. |
 | `TransportFactoryService` | `transport-factory.service.ts` | Transport factory service, creates instances by `TransportType` |
 
 ### 2.3 Extension Guide
@@ -80,7 +80,6 @@ abstract class DapTransportService {
   abstract connect(address: string): Observable<void>;
   abstract disconnect(): void;
   abstract sendRequest(request: DapRequest): void;
-  abstract onEvent(): Observable<DapEvent>;      // Raw event stream
   abstract onMessage(): Observable<DapMessage>;  // All message stream
   abstract get connectionStatus$(): Observable<boolean>;
 }
@@ -378,7 +377,6 @@ sequenceDiagram
 `TransportType` type definition:
 
 ```typescript
-// 'ipc' = Electron IPC (WI-24); 'serial' = future use
 type TransportType = 'websocket' | 'ipc' | 'serial';
 ```
 
@@ -401,6 +399,7 @@ To ensure compatibility with Electron's `file://` protocol and multi-mode archit
 
 - **HashLocationStrategy**: The application uses `withHashLocation()` in `app.config.ts` to prevent "file not found" errors when reloading inside Electron.
 - **Main Process Isolation**: All Node.js/Filesystem logic is abstracted into the Electron Main Process (`electron/main.ts`) and accessed via the secure Preload bridge (`electron/preload.ts`).
+- **WebSocket Relay & Strict Binary Contract**: The Electron main process connects to the DAP Server via a WebSocket relay. It strictly requires all binary payloads from the Relay Server to be `Blob` instances.
 
 ---
 

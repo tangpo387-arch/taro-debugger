@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Observable, Subject, filter, map } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { DapTransportService } from './dap-transport.service';
-import { DapMessage, DapRequest, DapEvent } from './dap.types';
+import { DapMessage, DapRequest } from './dap.types';
 
 @Injectable()
 export class WebSocketTransportService extends DapTransportService {
@@ -98,13 +98,6 @@ export class WebSocketTransportService extends DapTransportService {
 
     // Merge string and Uint8Array directly in an array to generate a single Blob, avoiding redundant encoding
     this.socket.send(new Blob([header, payloadBytes], { type: 'application/json' }));
-  }
-
-  override onEvent(): Observable<DapEvent> {
-    return this.messageSubject.pipe(
-      filter(msg => msg.type === 'event'),
-      map(msg => msg as DapEvent)
-    );
   }
 
   override onMessage(): Observable<DapMessage> {

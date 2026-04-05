@@ -2,7 +2,7 @@
 title: Design Decisions (ADR)
 scope: architecture, decisions, rationale, tradeoffs
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-04
+last_updated: 2026-04-06
 related:
   - docs/architecture.md
   - docs/system-specification.md
@@ -21,6 +21,7 @@ WI/TI IDs are provided for cross-referencing with the development history.
 
 - **WI**: WI-07 (DAP Request Timeout Mechanism)
 - **Status**: Accepted
+- **Date**: 2026-04-04T00:00:00+08:00
 
 ### Context
 
@@ -41,6 +42,7 @@ Implement the timeout using a native `setTimeout` callback that rejects the Prom
 
 - **WI**: WI-13 (Breakpoint DAP Synchronization)
 - **Status**: Accepted
+- **Date**: 2026-04-04T00:00:00+08:00
 
 ### Context
 
@@ -63,6 +65,7 @@ The DAP `setBreakpoints` request replaces **all** breakpoints for a given file i
 
 - **WI**: WI-18.1 (Variables Data State Management)
 - **Status**: Accepted
+- **Date**: 2026-04-04T00:00:00+08:00
 
 ### Context
 
@@ -84,6 +87,7 @@ Extract all variable-related derived state and caching into a dedicated **`DapVa
 
 - **WI**: WI-18.2 (Variables Tree UI Component)
 - **Status**: Accepted
+- **Date**: 2026-04-04T00:00:00+08:00
 
 ### Context
 
@@ -108,6 +112,7 @@ Implement `VariablesComponent` using a **hierarchical-to-flat transformation**:
 
 - **WI**: WI-23 (Electron Main Process Architecture)
 - **Status**: Accepted
+- **Date**: 2026-04-04T00:00:00+08:00
 
 ### Context
 
@@ -131,6 +136,7 @@ Adopt **`HashLocationStrategy`** (`withHashLocation()` in `app.config.ts`) globa
 
 - **WI**: WI-23 (Electron Main Process Architecture)
 - **Status**: Accepted
+- **Date**: 2026-04-04T00:00:00+08:00
 
 ### Context
 
@@ -156,3 +162,31 @@ All communication between the renderer (Angular) and the main process (Node.js) 
 - `IpcTransportService` (WI-24, Pending) must use `window.electronAPI` (exposed via `contextBridge`) for all DAP I/O, not `ipcRenderer` directly.
 - A separate `tsconfig.electron.json` is required (targeting `CommonJS` / `ES2022`) to compile the main process and preload scripts without Angular template-checking options interfering.
 - `electron-builder` is configured for Linux (`AppImage`, `deb`) and Windows (`nsis`) packaging targets.
+
+---
+
+## ADR-07: Electron Main Process Uses WebSocket Relay (Not Direct TCP) for DAP Communication
+
+- **WI**: WI-24 (Electron IPC Transport Layer)
+- **Status**: Accepted
+- **Date**: 2026-04-06T02:39:00+08:00
+
+### Context
+
+The initial WI-24 specification described the Electron main process forwarding DAP messages to the DAP Server via a **raw TCP socket** (`net.createConnection`). However, most modern DAP Servers (such as the Node.js WebSocket bridge from WI-09) expose a **WebSocket endpoint** rather than a bare TCP port.
+
+Attempting to open a raw TCP connection to a WebSocket server results in `400 Bad Request`, because the server performs an HTTP Upgrade handshake that a plain TCP client cannot satisfy.
+
+### Decision
+
+The Electron main process (`electron/main.ts`) connects to the DAP Server via a **WebSocket connection** using the globally available `WebSocket` class (native to Electron's bundled Chromium/Node.js runtime). The address passed from `IpcTransportService` is automatically normalized: if no `ws://` prefix is present, it is prepended automatically.
+
+This means both Electron Desktop Mode and Web Browser Mode share the same WebSocket relay infrastructure (WI-09), with the distinction being **who opens the WebSocket connection**:
+- **Web Browser Mode**: The Angular renderer opens the WebSocket directly.
+- **Electron Desktop Mode**: The Electron main process opens the WebSocket on behalf of the renderer, bridged via IPC.
+
+### Consequences
+
+- The `net` module is no longer imported in `electron/main.ts`.
+- The `§4.1` communication path in `system-specification.md` is updated to reflect a 4-layer flow including the WebSocket Relay Layer.
+- WI-09 (Node.js WebSocket Bridge) is a **shared dependency** for both deployment modes, not Electron-exclusive.
