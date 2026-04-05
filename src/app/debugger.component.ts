@@ -48,6 +48,7 @@ import { DapLogService } from './dap-log.service';
   providers: [
     DapSessionService,
     DapVariablesService,
+    DapLogService,
   ],
   templateUrl: './debugger.component.html',
   styleUrls: ['./debugger.component.scss']

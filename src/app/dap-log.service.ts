@@ -2,9 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { LogEntry, LogCategory } from './dap.types';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class DapLogService {
   private readonly consoleLogsSubject = new BehaviorSubject<LogEntry[]>([]);
   private readonly programLogsSubject = new BehaviorSubject<LogEntry[]>([]);

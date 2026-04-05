@@ -30,6 +30,12 @@ This document defines where "state" should be stored in the `taro-debugger-front
   * Services that cache runtime-inspectable data (e.g., `DapVariablesService`) must automatically clear their cache whenever `executionState$` exits `stopped` (i.e., transitions to `running`, `terminated`, or `error`). This prevents stale variable data from remaining visible in the UI after a `continue` command.
   * Session-scoped state (e.g., log records) must be cleaned up during `DapSessionService.disconnect()` or when reverting to `idle` via `reset()`.
   * UI-related local Subscriptions must be cancelled within `ngOnDestroy`.
+* **R_SM5.1: Component-Scoped Service Must Not Use `providedIn: 'root'`**
+  * Services that are registered in a component's `providers` array for lifecycle scoping
+    (e.g., `DapSessionService`, `DapVariablesService`, `DapLogService` in `DebuggerComponent`)
+    MUST NOT declare `@Injectable({ providedIn: 'root' })`. Violating this causes the
+    Angular DI container to ignore the component-level registration entirely, making the
+    lifecycle scoping rule ineffective.
 * **R_SM6: Use State Selectors / Derived Observables**
   * UI components must receive pre-computed data from the service layer via derived Observables or "Selectors". For example, use a `hasActiveSession$` observable directly from the service rather than manually computing `executionState === 'running'` within the template or component logic.
 

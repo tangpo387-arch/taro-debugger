@@ -262,28 +262,34 @@ graph TD
 
 ### 4.4 Component Lifecycle (DebuggerComponent)
 
-```mermaid
-graph TD
-    subgraph ngOnInit ["ngOnInit()"]
-        A1["Read Config"]
-        A2["Subscribe executionState$<br/>(sync local state)"]
-        A3["Subscribe onEvent()"]
-        A4["Subscribe consoleLogs$ / programLogs$<br/>(auto-scroll)"]
-        A5["startSession()"]
-        A6["loadPersistedSizes()"]
+The following table is the **authoritative specification** for dependency injection scoping and state destruction inside `DebuggerComponent`.
 
-        A1 --> A2 --> A3 --> A4 --> A5 --> A6
-    end
+**Strict Dependency Rule:** Only the objects explicitly listed in the "Root-Level Injected Services" table below are permitted to come from the `root` injector. **Every other object reference, service, or piece of state must be component-scoped** and cleared according to the `DebuggerComponent` destruction state. (e.g. `DapSessionService`, `DapVariablesService`, `DapLogService` MUST be destroyed).
 
-    subgraph ngOnDestroy ["ngOnDestroy()"]
-        C1["Unsubscribe all Subscriptions"]
-        C2["disconnect()"]
-    end
-```
+**Root-Level Injected Services** (Whitelisted Singletons):
+
+| Service / Object | Scope | Responsibility | Restriction |
+| :--- | :--- | :--- | :--- |
+| `DapConfigService` | `root` | Global read-only configuration | Must not hold active session or transport state. |
+| `Router` | `root` | Angular navigation | Framework provided. |
+| `MatSnackBar` | `root` | Global UI popups | Framework provided. |
+| `MatDialog` | `root` | Global UI popups | Framework provided. |
+
+> [!CAUTION]
+> **Implementation Enforcement**: Any service NOT listed in the Root-Level table above
+> MUST be registered exclusively via `@Component({ providers: [...] })` in
+> `DebuggerComponent`. Using `@Injectable({ providedIn: 'root' })` for session-scoped
+> services is an architectural violation that will cause state to persist across sessions.
+
+**Intentionally Persisted State** (not cleared — by design):
+
+| Storage | Key | Reason |
+| :--- | :--- | :--- |
+| `localStorage` | `taro-debugger-layout-sizes` | User layout preference — survives sessions intentionally |
 
 ### 4.5 Logging Architecture (DapLogService + LogViewerComponent)
 
-`DapLogService` is a global singleton service (`providedIn: 'root'`) managing two independent log streams:
+`DapLogService` manages two independent log streams:
 
 | Stream | Observable | Purpose |
 | --- | --- | --- |
