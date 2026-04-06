@@ -1,0 +1,108 @@
+/* Ensure class names match those in the HTML */
+.editor-container {
+  display: block;
+  flex-grow: 1;    /* Automatically fill all remaining space */
+  width: 100%;
+  height: 100%;
+  /* Use Material token instead of hardcode to ensure theme compatibility (§9.4) */
+  border: 1px solid var(--mat-sys-outline-variant);
+
+  ngx-monaco-editor {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* ── Monaco Editor Internal Styling (§9.4) ── */
+/* Rule §2.2: Every ::ng-deep selector must be prefixed with :host to constrain 
+   the style penetration to the current component's subtree only. */
+
+:host ::ng-deep {
+
+  /* Current execution line highlight and glyph marker.
+     Monaco's className decoration renders via an absolutely-positioned ::before
+     pseudo-element that is stacked BELOW the text layer by the editor internals.
+     Do NOT use inlineClassName or a stacking-context-creating property here. */
+  .current-line-highlight {
+    /* Opacity ≤ 0.12 to prevent obscuring code text (§9.4) */
+    background-color: rgba(255, 193, 7, 0.10) !important; /* Amber 500 at 10% */
+  }
+
+  .current-line-glyph {
+    background-color: #ffd740 !important; /* Material Amber 400 */
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 2px;
+    margin-left: 5px;
+    box-shadow: 0 0 5px rgba(255, 215, 64, 0.5);
+  }
+
+  /* Breakpoint marker in the glyph margin */
+  .breakpoint-glyph {
+    background: #ff5252 !important; /* Vibrant Red */
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 50%;
+    margin-left: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 8px rgba(255, 82, 82, 0.6);
+    cursor: pointer;
+    transition: transform 0.1s ease-in-out;
+
+    &:hover {
+      transform: scale(1.2);
+      background: #ff1744 !important;
+    }
+  }
+
+  /* Unverified (pending) breakpoint: shown before the DAP adapter confirms the line */
+  .breakpoint-glyph-unverified {
+    background: #9e9e9e !important; /* Material Gray 500 */
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 50%;
+    margin-left: 5px;
+    opacity: 0.7;
+    cursor: pointer;
+    transition: opacity 0.15s ease-in-out;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  /* ── Monaco Scrollbar Native Alignment (§9.4) ── */
+  .monaco-editor {
+    .monaco-scrollable-element {
+      > .scrollbar {
+        /* Align track color with Material surface (§9.4) */
+        background-color: var(--mat-sys-surface-container-low) !important;
+
+        > .slider {
+          background-color: var(--mat-sys-outline-variant) !important;
+          border-radius: 7px !important;
+
+          &:hover, &.active {
+            background-color: var(--mat-sys-outline) !important;
+          }
+        }
+      }
+
+      /* ── Scrollbar Corner Theme Sync ── */
+      /* Monaco does not expose corner styling via CSS vars. ::ng-deep with :host & 
+         is required to sync the intersection with the editor track color. */
+      .scrollbar-corner {
+        background-color: var(--mat-sys-surface-container-low) !important;
+      }
+    }
+
+    /* ── Prevent Text/Scrollbar Overlap (§9.4) ── */
+    /* Force viewport to stop before the scrollbar track starts. */
+    .lines-content.monaco-editor-background {
+      padding-right: 14px !important;
+    }
+
+    .view-lines {
+      padding-bottom: 40px !important;
+    }
+  }
+}

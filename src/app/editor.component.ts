@@ -13,6 +13,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { DapConfigService } from './dap-config.service';
@@ -32,11 +33,12 @@ const UPDATE_DEBOUNCE_MS = 50;
   selector: 'app-editor',
   standalone: true,
   imports: [
+    CommonModule,
     FormsModule,
     MonacoEditorModule
   ],
   templateUrl: './editor.component.html',
-  styleUrls: ['./editor.component.css']
+  styleUrl: './editor.component.scss'
 })
 export class EditorComponent implements OnChanges, OnDestroy {
   // ── Properties ──────────────────────────────────────────────────────
@@ -50,7 +52,24 @@ export class EditorComponent implements OnChanges, OnDestroy {
     automaticLayout: true,
     lineNumbers: 'on',
     minimap: { enabled: false },
-    fontSize: this.queryCssToken('--text-base', 14)
+    fontSize: this.queryCssToken('--text-base', 14),
+    scrollBeyondLastLine: false,
+    overviewRulerLanes: 3,
+    hideCursorInOverviewRuler: true,
+    fixedOverflowWidgets: true,
+    padding: { bottom: 40, top: 0 },
+    scrollbar: {
+      vertical: 'auto',
+      horizontal: 'auto',
+      verticalScrollbarSize: 14,
+      horizontalScrollbarSize: 14,
+      verticalSliderSize: 6,
+      horizontalSliderSize: 6,
+      verticalHasArrows: false,
+      horizontalHasArrows: false,
+      useShadows: false,
+      alwaysConsumeMouseWheel: false
+    }
   };
 
   /**

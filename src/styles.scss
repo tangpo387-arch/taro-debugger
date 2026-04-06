@@ -70,3 +70,7 @@ body.ui-density-panel {
 ::-webkit-scrollbar-thumb:hover {
   background-color: var(--mat-sys-outline);
 }
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
