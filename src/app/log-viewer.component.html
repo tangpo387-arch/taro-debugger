@@ -17,7 +17,7 @@
             @if (log.data) {
               <button class="log-expand-btn" (click)="toggleLogExpand(log)"
                       [attr.aria-label]="isLogExpanded(log) ? 'Collapse payload' : 'Expand payload'">
-                <mat-icon style="font-size: 14px; width: 14px; height: 14px; line-height: 14px;">
+                <mat-icon style="font-size: var(--text-base); width: 14px; height: 14px; line-height: 14px;">
                   {{ isLogExpanded(log) ? 'expand_less' : 'expand_more' }}
                 </mat-icon>
               </button>

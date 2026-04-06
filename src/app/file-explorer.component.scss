@@ -23,10 +23,9 @@
     margin-bottom: 4px;
 
     h3 {
-      font-weight: 700;
-      font-size: 1rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      font-weight: var(--weight-bold);
+      font-size: var(--text-lg);
+      letter-spacing: 0.5px;
       color: var(--mat-sys-on-surface-variant);
       margin: 0;
       opacity: 0.8;
@@ -44,7 +43,7 @@
       margin-left: 4px;
 
       mat-icon {
-        font-size: 18px;
+        font-size: var(--text-xl);
         width: 18px;
         height: 18px;
       }
@@ -57,7 +56,7 @@
 }
 
 .source-path {
-  font-size: 0.875rem;
+  font-size: var(--text-xs);
   color: var(--mat-sys-on-surface-variant);
   white-space: nowrap;
   overflow: hidden;
@@ -101,7 +100,7 @@
   }
 
   &.active-node {
-    font-weight: bold;
+    font-weight: var(--weight-bold);
     color: var(--mat-sys-primary);
     background-color: var(--mat-sys-primary-container);
   }
@@ -132,7 +131,7 @@
   justify-content: center;
 
   mat-icon {
-    font-size: 18px;
+    font-size: var(--text-xl);
     width: 18px;
     height: 18px;
   }
@@ -142,14 +141,14 @@
    flex: 0 0 auto lets each row expand to its natural width, consistent with
    the inline-block tree container that already expands to the widest child. */
 .node-text {
-  font-size: 14px;
+  font-size: var(--text-base);
   white-space: nowrap;
   flex: 0 0 auto;
 }
 
 /* Icons */
 .file-icon {
-  font-size: 18px;
+  font-size: var(--text-xl);
   width: 18px;
   height: 18px;
   margin-right: 8px;
@@ -159,7 +158,7 @@
 }
 
 .folder-icon {
-  font-size: 18px;
+  font-size: var(--text-xl);
   width: 18px;
   height: 18px;
   margin-right: 8px;
@@ -172,7 +171,7 @@
 .unsupported-message {
   padding: 16px;
   color: var(--mat-sys-on-surface-variant);
-  font-size: 0.875rem;
+  font-size: var(--text-base);
   display: flex;
   align-items: center;
   justify-content: center;

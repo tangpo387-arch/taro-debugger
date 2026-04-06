@@ -101,7 +101,7 @@
           <button mat-list-item (click)="onFrameClick(frame)"
             [style.background-color]="activeFrameId === frame.id ? 'var(--mat-sys-surface-variant)' : 'transparent'">
             <span matListItemTitle>{{ frame.name }}</span>
-            <span matListItemLine style="font-size: 0.75rem; color: var(--mat-sys-on-surface-variant);">
+            <span matListItemLine style="font-size: var(--text-xs); color: var(--mat-sys-on-surface-variant);">
               {{ frame.source?.name || 'Unknown' }}:{{ frame.line }}
             </span>
           </button>

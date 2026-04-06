@@ -56,6 +56,14 @@ This document defines the development standards for the `taro-debugger-frontend`
 
 ### SCSS Styling Rules
 
+#### Typography Design Tokens
+
+*   **Design Token Enforcement**: All UI typography (font size, weight, family) must use the CSS custom properties defined in the global `:root` (`styles.scss`). **Hardcoding font scalar sizes (e.g., `font-size: 13px`, `font-size: 0.8rem`) is strictly forbidden.**
+*   **Permitted Tokens**:
+    *   **Font Family**: `var(--font-sans)` (default UI), `var(--font-mono)` (code, console, debugging panels).
+    *   **Font Weights**: `var(--weight-regular)`, `var(--weight-medium)`, `var(--weight-bold)`.
+    *   **Typographic Scale**: `var(--text-xs)` (0.75rem / 12px), `var(--text-sm)` (0.8125rem / 13px), `var(--text-base)` (0.875rem / 14px), `var(--text-lg)` (1rem / 16px), `var(--text-xl)` (1.125rem / 18px), `var(--text-2xl)` (1.375rem / 22px).
+
 #### `::ng-deep` Usage Policy
 
 `::ng-deep` is **deprecated** in Angular and must be treated as a **last resort**, not a default solution.
