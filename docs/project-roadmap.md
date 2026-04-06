@@ -124,7 +124,7 @@ graph LR
 
     style WI23 fill:#94a3b8,stroke:#000,stroke-width:2.5px
     style WI24 fill:#94a3b8,stroke:#000,stroke-width:2.5px
-    style WI25 fill:#94a3b8,stroke:#64748b
+    style WI25 fill:none,stroke-dasharray:5
     style WI26 fill:#94a3b8,stroke:#000,stroke-width:2.5px
 
     style TI01 fill:#ffffff,stroke:#000,stroke-width:2.5px

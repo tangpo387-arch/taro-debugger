@@ -175,5 +175,5 @@ interface DapConfig {
 To ensure compatibility with Electron's `file://` protocol and multi-mode architecture:
 
 - **HashLocationStrategy**: The application uses `withHashLocation()` in `app.config.ts` to prevent "file not found" errors when reloading inside Electron.
-- **Main Process Isolation**: All Node.js/Filesystem logic is abstracted into the Electron Main Process (`electron/main.ts`) and accessed via the secure Preload bridge (`electron/preload.ts`).
+- **Main Process Isolation**: All native Node.js logic is abstracted into the Electron Main Process (`electron/main.ts`) and accessed via the secure Preload bridge (`electron/preload.ts`).
 - **WebSocket Relay & Strict Binary Contract**: The Electron main process connects to the DAP Server via a WebSocket relay. It strictly requires all binary payloads from the Relay Server to be `Blob` instances.

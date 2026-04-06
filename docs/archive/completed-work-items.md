@@ -426,3 +426,17 @@ These items were moved out of the main work list (`work-items.md`) to keep the d
   - Electron main process side: `ipcMain.handle` receives calls and forwards to the DAP Server via **WebSocket relay** (same relay as Web Browser Mode, WI-09); no direct TCP socket connection
 - **Dependencies**: WI-04, WI-23, WI-26
 - **Status**: ✅ Done
+
+---
+
+## Electron Desktop Mode
+
+### WI-25: Electron Local File System Access
+<!-- status: pending | size: S | depends: WI-15, WI-23 -->
+- **Size**: S
+- **Description**: Implement local file reading per spec [§6.1](system-specification.md#61-electron-desktop-mode)
+- **Details**:
+  - Implement `FileTreeService`'s Electron version
+  - Read file tree and file contents via IPC calling Node.js `fs` API
+- **Dependencies**: WI-15, WI-23
+- **Status**: 🚫 Aborted (Architecture relies on generic DAP source requests instead of direct fs access)
