@@ -356,7 +356,14 @@ export class DapSessionService {
       const timeoutId = setTimeout(() => {
         if (this.pendingRequests.has(currentSeq)) {
           this.pendingRequests.delete(currentSeq);
-          reject(new Error(`DAP request '${command}' timed out after ${timeoutMs}ms`));
+          const msg = `DAP request '${command}' timed out after ${timeoutMs}ms`;
+          this.eventSubject.next({
+            seq: 0,
+            type: 'event',
+            event: '_sessionWarning',
+            body: { message: msg }
+          });
+          reject(new Error(msg));
         }
       }, timeoutMs);
 

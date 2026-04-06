@@ -140,13 +140,11 @@ export class LogViewerComponent implements OnInit, OnDestroy {
         context: 'repl',
       });
 
-      if (response.success && response.body) {
+      if (response.body?.result) {
         this.logService.consoleLog(response.body.result, 'info', 'stdout');
-      } else {
-        this.logService.consoleLog(response.message || 'Evaluate failed', 'error', 'system');
       }
     } catch (e: any) {
-      this.logService.consoleLog(`Evaluate failed: ${e.message}`, 'error', 'system');
+      // Handled globally by synthetic DAP events
     } finally {
       this.isEvaluating = false;
       this.cdr.detectChanges();

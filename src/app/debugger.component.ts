@@ -491,7 +491,9 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         }
       }
     } catch (e: any) {
-      this.logService.consoleLog(`Failed to load call stack: ${e.message}`, 'error', 'system');
+      // Clear stale data on failure (Error log handled globally)
+      this.stackFrames = [];
+      this.cdr.detectChanges();
     }
   }
 
@@ -522,7 +524,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
     // Trigger scope cache update for the newly selected frame
     this.variablesService.fetchScopes(frame.id).catch(e => {
-      this.logService.consoleLog(`Scopes request failed: ${e.message}`, 'error', 'system');
+      // Handled globally by synthetic DAP events
     });
 
     this.cdr.detectChanges();
@@ -566,11 +568,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         'system'
       );
     } catch (e: any) {
-      this.logService.consoleLog(
-        `Failed to sync breakpoints for ${filePath}: ${e.message}`,
-        'error',
-        'system'
-      );
+      // Handled globally by synthetic DAP events
     }
   }
 
@@ -580,7 +578,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     try {
       await this.dapSession.continue();
     } catch (e: any) {
-      this.logService.consoleLog(`Continue failed: ${e.message}`, 'error', 'system');
+      // Handled globally by synthetic DAP events
     }
   }
 
@@ -590,7 +588,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     try {
       await this.dapSession.pause();
     } catch (e: any) {
-      this.logService.consoleLog(`Pause failed: ${e.message}`, 'error', 'system');
+      // Handled globally by synthetic DAP events
     }
   }
 
@@ -600,7 +598,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     try {
       await this.dapSession.next();
     } catch (e: any) {
-      this.logService.consoleLog(`Step Over failed: ${e.message}`, 'error', 'system');
+      // Handled globally by synthetic DAP events
     }
   }
 
@@ -610,7 +608,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     try {
       await this.dapSession.stepIn();
     } catch (e: any) {
-      this.logService.consoleLog(`Step Into failed: ${e.message}`, 'error', 'system');
+      // Handled globally by synthetic DAP events
     }
   }
 
@@ -620,7 +618,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     try {
       await this.dapSession.stepOut();
     } catch (e: any) {
-      this.logService.consoleLog(`Step Out failed: ${e.message}`, 'error', 'system');
+      // Handled globally by synthetic DAP events
     }
   }
 
@@ -630,7 +628,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       this.logService.consoleLog('Debug session stopped by user', 'info', 'system');
       await this.dapSession.terminate();
     } catch (e: any) {
-      this.logService.consoleLog(`Terminate failed: ${e.message}`, 'error', 'system');
+      // Handled globally by synthetic DAP events
     }
   }
 
