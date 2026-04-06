@@ -42,7 +42,7 @@ Use this decision tree to quickly find the right document based on your current 
 
 | Task Type | Layer | Primary Agent | Start Here |
 | --- | --- | --- | --- |
-| Define or update requirements | — | `Product_Architect` | [system-specification.md](../docs/system-specification.md) + [architecture.md](../docs/architecture.md) |
+| Define or update requirements | — | `Product_Architect` | [system-specification.md](../docs/system-specification.md) + [architecture.md](../docs/architecture.md) (Index) |
 | Add a new UI feature | **UI** | `Lead_Engineer` | [system-specification.md §3](../docs/system-specification.md#3-view-navigation--layout-specification) for layout spec |
 | Modify component local state | **UI** | `Lead_Engineer` | **Skill: `state-management`** — load before touching `@Input`, `BehaviorSubject`, or `async` pipe patterns |
 | Modify service reactive state | **Session** | `Lead_Engineer` | **Skill: `state-management`** — load before touching `BehaviorSubject`, `Subject`, or `Observable` streams in services |
@@ -82,7 +82,7 @@ This table consolidates the authoritative reference documents each role relies o
 | :--- | :---: | :---: | :---: |
 | `docs/README.md` | ✅ | ✅ | ✅ |
 | `docs/system-specification.md` | ✅ | ✅ | — |
-| `docs/architecture.md` | ✅ | — | — |
+| `docs/architecture.md` (Index) | ✅ | — | — |
 | `docs/file-map.md` | ✅ | ✅ | ✅ |
 | `.agents/rules/code-style-guide.md` | — | ✅ | ✅ |
 | `.agents/rules/testing-protocol.md` | — | ✅ | ✅ |
