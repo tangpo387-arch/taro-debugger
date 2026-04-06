@@ -15,6 +15,18 @@
   display: flex;
   flex-direction: column;
 
+  // PA spec §9.2: Panel header bar height must be 32px.
+  // Overriding Material's default 48px tab header height to reclaim vertical space in the IDE console.
+  :host & ::ng-deep .mat-mdc-tab-header {
+    --mdc-tab-height: 32px;
+  }
+  
+  :host & ::ng-deep .mat-mdc-tab {
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 16px;
+  }
+
   // Layer 1: wrapper must grow to fill remaining space after tab header
   :host & ::ng-deep .mat-mdc-tab-body-wrapper {
     flex: 1;
@@ -43,7 +55,7 @@
   flex: 1;
   width: 100%;
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   color: var(--mat-sys-on-surface);
   background-color: var(--mat-sys-surface-container-low);
 }
@@ -68,7 +80,7 @@
 
   .log-line-header {
     height: 20px;
-    line-height: 20px;
+    line-height: 1.5; /* Eliminate crowding in high-frequency log output (§9.6) */
     display: flex;
     align-items: center;
     white-space: pre;
@@ -78,7 +90,8 @@
   }
 
   .log-timestamp {
-    color: var(--mat-sys-on-surface-variant);
+    color: var(--mat-sys-outline); /* De-emphasize timestamps per §9.6 */
+    font-size: var(--text-sm); /* Smaller than body to reinforce hierarchy (§9.6) */
     margin-right: 8px;
   }
 
@@ -95,7 +108,10 @@
     }
 
     &.log-level-error {
-      color: var(--mat-sys-error) !important;
+      color: var(--mat-sys-on-error-container) !important;
+      background-color: var(--mat-sys-error-container);
+      padding: 0 4px;
+      border-radius: 4px;
     }
     // console and stdout inherit the default color
   }
@@ -142,7 +158,8 @@
   display: flex;
   align-items: center;
   padding: 0 8px;
-  height: 40px;
+  /* Sync with density system (§8.2) and align with 8px grid (§9.2): 32px Desktop / 24px Panel */
+  height: var(--sys-density-variable-row, 32px);
   flex-shrink: 0;
   border-top: 1px solid var(--mat-sys-outline-variant);
   background: var(--mat-sys-surface-container);
@@ -159,7 +176,7 @@
     outline: none;
     color: var(--mat-sys-on-surface);
     font-family: var(--font-mono);
-    font-size: var(--text-sm);
+    font-size: var(--text-base);
 
     &::placeholder {
       color: var(--mat-sys-outline);

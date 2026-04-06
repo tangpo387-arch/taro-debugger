@@ -1,14 +1,14 @@
-import { 
-  Component, 
+import {
+  Component,
   Input,
   Output,
   EventEmitter,
-  inject, 
-  NgZone, 
-  OnChanges, 
-  SimpleChanges, 
+  inject,
+  NgZone,
+  OnChanges,
+  SimpleChanges,
   OnDestroy,
-  DestroyRef 
+  DestroyRef
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject } from 'rxjs';
@@ -16,6 +16,7 @@ import { debounceTime } from 'rxjs/operators';
 import { FormsModule } from '@angular/forms';
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { DapConfigService } from './dap-config.service';
+import { EnvironmentDetectService } from './environment-detect.service';
 
 /** Payload emitted when breakpoints change in the editor */
 export interface BreakpointChangeEvent {
@@ -40,15 +41,34 @@ const UPDATE_DEBOUNCE_MS = 50;
 export class EditorComponent implements OnChanges, OnDestroy {
   // ── Properties ──────────────────────────────────────────────────────
 
+  private readonly envDetect = inject(EnvironmentDetectService);
+
   public editorOptions = {
     theme: 'vs',
     language: 'cpp',
     glyphMargin: true,
     automaticLayout: true,
-    fontSize: 14,
     lineNumbers: 'on',
-    minimap: { enabled: false }
+    minimap: { enabled: false },
+    fontSize: this.queryCssToken('--text-base', 14)
   };
+
+  /**
+   * Queries a CSS token from the body and converts rem/px to a numeric pixel size.
+   * A fallback is required for three primary defensive programming reasons:
+   * 1. SSR/Test Safety: The window/document objects may not exist in Node.js environments.
+   * 2. Initialization Timing: Angular may instantiate this class before CSS is fully heavily parsed.
+   * 3. Robustness: Prevents Editor core failure if the CSS token is ever typo'd or removed.
+   */
+  private queryCssToken(token: string, fallback: number): number {
+    if (typeof window === 'undefined') return fallback;
+    const val = getComputedStyle(document.body).getPropertyValue(token).trim();
+    if (!val) return fallback;
+    if (val.endsWith('rem')) {
+      return parseFloat(val) * 16; // 1rem = 16px
+    }
+    return parseFloat(val) || fallback;
+  }
 
   @Input() public filename: string | null = null;
   @Input() public code: string = '// Loading source code...';

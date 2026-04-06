@@ -7,6 +7,7 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
 import { Subscription } from 'rxjs';
 
 import { DapVariablesService, DapScope } from './dap-variables.service';
+import { EnvironmentDetectService } from './environment-detect.service';
 
 // ── Data Model ────────────────────────────────────────────────────────
 
@@ -50,7 +51,12 @@ const INDENT_PX = 20;
 })
 export class VariablesComponent implements OnInit, OnDestroy {
   private readonly variablesService = inject(DapVariablesService);
+  private readonly envDetect = inject(EnvironmentDetectService);
   private readonly cdr = inject(ChangeDetectorRef);
+
+  public get rowHeight(): number {
+    return this.envDetect.isElectron() ? 32 : 24;
+  }
 
   /** Hierarchical tree data (source of truth). */
   private treeData: VariableNode[] = [];

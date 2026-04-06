@@ -19,9 +19,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTreeModule, MatTree } from '@angular/material/tree';
 
-// Local
 import { DapSessionService } from './dap-session.service';
 import { DapConfigService } from './dap-config.service';
+import { EnvironmentDetectService } from './environment-detect.service';
 import { FileNode } from './file-tree.service';
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -42,6 +42,7 @@ export class FileExplorerComponent implements OnChanges {
   // ── Injected Services ────────────────────────────────────────────────────────
   private readonly dapSession = inject(DapSessionService);
   private readonly dapConfig = inject(DapConfigService);
+  private readonly envDetect = inject(EnvironmentDetectService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -82,6 +83,13 @@ export class FileExplorerComponent implements OnChanges {
   /** Predicate used by *matTreeNodeDef to identify expandable (directory) nodes. */
   public readonly hasChild = (_: number, node: FileNode): boolean =>
     !!node.children && node.children.length > 0;
+
+  /** Gets active dynamic indent based on env context.
+   * Per PA spec §9.2: 16px per level is mandatory for all environments
+   * to ensure readability of deep directory paths. */
+  public get indentSize(): number {
+    return 16;
+  }
 
   /** Whether the connected DAP adapter supports `loadedSources`. */
   public fileTreeSupported: boolean = true;

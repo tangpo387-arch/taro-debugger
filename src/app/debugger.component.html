@@ -99,11 +99,12 @@
         <mat-action-list class="stack-list" style="padding: 0;">
           @for (frame of stackFrames; track frame.id) {
           <button mat-list-item (click)="onFrameClick(frame)"
-            [style.background-color]="activeFrameId === frame.id ? 'var(--mat-sys-surface-variant)' : 'transparent'">
-            <span matListItemTitle>{{ frame.name }}</span>
-            <span matListItemLine style="font-size: var(--text-xs); color: var(--mat-sys-on-surface-variant);">
-              {{ frame.source?.name || 'Unknown' }}:{{ frame.line }}
-            </span>
+            [class.active-node]="activeFrameId === frame.id" 
+            class="compact-stack-frame">
+            <div class="frame-content">
+              <div class="frame-name">{{ frame.name }}</div>
+              <div class="frame-source">{{ frame.source?.name || 'Unknown' }}:{{ frame.line }}</div>
+            </div>
           </button>
           }
         </mat-action-list>

@@ -19,9 +19,9 @@
 .variable-row {
   display: flex;
   align-items: center;
-  height: 28px;
+  height: var(--sys-density-variable-row, 32px);
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -68,7 +68,7 @@
   // ── Variable Segments ───────────────────────────────────────────────
 
   .var-name {
-    color: var(--mat-sys-primary);
+    color: var(--mat-sys-on-surface); /* Name: primary foreground for readability (§9.5) */
     font-weight: var(--weight-medium);
     flex-shrink: 0;
   }
@@ -80,7 +80,7 @@
   }
 
   .var-value {
-    color: var(--mat-sys-on-surface);
+    color: var(--mat-sys-primary); /* Value: primary accent for visual distinction (§9.5) */
     margin-left: 2px;
     overflow: hidden;
     text-overflow: ellipsis;

@@ -1,5 +1,5 @@
 @if (flatNodes.length > 0) {
-  <cdk-virtual-scroll-viewport [itemSize]="28" class="variables-viewport"
+  <cdk-virtual-scroll-viewport [itemSize]="32" class="variables-viewport"
                                minBufferPx="200" maxBufferPx="400">
     <div *cdkVirtualFor="let flatNode of flatNodes; trackBy: trackByNode"
          class="variable-row"

@@ -1,4 +1,11 @@
 :root {
+  /* UI Density Scale */
+  --sys-density-toolbar-height: 64px;
+  --sys-density-panel-padding: 16px;
+  --sys-density-variable-row: 32px;
+  --sys-density-item-gap: 12px;
+  --sys-density-console-height: 20px;
+
   /* Typographic Scale (assuming 1rem = 16px) */
   --text-xs: 0.75rem;    /* 12px */
   --text-sm: 0.8125rem;  /* 13px */
@@ -17,7 +24,11 @@
   --font-mono: 'Consolas', 'Courier New', monospace;
 }
 
-html,
+html {
+  height: 100%;
+  margin: 0;
+}
+
 body {
   height: 100%;
   margin: 0;
@@ -28,4 +39,34 @@ body {
 .mat-app-background {
   background-color: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
+}
+
+body.ui-density-panel {
+  --sys-density-toolbar-height: 48px;
+  --sys-density-panel-padding: 12px;
+  --sys-density-variable-row: 24px;
+  --sys-density-item-gap: 8px;
+  /* Typography density override (§8.4): scale base font for confined panel contexts */
+  --text-base: 0.75rem; /* 12px — tighter than Desktop's 14px */
+}
+
+/* ── Global Webkit Scrollbar Customization ── */
+::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--mat-sys-outline-variant);
+  border-radius: 7px;
+  border: 4px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--mat-sys-outline);
 }

@@ -21,10 +21,10 @@
   z-index: 10;
   box-shadow: var(--mat-sys-level2-shadow);
 
-  /* Reduce default height (Angular Material defaults to 64px) */
-  min-height: 48px;
-  height: 48px;
-  padding: 0 16px;
+  /* Use dynamic density for toolbar and touch targets */
+  min-height: var(--sys-density-toolbar-height);
+  height: var(--sys-density-toolbar-height);
+  padding: 0 var(--sys-density-panel-padding);
 }
 
 .sidebar-toggle-btn {
@@ -60,12 +60,11 @@
 /* --- Sidenav shared and individual styles --- */
 .sidenav-left,
 .sidenav-right {
-  padding: 16px;
+  padding: var(--sys-density-panel-padding);
   background-color: var(--mat-sys-surface-container);
 }
 
 .sidenav-left {
-  border-right: 1px solid var(--mat-sys-outline-variant);
   min-width: 150px;
   max-width: 80vw;
   /* Content layout: resize-handle + minimize-row + file-explorer component */
@@ -85,12 +84,19 @@
 }
 
 .sidenav-right {
-  border-left: 1px solid var(--mat-sys-outline-variant);
   display: flex;
   flex-direction: column;
   min-width: 200px;
   max-width: 80vw;
-  overflow: auto;
+  overflow: hidden;
+
+  /* Material does not expose a CSS variable for .mat-drawer-inner-container
+     Must be flex column to allow .panel-section to expand with flex: 1 */
+  :host & ::ng-deep .mat-drawer-inner-container {
+    overflow: hidden !important;
+    display: flex;
+    flex-direction: column;
+  }
 }
 
 /* Thin row housing the minimize-sidebar button, kept in DebuggerComponent
@@ -122,25 +128,83 @@
 .panel-section {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .variables-section {
-  height: 50%;
-  border-bottom: 1px solid var(--mat-sys-outline-variant);
-  margin-bottom: 16px;
-  padding-bottom: 16px;
+  /* Material 3 Section Separation: Pure whitespace to group panels cleanly.
+     Using 32px gap perfectly aligns with the 8px base grid (§9.2). */
+  margin-bottom: 32px;
+  padding-bottom: 0;
 }
 
 .panel-title {
-  font-weight: var(--weight-bold);
-  font-size: var(--text-base);
+  font-weight: var(--weight-medium); /* Panel titles use medium, not bold (§9.1) */
+  font-size: var(--text-lg);
   color: var(--mat-sys-on-surface-variant);
-  margin: 0 0 8px 0;
+  margin: 0;
+  flex-shrink: 0;
+  /* Separator + spacing below title per §9.5 */
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  padding-bottom: var(--sys-density-item-gap); /* ≥ 8px between separator and first row */
+  margin-bottom: var(--sys-density-item-gap);
 }
 
 .placeholder-content {
   font-size: var(--text-sm);
   color: var(--mat-sys-on-surface-variant);
+}
+
+.stack-list {
+  flex: 1;
+  overflow-y: auto;
+
+  /* Force Material to treat this as a standard 48px height item */
+  :host & ::ng-deep .mat-mdc-list-item {
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0 12px;
+  }
+}
+
+/* Custom manual layout for two-line frames to perfectly center text
+   within the 48px compact bounding box, bypassing MDC internal padding */
+.compact-stack-frame {
+  .frame-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1.3;
+    padding: 4px 0;
+  }
+  
+  .frame-name {
+    font-size: var(--text-base);
+    color: var(--mat-sys-on-surface);
+  }
+
+  .frame-source {
+    font-size: var(--text-xs);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.active-node {
+  background-color: var(--mat-sys-primary-container) !important;
+  color: var(--mat-sys-on-primary-container) !important;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background-color: var(--mat-sys-primary);
+    z-index: 1;
+  }
 }
 
 /* --- Center editor area style --- */
@@ -156,7 +220,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 0;
+  padding: 0 var(--sys-density-panel-padding) 0 0;
   overflow: hidden;
 }
 
@@ -169,7 +233,6 @@
 /* --- Console panel area style --- */
 .consoles-container {
   flex-shrink: 0;
-  border-top: 1px solid var(--mat-sys-outline-variant);
   background-color: var(--mat-sys-surface-container-high);
   // position:relative is required so app-log-viewer can use position:absolute inset:0
   position: relative;
@@ -185,10 +248,12 @@
 
 /* Bottom status bar style */
 .status-bar {
-  height: 32px;
+  /* Sync with density system (§8.2) and align with 8px grid (§9.2): 32px Desktop / 24px Panel */
+  min-height: var(--sys-density-variable-row, 32px);
+  height: var(--sys-density-variable-row, 32px);
   flex-shrink: 0;
-  background-color: var(--mat-sys-primary);
-  color: var(--mat-sys-on-primary);
+  background-color: var(--mat-sys-surface-variant);
+  color: var(--mat-sys-on-surface-variant);
   font-size: var(--text-sm);
   display: flex;
   align-items: center;
@@ -245,7 +310,6 @@
   bottom: 0;
   width: 4px;
   cursor: col-resize;
-  border-right: 1px solid var(--mat-sys-outline-variant);
 }
 
 .resize-handle-right {
@@ -254,7 +318,6 @@
   bottom: 0;
   width: 4px;
   cursor: col-resize;
-  border-left: 1px solid var(--mat-sys-outline-variant);
 }
 
 .resize-handle-bottom {
@@ -263,5 +326,4 @@
   right: 0;
   height: 4px;
   cursor: row-resize;
-  border-top: 1px solid var(--mat-sys-outline-variant);
 }

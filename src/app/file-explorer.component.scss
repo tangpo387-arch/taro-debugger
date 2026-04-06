@@ -13,17 +13,18 @@
 /* ── Panel Header ──────────────────────────────────────────────────────────── */
 
 .sidenav-header {
-  padding: 16px 16px 0;
-  margin-bottom: 12px;
+  padding: 0 16px;
   flex: 0 0 auto;
 
   .header-title-row {
     display: flex;
     align-items: center;
-    margin-bottom: 4px;
+    height: 32px; /* Panel header bar height per PA spec §9.2 */
+    border-bottom: 1px solid var(--mat-sys-outline-variant); /* Separator per §9.5 */
+    margin-bottom: var(--sys-density-item-gap); /* ≥ 8px gap below separator per §9.5 */
 
     h3 {
-      font-weight: var(--weight-bold);
+      font-weight: var(--weight-medium); /* Panel titles use medium, not bold (§9.1) */
       font-size: var(--text-lg);
       letter-spacing: 0.5px;
       color: var(--mat-sys-on-surface-variant);
@@ -103,6 +104,17 @@
     font-weight: var(--weight-bold);
     color: var(--mat-sys-primary);
     background-color: var(--mat-sys-primary-container);
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background-color: var(--mat-sys-primary);
+    }
   }
 
   /* Focus indicator for keyboard navigation */

@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { EnvironmentDetectService } from './environment-detect.service';
 
 @Component({
   selector: 'app-root',
@@ -8,10 +9,14 @@ import { RouterOutlet } from '@angular/router';
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App {
-  /**
-   * Core entry point of the application.
-   * State management and UI logic are handled by individual components and services,
-   * so this entry point remains simple.
-   */
+export class App implements OnInit {
+  private envDetect = inject(EnvironmentDetectService);
+
+  ngOnInit() {
+    if (this.envDetect.isElectron()) {
+      document.body.classList.add('ui-density-desktop');
+    } else {
+      document.body.classList.add('ui-density-panel');
+    }
+  }
 }
