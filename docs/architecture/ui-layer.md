@@ -163,6 +163,12 @@ To optimize the reading experience across different usage contexts, the interfac
 
 Instead, it relies inherently on **CSS Media Queries (RWD)**. Both the Desktop and Web versions of the application utilize standard, comfortable layouts by default. When the viewport width drops below a predefined breakpoint (e.g., `800px`), the global CSS Custom Properties automatically scale down. This triggers an instant compression of structural padding, block gaps, and base body text to maximize information density in narrow layouts.
 
+**Exception: Brand Visibility & Density Standards**:
+- **Desktop Mode (Electron)**: The `.brand-title` is always disabled to prioritize horizontal space for file paths and debug controls.
+- **WebApp Mode (Browser)**:
+  - **Wide Screens (>= 800px)**: The `.brand-title` is visible.
+  - **Compact Screens (< 800px)**: The `.brand-title` is disabled to maximize space for the debugger controls and file path in narrow viewports.
+
 **CSS Custom Properties (Design Tokens)**
 The global `styles.scss` defines root CSS variables representing dynamic spacing and dimensions:
 - `--sys-density-toolbar-height`

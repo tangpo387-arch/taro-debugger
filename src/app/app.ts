@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject, HostBinding } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { EnvironmentDetectService } from './environment-detect.service';
 
 @Component({
   selector: 'app-root',
@@ -9,4 +10,6 @@ import { RouterOutlet } from '@angular/router';
   styleUrl: './app.css'
 })
 export class App {
+  @HostBinding('class.electron-env')
+  public readonly isElectron = inject(EnvironmentDetectService).isElectron();
 }

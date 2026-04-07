@@ -43,19 +43,43 @@
   font-size: var(--text-xl);
   letter-spacing: 0.5px;
 
+  /* Brand Visibility: 
+     1. Visible on WebApp wide screens (>= 800px)
+     2. Hidden on WebApp compact screens (< 800px)
+     3. Always hidden on Desktop (Electron)
+  */
+  display: inline-block;
+  vertical-align: middle;
+
+  :host-context(.electron-env) & {
+    display: none;
+  }
+
   @media #{bp.$mq-compact} {
     display: none;
   }
 }
 
 .loaded-file {
-  margin-left: 16px;
+  margin-left: 12px;
   font-size: var(--text-xs);
   /* Semi-transparent background */
   background-color: var(--mat-sys-surface-variant);
   color: var(--mat-sys-on-surface-variant);
   padding: 4px 8px;
   border-radius: 4px;
+
+  /* --- Path Truncation Styles --- */
+  max-width: 30vw;
+  flex-shrink: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
+  /* Force ellipsis on the left to preserve trailing filename */
+  direction: rtl;
+  text-align: left;
 }
 
 .spacer {
@@ -72,13 +96,16 @@
 .sidenav-left {
   padding: 0;
   background-color: var(--mat-sys-surface-container);
-  border-radius: 0 !important; /* Remove M3 shape for flush IDE layout */
+  border-radius: 0 !important;
+  /* Remove M3 shape for flush IDE layout */
 }
 
 .sidenav-right {
-  padding: var(--sys-density-panel-padding) 0 0 0; /* Keep lateral edge-to-edge, protect top */
+  padding: var(--sys-density-panel-padding) 0 0 0;
+  /* Keep lateral edge-to-edge, protect top */
   background-color: var(--mat-sys-surface-container);
-  border-radius: 0 !important; /* Remove M3 shape for flush IDE layout */
+  border-radius: 0 !important;
+  /* Remove M3 shape for flush IDE layout */
 }
 
 .sidenav-left {
@@ -156,7 +183,8 @@
 }
 
 .panel-title {
-  font-weight: var(--weight-medium); /* Panel titles use medium, not bold (§9.1) */
+  font-weight: var(--weight-medium);
+  /* Panel titles use medium, not bold (§9.1) */
   font-size: var(--text-lg);
   color: var(--mat-sys-on-surface-variant);
   margin: 0;
@@ -195,7 +223,7 @@
     line-height: 1.3;
     padding: 4px 0;
   }
-  
+
   .frame-name {
     font-size: var(--text-base);
     color: var(--mat-sys-on-surface);
@@ -211,7 +239,7 @@
   background-color: var(--mat-sys-primary-container) !important;
   color: var(--mat-sys-on-primary-container) !important;
   position: relative;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -237,7 +265,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 0; /* Removed padding to maximize editor screen real estate (§9.4) */
+  padding: 0;
+  /* Removed padding to maximize editor screen real estate (§9.4) */
   overflow: hidden;
 }
 

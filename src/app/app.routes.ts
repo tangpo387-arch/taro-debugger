@@ -27,7 +27,7 @@ export const routes: Routes = [
     // Load the core debugger view when the URL is '/debug'
     path: 'debug',
     component: DebuggerComponent,
-    title: 'Debugger - Taro Debugger'
+    title: 'Taro Debugger'
   },
   {
     // Automatically redirect to the setup page when the URL is empty (root)

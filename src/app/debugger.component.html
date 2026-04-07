@@ -6,10 +6,15 @@
     <button mat-icon-button (click)="toggleLeftSidenav()" title="Toggle File Explorer" class="sidebar-toggle-btn">
       <mat-icon>{{ leftVisible ? 'menu_open' : 'menu' }}</mat-icon>
     </button>
-    <span class="brand-title">Taro Debugger</span>
-    <!-- Show current loaded executable path from configuration -->
-    <span class="loaded-file">
-      {{ currentConfig.executablePath || 'No file loaded' }}
+    <span class="brand-title">Taro</span>
+    <!-- 
+      Show current loaded executable path from configuration.
+      CRITICAL: DO NOT REMOVE \u200E (LRM) or &lrm;. These invisible characters 
+      prevent the Unicode Bidi algorithm from misplacing leading '/' characters 
+      due to 'direction: rtl' in SCSS. Removing them will break path rendering.
+    -->
+    <span class="loaded-file" [title]="'\u200E' + (currentConfig.executablePath || 'No file loaded')">
+      &lrm;{{ currentConfig.executablePath || 'No file loaded' }}
     </span>
 
     <span class="spacer"></span>
@@ -75,11 +80,8 @@
           <mat-icon>chevron_left</mat-icon>
         </button>
       </div>
-      <app-file-explorer
-        [activeFilePath]="activeFilePath"
-        [reloadTrigger]="fileTreeReloadTrigger"
-        (fileSelected)="onFileSelected($event)"
-      ></app-file-explorer>
+      <app-file-explorer [activeFilePath]="activeFilePath" [reloadTrigger]="fileTreeReloadTrigger"
+        (fileSelected)="onFileSelected($event)"></app-file-explorer>
     </mat-sidenav>
 
     <!-- 3. Right sidenav: Variables and Call Stack -->
@@ -98,8 +100,7 @@
         @if (stackFrames.length > 0) {
         <mat-action-list class="stack-list" style="padding: 0;">
           @for (frame of stackFrames; track frame.id) {
-          <button mat-list-item (click)="onFrameClick(frame)"
-            [class.active-node]="activeFrameId === frame.id" 
+          <button mat-list-item (click)="onFrameClick(frame)" [class.active-node]="activeFrameId === frame.id"
             class="compact-stack-frame">
             <div class="frame-content">
               <div class="frame-name">{{ frame.name }}</div>
