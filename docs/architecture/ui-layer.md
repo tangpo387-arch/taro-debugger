@@ -155,7 +155,7 @@ To optimize the reading experience across different usage contexts, the interfac
 ### 8.1 Environment Detection
 
 - **Mechanism**: The `App` root component injects `EnvironmentDetectService`. Upon initialization, it queries `isElectron()` to determine the host container type.
-- **CSS Class Binding**: 
+- **CSS Class Binding**:
   - If running in standalone Electron (desktop), `document.body` receives the `.ui-density-desktop` class.
   - If running within a browser webview or IDE panel, it receives the `.ui-density-panel` class.
 
@@ -225,10 +225,10 @@ The UI adheres to an **8px base grid** as its canonical spacing modulus.
 | Rule | Value | Notes |
 | :--- | :--- | :--- |
 | Base grid modulus | `8px` | All spacing values must be multiples of 4px or 8px |
-| Panel content padding | `12px` | Maps to `--sys-density-panel-padding` in Panel density |
+| Panel internal padding | `12px` | Maps to `--sys-density-panel-padding`. Applied at content level. Container padding must be restricted to top-only (`padding-top`) to anchor content; lateral bounds must remain 0 to permit edge-to-edge separators. |
 | Panel header bar height | `32px` (Desktop) | Fixed. See note below regarding Web mode |
-| Panel section title bottom gap | `≥ 8px` | Enforced via `--sys-density-item-gap` |
-| File tree node indentation | `16px` per level | Fixes readability regression for deep paths |
+| Editor side margins | `0px` | The editor area must be flush with sidebars to maximize readability (§9.4) |
+| File tree node indent | `16px` per level | Fixes readability regression for deep paths |
 
 > [!NOTE]
 > **Panel header height — Web mode**: The `.ui-density-panel` context does **not** use 40px headers. The Desktop value of `32px` is retained for Web/panel environments. The `64px` value defined by `--sys-density-toolbar-height` applies only to the **top-level `mat-toolbar`**, not to panel section headers.
@@ -239,6 +239,7 @@ All panel boundaries and section dividers must use **Material Design system toke
 
 | Use Case | Required Token / Rule |
 | :--- | :--- |
+| Sidebar Shapes | `border-radius: 0 !important` (Removes Material 3 default round corners to enforce sharp IDE block aesthetics) |
 | Section divider lines | `border: 1px solid var(--mat-sys-outline-variant)` |
 | Panel-to-panel background separation | `background-color: var(--mat-sys-surface-variant)` |
 | **Forbidden** | `border: 1px solid #CCC` or any hardcoded `rgba(0,0,0,0.x)` color |
@@ -258,8 +259,10 @@ These rules govern the Monaco Editor integration in `EditorComponent`.
 
 | Element | Rule |
 | :--- | :--- |
-| Section title separator | Must render a `border-bottom: 1px solid var(--mat-sys-outline-variant)` below panel titles |
-| Section title spacing | Minimum `8px` vertical padding between the title separator and the first data row |
+| Side-to-Side Flush | The editor area and sidebars must have **zero external margins** between them. |
+| Edge-to-Edge Separator | `border-bottom` on panel titles must span the full 100% width of the sidebar. |
+| Content Padding | Individual content items (Variable rows, Call Stack frames) must implement internal `--sys-density-panel-padding` to prevent text from touching edges. |
+| Section title spacing | Minimum `8px` vertical padding between the title separator and the first data row. |
 | Variable name color | Must use `var(--mat-sys-on-surface)` (primary foreground — typically dark) |
 | Variable value color | Must use `var(--mat-sys-primary)` (Material primary accent — typically blue/teal) |
 | Value color fallback | Never hardcode hex/rgb values for variable name or value text |

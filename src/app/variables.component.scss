@@ -26,7 +26,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: default;
-  // padding-left is set dynamically via [style.padding-left.px] in the template
+
+  // Combine base sidebar padding (§9.2) with dynamic tree indentation
+  padding-left: calc(var(--sys-density-panel-padding) + var(--level-padding, 0px));
+  padding-right: var(--sys-density-panel-padding);
 
   &:hover {
     background-color: var(--mat-sys-surface-container-highest);

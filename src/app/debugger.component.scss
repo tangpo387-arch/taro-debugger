@@ -58,10 +58,16 @@
 }
 
 /* --- Sidenav shared and individual styles --- */
-.sidenav-left,
-.sidenav-right {
-  padding: var(--sys-density-panel-padding);
+.sidenav-left {
+  padding: 0;
   background-color: var(--mat-sys-surface-container);
+  border-radius: 0 !important; /* Remove M3 shape for flush IDE layout */
+}
+
+.sidenav-right {
+  padding: var(--sys-density-panel-padding) 0 0 0; /* Keep lateral edge-to-edge, protect top */
+  background-color: var(--mat-sys-surface-container);
+  border-radius: 0 !important; /* Remove M3 shape for flush IDE layout */
 }
 
 .sidenav-left {
@@ -70,7 +76,6 @@
   /* Content layout: resize-handle + minimize-row + file-explorer component */
   display: flex;
   flex-direction: column;
-  padding: 0;
   overflow: hidden;
   /* FileExplorerComponent manages its own internal padding */
 
@@ -147,11 +152,12 @@
   flex-shrink: 0;
   /* Separator + spacing below title per §9.5 */
   border-bottom: 1px solid var(--mat-sys-outline-variant);
-  padding-bottom: var(--sys-density-item-gap); /* ≥ 8px between separator and first row */
+  padding: 0 var(--sys-density-panel-padding) var(--sys-density-item-gap);
   margin-bottom: var(--sys-density-item-gap);
 }
 
 .placeholder-content {
+  padding: var(--sys-density-panel-padding);
   font-size: var(--text-sm);
   color: var(--mat-sys-on-surface-variant);
 }
@@ -164,7 +170,7 @@
   :host & ::ng-deep .mat-mdc-list-item {
     height: 48px !important;
     min-height: 48px !important;
-    padding: 0 12px;
+    padding: 0 var(--sys-density-panel-padding);
   }
 }
 
@@ -220,7 +226,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 0 var(--sys-density-panel-padding) 0 0;
+  padding: 0; /* Removed padding to maximize editor screen real estate (§9.4) */
   overflow: hidden;
 }
 

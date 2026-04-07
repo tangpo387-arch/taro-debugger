@@ -3,7 +3,7 @@
                                minBufferPx="200" maxBufferPx="400">
     <div *cdkVirtualFor="let flatNode of flatNodes; trackBy: trackByNode"
          class="variable-row"
-         [style.padding-left.px]="flatNode.level * INDENT_PX">
+         [style.--level-padding.px]="flatNode.level * INDENT_PX">
 
       <!-- Expand/Collapse toggle (only for expandable nodes) -->
       @if (flatNode.expandable) {
