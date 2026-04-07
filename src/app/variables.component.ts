@@ -7,7 +7,9 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
 import { Subscription } from 'rxjs';
 
 import { DapVariablesService, DapScope } from './dap-variables.service';
-import { EnvironmentDetectService } from './environment-detect.service';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 
 // ── Data Model ────────────────────────────────────────────────────────
 
@@ -51,12 +53,16 @@ const INDENT_PX = 20;
 })
 export class VariablesComponent implements OnInit, OnDestroy {
   private readonly variablesService = inject(DapVariablesService);
-  private readonly envDetect = inject(EnvironmentDetectService);
+  private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly cdr = inject(ChangeDetectorRef);
 
-  public get rowHeight(): number {
-    return this.envDetect.isElectron() ? 32 : 24;
-  }
+  /** Responsive row height for cdk-virtual-scroll itemSize */
+  public rowHeight = toSignal(
+    this.breakpointObserver.observe('(max-width: 800px)').pipe(
+      map(state => state.matches ? 24 : 32)
+    ),
+    { initialValue: 32 }
+  );
 
   /** Hierarchical tree data (source of truth). */
   private treeData: VariableNode[] = [];

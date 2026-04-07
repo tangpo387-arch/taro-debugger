@@ -17,7 +17,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { DapConfigService } from './dap-config.service';
-import { EnvironmentDetectService } from './environment-detect.service';
+import { BreakpointObserver } from '@angular/cdk/layout';
 
 /** Payload emitted when breakpoints change in the editor */
 export interface BreakpointChangeEvent {
@@ -43,7 +43,7 @@ const UPDATE_DEBOUNCE_MS = 50;
 export class EditorComponent implements OnChanges, OnDestroy {
   // ── Properties ──────────────────────────────────────────────────────
 
-  private readonly envDetect = inject(EnvironmentDetectService);
+  private readonly breakpointObserver = inject(BreakpointObserver);
 
   public editorOptions = {
     theme: 'vs',
@@ -52,7 +52,7 @@ export class EditorComponent implements OnChanges, OnDestroy {
     automaticLayout: true,
     lineNumbers: 'on',
     minimap: { enabled: false },
-    fontSize: this.queryCssToken('--text-base', 14),
+    fontSize: 14, // dynamically managed by BreakpointObserver
     scrollBeyondLastLine: false,
     overviewRulerLanes: 3,
     hideCursorInOverviewRuler: true,
@@ -72,22 +72,7 @@ export class EditorComponent implements OnChanges, OnDestroy {
     }
   };
 
-  /**
-   * Queries a CSS token from the body and converts rem/px to a numeric pixel size.
-   * A fallback is required for three primary defensive programming reasons:
-   * 1. SSR/Test Safety: The window/document objects may not exist in Node.js environments.
-   * 2. Initialization Timing: Angular may instantiate this class before CSS is fully heavily parsed.
-   * 3. Robustness: Prevents Editor core failure if the CSS token is ever typo'd or removed.
-   */
-  private queryCssToken(token: string, fallback: number): number {
-    if (typeof window === 'undefined') return fallback;
-    const val = getComputedStyle(document.body).getPropertyValue(token).trim();
-    if (!val) return fallback;
-    if (val.endsWith('rem')) {
-      return parseFloat(val) * 16; // 1rem = 16px
-    }
-    return parseFloat(val) || fallback;
-  }
+
 
   @Input() public filename: string | null = null;
   @Input() public code: string = '// Loading source code...';
@@ -123,6 +108,17 @@ export class EditorComponent implements OnChanges, OnDestroy {
         this.scrollToLine(this.activeLine);
       }
     });
+
+    // Dynamically update Monaco font size when entering/exiting Compact Mode
+    this.breakpointObserver.observe('(max-width: 800px)')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(state => {
+        const newSize = state.matches ? 12 : 14;
+        this.editorOptions.fontSize = newSize;
+        if (this.editorInstance) {
+          this.editorInstance.updateOptions({ fontSize: newSize });
+        }
+      });
   }
 
   public ngOnChanges(changes: SimpleChanges): void {

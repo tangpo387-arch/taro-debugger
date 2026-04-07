@@ -35,7 +35,7 @@
     [class.active-node]="node.path === activeFilePath"
     (click)="onNodeClick(node)"
     (keydown.enter)="onNodeClick(node); $event.preventDefault()">
-    <div class="indent-spacer" matTreeNodePadding [matTreeNodePaddingIndent]="indentSize"></div>
+    <div class="indent-spacer" matTreeNodePadding [matTreeNodePaddingIndent]="indentSize()"></div>
     <mat-icon class="file-icon">description</mat-icon>
     <span class="node-text">{{ node.name }}</span>
   </mat-tree-node>
@@ -48,7 +48,7 @@
     (click)="tree.toggle(node)"
     (keydown.enter)="tree.toggle(node); $event.preventDefault()"
     (keydown.space)="tree.toggle(node); $event.preventDefault()">
-    <div class="indent-spacer" matTreeNodePadding [matTreeNodePaddingIndent]="indentSize"></div>
+    <div class="indent-spacer" matTreeNodePadding [matTreeNodePaddingIndent]="indentSize()"></div>
     <div class="node-toggle-btn" aria-hidden="true">
       <mat-icon class="mat-icon-rtl-mirror">
         {{ tree.isExpanded(node) ? 'expand_more' : 'chevron_right' }}
