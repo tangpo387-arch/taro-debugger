@@ -1,3 +1,5 @@
+@use 'breakpoints' as bp;
+
 :root {
   /* UI Density Scale */
   --sys-density-toolbar-height: 48px;
@@ -41,7 +43,7 @@ body {
   color: var(--mat-sys-on-surface);
 }
 
-@media (max-width: 800px) {
+@media #{bp.$mq-compact} {
   :root {
     --sys-density-toolbar-height: 40px;
     --sys-density-panel-padding: 12px;

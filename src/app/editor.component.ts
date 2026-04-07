@@ -18,7 +18,7 @@ import { FormsModule } from '@angular/forms';
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { DapConfigService } from './dap-config.service';
 import { BreakpointObserver } from '@angular/cdk/layout';
-
+import { LAYOUT_COMPACT_MQ } from './layout.config';
 /** Payload emitted when breakpoints change in the editor */
 export interface BreakpointChangeEvent {
   /** Absolute path of the source file whose breakpoints changed */
@@ -110,7 +110,7 @@ export class EditorComponent implements OnChanges, OnDestroy {
     });
 
     // Dynamically update Monaco font size when entering/exiting Compact Mode
-    this.breakpointObserver.observe('(max-width: 800px)')
+    this.breakpointObserver.observe(LAYOUT_COMPACT_MQ)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(state => {
         const newSize = state.matches ? 12 : 14;

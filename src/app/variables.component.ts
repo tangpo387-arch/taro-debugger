@@ -8,6 +8,7 @@ import { Subscription } from 'rxjs';
 
 import { DapVariablesService, DapScope } from './dap-variables.service';
 import { BreakpointObserver } from '@angular/cdk/layout';
+import { LAYOUT_COMPACT_MQ } from './layout.config';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 
@@ -58,7 +59,7 @@ export class VariablesComponent implements OnInit, OnDestroy {
 
   /** Responsive row height for cdk-virtual-scroll itemSize */
   public rowHeight = toSignal(
-    this.breakpointObserver.observe('(max-width: 800px)').pipe(
+    this.breakpointObserver.observe(LAYOUT_COMPACT_MQ).pipe(
       map(state => state.matches ? 24 : 32)
     ),
     { initialValue: 32 }

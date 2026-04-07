@@ -1,3 +1,5 @@
+@use '../breakpoints' as bp;
+
 /* Full screen outer container */
 .app-layout {
   height: 100vh;
@@ -25,6 +27,11 @@
   min-height: var(--sys-density-toolbar-height);
   height: var(--sys-density-toolbar-height);
   padding: 0 var(--sys-density-panel-padding);
+
+  @media #{bp.$mq-compact} {
+    --mdc-icon-button-state-layer-size: 36px;
+    --mdc-icon-button-icon-size: 20px;
+  }
 }
 
 .sidebar-toggle-btn {
@@ -35,6 +42,10 @@
   font-weight: var(--weight-bold);
   font-size: var(--text-xl);
   letter-spacing: 0.5px;
+
+  @media #{bp.$mq-compact} {
+    display: none;
+  }
 }
 
 .loaded-file {

@@ -22,6 +22,7 @@ import { MatTreeModule, MatTree } from '@angular/material/tree';
 import { DapSessionService } from './dap-session.service';
 import { DapConfigService } from './dap-config.service';
 import { BreakpointObserver } from '@angular/cdk/layout';
+import { LAYOUT_COMPACT_MQ } from './layout.config';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { FileNode } from './file-tree.service';
@@ -89,7 +90,7 @@ export class FileExplorerComponent implements OnChanges {
   /** Gets active dynamic indent based on viewport context.
    * Responsive logic defined in UI spec §8.1. */
   public indentSize = toSignal(
-    this.breakpointObserver.observe('(max-width: 800px)').pipe(
+    this.breakpointObserver.observe(LAYOUT_COMPACT_MQ).pipe(
       map(state => state.matches ? 8 : 16)
     ),
     { initialValue: 16 }
