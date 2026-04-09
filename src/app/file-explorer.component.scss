@@ -91,7 +91,7 @@
   align-items: center;
   min-height: 28px;
   cursor: pointer;
-  padding-right: 12px;
+  padding-right: 16px;
   box-sizing: border-box;
   white-space: nowrap;
   color: var(--mat-sys-on-surface-variant);
@@ -174,7 +174,7 @@
   width: 18px;
   height: 18px;
   margin-right: 8px;
-  color: #ffca28;
+  color: var(--mat-sys-primary);
   flex-shrink: 0;
 }
 
@@ -195,7 +195,7 @@
 
 .unsupported-icon {
   margin-bottom: 8px;
-  font-size: 32px;
-  width: 32px;
-  height: 32px;
+  font-size: var(--text-2xl);
+  width: 24px;
+  height: 24px;
 }

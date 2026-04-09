@@ -3,7 +3,7 @@
   display: flex;
   justify-content: center;
   min-height: 100vh;
-  background-color: #f0f2f5;
+  background-color: var(--mat-sys-surface-variant);
   padding: 24px 16px;
   box-sizing: border-box;
   /* Enable scrolling if content exceeds viewport */
@@ -26,15 +26,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
   padding-bottom: 0;
 }
 
 .header-icon {
-  font-size: 52px;
+  font-size: var(--text-2xl);
   height: 52px;
   width: 52px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .header-title {
@@ -49,7 +49,7 @@
   font-weight: var(--weight-bold);
   letter-spacing: 0.8px;
   text-transform: uppercase;
-  color: #6b7280;
+  color: var(--mat-sys-outline);
   margin-bottom: 4px;
   margin-top: 4px;
 }
@@ -108,7 +108,7 @@
 
 .mode-hint {
   font-size: var(--text-xs);
-  color: #6b7280;
+  color: var(--mat-sys-outline);
   margin: 0;
   padding-left: 2px;
   min-height: 16px;
@@ -116,7 +116,7 @@
 
 /* Required field marker */
 .required-mark {
-  color: #ef4444;
+  color: var(--mat-sys-error);
 }
 
 /* Button area style */
@@ -129,12 +129,12 @@
 
 .connect-button {
   width: 100%;
-  padding: 10px 0;
+  padding: 8px 0;
   font-size: var(--text-lg);
   letter-spacing: 0.4px;
 
   mat-icon {
-    margin-right: 6px;
+    margin-right: 8px;
     vertical-align: middle;
   }
 }
@@ -142,9 +142,9 @@
 .platform-badge {
   font-size: var(--text-xs);
   margin-left: 8px;
-  color: #1976d2;
-  background-color: rgba(25, 118, 210, 0.1);
-  padding: 2px 6px;
+  color: var(--mat-sys-primary);
+  background-color: var(--mat-sys-primary-container);
+  padding: 4px 8px;
   border-radius: 4px;
   vertical-align: middle;
 }

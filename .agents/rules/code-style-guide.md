@@ -62,39 +62,9 @@ This document defines the development standards for the `taro-debugger-frontend`
 
 > [!IMPORTANT]
 > **Visual Design System Enforcement**
-> The rules defined in this SCSS section, along with the visual standards established in `docs/architecture/ui-layer.md` (Section 8), are **binding architectural decisions**. They are **mandatory** for `Lead_Engineer` implementation and serve as the strict front-end acceptance criteria for the `Quality_Control_Reviewer`.
-
-#### Typography Design Tokens
-
-*   **Design Token Enforcement**: All UI typography (font size, weight, family) must use the CSS custom properties defined in the global `:root` (`styles.scss`). **Hardcoding font scalar sizes (e.g., `font-size: 13px`, `font-size: 0.8rem`) is strictly forbidden.**
-*   **Font Family**: `var(--font-sans)` (default UI), `var(--font-mono)` (code, console, debugging panels).
-
-##### Typography System & Density
-
-All UI type must use the tokens defined in `styles.scss`. The following table defines the **authoritative semantic mapping** and viewport-driven density scaling.
-
-| Token | Semantic Usage | Wide (>=800px) | Compact (<800px) |
-| :--- | :--- | :--- | :--- |
-| `--text-xs` | Reserved for badges, chip labels, or peripheral metadata | `0.75rem` | `0.75rem` (fixed) |
-| `--text-sm` | Status bar text, log timestamps, file tree secondary labels | `0.8125rem` | `0.8125rem` (fixed) |
-| **`--text-base`** | **Default body text: log content, variable values, editor UI** | **`0.875rem`** | **`0.75rem`** |
-| `--text-lg` | Panel section headers (Variables, Call Stack, Explorer) | `1rem` | `1rem` (fixed) |
-| `--text-xl` | Toolbar title / app branding label | `1.125rem` | `1.125rem` (fixed) |
-| `--text-2xl` | Reserved for empty-state headings or modal titles | `1.375rem` | `1.375rem` (fixed) |
-
-> [!IMPORTANT]
-> All derived typographic scale tokens (`--text-sm`, `--text-lg`, etc.) are **ratio-fixed** in `styles.scss` and do **not** change per density — only `--text-base` shifts. Components that use `--text-sm` for timestamps or `--text-lg` for panel titles automatically inherit the density-appropriate visual weight by virtue of the base cascade.
-
-##### Authoritative Weight Semantics
-
-| Token | Value | Semantic Usage |
-| :--- | :--- | :--- |
-| `--weight-regular` | 400 | Code content, log body text, file names, variable values |
-| `--weight-medium` | 500 | Panel section titles (Variables, Call Stack), active tab labels |
-| `--weight-bold` | 700 | Critical error badges, primary CTA buttons |
-
-> [!CAUTION]
-> **`font-weight: 600` (Semi-Bold) is explicitly rejected** from this design system. It falls outside the closed three-value token set and is not permitted in any component SCSS. Panel titles that require emphasis must use `--weight-medium` (500).
+> The design tokens, typography scale, and layout behaviors are now strictly defined in the `docs/architecture/visual-design.md` architecture document.
+> 
+> **You MUST consult `docs/architecture/visual-design.md` before applying any SCSS.** All UI development must adhere to the Design Tokens and Density scaling rules documented there. Hardcoding font sizes or colors that violate the Design System is strictly forbidden.
 
 
 #### `::ng-deep` Usage Policy

@@ -57,8 +57,8 @@ As the **Product_Architect**, you must trigger this skill in the following scena
 
 ## 4. Reference Documents
 
-- [`docs/project-management.md`](../docs/project-management.md): Authoritative lifecycle process and Feature Group SSOT.
-- [`docs/project-roadmap.md`](../docs/project-roadmap.md): Atomic dependency map (SSOT for Mermaid node styles).
-- [`docs/work-items.md`](../docs/work-items.md): Active task backlog and strategic milestone overview.
-- [`docs/design-decisions.md`](../docs/design-decisions.md): Architecture Decision Records (ADRs) for non-obvious implementation choices.
-- [`.agents/project-context.md`](../project-context.md): Agent navigation index.
+- [`docs/project-management.md`](../../../docs/project-management.md): Authoritative lifecycle process and Feature Group SSOT.
+- [`docs/project-roadmap.md`](../../../docs/project-roadmap.md): Atomic dependency map (SSOT for Mermaid node styles).
+- [`docs/work-items.md`](../../../docs/work-items.md): Active task backlog and strategic milestone overview.
+- [`docs/design-decisions.md`](../../../docs/design-decisions.md): Architecture Decision Records (ADRs) for non-obvious implementation choices.
+- [`.agents/project-context.md`](../../project-context.md): Agent navigation index.

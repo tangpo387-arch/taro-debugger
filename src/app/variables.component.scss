@@ -42,7 +42,7 @@
     height: 24px;
     line-height: 24px;
     padding: 0;
-    margin-right: 2px;
+    margin-right: 4px;
     flex-shrink: 0;
 
     mat-icon {
@@ -84,7 +84,7 @@
 
   .var-value {
     color: var(--mat-sys-primary); /* Value: primary accent for visual distinction (§9.5) */
-    margin-left: 2px;
+    margin-left: 4px;
     overflow: hidden;
     text-overflow: ellipsis;
     // Allow the value to shrink and truncate when the panel is narrow

@@ -321,11 +321,11 @@
 
   &.online {
     /* Online status indicator: success color */
-    background-color: #4ade80;
+    background-color: var(--mat-sys-primary);
   }
 
   &.offline {
-    background-color: var(--mat-sys-error, #f44336);
+    background-color: var(--mat-sys-error);
   }
 }
 

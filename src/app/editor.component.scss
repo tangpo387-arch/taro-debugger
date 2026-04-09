@@ -29,38 +29,38 @@
   }
 
   .current-line-glyph {
-    background-color: #ffd740 !important; /* Material Amber 400 */
+    background-color: var(--mat-sys-tertiary-container) !important; /* Material Amber 400 */
     width: 12px !important;
     height: 12px !important;
     border-radius: 2px;
-    margin-left: 5px;
-    box-shadow: 0 0 5px rgba(255, 215, 64, 0.5);
+    margin-left: 4px;
+    box-shadow: none;
   }
 
   /* Breakpoint marker in the glyph margin */
   .breakpoint-glyph {
-    background: #ff5252 !important; /* Vibrant Red */
+    background: var(--mat-sys-error) !important; /* Vibrant Red */
     width: 12px !important;
     height: 12px !important;
     border-radius: 50%;
-    margin-left: 5px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 8px rgba(255, 82, 82, 0.6);
+    margin-left: 4px;
+    box-shadow: none;
     cursor: pointer;
     transition: transform 0.1s ease-in-out;
 
     &:hover {
       transform: scale(1.2);
-      background: #ff1744 !important;
+      background: var(--mat-sys-error) !important;
     }
   }
 
   /* Unverified (pending) breakpoint: shown before the DAP adapter confirms the line */
   .breakpoint-glyph-unverified {
-    background: #9e9e9e !important; /* Material Gray 500 */
+    background: var(--mat-sys-outline) !important; /* Material Gray 500 */
     width: 12px !important;
     height: 12px !important;
     border-radius: 50%;
-    margin-left: 5px;
+    margin-left: 4px;
     opacity: 0.7;
     cursor: pointer;
     transition: opacity 0.15s ease-in-out;

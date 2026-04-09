@@ -44,6 +44,7 @@ Use this decision tree to quickly find the right document based on your current 
 | --- | --- | --- | --- |
 | Define or update requirements | — | `Product_Architect` | [system-specification.md](../docs/system-specification.md) + [architecture.md](../docs/architecture.md) (Index) |
 | Add a new UI feature | **UI** | `Lead_Engineer` | [system-specification.md §3](../docs/system-specification.md#3-view-navigation--layout-specification) for layout spec |
+| Modify visual style or layout | **UI** | `Lead_Engineer` | **Skill: `visual-design`** |
 | Modify component local state | **UI** | `Lead_Engineer` | **Skill: `state-management`** — load before touching `@Input`, `BehaviorSubject`, or `async` pipe patterns |
 | Modify service reactive state | **Session** | `Lead_Engineer` | **Skill: `state-management`** — load before touching `BehaviorSubject`, `Subject`, or `Observable` streams in services |
 | Implement or fix DAP protocol logic | **Session / Transport** | `Lead_Engineer` | **Skill: `dap-implementation`** |
@@ -93,6 +94,7 @@ This table consolidates the authoritative reference documents each role relies o
 
 | Skill | Trigger | Lead_Engineer | Quality_Control_Reviewer |
 | :--- | :--- | :---: | :---: |
-| `dap-implementation` | Modifying DAP services, transport, session lifecycle | ✅ | ✅ |
-| `state-management` | Modifying component/service state flow | ✅ | ✅ |
-| `work-item-management` | Creating, progressing, or retiring WIs | — | — |
+| `visual-design` | Modifying CSS, UI layout, typography, or density | ✅ | ✅ |
+| **Skill:** `dap-implementation` | Modifying DAP services, transport, session lifecycle | ✅ | ✅ |
+| **Skill:** `state-management` | Modifying component/service state flow | ✅ | ✅ |
+| **Skill:** `work-item-management` | Creating, progressing, or retiring WIs | — | — |
