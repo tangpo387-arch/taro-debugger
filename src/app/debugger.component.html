@@ -75,12 +75,8 @@
       <!-- Left Resize Handle -->
       <div class="resize-handle resize-handle-left" (mousedown)="onResizeStart($event, 'left')"></div>
       <!-- Minimize button lives outside FileExplorerComponent (it controls the sidenav, not the tree) -->
-      <div class="sidenav-minimize-row">
-        <button mat-icon-button (click)="toggleLeftSidenav()" title="Minimize Sidebar" class="header-action-btn">
-          <mat-icon>chevron_left</mat-icon>
-        </button>
-      </div>
       <app-file-explorer [activeFilePath]="activeFilePath" [reloadTrigger]="fileTreeReloadTrigger"
+        [revealTrigger]="fileRevealTrigger"
         (fileSelected)="onFileSelected($event)"></app-file-explorer>
     </mat-sidenav>
 

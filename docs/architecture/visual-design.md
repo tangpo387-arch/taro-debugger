@@ -12,7 +12,6 @@ related:
 
 ## 1. Guiding Principles
 
-
 > **Guiding Principle: Flush IDE Layouts & Material Design 3 (M3)**
 > When architecting the visual layer, we resolve the conflict between modern IDE aesthetics and default Material Design 3 (M3) paradigms through two core rules:
 > 1. **Adopt M3 Colors, Reject M3 Shapes**: We fully adhere to M3's System Color Tokens (`--mat-sys-surface`, `--mat-sys-outline`) to ensure flawless Light/Dark mode transitions. Conversely, we aggressively strip away M3's default large rounded corners (`border-radius`) and floating shadows (`elevation`), forcing components back to the sharp, orthogonal geometries expected in professional developer tools.
@@ -90,16 +89,18 @@ The UI adheres to an **8px base grid** as its canonical spacing modulus.
 
 All panel boundaries and section dividers must use **Material Design system tokens**, not hardcoded color values. This ensures correct behavior in both light and dark themes.
 
-| Use Case | Required Token / Rule |
+| Rule | Required Token / Spec |
 | :--- | :--- |
-| Sidebar Shapes | `border-radius: 0 !important` (Removes Material 3 default round corners to enforce sharp IDE block aesthetics) |
-| Section divider lines | `border: 1px solid var(--mat-sys-outline-variant)` |
-| Panel-to-panel background separation | `background-color: var(--mat-sys-surface-variant)` |
-| **Forbidden** | `border: 1px solid #CCC` or any hardcoded `rgba(0,0,0,0.x)` color |
+| **Sidebar Shapes** | `border-radius: 0 !important` (Enforce sharp IDE geometries) |
+| **Section Dividers** | `1px solid var(--mat-sys-outline-variant)` |
+| **Tool Window Headers** | `surface-container-high` background, Uppercase typography |
+| **Unified Highlight** | `primary-container` background + `4px primary` left accent |
+| **Active Alignment** | `padding-left: calc(var(--sys-density-panel-padding) - 4px)` |
+| **Forbidden** | Hardcoded hex/rgba values for borders or backgrounds |
 
 ## 6. Component-Specific Layout Rules
 
-#### Editor Component Rules
+### 6.1 Editor Component Rules
 
 These rules govern the Monaco Editor integration in `EditorComponent`.
 
@@ -110,7 +111,7 @@ These rules govern the Monaco Editor integration in `EditorComponent`.
 | **Highlight z-index** | The decoration layer's `z-index` must be positioned **below** the text rendering layer. Using inline style or className decoration that creates a new stacking context above text is forbidden | High |
 | **Scrollbar Consistency** | Monaco's built-in scrollbar must be configured and CSS-forced to visually mimic the global `::-webkit-scrollbar` (14px track, 6px thumb, constant opacity, no shadows) to prevent behavioral drift from the native panels | High |
 
-#### Right Panel (Variables & Call Stack) Rules
+### 6.2 Right Panel (Variables & Call Stack) Rules
 
 | Element | Rule |
 | :--- | :--- |
@@ -122,7 +123,7 @@ These rules govern the Monaco Editor integration in `EditorComponent`.
 | Variable value color | Must use `var(--mat-sys-primary)` (Material primary accent — typically blue/teal) |
 | Value color fallback | Never hardcode hex/rgb values for variable name or value text |
 
-#### Console (LogViewerComponent) Rules
+### 6.3 Console (LogViewerComponent) Rules
 
 | Property | Rule | Rationale |
 | :--- | :--- | :--- |
@@ -130,3 +131,11 @@ These rules govern the Monaco Editor integration in `EditorComponent`.
 | Timestamp color | `color: var(--mat-sys-outline)` | De-emphasize timestamps; direct focus to message content |
 | Log content font | `font-family: var(--font-mono)` | Monospaced for DAP protocol data readability |
 | Timestamp font size | `font-size: var(--text-sm)` | Smaller than body to reinforce visual hierarchy |
+
+### 6.4 Side Panel Navigation (File Explorer & Call Stack)
+
+| Feature | Requirement |
+| :--- | :--- |
+| **Auto-Revelation** | The file tree MUST automatically expand parent nodes and `scrollIntoView` the active file on every execution stop or manual frame click. |
+| **Highlight Strategy** | Use `border-left` directly on the item container. Using `::before` pseudo-elements is discouraged for MDC-based components to avoid layering conflicts. |
+| **Transition** | `background-color 0.2s ease` on hover/active states for smooth visual feedback. |

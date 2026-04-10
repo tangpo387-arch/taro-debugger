@@ -67,6 +67,13 @@ export class FileExplorerComponent implements OnChanges {
    */
   @Input() public reloadTrigger: number = 0;
 
+  /**
+   * Incrementing counter driven by DebuggerComponent on every explicit
+   * call stack frame click. Forces a re-evaluation of tree expansion
+   * even if activeFilePath hasn't changed.
+   */
+  @Input() public revealTrigger: number = 0;
+
   // ── Outputs ───────────────────────────────────────────────────────────────────
 
   /**
@@ -115,6 +122,10 @@ export class FileExplorerComponent implements OnChanges {
   public ngOnChanges(changes: SimpleChanges): void {
     if (changes['reloadTrigger'] && !changes['reloadTrigger'].firstChange) {
       this.loadTree();
+    }
+
+    if ((changes['activeFilePath'] || changes['revealTrigger']) && this.activeFilePath) {
+      this.revealActiveFile(this.activeFilePath);
     }
   }
 
@@ -182,6 +193,11 @@ export class FileExplorerComponent implements OnChanges {
           // Restore previously expanded nodes after the tree re-renders.
           this.restoreExpandedPaths(expandedPaths);
           this.cdr.detectChanges();
+
+          // Ensure the active file is revealed after the new tree is rendered
+          if (this.activeFilePath) {
+            this.revealActiveFile(this.activeFilePath);
+          }
         },
         error: (err) => {
           console.warn('FileExplorerComponent: Failed to load file tree', err);
@@ -231,5 +247,51 @@ export class FileExplorerComponent implements OnChanges {
     };
 
     traverse(this.fileDataSource);
+  }
+
+  /**
+   * Expands the tree to reveal the specified file path and scrolls it into view.
+   */
+  private revealActiveFile(targetPath: string): void {
+    if (!this.tree || !this.fileDataSource || this.fileDataSource.length === 0) return;
+
+    // Find the ancestral path of directory nodes to the target file
+    const ancestorNodes = this.findAncestorNodes(this.fileDataSource, targetPath);
+
+    if (ancestorNodes) {
+      // Expand all intermediate directories
+      for (const node of ancestorNodes) {
+        this.tree.expand(node);
+      }
+    }
+
+    // Scroll the highlighted element into view after Angular re-renders the expanded DOM
+    setTimeout(() => {
+      const activeElement = document.querySelector('.active-node');
+      if (activeElement) {
+        activeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 50); // Delay to allow mat-tree DOM reconciliation
+  }
+
+  /**
+   * Recursively searches for the target path and returns the list of ancestor directory nodes.
+   * Returns null if the target path is not found.
+   */
+  private findAncestorNodes(nodes: FileNode[], targetPath: string): FileNode[] | null {
+    for (const node of nodes) {
+      if (node.path === targetPath) {
+        return []; // Target found. Output empty array to start traversing up.
+      }
+
+      if (node.children && node.children.length > 0) {
+        const childResult = this.findAncestorNodes(node.children, targetPath);
+        if (childResult !== null) {
+          // If found in a child, prepend this directory node to the ancestor chain
+          return [node, ...childResult];
+        }
+      }
+    }
+    return null; // Not found in this branch
   }
 }

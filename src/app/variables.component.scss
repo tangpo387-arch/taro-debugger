@@ -31,6 +31,8 @@
   padding-left: calc(var(--sys-density-panel-padding) + var(--level-padding, 0px));
   padding-right: var(--sys-density-panel-padding);
 
+  transition: background-color 0.2s ease;
+
   &:hover {
     background-color: var(--mat-sys-surface-container-highest);
   }

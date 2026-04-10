@@ -19,12 +19,19 @@
   // Overriding Material's default 48px tab header height to reclaim vertical space in the IDE console.
   :host & ::ng-deep .mat-mdc-tab-header {
     --mdc-tab-height: 32px;
+    background-color: var(--mat-sys-surface-container-high);
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
   }
   
   :host & ::ng-deep .mat-mdc-tab {
     height: 32px !important;
     min-height: 32px !important;
     padding: 0 16px;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: var(--mat-sys-surface-container-highest);
+    }
   }
 
   // Layer 1: wrapper must grow to fill remaining space after tab header
@@ -73,6 +80,8 @@
     min-height: 20px;
     background-color: var(--mat-sys-surface-container-highest);
   }
+
+  transition: background-color 0.2s ease;
 
   &:hover {
     background-color: var(--mat-sys-surface-container-highest);
@@ -162,7 +171,7 @@
   height: var(--sys-density-variable-row, 32px);
   flex-shrink: 0;
   border-top: 1px solid var(--mat-sys-outline-variant);
-  background: var(--mat-sys-surface-container);
+  background: var(--mat-sys-surface-container-low);
 
   mat-icon {
     color: var(--mat-sys-primary);

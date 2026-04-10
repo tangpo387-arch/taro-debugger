@@ -112,6 +112,13 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public fileTreeReloadTrigger: number = 0;
 
   /**
+   * Incrementing counter passed to FileExplorerComponent as [revealTrigger].
+   * Triggered on every explicit call stack frame click to ensure the tree
+   * expands and scrolls to the node at `activeFilePath`.
+   */
+  public fileRevealTrigger: number = 0;
+
+  /**
    * Guards against reloading the file tree on every `stopped` event.
    * Reset only on session-level transitions (terminated, exited, disconnect/reconnect),
    * NOT on ephemeral `continued` events — otherwise a Resume → StepOver cycle
@@ -488,6 +495,8 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         // Load the top frame to show source code by default after success
         if (this.stackFrames.length > 0) {
           await this.onFrameClick(this.stackFrames[0]);
+          // After setting activeFilePath via onFrameClick, trigger the tree reveal
+          this.fileRevealTrigger++;
         }
       }
     } catch (e: any) {
@@ -506,6 +515,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     // Load associated file
     if (frame.source && frame.source.path) {
       this.activeFilePath = frame.source.path;
+      this.fileRevealTrigger++; // Always trigger a UX reveal on explicit navigation
       this.currentCode = '// Loading source code...';
       this.cdr.detectChanges();
 
