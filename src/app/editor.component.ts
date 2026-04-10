@@ -47,12 +47,14 @@ export class EditorComponent implements OnChanges, OnDestroy {
 
   public editorOptions = {
     theme: 'vs',
-    language: 'cpp',
+    language: 'plaintext', // Language is dynamically set by updateLanguage()
     glyphMargin: true,
     automaticLayout: true,
     lineNumbers: 'on',
     minimap: { enabled: false },
     fontSize: 14, // dynamically managed by BreakpointObserver
+    readOnly: true,
+    readOnlyMessage: { value: '' },
     scrollBeyondLastLine: false,
     overviewRulerLanes: 3,
     hideCursorInOverviewRuler: true,
@@ -122,6 +124,9 @@ export class EditorComponent implements OnChanges, OnDestroy {
   }
 
   public ngOnChanges(changes: SimpleChanges): void {
+    if (changes['filename'] && this.editorInstance) {
+      this.updateLanguage();
+    }
     if ((changes['activeLine'] || changes['code'] || changes['filename']) && this.editorInstance) {
       this.updateQueue$.next();
     }
@@ -177,6 +182,7 @@ export class EditorComponent implements OnChanges, OnDestroy {
    */
   public onEditorInit(editor: any): void {
     this.editorInstance = editor;
+    this.updateLanguage(); // Initialize correct language for the active file
 
     // Listen for mouse click on the glyph margin (breakpoint area)
     this.editorInstance.onMouseDown((e: any) => {
@@ -193,6 +199,37 @@ export class EditorComponent implements OnChanges, OnDestroy {
   }
 
   // ── Private Logic ───────────────────────────────────────────────────
+
+  /**
+   * Identifies the correct Monaco language ID based on the file extension
+   */
+  private getLanguageFromPath(path: string | null): string {
+    if (!path) return 'plaintext';
+
+    const monaco = (window as any).monaco;
+    if (!monaco || !monaco.languages) return 'plaintext';
+
+    const languages = monaco.languages.getLanguages();
+
+    // Find a registered language that claims this file extension
+    const match = languages.find((lang: any) =>
+      lang.extensions && lang.extensions.some((ext: string) => path.toLowerCase().endsWith(ext.toLowerCase()))
+    );
+
+    return match ? match.id : 'plaintext';
+  }
+
+  /**
+   * Applies the dynamically detected language to the current Monaco model
+   */
+  private updateLanguage(): void {
+    if (!this.editorInstance || !this.filename) return;
+    const monaco = (window as any).monaco;
+    const model = this.editorInstance.getModel();
+    if (model && monaco && monaco.editor) {
+      monaco.editor.setModelLanguage(model, this.getLanguageFromPath(this.filename));
+    }
+  }
 
   private toggleBreakpoint(lineNumber: number): void {
     if (!this.filename) return;

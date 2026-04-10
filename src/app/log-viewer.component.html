@@ -1,8 +1,8 @@
 <mat-tab-group animationDuration="0ms" class="log-tab-group"
                (selectedTabChange)="onTabChange()">
 
-  <!-- ── Console Tab (DAP events, system messages) ──────────────────── -->
-  <mat-tab label="Console">
+  <!-- ── Debug Console Tab (DAP events, system messages, evaluation) ── -->
+  <mat-tab label="Debug Console">
     <cdk-virtual-scroll-viewport itemSize="20" class="console-viewport"
                                  minBufferPx="200" maxBufferPx="400">
       <div *cdkVirtualFor="let log of consoleLogs$ | async; trackBy: trackByLog"
@@ -52,8 +52,8 @@
     </div>
   </mat-tab>
 
-  <!-- ── Program Console Tab (debuggee stdout/stderr) ───────────────── -->
-  <mat-tab label="Program Console">
+  <!-- ── Output Tab (debuggee stdout/stderr) ────────────────────── -->
+  <mat-tab label="Output">
     <cdk-virtual-scroll-viewport itemSize="20" class="console-viewport"
                                  minBufferPx="200" maxBufferPx="400">
       <div *cdkVirtualFor="let log of programLogs$ | async; trackBy: trackByLog"

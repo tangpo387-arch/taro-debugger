@@ -29,6 +29,13 @@
     padding: 0 16px;
     transition: background-color 0.2s ease;
 
+    // Unified Tool Window Header typography
+    .mdc-tab__text-label {
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: var(--weight-medium) !important;
+    }
+
     &:hover {
       background-color: var(--mat-sys-surface-container-highest);
     }

@@ -123,7 +123,7 @@ These rules govern the Monaco Editor integration in `EditorComponent`.
 | Variable value color | Must use `var(--mat-sys-primary)` (Material primary accent — typically blue/teal) |
 | Value color fallback | Never hardcode hex/rgb values for variable name or value text |
 
-### 6.3 Console (LogViewerComponent) Rules
+### 6.3 Logs & Output (LogViewerComponent) Rules
 
 | Property | Rule | Rationale |
 | :--- | :--- | :--- |
