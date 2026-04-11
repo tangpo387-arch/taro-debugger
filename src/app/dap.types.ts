@@ -43,3 +43,23 @@ export interface LogEntry {
   /** Optional structured payload (e.g. a raw DAP event object) for UI inspection. */
   data?: any;
 }
+
+/** 
+ * Strongly typed interface for a Debug Adapter Protocol Stack Frame 
+ * Used for rendering the call stack UI.
+ */
+export interface DapStackFrame {
+  id: number;
+  name: string;
+  source?: {
+    name?: string;
+    path?: string;
+    [key: string]: any;
+  };
+  line: number;
+  column: number;
+  instructionPointerReference?: string;
+  moduleId?: number | string;
+  [key: string]: any;
+}
+

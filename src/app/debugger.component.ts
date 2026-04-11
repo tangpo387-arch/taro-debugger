@@ -22,10 +22,11 @@ import { ErrorDialog, ErrorDialogData } from './error-dialog/error-dialog';
 import { DapConfigService, DapConfig } from './dap-config.service';
 import { DapSessionService, ExecutionState, VerifiedBreakpoint } from './dap-session.service';
 import { DapVariablesService } from './dap-variables.service';
-import { DapEvent } from './dap.types';
+import { DapEvent, DapStackFrame } from './dap.types';
 import { FileNode } from './file-tree.service';
 import { DapLogService } from './dap-log.service';
 import { DebugControlGroupComponent } from './debug-control-group.component';
+import { CallStackComponent } from './call-stack.component';
 
 @Component({
   selector: 'app-debugger',
@@ -46,6 +47,7 @@ import { DebugControlGroupComponent } from './debug-control-group.component';
     VariablesComponent,
     LogViewerComponent,
     DebugControlGroupComponent,
+    CallStackComponent,
   ],
   providers: [
     DapSessionService,
@@ -131,7 +133,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   // ── Call Stack State ──────────────────────────────────────────────────────
 
   /** Call stack state */
-  public stackFrames: any[] = [];
+  public stackFrames: DapStackFrame[] = [];
   public activeFrameId: number | null = null;
   public activeLine: number | null = null;
   public activeLineFilePath: string | null = null;
@@ -509,7 +511,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   }
 
   /** Trigger load file and line number when Frame is clicked */
-  public async onFrameClick(frame: any): Promise<void> {
+  public async onFrameClick(frame: DapStackFrame): Promise<void> {
     this.activeFrameId = frame.id;
     this.activeLine = frame.line;
     this.activeLineFilePath = frame.source?.path || null;

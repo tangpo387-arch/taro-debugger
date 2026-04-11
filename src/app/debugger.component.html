@@ -56,21 +56,11 @@
       <!-- Call Stack Section -->
       <div class="panel-section">
         <h3 class="panel-title">Call Stack</h3>
-        @if (stackFrames.length > 0) {
-        <mat-action-list class="stack-list" style="padding: 0;">
-          @for (frame of stackFrames; track frame.id) {
-          <button mat-list-item (click)="onFrameClick(frame)" [class.active-node]="activeFrameId === frame.id"
-            class="compact-stack-frame">
-            <div class="frame-content">
-              <div class="frame-name">{{ frame.name }}</div>
-              <div class="frame-source">{{ frame.source?.name || 'Unknown' }}:{{ frame.line }}</div>
-            </div>
-          </button>
-          }
-        </mat-action-list>
-        } @else {
-        <div class="placeholder-content">No call stack information available</div>
-        }
+        <app-call-stack 
+          [stackFrames]="stackFrames" 
+          [activeFrameId]="activeFrameId" 
+          (frameSelected)="onFrameClick($event)">
+        </app-call-stack>
       </div>
     </mat-sidenav>
 

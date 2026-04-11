@@ -40,7 +40,7 @@ graph TD
         TB["Top Toolbar<br/>Brand title / Debug control buttons / Reset button"]
         LS["Left Sidenav<br/>File Explorer (app-file-explorer)<br/>Toggle show/hide"]
         MC["Main Content<br/>Monaco Editor (app-editor)"]
-        RS["Right Sidenav<br/>Variables (app-variables) / Call Stack"]
+        RS["Right Sidenav<br/>Variables (app-variables)<br/>Call Stack (app-call-stack)"]
         LV["Console Area<br/>(app-log-viewer)<br/>Dual-tab: Console + Program Console<br/>+ Evaluate input"]
         SB["Status Bar<br/>Connection status / Execution state"]
     end
