@@ -38,6 +38,7 @@ This document acts as the **Single Source of Truth (SSOT)** for the project's st
 | 🔵 **Cyan** | Status & Console UI | WI-19 ~ WI-20 | `#2dd4bf` |
 | 🟠 **Deep Orange** | Error Handling | WI-21 ~ WI-22 | `#fb923c` |
 | ⬜ **Gray** | Electron Desktop Mode | WI-23 ~ WI-26 | `#94a3b8` |
+| 🟣 **Indigo** | Low-Level Inspection | WI-27 ~ WI-29 | `#6366f1` |
 | ⬜ **White** | Automation Tests | TI-01 ~ TI-06 | `#ffffff` |
 
 ### Full Map
@@ -85,6 +86,12 @@ graph LR
     WI04 --> WI24
     WI23 --> WI25[WI-25 Electron File System]
     WI15 --> WI25
+    
+    WI07 --> WI27[WI-27 Tabbed Layout]
+    WI11 --> WI27
+    WI06 --> WI28[WI-28 Assembly Service]
+    WI27 --> WI29[WI-29 Assembly UI]
+    WI28 --> WI29
 
     WI01 -.-> TI01[TI-01 Config Unit Tests]
     WI06 -.-> TI02[TI-02 Session Unit Tests]
@@ -133,4 +140,8 @@ graph LR
     style TI04 fill:#ffffff,stroke:#000,stroke-width:2.5px
     style TI05 fill:#ffffff,stroke:#000,stroke-width:2.5px
     style TI06 fill:#ffffff,stroke:#000,stroke-width:2.5px
+
+    style WI27 fill:#6366f1,stroke:#4f46e5
+    style WI28 fill:#6366f1,stroke:#4f46e5
+    style WI29 fill:#6366f1,stroke:#4f46e5
 ```

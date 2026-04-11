@@ -59,6 +59,16 @@ The architectural documentation has been modularized. Please see the specific su
 
 ---
 
-## 3. File Reference Table
+## 3. Component & Feature Specifications
+
+Granular specifications for complex UI components and specific DAP feature implementations.
+
+| Feature / Component | Documentation Document | Description |
+| :--- | :--- | :--- |
+| **Assembly View** | [architecture/ui-components/assembly-view-spec.md](architecture/ui-components/assembly-view-spec.md) | Low-level instruction inspection, address-to-source mapping, and tabbed editor integration. |
+
+---
+
+## 4. File Reference Table
 
 > **Note:** For a complete and up-to-date mapping of source files to their architectural layers and responsibilities, please refer to the **[Source File Responsibility Map](file-map.md)**.

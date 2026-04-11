@@ -70,6 +70,7 @@ A **Feature Group** is a named domain category that groups related `WI-##` items
 | Status & Console UI | 🔵 Cyan | WI-19 ~ WI-20 |
 | Error Handling | 🟠 Deep Orange | WI-21 ~ WI-22 |
 | Electron Desktop Mode | ⬜ Gray | WI-23 ~ WI-25 |
+| Low-Level Inspection | 🟣 Indigo | WI-27 ~ WI-29 |
 | Automation Tests | ⬜ White | TI-01 ~ TI-06 |
 
 > [!NOTE]
