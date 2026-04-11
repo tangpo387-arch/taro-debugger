@@ -1,0 +1,47 @@
+[
+  {
+    "id": "WI-10",
+    "title": "Debug Control Button Functionality",
+    "featureGroup": "Debug Controls",
+    "metadata": {
+      "status": "done",
+      "size": "M",
+      "dependencies": ["WI-07"]
+    },
+    "description": "Connect toolbar control buttons to DAP requests",
+    "details": [
+      "Continue → `continue` request",
+      "Step Over → `next` request",
+      "Step Into → `stepIn` request",
+      "Step Out → `stepOut` request (button was missing from template, added)",
+      "Pause → `pause` request",
+      "Stop → `disconnect` request",
+      "Button state management (Running: only Pause/Stop available; Stopped: Continue/Step available)"
+    ],
+    "timeline": {
+      "completed": "2026-03"
+    }
+  },
+  {
+    "id": "WI-11",
+    "title": "DAP Event Handling & State Management",
+    "featureGroup": "Debug Controls",
+    "metadata": {
+      "status": "done",
+      "size": "M",
+      "dependencies": ["WI-07"]
+    },
+    "description": "Handle DAP Server events and update frontend state",
+    "details": [
+      "`stopped` event → Update to paused state, trigger stackTrace/scopes/variables queries",
+      "`continued` event → Update to running state",
+      "`terminated` / `exited` events → Update to terminated state, notify user",
+      "`output` event → Write to console log",
+      "`initialized` event → Trigger `configurationDone`",
+      "`breakpoint` event → Update breakpoint display status"
+    ],
+    "timeline": {
+      "completed": "2026-03"
+    }
+  }
+]

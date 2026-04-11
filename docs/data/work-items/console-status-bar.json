@@ -1,0 +1,42 @@
+[
+  {
+    "id": "WI-19",
+    "title": "Debug Console Functionality",
+    "featureGroup": "Console & Status Bar",
+    "metadata": {
+      "status": "done",
+      "size": "M",
+      "dependencies": ["WI-11"]
+    },
+    "description": "Complete bottom console per spec [§3.2.5](system-specification.md#325-status-bar--console)",
+    "details": [
+      "Receive DAP `output` events, route by category to Debugger Console / Program Console",
+      "Add command input field, send `evaluate` request",
+      "Auto-scroll to latest log",
+      "Log timestamp display"
+    ],
+    "timeline": {
+      "completed": "2026-03"
+    }
+  },
+  {
+    "id": "WI-20",
+    "title": "Connection Status Indicator Functionality",
+    "featureGroup": "Console & Status Bar",
+    "metadata": {
+      "status": "done",
+      "size": "S",
+      "dependencies": ["WI-05"]
+    },
+    "description": "Make status bar dynamic per spec [§3.2.5](system-specification.md#325-status-bar--console)",
+    "details": [
+      "Bind `DapTransportService` connection status Observable",
+      "Green light = connected, gray light = disconnected, red light = connection error",
+      "Display connection address information",
+      "Display current debug state (Running / Stopped / Terminated)"
+    ],
+    "timeline": {
+      "completed": "2026-03"
+    }
+  }
+]

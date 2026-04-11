@@ -1,0 +1,62 @@
+[
+  {
+    "id": "WI-27",
+    "title": "Integration of Tabbed Layout and Navigation",
+    "featureGroup": "Low-Level Inspection",
+    "metadata": {
+      "status": "done",
+      "size": "S",
+      "dependencies": ["WI-07", "WI-11"]
+    },
+    "description": "Evolve the main content area into a **tabbed interface** and implement logic for dynamic switching between Source and Disassembly.",
+    "details": [
+      "Replace static Monaco Editor with a `mat-tab-group` containing Source and Disassembly tabs.",
+      "Implement active tab management in `DebuggerComponent`.",
+      "Add logic to automatically switch to Disassembly tab if a selected stack frame has no source but has an instruction pointer."
+    ],
+    "timeline": {
+      "created": "2026-04-11",
+      "completed": "2026-04-11"
+    }
+  },
+  {
+    "id": "WI-28",
+    "title": "DapAssemblyService and Disassemble Request",
+    "featureGroup": "Low-Level Inspection",
+    "metadata": {
+      "status": "pending",
+      "size": "M",
+      "dependencies": ["WI-06"]
+    },
+    "description": "Implement a dedicated service for assembly data retrieval and interaction with the DAP `disassemble` endpoint.",
+    "details": [
+      "Create `DapAssemblyService` with a component-scoped lifecycle.",
+      "Implement the `disassemble` request with configurable instruction count and offsets.",
+      "Handle symbol resolution and address mapping within the service.",
+      "Expose a reactive `instructions$` stream for the UI."
+    ],
+    "timeline": {
+      "created": "2026-04-11"
+    }
+  },
+  {
+    "id": "WI-29",
+    "title": "AssemblyViewComponent and Instruction Rendering",
+    "featureGroup": "Low-Level Inspection",
+    "metadata": {
+      "status": "pending",
+      "size": "M",
+      "dependencies": ["WI-27", "WI-28"]
+    },
+    "description": "Build the high-density instruction list component with **virtual scrolling** and instruction pointer highlighting.",
+    "details": [
+      "Implement `AssemblyViewComponent` using `cdk-virtual-scroll-viewport`.",
+      "Design the high-density table layout (Address, Opcode, Mnemonic, Annotation).",
+      "Implement logic to synchronize the highlighted instruction with the current `instructionPointerReference`.",
+      "Integrate breakpoint markers in the assembly gutter."
+    ],
+    "timeline": {
+      "created": "2026-04-11"
+    }
+  }
+]

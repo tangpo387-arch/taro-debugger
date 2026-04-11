@@ -5,60 +5,92 @@ description: Managing the creation, progression, and archival of Work Items (WI)
 
 # Work Item Management Skill
 
-This skill defines the procedures and criteria for the `Product_Architect` and `Lead_Engineer` to manage the project's backlog and task lifecycle.
+> [!IMPORTANT]
+> **Principles & Nomenclature**: For authoritative naming conventions, lifecycle state definitions, and Feature Group mappings, refer to the project guide:
+> [docs/project-management.md](../../../docs/project-management.md)
 
-## 1. When to Use This Skill
+---
 
-As the **Product_Architect**, you must trigger this skill in the following scenarios:
+## 1. Operational Context
 
-- **New Requirement/Feature**: When a user request results in a new functional deliverable.
-- **Retirement Decision**: When `Product_Architect` decides to retire a Feature Group (all work being done is a necessary precondition, not the trigger).
-- **Status Alignment**: When there is a discrepancy between the codebase and the `work-items.md` tracking.
-- **Progress Reporting**: When visualizing the current project dependencies and bottlenecks.
+### 1.1 Trigger Conditions
 
-## 2. Shared Visibility (Who reads what)
+As the **Product_Architect**, you must initiate these procedures when:
+- **New Requirement/Feature**: A user request results in a new functional deliverable.
+- **Stabilization**: A Feature Group has zero remaining `pending` items; `generate-docs.js` updates the roadmap automatically.
+- **Status Alignment**: A discrepancy is detected between the codebase and the `work-items.md` tracking.
+- **Progress Reporting**: Visualizing current project dependencies and bottlenecks is required.
 
-- **Lead_Engineer**: May optionally read `docs/project-roadmap.md` when the WI's `depends:` metadata is insufficient to determine implementation sequence or module coupling. Not required if dependencies are clear from the WI description.
-- **Quality_Control_Reviewer**: May optionally read `docs/project-roadmap.md` to identify regression boundaries when a WI impacts multiple Feature Groups.
-- **Product_Architect**: Responsible for maintaining both maps to ensure accurate project trajectory tracking.
+### 1.2 Shared Visibility (Role Responsibilities)
 
-## 3. Standard Procedures
+- **Product_Architect**: Responsible for maintaining accurate mappings, executing creation scripts, and declaring Feature Group Stabilization.
+- **Lead_Engineer**: May optionally read `docs/project-roadmap.md` if the WI's metadata is insufficient to determine implementation sequence. Not required if dependencies are clear.
+- **Quality_Control_Reviewer**: Uses the backlog to identify regression boundaries when a WI impacts multiple Feature Groups.
 
-### A. Creating a New Work Item (WI) — Owner: `Product_Architect`
+---
 
-1. **Assign ID**: Scan `docs/project-roadmap.md` for the highest existing `WI-##` node (retired nodes are preserved there and never deleted), then increment by 1. Never reuse any ID that has appeared in the roadmap.
-2. **Categorize**: Place the item under the correct **Feature Group** heading in `docs/work-items.md`.
-3. **Template**: Use the mandatory HTML comment metadata for machine-readability:
+## 2. Creating a New Work Item
 
-   ```markdown
-   ### WI-##: [Title]
-   <!-- status: pending | size: S|M|L | depends: WI-##, WI-## -->
-   - Status: ⏳ Pending
-   ```
+**Owner**: `Product_Architect`
 
-4. **Link Dependencies**:
-   - **Atomic Map**: Add the new node and dependency edge in `docs/project-roadmap.md`.
-   - **Strategic Map**: Normally no change is required in `docs/work-items.md` unless creating a fundamentally new Feature Group.
+### Step 1 — Automated Creation
 
-### B. Progressing to 'In-Progress' or 'Done' — Owner: `Lead_Engineer`
+Use the `add-wi.js` script to create the task. The script will automatically assign the next available ID, validate the group, and update all derivative Markdown files.
 
-1. **Validation**: Before setting to `✅ Done`, ensure all associated `TI-##` (Test Items) are passing.
-2. **Update Status**: Synchronize the visible `Status` field and the hidden HTML metadata.
-3. **Visual Feedback**:
-   - **Atomic Map** (`docs/project-roadmap.md`): Assign `stroke-width: 2.5px` (Thick Border) to the completed node.
-   - **Strategic Map** (`docs/work-items.md`): Only update the Feature Group's border when **all** WIs within that group reach `✅ Done`. Do NOT update before the entire group is complete.
+```bash
+# Usage:
+# node scripts/add-wi.js AUTO "Group" "Title" "Description" "Details" "Deps" "Size"
 
-### C. Retiring a Feature Group — Owner: `Product_Architect`
+node scripts/add-wi.js AUTO "Editor Advanced Interaction" "Search UI" "Add global search filter" "Matches regex|Case sensitive" "WI-12" "M"
+```
 
-1. **Criteria**: Ensure §6 (Completion Criteria) of `project-management.md` is met (QA review + Specs match).
-2. **Design Persistence**: If the work involved architectural changes, translate them into an ADR in `docs/design-decisions.md` **before** any deletion.
-3. **Purge Backlog**: Delete the entire Feature Group section (the `## Heading` + all `### WI-##` entries) from `docs/work-items.md`. Also remove the Feature Group node from the Strategic Map in `work-items.md`.
-4. **Archive Atomic Map**: In `docs/project-roadmap.md`, update the retired nodes to use the archived style (`stroke-dasharray: 5`). Do **not** delete nodes — preserve dependency history for downstream traceability.
+- **AUTO**: Let the system allocate the numeric ID.
+- **Group**: Must match a Feature Group defined in `project-management.md §1.4`.
+- **Details**: Use `|` to separate multiple sub-tasks.
+- **Deps**: Comma-separated list of dependent IDs (or `none`).
 
-## 4. Reference Documents
+### Step 2 — Long Content Handling
 
-- [`docs/project-management.md`](../../../docs/project-management.md): Authoritative lifecycle process and Feature Group SSOT.
-- [`docs/project-roadmap.md`](../../../docs/project-roadmap.md): Atomic dependency map (SSOT for Mermaid node styles).
-- [`docs/work-items.md`](../../../docs/work-items.md): Active task backlog and strategic milestone overview.
-- [`docs/design-decisions.md`](../../../docs/design-decisions.md): Architecture Decision Records (ADRs) for non-obvious implementation choices.
-- [`.agents/project-context.md`](../../project-context.md): Agent navigation index.
+If the `Description` or `Details` are too complex for a shell command, use `@` to reference a temporary file:
+
+```bash
+node scripts/add-wi.js AUTO "Core" "Refactor" "@temp_details.txt"
+```
+
+### Step 3 — Verification
+
+After the script completes, verify that the item appears in `docs/work-items.md` and the Mermaid graph in `docs/project-roadmap.md` has been updated with the correct styles.
+
+---
+
+## 3. Progressing a Work Item
+
+**Owner**: `Lead_Engineer`
+
+Implementation status is updated via the `update-wi.js` script. **Do not** edit Markdown files manually.
+
+| Action | Command | Result |
+| :--- | :--- | :--- |
+| **Complete** | `node scripts/update-wi.js WI-## done` | Moves to ✅ Done; item is archived in the JSON SSOT. |
+| **Abort** | `node scripts/update-wi.js WI-## abort` | Moves to ❌ Aborted; item is archived in the JSON SSOT. |
+| **Revert** | `node scripts/update-wi.js WI-## pending` | Moves back to ⏳ Pending. |
+
+The script automatically handles timestamps and refreshes all derivative views.
+
+## 4. Machine-Readable Archival (JSON)
+
+- **Single Source of Truth**: The JSON repository in `docs/data/work-items/` is the **only** SSOT for task data.
+- **Data Specification**: For full JSON schema details and script logic, see [data-management-spec.md](../../../docs/data/data-management-spec.md).
+- **Automation First**: Never edit `work-items.md` or `project-roadmap.md` manually. Always use the generation scripts.
+- **Utility**: `node scripts/generate-docs.js <type> <output_path|"-">` can be used to manually generate specific views.
+
+---
+
+## 6. Quick Reference
+
+```text
+Create WI/TI   →  Product_Architect runs scripts/add-wi.js
+Implement      →  Lead_Engineer runs scripts/update-wi.js (done|aborted)
+Review         →  Quality_Control_Reviewer approves PR
+Query/Export   →  node scripts/generate-docs.js <backlog|roadmap|changelog|future> <path|"-">
+```

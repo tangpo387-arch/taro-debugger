@@ -27,8 +27,12 @@ To help new developers or maintainers get up to speed quickly, the recommended r
   * **When to read**: To understand how different modules depend on each other, determine development order, or visualize project scope and completed feature paths.
 
 * 📄 **[Project Management Guide (project-management.md)](project-management.md)**
-  * **Contents**: WI/TI lifecycle process, naming conventions, feature group definitions, and archival procedures. The authoritative process handbook for all project management operations.
-  * **When to read**: When creating, progressing, or retiring any work item, or when you need to understand feature group ownership and color assignments.
+  * **Contents**: WI/TI lifecycle process, naming conventions, and feature group definitions.
+  * **When to read**: When creating, progressing, or retiring any work item.
+
+* 📄 **[Data Management Specification (data/data-management-spec.md)](data/data-management-spec.md)**
+  * **Contents**: Technical reference for the JSON-first architecture, SSOT schema, and automation scripts (`add-wi.js`, `update-wi.js`, `generate-docs.js`).
+  * **When to read**: When modifying the task database structure or troubleshooting documentation generation.
 
 * 📄 **[Test Plan (test-plan.md)](test-plan.md)**
   * **Contents**: Describes the project's test pyramid strategy, including the scope of unit tests, integration tests, and E2E tests, along with coverage requirements.

@@ -1,0 +1,62 @@
+[
+  {
+    "id": "WI-01",
+    "title": "Extend `GdbConfigService` Configuration Model",
+    "featureGroup": "Setup View",
+    "metadata": {
+      "status": "done",
+      "size": "S",
+      "dependencies": []
+    },
+    "description": "Extend the config object into a complete DAP connection configuration interface",
+    "details": [
+      "Define `DapConfig` interface (`serverAddress`, `launchMode: 'launch' | 'attach'`, `executablePath`, `sourcePath`, `programArgs`)",
+      "Update `GdbConfigService`'s `setConfig()` / `getConfig()` methods",
+      "Rename service to `DapConfigService` (aligning with the generic DAP concept in the spec)",
+      "[Test] Verify `setConfig()` and `getConfig()` correctly store and return complete `DapConfig` data"
+    ],
+    "timeline": {
+      "completed": "2026-03"
+    }
+  },
+  {
+    "id": "WI-02",
+    "title": "Setup Form Field Completion",
+    "featureGroup": "Setup View",
+    "metadata": {
+      "status": "done",
+      "size": "M",
+      "dependencies": ["WI-01"]
+    },
+    "description": "Complete all Setup form fields per spec [§3.1](system-specification.md#31-initialization-setup-view-setup)",
+    "details": [
+      "Add **DAP Server Connection Address** field (e.g., `localhost:4711`)",
+      "Add **Launch Mode** selector (`mat-button-toggle` or `mat-radio`: Launch / Attach)",
+      "Add **Program Arguments** field (optional)",
+      "Button text dynamically switches based on Launch Mode (\"Launch\" / \"Attach\")"
+    ],
+    "timeline": {
+      "completed": "2026-03"
+    }
+  },
+  {
+    "id": "WI-03",
+    "title": "Setup Form Validation",
+    "featureGroup": "Setup View",
+    "metadata": {
+      "status": "done",
+      "size": "S",
+      "dependencies": ["WI-02"]
+    },
+    "description": "Implement real-time form validation per spec [§7.3](system-specification.md#73-user-configuration-validation)",
+    "details": [
+      "Switch to Reactive Forms (`FormGroup` + `Validators`) Greenland",
+      "Connection address format validation (`host:port`)",
+      "Required field validation + inline error messages",
+      "Launch/Attach button disabled when validation fails"
+    ],
+    "timeline": {
+      "completed": "2026-03"
+    }
+  }
+]

@@ -2,146 +2,126 @@
 title: Project Roadmap & Dependency Map
 scope: milestones, dependencies, architecture-tracking
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-06
-related:
-  - docs/project-management.md
-  - docs/work-items.md
-  - docs/test-plan.md
+last_updated: 2026-04-11
 ---
 
 # Project Roadmap & Dependency Map
 
-This document acts as the **Single Source of Truth (SSOT)** for the project's strategic roadmap and granular work item dependencies. It illustrates the sequence of implementation and the architectural relationships between all modules.
-
-> [!NOTE]
-> - **Lead Engineer**: Use this map to determine implementation order and spot architectural dependencies before starting a WI.
-> - **QA Reviewer**: Use this map to identify regression testing paths and verify TI/WI coverage.
-> - **Product Architect**: Maintain this map whenever a Feature Group is created, completed, or retired.
-
----
-
-## Technical Dependency Map (Atomic View)
-
-### Chart Color & Style Legend
-
-| Color | Feature Group | Item Status | Style Representation |
-| :--- | :--- | :--- | :--- |
-| **All Colors** | (Varies by Fill Color) | **Pending / Proposed** | Solid background, standard border |
-| **All Colors** | (Varies by Fill Color) | **Done** | Solid background + **Thick Black Border** (`stroke-width: 2.5px`) |
-| **Any** | Retired Feature Group | **Archived** | No fill + **Dashed Border** (`stroke-dasharray: 5`) |
-| 🟢 **Green** | Core Infrastructure | WI-01 ~ WI-08, WI-10, WI-11 | `#4ade80` |
-| 🔵 **Blue** | Backend Relay | WI-09 | `#60a5fa` |
-| 🟠 **Orange** | Debug Control UI | — | (Reserved) |
-| 🟣 **Purple** | Editor Advanced Interaction | WI-12 ~ WI-14 | `#a78bfa` |
-| 🟡 **Yellow** | File Resource Management | WI-15 ~ WI-16 | `#facc15` |
-| 🩷 **Pink** | Debug Info Panel | WI-17 ~ WI-18 | `#f472b6` |
-| 🔵 **Cyan** | Status & Console UI | WI-19 ~ WI-20 | `#2dd4bf` |
-| 🟠 **Deep Orange** | Error Handling | WI-21 ~ WI-22 | `#fb923c` |
-| ⬜ **Gray** | Electron Desktop Mode | WI-23 ~ WI-26 | `#94a3b8` |
-| 🟣 **Indigo** | Low-Level Inspection | WI-27 ~ WI-29 | `#6366f1` |
-| ⬜ **White** | Automation Tests | TI-01 ~ TI-06 | `#ffffff` |
-
-### Full Map
-
 ```mermaid
 graph LR
-    WI01[WI-01 Config Model] --> WI02[WI-02 Form Fields]
-    WI02 --> WI03[WI-03 Form Validation]
+    WI_09["WI-09 Implement Node.js WebSocket Bridge"]
+    WI_19["WI-19 Debug Console Functionality"]
+    WI_20["WI-20 Connection Status Indicator Functionality"]
+    WI_04["WI-04 Create `DapTransportService` Abstract Interface"]
+    WI_05["WI-05 Implement WebSocket Transport Layer (`WebSocketTransportService`)"]
+    WI_06["WI-06 DAP Session Management Service (`DapSessionService`)"]
+    WI_07["WI-07 DAP Request Timeout Mechanism"]
+    WI_08["WI-08 Integrate DapSessionService in DebuggerComponent"]
+    WI_31["WI-31 DAP 'terminated' Event _restart Payload Passing"]
+    WI_10["WI-10 Debug Control Button Functionality"]
+    WI_11["WI-11 DAP Event Handling & State Management"]
+    WI_12["WI-12 Monaco Editor Breakpoint Interaction"]
+    WI_13["WI-13 Breakpoint DAP Synchronization"]
+    WI_14["WI-14 Current Line Highlight"]
+    WI_23["WI-23 Electron Main Process Architecture"]
+    WI_26["WI-26 Setup Page Separation"]
+    WI_24["WI-24 Electron IPC Transport Layer (`IpcTransportService`)"]
+    WI_25["WI-25 Electron Local File System Access"]
+    WI_21["WI-21 Connection Error Handling"]
+    WI_22["WI-22 DAP Server Error Handling"]
+    WI_15["WI-15 File Tree Service Abstraction (`FileTreeService`)"]
+    WI_16["WI-16 Left Sidenav File Tree UI"]
+    WI_27["WI-27 Integration of Tabbed Layout and Navigation"]
+    WI_28["WI-28 DapAssemblyService and Disassemble Request"]
+    WI_29["WI-29 AssemblyViewComponent and Instruction Rendering"]
+    WI_01["WI-01 Extend `GdbConfigService` Configuration Model"]
+    WI_02["WI-02 Setup Form Field Completion"]
+    WI_03["WI-03 Setup Form Validation"]
+    WI_17["WI-17 Call Stack Panel"]
+    WI_18_1["WI-18.1 Variables Data State Management"]
+    WI_18_2["WI-18.2 Variables Tree UI Component"]
+    WI_30["WI-30 Local Variable Modification"]
+    WI_11 --> WI_19
+    WI_05 --> WI_20
+    WI_04 --> WI_05
+    WI_05 --> WI_06
+    WI_06 --> WI_07
+    WI_06 --> WI_08
+    WI_07 --> WI_08
+    WI_07 --> WI_10
+    WI_07 --> WI_11
+    WI_06 --> WI_13
+    WI_12 --> WI_13
+    WI_11 --> WI_14
+    WI_04 --> WI_24
+    WI_23 --> WI_24
+    WI_26 --> WI_24
+    WI_15 --> WI_25
+    WI_23 --> WI_25
+    WI_05 --> WI_21
+    WI_20 --> WI_21
+    WI_06 --> WI_22
+    WI_15 --> WI_16
+    WI_07 --> WI_27
+    WI_11 --> WI_27
+    WI_06 --> WI_28
+    WI_27 --> WI_29
+    WI_28 --> WI_29
+    WI_01 --> WI_02
+    WI_02 --> WI_03
+    WI_11 --> WI_17
+    WI_11 --> WI_18_1
+    WI_17 --> WI_18_1
+    WI_18_1 --> WI_18_2
+    WI_18_1 --> WI_30
+    WI_18_2 --> WI_30
 
-    WI04[WI-04 Transport Abstract] --> WI05[WI-05 WebSocket Impl]
-    WI05 --> WI06[WI-06 DAP Session Mgmt]
-
-    WI06 --> WI07[WI-07 Debugger Integration]
-    WI06 --> WI08[WI-08 DAP Timeout]
-
-    WI06 -.-> WI09[WI-09 Node.js WS Bridge]
-
-    WI07 --> WI10[WI-10 Control Buttons]
-    WI07 --> WI11[WI-11 Event State Mgmt]
-
-    WI12[WI-12 Breakpoint UI] --> WI13[WI-13 Breakpoint DAP Sync]
-    WI06 --> WI13
-    WI11 --> WI14[WI-14 Current Line Highlight]
-
-    WI15[WI-15 FileTree Abstract] --> WI16[WI-16 File Tree UI]
-
-    WI11 --> WI17[WI-17 Call Stack]
-    WI11 --> WI18_1[WI-18.1 Variables State]
-    WI17 --> WI18_1
-    WI18_1 --> WI18_2[WI-18.2 Variables UI]
-
-    WI11 --> WI19[WI-19 Console]
-    WI05 --> WI20[WI-20 Connection Indicator]
-
-    WI05 --> WI21[WI-21 Connection Error Handling]
-    WI20 --> WI21
-    WI06 --> WI22[WI-22 DAP Error Handling]
-
-    WI21 -.-> TI05[TI-05 Error Integration Tests]
-    WI22 -.-> TI05
-    WI18_1 -.-> TI06[TI-06 Variables Unit Tests]
-
-    WI26[WI-26 Setup Page Split] --> WI24[WI-24 IPC Transport]
-    WI23[WI-23 Electron Main Process] --> WI24
-    WI04 --> WI24
-    WI23 --> WI25[WI-25 Electron File System]
-    WI15 --> WI25
-    
-    WI07 --> WI27[WI-27 Tabbed Layout]
-    WI11 --> WI27
-    WI06 --> WI28[WI-28 Assembly Service]
-    WI27 --> WI29[WI-29 Assembly UI]
-    WI28 --> WI29
-
-    WI01 -.-> TI01[TI-01 Config Unit Tests]
-    WI06 -.-> TI02[TI-02 Session Unit Tests]
-    WI05 -.-> TI03[TI-03 Transport Unit Tests]
-    WI15 -.-> TI04[TI-04 FileTree Unit Tests]
-
-    style WI01 fill:#4ade80,stroke:#000,stroke-width:2.5px
-    style WI02 fill:#4ade80,stroke:#000,stroke-width:2.5px
-    style WI03 fill:#4ade80,stroke:#000,stroke-width:2.5px
-    style WI04 fill:#4ade80,stroke:#000,stroke-width:2.5px
-    style WI05 fill:#4ade80,stroke:#000,stroke-width:2.5px
-    style WI06 fill:#4ade80,stroke:#000,stroke-width:2.5px
-
-    style WI07 fill:#4ade80,stroke:#000,stroke-width:2.5px
-    style WI08 fill:#4ade80,stroke:#000,stroke-width:2.5px
-    style WI09 fill:#60a5fa,stroke:#2563eb
-
-    style WI10 fill:#f97316,stroke:#000,stroke-width:2.5px
-    style WI11 fill:#f97316,stroke:#000,stroke-width:2.5px
-
-    style WI12 fill:#a78bfa,stroke:#000,stroke-width:2.5px
-    style WI13 fill:#a78bfa,stroke:#000,stroke-width:2.5px
-    style WI14 fill:#a78bfa,stroke:#000,stroke-width:2.5px
-
-    style WI15 fill:#facc15,stroke:#000,stroke-width:2.5px
-    style WI16 fill:#facc15,stroke:#000,stroke-width:2.5px
-
-    style WI17 fill:#f472b6,stroke:#000,stroke-width:2.5px
-    style WI18_1 fill:#f472b6,stroke:#000,stroke-width:2.5px
-    style WI18_2 fill:#f472b6,stroke:#000,stroke-width:2.5px
-
-    style WI19 fill:#2dd4bf,stroke:#000,stroke-width:2.5px
-    style WI20 fill:#2dd4bf,stroke:#000,stroke-width:2.5px
-
-    style WI21 fill:#fb923c,stroke:#000,stroke-width:2.5px
-    style WI22 fill:#fb923c,stroke:#000,stroke-width:2.5px
-
-    style WI23 fill:#94a3b8,stroke:#000,stroke-width:2.5px
-    style WI24 fill:#94a3b8,stroke:#000,stroke-width:2.5px
-    style WI25 fill:none,stroke-dasharray:5
-    style WI26 fill:#94a3b8,stroke:#000,stroke-width:2.5px
-
-    style TI01 fill:#ffffff,stroke:#000,stroke-width:2.5px
-    style TI02 fill:#ffffff,stroke:#000,stroke-width:2.5px
-    style TI03 fill:#ffffff,stroke:#000,stroke-width:2.5px
-    style TI04 fill:#ffffff,stroke:#000,stroke-width:2.5px
-    style TI05 fill:#ffffff,stroke:#000,stroke-width:2.5px
-    style TI06 fill:#ffffff,stroke:#000,stroke-width:2.5px
-
-    style WI27 fill:#6366f1,stroke:#000,stroke-width:2.5px
-    style WI28 fill:#6366f1,stroke:#4f46e5
-    style WI29 fill:#6366f1,stroke:#4f46e5
+    style WI_09 fill:#60a5fa,stroke:#2563eb
+    style WI_19 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_20 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_04 fill:#4ade80,stroke:#000,stroke-width:2.5px
+    style WI_05 fill:#4ade80,stroke:#000,stroke-width:2.5px
+    style WI_06 fill:#4ade80,stroke:#000,stroke-width:2.5px
+    style WI_07 fill:#4ade80,stroke:#000,stroke-width:2.5px
+    style WI_08 fill:#4ade80,stroke:#000,stroke-width:2.5px
+    style WI_31 fill:#4ade80,stroke:#22c55e
+    style WI_10 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_11 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_12 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_13 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_14 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_23 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_26 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_24 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_25 fill:none,stroke-dasharray:5
+    style WI_21 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_22 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_15 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_16 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_27 fill:#6366f1,stroke:#000,stroke-width:2.5px
+    style WI_28 fill:#6366f1,stroke:#4f46e5
+    style WI_29 fill:#6366f1,stroke:#4f46e5
+    style WI_01 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_02 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_03 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_17 fill:#f472b6,stroke:#000,stroke-width:2.5px
+    style WI_18_1 fill:#f472b6,stroke:#000,stroke-width:2.5px
+    style WI_18_2 fill:#f472b6,stroke:#000,stroke-width:2.5px
+    style WI_30 fill:#f472b6,stroke:#db2777
 ```
+
+## Feature Groups
+
+| Group | Color | Status |
+| :--- | :--- | :--- |
+| Setup View | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%234ade80'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#4ade80"/> `#4ade80` | 💎 Stabilized |
+| DAP Transport Layer | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%234ade80'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#4ade80"/> `#4ade80` | 🔵 Active |
+| Backend Relay | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%2360a5fa'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#60a5fa"/> `#60a5fa` | 🔵 Active |
+| Debug Controls | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f1f5f9'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f1f5f9"/> `#f1f5f9` | 💎 Stabilized |
+| Editor Features | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23a78bfa'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#a78bfa"/> `#a78bfa` | 💎 Stabilized |
+| File Explorer | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23facc15'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#facc15"/> `#facc15` | 💎 Stabilized |
+| Variables & Call Stack | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f472b6'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f472b6"/> `#f472b6` | 🔵 Active |
+| Console & Status Bar | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%232dd4bf'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#2dd4bf"/> `#2dd4bf` | 💎 Stabilized |
+| Error Handling | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23fb923c'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#fb923c"/> `#fb923c` | 💎 Stabilized |
+| Electron Desktop Mode | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%2394a3b8'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#94a3b8"/> `#94a3b8` | 💎 Stabilized |
+| Low-Level Inspection | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%236366f1'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#6366f1"/> `#6366f1` | 🔵 Active |

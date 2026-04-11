@@ -1,0 +1,43 @@
+[
+  {
+    "id": "WI-15",
+    "title": "File Tree Service Abstraction (`FileTreeService`)",
+    "featureGroup": "File Explorer",
+    "metadata": {
+      "status": "done",
+      "size": "S",
+      "dependencies": []
+    },
+    "description": "Define file tree data retrieval abstract interface per spec [§3.2.2](system-specification.md#322-left-sidenav)",
+    "details": [
+      "Define `FileNode` interface (`name`, `path`, `type: 'file' | 'directory'`, `children?`)",
+      "Define `FileTreeService` abstract (`getTree(rootPath)`, `readFile(path)`)",
+      "Web mode: Retrieve remote file tree via backend API / WebSocket",
+      "[Test] getTree: Happy path, path logic, and sorting",
+      "[Test] readFile: Happy path and failure fallback"
+    ],
+    "timeline": {
+      "completed": "2026-03"
+    }
+  },
+  {
+    "id": "WI-16",
+    "title": "Left Sidenav File Tree UI",
+    "featureGroup": "File Explorer",
+    "metadata": {
+      "status": "done",
+      "size": "M",
+      "dependencies": ["WI-15"]
+    },
+    "description": "Replace left sidebar hardcoded content with dynamic file tree",
+    "details": [
+      "Use `mat-tree` (Flat or Nested) to display file/folder hierarchy",
+      "Folder expand/collapse functionality",
+      "Click file → Load source code into Monaco Editor",
+      "Currently opened file highlighted"
+    ],
+    "timeline": {
+      "completed": "2026-03"
+    }
+  }
+]
