@@ -24,18 +24,6 @@ audience: [Lead_Engineer, Product_Architect]
 
 ## Low-Level Inspection
 
-### WI-28: DapAssemblyService and Disassemble Request
-
-- **Status**: ⏳ Pending
-- **Size**: M
-- **Description**: Implement a dedicated service for assembly data retrieval and interaction with the DAP `disassemble` endpoint.
-- **Details**:
-  - Create `DapAssemblyService` with a component-scoped lifecycle.
-  - Implement the `disassemble` request with configurable instruction count and offsets.
-  - Handle symbol resolution and address mapping within the service.
-  - Expose a reactive `instructions$` stream for the UI.
-- **Dependencies**: WI-06
-
 ### WI-29: AssemblyViewComponent and Instruction Rendering
 
 - **Status**: ⏳ Pending

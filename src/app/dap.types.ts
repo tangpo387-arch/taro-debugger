@@ -63,3 +63,28 @@ export interface DapStackFrame {
   [key: string]: any;
 }
 
+/**
+ * Arguments for the 'disassemble' request.
+ */
+export interface DisassembleArguments {
+  memoryReference: string;
+  offset?: number;
+  instructionOffset?: number;
+  instructionCount: number;
+  resolveSymbols?: boolean;
+}
+
+/**
+ * Represents a single disassembled instruction.
+ */
+export interface DapDisassembledInstruction {
+  address: string;
+  instructionBytes?: string;
+  instruction: string;
+  symbol?: string;
+  location?: any;
+  line?: number;
+  column?: number;
+  endLine?: number;
+  endColumn?: number;
+}

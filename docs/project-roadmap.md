@@ -99,7 +99,7 @@ graph LR
     style WI_15 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_16 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_27 fill:#6366f1,stroke:#000,stroke-width:2.5px
-    style WI_28 fill:#6366f1,stroke:#4f46e5
+    style WI_28 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI_29 fill:#6366f1,stroke:#4f46e5
     style WI_01 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_02 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
