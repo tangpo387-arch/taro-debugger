@@ -67,11 +67,21 @@
     <!-- 4. Center: Core Editor and Consoles -->
     <mat-sidenav-content class="main-content">
 
-      <!-- Monaco Editor Container -->
+      <!-- Main Content Tab Group (Source / Disassembly) -->
       <div class="editor-container">
-        <app-editor class="monaco-editor-instance" [code]="currentCode" [filename]="activeFilePath"
-          [activeLine]="activeFilePath === activeLineFilePath ? activeLine : null"
-          (breakpointsChange)="onBreakpointsChange($event)" />
+        <mat-tab-group [selectedIndex]="activeTabIndex" (selectedIndexChange)="activeTabIndex = $event" animationDuration="0ms">
+          <mat-tab label="Source">
+            <app-editor class="monaco-editor-instance" [code]="currentCode" [filename]="activeFilePath"
+              [activeLine]="activeFilePath === activeLineFilePath ? activeLine : null"
+              (breakpointsChange)="onBreakpointsChange($event)" />
+          </mat-tab>
+          <mat-tab label="Disassembly">
+            <div class="assembly-placeholder">
+              <mat-icon>terminal</mat-icon>
+              <p>Assembly View is under implementation (WI-29).</p>
+            </div>
+          </mat-tab>
+        </mat-tab-group>
       </div>
 
       <!-- Bottom Consoles Area — rendered by LogViewerComponent -->

@@ -141,7 +141,7 @@ graph LR
     style TI05 fill:#ffffff,stroke:#000,stroke-width:2.5px
     style TI06 fill:#ffffff,stroke:#000,stroke-width:2.5px
 
-    style WI27 fill:#6366f1,stroke:#4f46e5
+    style WI27 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI28 fill:#6366f1,stroke:#4f46e5
     style WI29 fill:#6366f1,stroke:#4f46e5
 ```

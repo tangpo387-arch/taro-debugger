@@ -230,12 +230,96 @@
   padding: 0;
   /* Removed padding to maximize editor screen real estate (§9.4) */
   overflow: hidden;
+
+  /* Force tab group to fill container */
+  mat-tab-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  // Ensure tab header maintains standard visual separation from the editor
+  :host & ::ng-deep .mat-mdc-tab-header {
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    background-color: var(--mat-sys-surface-container-high);
+    // Eliminate MDC top/bottom default paddings
+    --mdc-tab-container-height: 32px;
+  }
+
+  // Align tab sizing with the standard panel header bar height (32px)
+  :host & ::ng-deep .mat-mdc-tab {
+    min-height: 32px !important;
+    height: 32px !important;
+    padding: 0 16px;
+  }
+
+  // Align tab semantics with standard .panel-title (Uppercase, text-sm, 0.8px spacing)
+  :host & ::ng-deep .mdc-tab__text-label {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  // Active tab color
+  :host & ::ng-deep .mdc-tab--active .mdc-tab__text-label {
+    color: var(--mat-sys-on-surface);
+  }
+
+  // Material does not expose a CSS variable for .mat-mdc-tab-body-wrapper
+  // flex growth — ::ng-deep required to propagate height through tab internals (§2.2 SCSS Guide).
+  :host & ::ng-deep .mat-mdc-tab-body-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  :host & ::ng-deep .mat-mdc-tab-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    .mat-mdc-tab-body-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+  }
 }
 
 .monaco-editor-instance {
+  flex: 1;
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.assembly-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--mat-sys-on-surface-variant);
+  background-color: var(--mat-sys-surface-container-low);
+  gap: 16px;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    opacity: 0.5;
+  }
+
+  p {
+    margin: 0;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
 }
 
 /* --- Console panel area style --- */

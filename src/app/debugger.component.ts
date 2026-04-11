@@ -13,6 +13,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatTabsModule } from '@angular/material/tabs';
 
 import { EditorComponent, BreakpointChangeEvent } from './editor.component';
 import { FileExplorerComponent } from './file-explorer.component';
@@ -42,6 +43,7 @@ import { CallStackComponent } from './call-stack.component';
     MatListModule,
     MatSnackBarModule,
     MatDialogModule,
+    MatTabsModule,
     EditorComponent,
     FileExplorerComponent,
     VariablesComponent,
@@ -143,6 +145,8 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public rightWidth: number = 300;
   public consoleHeight: number = 250;
   public leftVisible: boolean = true;
+  /** Current active tab in the main content area (0: Source, 1: Disassembly) */
+  public activeTabIndex: number = 0;
 
   private isResizingLeft = false;
   private isResizingRight = false;
@@ -352,6 +356,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public async onFileSelected(node: FileNode): Promise<void> {
     this.activeFilePath = node.path;
     this.currentCode = '// Loading source code...';
+    this.activeTabIndex = 0; // Switching to Source tab immediately (avoids UI lag/error masking)
     this.cdr.detectChanges();
 
     try {
@@ -521,6 +526,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       this.activeFilePath = frame.source.path;
       this.fileRevealTrigger++; // Always trigger a UX reveal on explicit navigation
       this.currentCode = '// Loading source code...';
+      this.activeTabIndex = 0; // Focus Source tab immediately
       this.cdr.detectChanges();
 
       try {
@@ -534,6 +540,11 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       const ref = frame.instructionPointerReference ? `\nInstruction Pointer: ${frame.instructionPointerReference}` : '';
       const mod = frame.moduleId ? `\nModule: ${frame.moduleId}` : '';
       this.currentCode = `// No source code available for this frame.${mod}${ref}`;
+
+      // Switch to Disassembly tab if instruction pointer is available
+      if (frame.instructionPointerReference) {
+        this.activeTabIndex = 1;
+      }
     }
 
     // Trigger scope cache update for the newly selected frame

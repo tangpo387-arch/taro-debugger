@@ -30,7 +30,7 @@ related:
 ## Low-Level Inspection
 
 ### WI-27: Integration of Tabbed Layout and Navigation
-<!-- status: pending | size: S | depends: WI-07, WI-11 -->
+<!-- status: done | size: S | depends: WI-07, WI-11 -->
 - **Size**: S
 - **Description**: Evolve the main content area into a tabbed interface and implement logic for dynamic switching between Source and Disassembly.
 - **Details**:
@@ -38,7 +38,7 @@ related:
   - Implement active tab management in `DebuggerComponent`.
   - Add logic to automatically switch to Disassembly tab if a selected stack frame has no source but has an instruction pointer.
 - **Dependencies**: WI-07, WI-11
-- **Status**: ⏳ Pending
+- **Status**: ✅ Done
 
 ### WI-28: DapAssemblyService and Disassemble Request
 <!-- status: pending | size: M | depends: WI-06 -->
