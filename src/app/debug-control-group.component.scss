@@ -1,0 +1,94 @@
+@use '../breakpoints' as bp;
+
+:host {
+  display: inline-flex;
+  vertical-align: middle;
+  overflow: hidden; 
+  border-radius: 8px !important; // Double-enforce outer radius
+}
+
+.control-group-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  background-color: var(--mat-sys-surface-container-high);
+  
+  /* ── Product Architect Exception ─────────────────────────────────────
+     Introduction of 8px border-radius for 'Control Overlay Layer' 
+  */
+  border-radius: 8px !important;
+  overflow: hidden; 
+  padding: 2px 4px;
+}
+
+.control-segment {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 2px;
+  padding: 0 2px;
+}
+
+.divider {
+  width: 1px;
+  height: 16px;
+  background-color: var(--mat-sys-outline-variant);
+  margin: 0 4px;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Material Overrides: Compressing buttons & forcing sharp interactive layers
+   ────────────────────────────────────────────────────────────────────────── */
+:host ::ng-deep {
+  button.mat-mdc-icon-button {
+    --mdc-icon-button-state-layer-size: var(--sys-density-btn-size-sm);
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: var(--sys-density-btn-size-sm) !important;
+    height: var(--sys-density-btn-size-sm) !important;
+    padding: 0 !important;
+    border-radius: 4px !important; 
+
+    /* Force all overlay layers to match the new 4px radius */
+    .mat-mdc-button-state-layer,
+    .mat-mdc-button-persistent-ripple,
+    .mat-mdc-focus-indicator,
+    &::before {
+      border-radius: 4px !important; 
+    }
+
+    .mat-mdc-button-touch-target {
+      display: none;
+    }
+
+    mat-icon {
+      font-size: var(--sys-density-btn-icon-size-sm);
+      width: var(--sys-density-btn-icon-size-sm);
+      height: var(--sys-density-btn-icon-size-sm);
+      margin: 0 !important; // Prevent internal Material margins from shifting the icon
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--mat-sys-on-surface);
+    }
+
+    /* Primary Emphasis for Play/Continue */
+    &[title*="Continue"] mat-icon, 
+    &[title*="Pause"] mat-icon {
+      color: var(--mat-sys-primary);
+    }
+
+    /* Stop emphasizes with Warn color */
+    &.warn-btn mat-icon {
+      color: var(--mat-sys-error);
+    }
+
+    /* Disabled state aesthetics */
+    &:disabled mat-icon {
+      color: var(--mat-sys-on-surface);
+      opacity: 0.38;
+    }
+  }
+}

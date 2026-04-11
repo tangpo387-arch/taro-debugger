@@ -15,6 +15,7 @@ related:
 > **Guiding Principle: Flush IDE Layouts & Material Design 3 (M3)**
 > When architecting the visual layer, we resolve the conflict between modern IDE aesthetics and default Material Design 3 (M3) paradigms through two core rules:
 > 1. **Adopt M3 Colors, Reject M3 Shapes**: We fully adhere to M3's System Color Tokens (`--mat-sys-surface`, `--mat-sys-outline`) to ensure flawless Light/Dark mode transitions. Conversely, we aggressively strip away M3's default large rounded corners (`border-radius`) and floating shadows (`elevation`), forcing components back to the sharp, orthogonal geometries expected in professional developer tools.
+>    * **Exception (Control Overlays & Toolbar Buttons)**: High-priority floating interaction capsules (e.g., the `DebugControlGroupComponent`) are explicitly exempt, using an `8px` container radius. All standalone toolbar buttons and internal interactive buttons use a `4px` radius to establish a distinct visual hierarchy against the sharp primary layer while maintaining micro-level shape consistency.
 > 2. **Maximum Spatial Efficiency (Flush-fit)**: Zero-pixel margins and simple 1px dividers are mandated between side panels and the core editor. This edge-to-edge architecture eliminates wasted peripheral whitespace, maximizing the readable area for critical debugging data.
 
 To optimize the reading experience across different usage contexts, the interface implements an environment-aware **UI Density Scale System** utilizing CSS Custom Properties combined with Angular components.
@@ -37,9 +38,11 @@ The global `styles.scss` defines root CSS variables representing dynamic spacing
 - `--sys-density-panel-padding`
 - `--sys-density-variable-row`
 - `--sys-density-item-gap`
-- `--text-base` *(overridden per density mode — see §8.2)*
+- `--sys-density-btn-size` / `--sys-density-btn-icon-size` (Standard sizes for standalone buttons)
+- `--sys-density-btn-size-sm` / `--sys-density-btn-icon-size-sm` (Compact sizes for inner control capsules)
+- `--text-base` *(overridden per density mode)*
 
-The base `:root` values assume a comfortable layout constraint. Under `@media (max-width: 800px)`, these tokens are redefined to significantly compress physical dimensions, maximizing information density for confined screen real estate.
+The base `:root` values assume a comfortable layout constraint. Under `@media (max-width: 800px)`, these tokens are redefined to significantly compress physical dimensions, maximizing information density for confined screen real estate. Notably, button dimensions (`--sys-density-btn-size` and `-sm`) dynamically shrink to prevent layout overflow when parent container heights contract (e.g. `28px` buttons shrinking to `20px` to continuously fit inside a `24px` row).
 
 **TypeScript Synchronization & Integration**
 Select Angular CDK / Material components require TypeScript-level synchronization rather than pure CSS, particularly due to internal math and viewport estimations. Instead of checking the OS/Environment, components must use the Angular CDK `BreakpointObserver` matching the same `800px` threshold:

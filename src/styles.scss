@@ -8,14 +8,26 @@
   --sys-density-item-gap: 12px;
   --sys-density-console-height: 20px;
 
+  /* Button Density Scale */
+  --sys-density-btn-size: 40px;
+  --sys-density-btn-icon-size: 24px;
+  --sys-density-btn-size-sm: 28px;
+  --sys-density-btn-icon-size-sm: 20px;
+
   /* Typographic Scale (assuming 1rem = 16px) */
-  --text-xs: 0.75rem;    /* 12px */
-  --text-sm: 0.8125rem;  /* 13px */
-  --text-base: 0.875rem; /* 14px */
-  --text-lg: 1rem;       /* 16px */
-  --text-xl: 1.125rem;   /* 18px */
-  --text-2xl: 1.375rem;  /* 22px */
-  
+  --text-xs: 0.75rem;
+  /* 12px */
+  --text-sm: 0.8125rem;
+  /* 13px */
+  --text-base: 0.875rem;
+  /* 14px */
+  --text-lg: 1rem;
+  /* 16px */
+  --text-xl: 1.125rem;
+  /* 18px */
+  --text-2xl: 1.375rem;
+  /* 22px */
+
   /* Font Weights */
   --weight-regular: 400;
   --weight-medium: 500;
@@ -49,8 +61,16 @@ body {
     --sys-density-panel-padding: 12px;
     --sys-density-variable-row: 24px;
     --sys-density-item-gap: 8px;
+
+    /* Button Density Override */
+    --sys-density-btn-size: 32px;
+    --sys-density-btn-icon-size: 20px;
+    --sys-density-btn-size-sm: 20px;
+    --sys-density-btn-icon-size-sm: 14px;
+
     /* Typography density override (§8.2): scale base font for confined viewports */
-    --text-base: 0.75rem; /* 12px — tighter than wide-screen 14px */
+    --text-base: 0.75rem;
+    /* 12px — tighter than wide-screen 14px */
   }
 }
 

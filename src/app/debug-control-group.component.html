@@ -1,0 +1,50 @@
+<div class="control-group-container">
+  <!-- Group 1: Execution Control (Play/Pause) -->
+  <div class="control-segment group-execution">
+    @if (isRunning$ | async) {
+      <button mat-icon-button (click)="onPause()" title="Pause (F6)">
+        <mat-icon>pause</mat-icon>
+      </button>
+    } @else {
+      <button mat-icon-button (click)="onResume()" [disabled]="!(isStopped$ | async)" title="Continue (F5)">
+        <mat-icon>play_arrow</mat-icon>
+      </button>
+    }
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Group 2: Stepping -->
+  <div class="control-segment group-stepping">
+    <button mat-icon-button (click)="onStepOver()" [disabled]="!(isStopped$ | async)" title="Step Over (F10)">
+      <mat-icon>redo</mat-icon>
+    </button>
+    <button mat-icon-button (click)="onStepInto()" [disabled]="!(isStopped$ | async)" title="Step Into (F11)">
+      <mat-icon>arrow_downward</mat-icon>
+    </button>
+    <button mat-icon-button (click)="onStepOut()" [disabled]="!(isStopped$ | async)" title="Step Out (Shift+F11)">
+      <mat-icon>arrow_upward</mat-icon>
+    </button>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Group 3: Restart -->
+  <div class="control-segment group-restart">
+    <button mat-icon-button (click)="onRestart()" [disabled]="isStarting$ | async" 
+            [title]="(isError$ | async) ? 'Reconnect' : 'Restart (Ctrl+Shift+F5)'">
+      <mat-icon>{{ (isError$ | async) ? 'sync' : 'replay' }}</mat-icon>
+    </button>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Group 4: Terminate -->
+  <div class="control-segment group-terminate">
+    <button mat-icon-button (click)="onStop()" class="warn-btn"
+            [disabled]="(isRunning$ | async) === false && (isStopped$ | async) === false" 
+            title="Stop (Shift+F5)">
+      <mat-icon>stop</mat-icon>
+    </button>
+  </div>
+</div>

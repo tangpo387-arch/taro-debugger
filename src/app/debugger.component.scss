@@ -28,12 +28,43 @@
   min-height: var(--sys-density-toolbar-height);
   height: var(--sys-density-toolbar-height);
   padding: 0 var(--sys-density-panel-padding);
+}
 
-  @media #{bp.$mq-compact} {
-    --mdc-icon-button-state-layer-size: 36px;
-    --mdc-icon-button-icon-size: 20px;
+/* Material Overrides for Toolbar Buttons
+   Material does not expose CSS variables for button border-radius.
+   Overriding state layers to 4px to align with inner capsule buttons. */
+:host ::ng-deep .top-toolbar button.mat-mdc-icon-button:not(app-debug-control-group *) {
+  --mdc-icon-button-state-layer-size: var(--sys-density-btn-size);
+  width: var(--sys-density-btn-size) !important;
+  height: var(--sys-density-btn-size) !important;
+  padding: 0 !important;
+  border-radius: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  .mat-mdc-button-state-layer,
+  .mat-mdc-button-persistent-ripple,
+  .mat-mdc-focus-indicator,
+  &::before {
+    border-radius: 4px !important;
+  }
+
+  .mat-mdc-button-touch-target {
+    display: none;
+  }
+
+  mat-icon {
+    font-size: var(--sys-density-btn-icon-size);
+    width: var(--sys-density-btn-icon-size);
+    height: var(--sys-density-btn-icon-size);
+    margin: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
+
 
 .sidebar-toggle-btn {
   margin-right: 8px;
@@ -85,12 +116,6 @@
 
 .spacer {
   flex: 1 1 auto;
-}
-
-.debug-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 /* --- Sidenav shared and individual styles --- */

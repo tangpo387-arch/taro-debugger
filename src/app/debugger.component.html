@@ -20,44 +20,8 @@
     <span class="spacer"></span>
 
     <!-- Debug control buttons -->
-    <div class="debug-controls">
-      <!-- Pause button: Available only in 'running' state -->
-      <button mat-icon-button title="Pause" (click)="onPause()" [disabled]="executionState !== 'running'">
-        <mat-icon>pause</mat-icon>
-      </button>
-
-      <!-- Continue button: Available only in 'stopped' state -->
-      <button mat-icon-button title="Continue" (click)="onResume()" [disabled]="executionState !== 'stopped'">
-        <mat-icon>play_arrow</mat-icon>
-      </button>
-
-      <!-- Step Over button: Available only in 'stopped' state -->
-      <button mat-icon-button title="Step Over" (click)="onStepOver()" [disabled]="executionState !== 'stopped'">
-        <mat-icon>redo</mat-icon>
-      </button>
-
-      <!-- Step Into button: Available only in 'stopped' state -->
-      <button mat-icon-button title="Step Into" (click)="onStepInto()" [disabled]="executionState !== 'stopped'">
-        <mat-icon>arrow_downward</mat-icon>
-      </button>
-
-      <!-- Step Out button: Available only in 'stopped' state -->
-      <button mat-icon-button title="Step Out" (click)="onStepOut()" [disabled]="executionState !== 'stopped'">
-        <mat-icon>arrow_upward</mat-icon>
-      </button>
-
-      <!-- Restart / Reconnect button -->
-      <button mat-icon-button [title]="executionState === 'error' ? 'Reconnect' : 'Restart'" color="primary"
-        (click)="onRestart()" [disabled]="executionState === 'idle' || executionState === 'starting'">
-        <mat-icon>{{ executionState === 'error' ? 'sync' : 'replay' }}</mat-icon>
-      </button>
-
-      <!-- Stop button: Available unless session is terminated/idle/starting -->
-      <button mat-icon-button title="Stop" color="warn" (click)="onStop()"
-        [disabled]="executionState === 'terminated' || executionState === 'starting' || executionState === 'idle' || executionState === 'error'">
-        <mat-icon>stop</mat-icon>
-      </button>
-    </div>
+    <app-debug-control-group (restart)="onRestart()" (stop)="onStop()">
+    </app-debug-control-group>
 
     <span class="spacer"></span>
 
@@ -76,8 +40,7 @@
       <div class="resize-handle resize-handle-left" (mousedown)="onResizeStart($event, 'left')"></div>
       <!-- Minimize button lives outside FileExplorerComponent (it controls the sidenav, not the tree) -->
       <app-file-explorer [activeFilePath]="activeFilePath" [reloadTrigger]="fileTreeReloadTrigger"
-        [revealTrigger]="fileRevealTrigger"
-        (fileSelected)="onFileSelected($event)"></app-file-explorer>
+        [revealTrigger]="fileRevealTrigger" (fileSelected)="onFileSelected($event)"></app-file-explorer>
     </mat-sidenav>
 
     <!-- 3. Right sidenav: Variables and Call Stack -->

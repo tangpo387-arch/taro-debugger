@@ -25,6 +25,7 @@ import { DapVariablesService } from './dap-variables.service';
 import { DapEvent } from './dap.types';
 import { FileNode } from './file-tree.service';
 import { DapLogService } from './dap-log.service';
+import { DebugControlGroupComponent } from './debug-control-group.component';
 
 @Component({
   selector: 'app-debugger',
@@ -44,6 +45,7 @@ import { DapLogService } from './dap-log.service';
     FileExplorerComponent,
     VariablesComponent,
     LogViewerComponent,
+    DebugControlGroupComponent,
   ],
   providers: [
     DapSessionService,

@@ -198,4 +198,36 @@
       color: var(--mat-sys-outline);
     }
   }
+
+  // Material does not expose CSS variables for button state layers or corner radii.
+  // ::ng-deep is required to compress the button.
+  // We use dynamic density tokens to scale the button down in compact viewports.
+  :host & ::ng-deep button.mat-mdc-icon-button {
+    --mdc-icon-button-state-layer-size: var(--sys-density-btn-size-sm);
+    width: var(--sys-density-btn-size-sm) !important;
+    height: var(--sys-density-btn-size-sm) !important;
+    padding: 0 !important;
+    border-radius: 4px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    .mat-mdc-button-state-layer,
+    .mat-mdc-button-persistent-ripple,
+    .mat-mdc-focus-indicator,
+    &::before {
+      border-radius: 4px !important;
+    }
+
+    .mat-mdc-button-touch-target {
+      display: none;
+    }
+
+    mat-icon {
+      font-size: var(--sys-density-btn-icon-size-sm);
+      width: var(--sys-density-btn-icon-size-sm);
+      height: var(--sys-density-btn-icon-size-sm);
+      margin: 0 !important;
+    }
+  }
 }
