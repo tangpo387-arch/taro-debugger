@@ -5,149 +5,94 @@ description: Follow these coding standards to maintain consistency in the taro-d
 
 # Project Code Style Guide
 
+<guide_overview>
 This document defines the development standards for the `taro-debugger-frontend` project, aiming to maintain code consistency, readability, and modern Angular best practices.
+</guide_overview>
+
+<naming_conventions>
 
 ## 1. Naming Conventions
 
 ### File Naming
-*   **File Name Format**: Always use `kebab-case`.
-*   **Suffix Conventions**:
-    *   Component: `*.component.ts`
-    *   Service: `*.service.ts`
-    *   Pipe: `*.pipe.ts`
-    *   Directive: `*.directive.ts`
-    *   Module/Config: `*.config.ts`, `*.routes.ts`
-    *   Unit Test: `*.spec.ts`
-    *   Type Definition: `*.types.ts`
+
+* **File Name Format**: Always use `kebab-case`.
+* **Suffix Conventions**:
+  * Component: `*.component.ts`
+  * Service: `*.service.ts`
+  * Pipe: `*.pipe.ts`
+  * Directive: `*.directive.ts`
+  * Module/Config: `*.config.ts`, `*.routes.ts`
+  * Unit Test: `*.spec.ts`
+  * Type Definition: `*.types.ts`
 
 ### Class and Variable Naming
-*   **Classes/Interfaces**: Use `PascalCase` (e.g., `DebuggerComponent`, `DapSessionService`).
-*   **Variables and Methods**: Use `camelCase` (e.g., `executionState`, `ngOnInit()`, `startSession()`).
-*   **Constants**: Use `UPPER_SNAKE_CASE` (e.g., `DEFAULT_TIMEOUT`).
-*   **Observable Variables**: Suffix with `$` (e.g., `connectionStatus$`, `executionState$`).
+
+* **Classes/Interfaces**: Use `PascalCase` (e.g., `DebuggerComponent`, `DapSessionService`).
+* **Variables and Methods**: Use `camelCase` (e.g., `executionState`, `ngOnInit()`, `startSession()`).
+* **Constants**: Use `UPPER_SNAKE_CASE` (e.g., `DEFAULT_TIMEOUT`).
+* **Observable Variables**: Suffix with `$` (e.g., `connectionStatus$`, `executionState$`).
+</naming_conventions>
+
+<angular_standards>
 
 ## 2. Angular Development Standards
 
 ### Component Structure
-*   **Standalone Components**: This project uses Angular 21+ **Standalone Components**. Do not use `NgModule` to declare components.
-*   **External Templates and Styles**: Component templates (`.html`) and styles (`.scss` or `.css`) must be kept separate from the `.ts` file.
-*   **Dependency Injection (DI)**: Prefer the modern `inject()` function over constructor injection.
+
+* **Standalone Components**: This project uses Angular 21+ **Standalone Components**. Do not use `NgModule` to declare components.
+* **External Templates and Styles**: Component templates (`.html`) and styles (`.scss` or `.css`) must be kept separate from the `.ts` file.
+* **Dependency Injection (DI)**: Prefer the modern `inject()` function over constructor injection.
+
     ```typescript
     private readonly configService = inject(DapConfigService);
     private readonly router = inject(Router);
     ```
 
-### Angular Material Tree API
-*   **Forbidden Deprecated API**: Do not use `NestedTreeControl` (`@angular/cdk/tree`) or `MatTreeNestedDataSource` (`@angular/material/tree`). This API was marked deprecated in Angular Material v17+ and will be removed in v22.
-*   **Use the `childrenAccessor` Pattern**: All `mat-tree` instances must use the modern `[childrenAccessor]` Input with a plain array `dataSource`, combined with the `#tree="matTree"` template reference. Do not introduce `TreeControl`.
-    ```typescript
-    // ✅ Correct: modern childrenAccessor pattern
-    public dataSource: MyNode[] = [];
-    public childrenAccessor = (node: MyNode): MyNode[] => node.children ?? [];
+</angular_standards>
 
-    // ❌ Forbidden: deprecated TreeControl pattern
-    public treeControl = new NestedTreeControl<MyNode>(node => node.children);
-    public dataSource = new MatTreeNestedDataSource<MyNode>();
-    ```
-
-### Services and State Management
-*   **Singleton Services**: By default, services that do not manage shared state should not use `providedIn: 'root'`. Instead, provide them according to their usage context (e.g., in a component's `providers` array).
-*   **Reactive State**: Use RxJS `BehaviorSubject` or `Subject` to manage shared state streams between components.
-
-### Responsive Layout & Density (Zero-JS Architecture)
-*   **CSS-First Responsive Design**: Density scaling (e.g., margins, gaps, fonts) must be handled dynamically via CSS Media Queries (`@media (max-width: 800px)`) applied to CSS Custom Properties. **Do not** manually bind `.ui-density-*` classes.
-*   **TypeScript Synchronization**: When CDK components (e.g., `cdk-virtual-scroll`, `mat-tree`) require strict TypeScript geometries, inject `BreakpointObserver` from `@angular/cdk/layout` matched to `(max-width: 800px)`. **Strictly forbidden:** Using `EnvironmentDetectService.isElectron()` to calculate UI sizes or layout parameters.
-
-### SCSS Styling Rules
-
-> [!IMPORTANT]
-> **Visual Design System Enforcement**
-> The design tokens, typography scale, and layout behaviors are now strictly defined in the `docs/architecture/visual-design.md` architecture document.
-> 
-> **You MUST consult `docs/architecture/visual-design.md` before applying any SCSS.** All UI development must adhere to the Design Tokens and Density scaling rules documented there. Hardcoding font sizes or colors that violate the Design System is strictly forbidden.
-
-
-#### `::ng-deep` Usage Policy
-
-`::ng-deep` is **deprecated** in Angular and must be treated as a **last resort**, not a default solution.
-
-**Permitted only when ALL of the following conditions are met:**
-1. The target CSS class is an Angular Material internal class (e.g., `.mat-mdc-*`) with **no corresponding CSS Custom Property** exposed by the library.
-2. The override is required for **structural layout** (flex growth, height propagation), not for cosmetic changes (colors, fonts, spacing).
-3. Every `::ng-deep` selector **must** be prefixed with `:host &` to constrain the style penetration to the current component's subtree only.
-
-```scss
-// ✅ Correct: scoped, justified, documented
-:host & ::ng-deep .mat-mdc-tab-body-wrapper {
-  flex: 1;
-  min-height: 0; // Required for flex shrink to work correctly
-}
-
-// ❌ Forbidden: unscoped, will leak to all instances globally
-::ng-deep .mat-mdc-tab-body-wrapper {
-  flex: 1;
-}
-
-// ❌ Forbidden: use for cosmetic overrides (use CSS variables instead)
-:host & ::ng-deep .mat-mdc-tab-label {
-  font-size: 12px;
-}
-```
-
-**Preferred alternatives (in priority order):**
-1. **Angular Material CSS Custom Properties** — check the component's theming API first (e.g., `--mat-tab-header-active-label-text-color`).
-2. **Layout restructuring (Method D)** — if the child component is sized via `position: absolute; inset: 0`, Material internals may inherit height without `::ng-deep`.
-3. **Global `styles.scss` with precise host selector** — use `app-my-component .mat-mdc-*` if the component is used in only one known context.
-4. **`::ng-deep` with `:host &` scope** — only if all alternatives above are not viable.
-
-**Mandatory comment**: Every permitted `::ng-deep` usage must include an inline comment explaining why no alternative exists:
-```scss
-// Material does not expose a CSS variable for .mat-mdc-tab-body-wrapper
-// flex growth — ::ng-deep required to propagate height through tab internals.
-:host & ::ng-deep .mat-mdc-tab-body-wrapper {
-  flex: 1;
-}
-```
-
+<typescript_standards>
 
 ## 3. TypeScript Standards
 
 ### Strong Typing
-*   **Explicit Declarations**: Public properties and methods must explicitly declare their return types or data types.
-*   **Access Modifiers**: Always use explicit `public`, `private`, and `protected` modifiers. Injected services should default to `private readonly`.
+
+* **Explicit Declarations**: Public properties and methods must explicitly declare their return types or data types.
+* **Access Modifiers**: Always use explicit `public`, `private`, and `protected` modifiers. Injected services should default to `private readonly`.
 
 ### Asynchronous Handling
-*   **Async/Await**: For sequential async logic (e.g., the DAP handshake flow), prefer `async/await`.
-*   **RxJS**: For event streams (e.g., DAP event listeners) or state broadcasting, use `Observable`.
-*   **Conversion**: To convert an Observable to a Promise, use `firstValueFrom`.
+
+* **Async/Await**: For sequential async logic (e.g., the DAP handshake flow), prefer `async/await`.
+* **RxJS**: For event streams (e.g., DAP event listeners) or state broadcasting, use `Observable`.
+* **Conversion**: To convert an Observable to a Promise, use `firstValueFrom`.
+</typescript_standards>
+
+<language_and_documentation>
 
 ## 4. Language & Documentation
 
-*   **Global Language Policy**:
-    *   All **code comments**, **JSDoc**, and **UI display text** (text in templates) must be written in **US English**.
-    *   Chinese content is forbidden in `*.ts`, `*.scss`, and `*.html` files.
-*   **Comment Standards**:
-    *   **Logic Explanation**: Use **US English** for complex logic descriptions to facilitate understanding by international team members.
-    *   **JSDoc**: Use **English JSDoc** for public method and interface descriptions.
-*   **Code Section Dividers**: For longer services or components, use a clear separator to delineate logical blocks:
+* **Global Language Policy**:
+  * All **code comments**, **JSDoc**, and **UI display text** (text in templates) must be written in **US English**.
+  * Chinese content is forbidden in `*.ts`, `*.scss`, and `*.html` files.
+* **Comment Standards**:
+  * **Logic Explanation**: Use **US English** for complex logic descriptions to facilitate understanding by international team members.
+  * **JSDoc**: Use **English JSDoc** for public method and interface descriptions.
+* **Code Section Dividers**: For longer services or components, use a clear separator to delineate logical blocks:
+
     ```typescript
     // ── Session Event Handling ─────────────────────────────────────────
     ```
 
+</language_and_documentation>
+
+<formatting_rules>
+
 ## 5. Formatting
 
-*   **Indentation**: 2 spaces.
-*   **Quotes**: Single quotes `'` (TypeScript/JavaScript), double quotes `"` (HTML).
-*   **Semicolons**: Required `;`.
-*   **Import Order**:
-    1.  Angular core and built-in modules (`@angular/*`)
-    2.  Third-party libraries (RxJS, Angular Material)
-    3.  Local project files
-
-## 6. RxJS Management
-
-*   **Resource Cleanup**: In `ngOnDestroy`, always call `unsubscribe()` or use operators like `takeUntil` to prevent memory leaks.
-*   **Immutability**: For arrays displayed in the UI (e.g., log records), use the spread operator `[...]` to create a new reference and trigger Angular's `OnPush` or default change detection.
-    ```typescript
-    this.dapLogs = [...this.dapLogs, newEntry];
-    ```
+* **Indentation**: 2 spaces.
+* **Quotes**: Single quotes `'` (TypeScript/JavaScript), double quotes `"` (HTML).
+* **Semicolons**: Required `;`.
+* **Import Order**:
+    1. Angular core and built-in modules (`@angular/*`)
+    2. Third-party libraries (RxJS, Angular Material)
+    3. Local project files
+</formatting_rules>

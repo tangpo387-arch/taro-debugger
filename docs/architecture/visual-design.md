@@ -167,3 +167,45 @@ The status bar is a fixed-height single-line flex container. The following rules
 | :--- | :--- |
 | **Single-line enforcement** | `.status-bar` MUST declare `flex-wrap: nowrap` and `overflow: hidden`. Without `flex-wrap: nowrap`, flex children can wrap onto a second line when the viewport is narrow, causing the container's fixed height to clip wrapped content. |
 | **Truncation Priority** | Informational metadata (e.g., server address) MUST truncate before critical state labels. Apply `flex-shrink: 0; white-space: nowrap` to high-priority elements (connection state, execution state). Apply `min-width: 0; overflow: hidden; text-overflow: ellipsis` to low-priority elements (server address). |
+
+## 7. SCSS & `::ng-deep` Usage Policy
+
+`::ng-deep` is **deprecated** in Angular and must be treated as a **last resort**, not a default solution.
+
+**Permitted only when ALL of the following conditions are met:**
+1. The target CSS class is an Angular Material internal class (e.g., `.mat-mdc-*`) with **no corresponding CSS Custom Property** exposed by the library.
+2. The override is required for **structural layout** (flex growth, height propagation), not for cosmetic changes (colors, fonts, spacing).
+3. Every `::ng-deep` selector **must** be prefixed with `:host &` to constrain the style penetration to the current component's subtree only.
+
+```scss
+// ✅ Correct: scoped, justified, documented
+:host & ::ng-deep .mat-mdc-tab-body-wrapper {
+  flex: 1;
+  min-height: 0; // Required for flex shrink to work correctly
+}
+
+// ❌ Forbidden: unscoped, will leak to all instances globally
+::ng-deep .mat-mdc-tab-body-wrapper {
+  flex: 1;
+}
+
+// ❌ Forbidden: use for cosmetic overrides (use CSS variables instead)
+:host & ::ng-deep .mat-mdc-tab-label {
+  font-size: 12px;
+}
+```
+
+**Preferred alternatives (in priority order):**
+1. **Angular Material CSS Custom Properties** — check the component's theming API first (e.g., `--mat-tab-header-active-label-text-color`).
+2. **Layout restructuring (Method D)** — if the child component is sized via `position: absolute; inset: 0`, Material internals may inherit height without `::ng-deep`.
+3. **Global `styles.scss` with precise host selector** — use `app-my-component .mat-mdc-*` if the component is used in only one known context.
+4. **`::ng-deep` with `:host &` scope** — only if all alternatives above are not viable.
+
+**Mandatory comment**: Every permitted `::ng-deep` usage must include an inline comment explaining why no alternative exists:
+```scss
+// Material does not expose a CSS variable for .mat-mdc-tab-body-wrapper
+// flex growth — ::ng-deep required to propagate height through tab internals.
+:host & ::ng-deep .mat-mdc-tab-body-wrapper {
+  flex: 1;
+}
+```

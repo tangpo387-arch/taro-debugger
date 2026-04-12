@@ -38,7 +38,13 @@ This document defines where "state" should be stored in the `taro-debugger-front
     lifecycle scoping rule ineffective.
 * **R_SM6: Use State Selectors / Derived Observables**
   * UI components must receive pre-computed data from the service layer via derived Observables or "Selectors". For example, use a `hasActiveSession$` observable directly from the service rather than manually computing `executionState === 'running'` within the template or component logic.
+* **R_SM7: Immutable State Updates for Change Detection**
+  * For arrays or objects displayed in the UI (e.g., log records), use the spread operator `[...]` or `{...}` to create a new reference. This ensures Angular's ChangeDetectionStrategy.OnPush correctly identifies the state mutation.
+  
+  ```typescript
+  this.dapLogs = [...this.dapLogs, newEntry];
+  ```
 
 ## 4. Notes
 
-> Rules R_SM1–R_SM6 are defined sequentially across §1–§3. §4 contains supplementary notes only.
+> Rules R_SM1–R_SM7 are defined sequentially across §1–§3. §4 contains supplementary notes only.

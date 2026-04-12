@@ -6,30 +6,18 @@ globs: src/app/**/*.spec.ts
 
 # Testing Protocol
 
-This document defines the unit and integration testing standards for the `taro-debugger` project, ensuring functional correctness and regression testing capabilities during development.
+<protocol_overview>
+This document defines the unit and integration testing standards and architectural strategies for the `taro-debugger` project.
 
-## 1. Test Environment Execution
+**Test Runner**: The project uses **Vitest** as the primary test runner. Command line execution rules are located in [`.agents/project-context.md`](../project-context.md).
+</protocol_overview>
 
-The project uses **Vitest** as the primary test runner, integrated within the Angular CLI.
-
-### 1.1 Common Execution Commands
-
-To maintain consistency across environments, use these standard commands for Vitest unit tests:
-
-| Operation | Command | Description |
-| :--- | :--- | :--- |
-| **Run All Tests** | `npm run test -- --watch=false` | Executes all tests in single-run mode. |
-| **Test Single File** | `npm run test -- --include=<path/to/file.spec.ts> --watch=false` | Executes tests for a specific file. |
-| **Watch Mode** | `npm run test` | Starts the Vitest runner in interactive watch mode. |
-
-> [!NOTE]
-> All test commands use **Vitest** via the Angular CLI. The `--` separator is required to pass arguments through npm to the underlying test runner.
-
-## 2. Mocking Strategy
+<mocking_strategy>
+## 1. Mocking Strategy
 
 When testing Services or Components, it is often necessary to isolate underlying DAP communication.
 
-### 2.1 Mocking `DapSessionService`
+### 1.1 Mocking `DapSessionService`
 When testing UI components or derived services (such as `DapFileTreeService`), use `vi.fn()` to simulate asynchronous methods like `sendRequest`.
 
 Example (`dap-file-tree.service.spec.ts`):
@@ -49,7 +37,7 @@ function makeMockSession(responseBody?: any) {
 }
 ```
 
-### 2.2 Mocking `DapTransportService`
+### 1.2 Mocking `DapTransportService`
 When testing `DapSessionService` itself, you need to simulate the underlying Transport event stream. Use a `Subject` to manually push messages.
 
 Example:
@@ -67,9 +55,12 @@ const mockTransport = {
 // Push simulated event
 mockMessage$.next({ type: 'event', event: 'stopped', body: { threadId: 1 } });
 ```
+</mocking_strategy>
 
-## 3. Test Writing Principles
+<test_principles>
+## 2. Test Writing Principles
 
 *   **Async/Await**: For DAP requests involving Promises, prioritize using `async/await` syntax in test cases.
 *   **Observable Testing**: Use `firstValueFrom` to convert an `Observable` to a `Promise` for `expect` assertions.
 *   **Cleanup**: Ensure test cases do not interfere with each other; use `afterEach` for cleanup when necessary.
+</test_principles>
