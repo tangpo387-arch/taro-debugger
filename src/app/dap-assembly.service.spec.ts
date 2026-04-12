@@ -53,11 +53,68 @@ describe('DapAssemblyService', () => {
       await service.fetchInstructions('0x1000', 2);
 
       const instructions = await firstValueFrom(service.instructions$);
-      expect(instructions).toEqual(fakeInstructions);
+      expect(instructions).toEqual([
+        { 
+          address: '0x1000', 
+          instruction: 'mov eax, 1',
+          normalizedSymbol: '',
+          byteOffset: undefined,
+          isFunctionStart: false
+        },
+        { 
+          address: '0x1005', 
+          instruction: 'add eax, 2',
+          normalizedSymbol: '',
+          byteOffset: undefined,
+          isFunctionStart: false
+        },
+      ]);
       expect(mockDapSession.disassemble).toHaveBeenCalledWith(expect.objectContaining({
         memoryReference: '0x1000',
         instructionCount: 2
       }));
+    });
+
+    it('should correctly parse symbols and calculate offsets', async () => {
+      const fakeInstructions = [
+        { address: '0x1000', instruction: 'push rbp', symbol: '<main+0>' },
+        { address: '0x1001', instruction: 'mov rbp, rsp', symbol: '<main+1>' },
+        { address: '0x1010', instruction: 'push rbp', symbol: '<foo+0>' },
+        { address: '0x1014', instruction: 'mov rbp, rsp', symbol: '<foo+4>' },
+      ];
+      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse(fakeInstructions));
+
+      await service.fetchInstructions('0x1000', 4);
+
+      const instructions = await firstValueFrom(service.instructions$);
+      
+      expect(instructions[0]).toMatchObject({
+        address: '0x1000',
+        normalizedSymbol: 'main',
+        byteOffset: 0,
+        isFunctionStart: true
+      });
+      
+      expect(instructions[1]).toMatchObject({
+        address: '0x1001',
+        normalizedSymbol: 'main',
+        byteOffset: 1,
+        isFunctionStart: false
+      });
+      
+      expect(instructions[2]).toMatchObject({
+        address: '0x1010',
+        normalizedSymbol: 'foo',
+        byteOffset: 0,
+        isFunctionStart: true
+      });
+      
+      expect(instructions[3]).toMatchObject({
+        address: '0x1014',
+        normalizedSymbol: 'foo',
+        byteOffset: 4,
+        isFunctionStart: false
+      });
     });
 
     it('should handle loading state correctly', async () => {
