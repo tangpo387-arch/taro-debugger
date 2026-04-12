@@ -124,6 +124,9 @@
   background-color: var(--mat-sys-surface-container);
   border-radius: 0 !important;
   /* Remove M3 shape for flush IDE layout */
+  border-right: 1px solid var(--mat-sys-outline-variant) !important;
+  border-top: 1px solid var(--mat-sys-outline-variant) !important;
+  margin-top: -1px; /* Align precisely with toolbar bottom border */
 }
 
 .sidenav-right {
@@ -132,6 +135,9 @@
   background-color: var(--mat-sys-surface-container);
   border-radius: 0 !important;
   /* Remove M3 shape for flush IDE layout */
+  border-left: 1px solid var(--mat-sys-outline-variant) !important;
+  border-top: 1px solid var(--mat-sys-outline-variant) !important;
+  margin-top: -1px; /* Align precisely with toolbar bottom border */
 }
 
 .sidenav-left {
@@ -198,13 +204,10 @@
   margin: 0;
   flex-shrink: 0;
   /* Separator + spacing below title per §9.5 */
-  border-top: 1px solid var(--mat-sys-outline-variant);
+  border-top: none;
   border-bottom: 1px solid var(--mat-sys-outline-variant);
   padding: 0 var(--sys-density-panel-padding);
-
-  &:first-child {
-    border-top: none;
-  }
+  box-sizing: border-box;
 }
 
 .placeholder-content {
@@ -326,6 +329,8 @@
 .consoles-container {
   flex-shrink: 0;
   background-color: var(--mat-sys-surface-container-high);
+  /* P2 Fix: Explicit top border to match all other panel separators (§9.5) */
+  border-top: 1px solid var(--mat-sys-outline-variant);
   // position:relative is required so app-log-viewer can use position:absolute inset:0
   position: relative;
 
@@ -350,12 +355,19 @@
   font-size: var(--text-sm);
   display: flex;
   align-items: center;
+  flex-wrap: nowrap; /* Prevent children from wrapping to a second line */
+  overflow: hidden;
   padding: 0 16px;
+  gap: 8px;
 }
 
 .connection-status {
   display: flex;
   align-items: center;
+  flex-shrink: 1;       /* Allow shrinking when space is tight */
+  min-width: 0;         /* Required for inner ellipsis to work */
+  white-space: nowrap;  /* Prevent text wrapping within status group */
+  overflow: hidden;
 }
 
 .indicator {
@@ -377,12 +389,17 @@
 }
 
 .server-address {
-  margin-left: 8px;
+  margin-left: 4px;
   opacity: 0.8;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Truncate server address when space is tight */
+  min-width: 0;
 }
 
 .execution-state {
   font-weight: var(--weight-medium);
+  white-space: nowrap;  /* Prevent wrapping in constrained widths */
+  flex-shrink: 0;
 }
 
 /* --- Resize Handles --- */

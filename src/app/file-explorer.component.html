@@ -1,7 +1,11 @@
-<!-- Panel header: title, collapse-all, minimize buttons -->
 <div class="sidenav-header">
   <div class="header-title-row">
-    <h3>Files</h3>
+    <div class="title-group">
+      <h3>Files</h3>
+      <div class="source-path" [title]="sourcePath">
+        {{ sourcePath || 'Not specified' }}
+      </div>
+    </div>
     <span class="spacer"></span>
     <button
       mat-icon-button
@@ -12,9 +16,6 @@
     >
       <mat-icon>unfold_less</mat-icon>
     </button>
-  </div>
-  <div class="source-path" [title]="sourcePath">
-    Source: {{ sourcePath || 'Not specified' }}
   </div>
 </div>
 

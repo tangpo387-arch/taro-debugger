@@ -2,7 +2,7 @@
 title: Architecture - Visual Design
 scope: architecture, visual-design, css, density, typography
 audience: [Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-10
+last_updated: 2026-04-12
 related:
   - ../architecture.md
   - ui-layer.md
@@ -27,27 +27,27 @@ To optimize the reading experience across different usage contexts, the interfac
 Instead, it relies inherently on **CSS Media Queries (RWD)**. Both the Desktop and Web versions of the application utilize standard, comfortable layouts by default. When the viewport width drops below a predefined breakpoint (e.g., `800px`), the global CSS Custom Properties automatically scale down. This triggers an instant compression of structural padding, block gaps, and base body text to maximize information density in narrow layouts.
 
 **Exception: Brand Visibility & Density Standards**:
-- **Desktop Mode (Electron)**: The `.brand-title` is always disabled to prioritize horizontal space for file paths and debug controls.
-- **WebApp Mode (Browser)**:
-  - **Wide Screens (>= 800px)**: The `.brand-title` is visible.
-  - **Compact Screens (< 800px)**: The `.brand-title` is disabled to maximize space for the debugger controls and file path in narrow viewports.
+* **Desktop Mode (Electron)**: The `.brand-title` is always disabled to prioritize horizontal space for file paths and debug controls.
+* **WebApp Mode (Browser)**:
+  * **Wide Screens (>= 800px)**: The `.brand-title` is visible.
+  * **Compact Screens (< 800px)**: The `.brand-title` is disabled to maximize space for the debugger controls and file path in narrow viewports.
 
 **CSS Custom Properties (Design Tokens)**
 The global `styles.scss` defines root CSS variables representing dynamic spacing and dimensions:
-- `--sys-density-toolbar-height`
-- `--sys-density-panel-padding`
-- `--sys-density-variable-row`
-- `--sys-density-item-gap`
-- `--sys-density-btn-size` / `--sys-density-btn-icon-size` (Standard sizes for standalone buttons)
-- `--sys-density-btn-size-sm` / `--sys-density-btn-icon-size-sm` (Compact sizes for inner control capsules)
-- `--text-base` *(overridden per density mode)*
+* `--sys-density-toolbar-height`
+* `--sys-density-panel-padding`
+* `--sys-density-variable-row`
+* `--sys-density-item-gap`
+* `--sys-density-btn-size` / `--sys-density-btn-icon-size` (Standard sizes for standalone buttons)
+* `--sys-density-btn-size-sm` / `--sys-density-btn-icon-size-sm` (Compact sizes for inner control capsules)
+* `--text-base` *(overridden per density mode)*
 
 The base `:root` values assume a comfortable layout constraint. Under `@media (max-width: 800px)`, these tokens are redefined to significantly compress physical dimensions, maximizing information density for confined screen real estate. Notably, button dimensions (`--sys-density-btn-size` and `-sm`) dynamically shrink to prevent layout overflow when parent container heights contract (e.g. `28px` buttons shrinking to `20px` to continuously fit inside a `24px` row).
 
 **TypeScript Synchronization & Integration**
 Select Angular CDK / Material components require TypeScript-level synchronization rather than pure CSS, particularly due to internal math and viewport estimations. Instead of checking the OS/Environment, components must use the Angular CDK `BreakpointObserver` matching the same `800px` threshold:
-- **Virtual Scroll Computations**: `VariablesComponent` evaluates the viewport width via `BreakpointObserver` to dynamically bind the `[itemSize]` property. This guarantees that `cdk-virtual-scroll` height calculations precisely track the CSS `.variable-row` rendering height to prevent spatial jitter.
-- **Material Tree Indentation**: `FileExplorerComponent` binds `[matTreeNodePaddingIndent]` dynamically (`8px` for narrow viewports vs `12px` for wide ones). This tightly constrains deep-nested folder structures from exhausting horizontal space.
+* **Virtual Scroll Computations**: `VariablesComponent` evaluates the viewport width via `BreakpointObserver` to dynamically bind the `[itemSize]` property. This guarantees that `cdk-virtual-scroll` height calculations precisely track the CSS `.variable-row` rendering height to prevent spatial jitter.
+* **Material Tree Indentation**: `FileExplorerComponent` binds `[matTreeNodePaddingIndent]` dynamically (`8px` for narrow viewports vs `12px` for wide ones). This tightly constrains deep-nested folder structures from exhausting horizontal space.
 
 ## 3. Typography System
 
@@ -101,6 +101,19 @@ All panel boundaries and section dividers must use **Material Design system toke
 | **Active Alignment** | `padding-left: calc(var(--sys-density-panel-padding) - 4px)` |
 | **Forbidden** | Hardcoded hex/rgba values for borders or backgrounds |
 
+### 5.1 Sidenav Border Authority Rules
+
+> [!IMPORTANT]
+> The following rules prevent recurring double-border and visual-gap bugs that arise from the interaction between Angular Material's `mat-sidenav` internal styles and the application's custom layout CSS.
+
+| Rule | Specification |
+| :--- | :--- |
+| **Single Border Source** | The vertical separator between a sidenav and the main content MUST be declared only on the **sidenav container** (`.sidenav-left`, `.sidenav-right`), NOT on internal child elements (e.g., `.header-title-row`, `.panel-title`). Declaring `border-right/left` on both the container and a child element causes a double-border visual artifact. |
+| **Override Requirement** | Angular Material's `.mat-drawer` applies its own `border` styles with high specificity. All sidenav border overrides MUST use `!important` to guarantee application. |
+| **Panel Title `border-top`** | `.panel-title` elements MUST NOT have `border-top`. The top boundary of a sidenav is owned exclusively by the sidenav container's `border-top`. Adding `border-top` to `.panel-title` creates asymmetric 1px gaps. |
+| **Horizontal Alignment** | All panel header bars (`.panel-title`, `mat-tab-header`, `.sidenav-header .header-title-row`) MUST share a fixed height of `32px` and render their bottom border at the exact same Y-coordinate. Do NOT mix `border-top` on some elements but not others in the same horizontal strip. |
+| **Negative Margin Prohibition** | Using `margin-top: -1px` on sidenavs to absorb a 1px gap is fragile and produces asymmetric rendering at non-integer device pixel ratios. Instead, ensure the toolbar's `border-bottom` and the sidenav's `border-top` share the same token so browsers resolve the overlap deterministically. |
+
 ## 6. Component-Specific Layout Rules
 
 ### 6.1 Editor Component Rules
@@ -111,8 +124,10 @@ These rules govern the Monaco Editor integration in `EditorComponent`.
 | :--- | :--- | :--- |
 | **Opaque overlay removal** | Any non-transparent overlay `div` or backdrop obscuring the code area must be eliminated | 🔴 Critical (Bug Fix) |
 | **Execution line highlight** | Background must use an `rgba`-based semi-transparent tint (opacity ≤ 0.12) applied via `deltaDecorations` | High |
+| **Gutter Highlight Sync** | The `current-line-highlight` CSS class is applied by Monaco only to `.view-lines`, NOT to `.margin-view-overlays` (the gutter). A companion rule `.monaco-editor .margin-view-overlays .current-line-highlight` MUST be declared inside `::ng-deep` to extend the highlight into the gutter, preventing a grey background leak on the active line. | High |
 | **Highlight z-index** | The decoration layer's `z-index` must be positioned **below** the text rendering layer. Using inline style or className decoration that creates a new stacking context above text is forbidden | High |
 | **Scrollbar Consistency** | Monaco's built-in scrollbar must be configured and CSS-forced to visually mimic the global `::-webkit-scrollbar` (14px track, 6px thumb, constant opacity, no shadows) to prevent behavioral drift from the native panels | High |
+| **No external border** | `EditorComponent`'s host `.editor-container` MUST NOT declare a `border` property. When placed inside `mat-tab-body` (which provides a flush layout), any border on the editor container creates a visible 1px margin gap inconsistent with adjacent borderless components (e.g., `AssemblyViewComponent`). The panel separation is the responsibility of the parent `mat-sidenav` container. | High |
 
 ### 6.2 Right Panel (Variables & Call Stack) Rules
 
@@ -134,6 +149,7 @@ These rules govern the Monaco Editor integration in `EditorComponent`.
 | Timestamp color | `color: var(--mat-sys-outline)` | De-emphasize timestamps; direct focus to message content |
 | Log content font | `font-family: var(--font-mono)` | Monospaced for DAP protocol data readability |
 | Timestamp font size | `font-size: var(--text-sm)` | Smaller than body to reinforce visual hierarchy |
+| **Console Panel Separator** | `.consoles-container` MUST declare `border-top: 1px solid var(--mat-sys-outline-variant)`. Relying on background-color contrast alone is insufficient and breaks the global horizontal divider language. | Consistent panel separation |
 
 ### 6.4 Side Panel Navigation (File Explorer & Call Stack)
 
@@ -142,3 +158,12 @@ These rules govern the Monaco Editor integration in `EditorComponent`.
 | **Auto-Revelation** | The file tree MUST automatically expand parent nodes and `scrollIntoView` the active file on every execution stop or manual frame click. |
 | **Highlight Strategy** | Use `border-left` directly on the item container. Using `::before` pseudo-elements is discouraged for MDC-based components to avoid layering conflicts. |
 | **Transition** | `background-color 0.2s ease` on hover/active states for smooth visual feedback. |
+
+### 6.5 Status Bar Layout Rules
+
+The status bar is a fixed-height single-line flex container. The following rules prevent text wrapping and content truncation bugs.
+
+| Rule | Specification |
+| :--- | :--- |
+| **Single-line enforcement** | `.status-bar` MUST declare `flex-wrap: nowrap` and `overflow: hidden`. Without `flex-wrap: nowrap`, flex children can wrap onto a second line when the viewport is narrow, causing the container's fixed height to clip wrapped content. |
+| **Truncation Priority** | Informational metadata (e.g., server address) MUST truncate before critical state labels. Apply `flex-shrink: 0; white-space: nowrap` to high-priority elements (connection state, execution state). Apply `min-width: 0; overflow: hidden; text-overflow: ellipsis` to low-priority elements (server address). |

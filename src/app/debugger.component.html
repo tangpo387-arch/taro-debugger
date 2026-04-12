@@ -93,7 +93,7 @@
         <div class="connection-status">
           <!-- Connection indicator light -->
           <span class="indicator" [ngClass]="(connectionStatus$ | async) ? 'online' : 'offline'"></span>
-          <span>DAP {{ (connectionStatus$ | async) ? 'Connected' : 'Disconnected' }}</span>
+          <span>{{ (connectionStatus$ | async) ? 'Connected' : 'Disconnected' }}</span>
           @if (currentConfig.serverAddress) {
           <span class="server-address">
             ({{ currentConfig.serverAddress }})
