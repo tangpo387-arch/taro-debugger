@@ -39,9 +39,16 @@
 
 /* ──────────────────────────────────────────────────────────────────────────
    Material Overrides: Compressing buttons & forcing sharp interactive layers
+   ──────────────────────────────────────────────────────────────────────────
+   ::ng-deep is used here exclusively for structural layout and MDC-internal
+   class overrides (button sizing, radius, touch-target hiding) that have no
+   corresponding Angular Material CSS Custom Property equivalent.
+   Cosmetic rules (icon color, opacity) are declared outside this block.
    ────────────────────────────────────────────────────────────────────────── */
 :host ::ng-deep {
   button.mat-mdc-icon-button {
+    // MDC does not expose a CSS variable for state-layer-size on icon buttons
+    // in the compact toolbar context — ::ng-deep required for size enforcement.
     --mdc-icon-button-state-layer-size: var(--sys-density-btn-size-sm);
     display: inline-flex !important;
     align-items: center !important;
@@ -49,14 +56,14 @@
     width: var(--sys-density-btn-size-sm) !important;
     height: var(--sys-density-btn-size-sm) !important;
     padding: 0 !important;
-    border-radius: 4px !important; 
+    border-radius: 4px !important;
 
     /* Force all overlay layers to match the new 4px radius */
     .mat-mdc-button-state-layer,
     .mat-mdc-button-persistent-ripple,
     .mat-mdc-focus-indicator,
     &::before {
-      border-radius: 4px !important; 
+      border-radius: 4px !important;
     }
 
     .mat-mdc-button-touch-target {
@@ -75,7 +82,7 @@
     }
 
     /* Primary Emphasis for Play/Continue */
-    &[title*="Continue"] mat-icon, 
+    &[title*="Continue"] mat-icon,
     &[title*="Pause"] mat-icon {
       color: var(--mat-sys-primary);
     }
@@ -91,4 +98,40 @@
       opacity: 0.38;
     }
   }
+}
+
+// ── Instruction Stepping — Option B Visual Weight ─────────────────────────
+// These are cosmetic rules and must NOT reside inside ::ng-deep.
+// .instruction-step is applied to the host <button> element directly,
+// so host-scoped selectors (no deep penetration required) are fully sufficient.
+:host ::ng-deep button.instruction-step {
+  transition: opacity 0.2s ease;
+
+  &.low-weight {
+    opacity: 0.45;
+
+    mat-icon {
+      color: var(--mat-sys-on-surface-variant);
+    }
+  }
+
+  &.high-weight {
+    opacity: 1;
+
+    mat-icon {
+      color: var(--mat-sys-primary);
+    }
+  }
+
+  &:hover:not(:disabled) {
+    opacity: 1;
+  }
+}
+
+.inner-divider {
+  width: 1px;
+  height: 12px;
+  background-color: var(--mat-sys-outline-variant);
+  opacity: 0.5;
+  margin: 0 1px;
 }

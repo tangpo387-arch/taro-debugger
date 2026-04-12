@@ -731,4 +731,23 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
     this.router.navigate(['/setup']);
   }
+
+  /** Handle instruction-level stepping requested from the control group */
+  public async onStepInstructionTab(action: 'stepi' | 'nexti'): Promise<void> {
+    if (this.executionState !== 'stopped') return;
+    
+    // Switch to Disassembly tab immediately (activeTabIndex = 1)
+    this.activeTabIndex = 1;
+    this.cdr.detectChanges();
+
+    try {
+      if (action === 'nexti') {
+        await this.dapSession.nextInstruction();
+      } else {
+        await this.dapSession.stepInInstruction();
+      }
+    } catch (e: any) {
+      // Handled globally by synthetic DAP events
+    }
+  }
 }

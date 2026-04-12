@@ -25,6 +25,19 @@
     <button mat-icon-button (click)="onStepOut()" [disabled]="!(isStopped$ | async)" title="Step Out (Shift+F11)">
       <mat-icon>arrow_upward</mat-icon>
     </button>
+
+    <div class="inner-divider"></div>
+
+    <button mat-icon-button (click)="onStepNextInstruction()" [disabled]="!(isStopped$ | async)"
+            title="Step Over Instruction (Nexti)"
+            class="instruction-step" [class.low-weight]="activeTabIndex === 0" [class.high-weight]="activeTabIndex === 1">
+      <mat-icon>skip_next</mat-icon>
+    </button>
+    <button mat-icon-button (click)="onStepIntoInstruction()" [disabled]="!(isStopped$ | async)" 
+            title="Step Into Instruction (Stepi)"
+            class="instruction-step" [class.low-weight]="activeTabIndex === 0" [class.high-weight]="activeTabIndex === 1">
+      <mat-icon>subdirectory_arrow_right</mat-icon>
+    </button>
   </div>
 
   <div class="divider"></div>

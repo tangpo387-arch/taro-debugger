@@ -3,7 +3,7 @@ import { Observable, Subject, BehaviorSubject, Subscription, firstValueFrom } fr
 import { filter, timeout } from 'rxjs/operators';
 import { DapTransportService } from './dap-transport.service';
 import { DapConfigService } from './dap-config.service';
-import { DapRequest, DapResponse, DapEvent, DisassembleArguments } from './dap.types';
+import { DapRequest, DapResponse, DapEvent, DisassembleArguments, StepArguments } from './dap.types';
 import { TransportFactoryService } from './transport-factory.service';
 import { FileTreeService } from './file-tree.service';
 import { DapFileTreeService } from './dap-file-tree.service';
@@ -264,6 +264,22 @@ export class DapSessionService {
    */
   async stepOut(): Promise<DapResponse> {
     return this.sendRequest('stepOut', { threadId: 1 });
+  }
+
+  /**
+   * Step Over at Instruction Level (Nexti)
+   */
+  async nextInstruction(): Promise<DapResponse> {
+    const args: StepArguments = { threadId: 1, granularity: 'instruction' };
+    return this.sendRequest('next', args);
+  }
+
+  /**
+   * Step Into at Instruction Level (Stepi)
+   */
+  async stepInInstruction(): Promise<DapResponse> {
+    const args: StepArguments = { threadId: 1, granularity: 'instruction' };
+    return this.sendRequest('stepIn', args);
   }
 
   /**

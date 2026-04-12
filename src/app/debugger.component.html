@@ -20,7 +20,11 @@
     <span class="spacer"></span>
 
     <!-- Debug control buttons -->
-    <app-debug-control-group (restart)="onRestart()" (stop)="onStop()">
+    <app-debug-control-group 
+      [activeTabIndex]="activeTabIndex"
+      (restart)="onRestart()" 
+      (stop)="onStop()"
+      (stepInstructionTab)="onStepInstructionTab($event)">
     </app-debug-control-group>
 
     <span class="spacer"></span>

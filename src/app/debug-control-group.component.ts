@@ -1,4 +1,4 @@
-import { Component, inject, Output, EventEmitter } from '@angular/core';
+import { Component, inject, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -22,6 +22,14 @@ import { map } from 'rxjs';
 export class DebugControlGroupComponent {
   @Output() public readonly restart = new EventEmitter<void>();
   @Output() public readonly stop = new EventEmitter<void>();
+  @Output() public readonly stepInstructionTab = new EventEmitter<'stepi' | 'nexti'>();
+
+  /** 
+   * Active tab index of the content area.
+   * 0: Source View
+   * 1: Disassembly View
+   */
+  @Input() public activeTabIndex = 0;
 
   private readonly dapSession = inject(DapSessionService);
 
@@ -62,5 +70,13 @@ export class DebugControlGroupComponent {
 
   public onStop(): void {
     this.stop.emit();
+  }
+
+  public onStepNextInstruction(): void {
+    this.stepInstructionTab.emit('nexti');
+  }
+
+  public onStepIntoInstruction(): void {
+    this.stepInstructionTab.emit('stepi');
   }
 }

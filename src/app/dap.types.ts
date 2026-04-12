@@ -88,3 +88,20 @@ export interface DapDisassembledInstruction {
   endLine?: number;
   endColumn?: number;
 }
+
+/**
+ * Stepping granularity.
+ * - 'statement': Stepping at the statement level.
+ * - 'line': Stepping at the line level.
+ * - 'instruction': Stepping at the instruction level (e.g., stepi/nexti).
+ */
+export type SteppingGranularity = 'statement' | 'line' | 'instruction';
+
+/**
+ * Arguments for 'next', 'stepIn', 'stepOut', and 'stepBack' requests.
+ */
+export interface StepArguments {
+  threadId: number;
+  singleThread?: boolean;
+  granularity?: SteppingGranularity;
+}

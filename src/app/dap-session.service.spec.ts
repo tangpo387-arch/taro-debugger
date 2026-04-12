@@ -55,6 +55,28 @@ describe('DapSessionService', () => {
     vi.clearAllMocks();
   });
 
+  describe('Instruction Stepping', () => {
+    it('should send next request with instruction granularity', async () => {
+      (service as any).transport = mockTransport;
+      service.nextInstruction();
+      
+      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+        command: 'next',
+        arguments: { threadId: 1, granularity: 'instruction' }
+      }));
+    });
+
+    it('should send stepIn request with instruction granularity', async () => {
+      (service as any).transport = mockTransport;
+      service.stepInInstruction();
+      
+      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+        command: 'stepIn',
+        arguments: { threadId: 1, granularity: 'instruction' }
+      }));
+    });
+  });
+
   describe('Sequence ID Management', () => {
     it('should increment seq for each request', () => {
       (service as any).transport = mockTransport;
