@@ -53,7 +53,7 @@
     "title": "AssemblyViewComponent and Instruction Rendering",
     "featureGroup": "Low-Level Inspection",
     "metadata": {
-      "status": "pending",
+      "status": "done",
       "size": "M",
       "dependencies": [
         "WI-27",
@@ -65,10 +65,14 @@
       "Implement `AssemblyViewComponent` using `cdk-virtual-scroll-viewport`.",
       "Design the high-density table layout (Address, Opcode, Mnemonic, Annotation).",
       "Implement logic to synchronize the highlighted instruction with the current `instructionPointerReference`.",
-      "Integrate breakpoint markers in the assembly gutter."
+      "Integrate breakpoint markers in the assembly gutter.",
+      "[Test] Verify virtual scrolling correctly renders a subset of the assembly instructions and handles rapid scrolling.",
+      "[Test] Verify the highlighted instruction is synchronized with the current instruction pointer reference.",
+      "[Test] Verify breakpoint markers are accurately mapped to the corresponding address rows."
     ],
     "timeline": {
-      "created": "2026-04-11"
+      "created": "2026-04-11",
+      "completed": "2026-04-11"
     }
   }
 ]

@@ -2,7 +2,7 @@
 title: Specification - Assembly View (Disassembly)
 scope: architecture, ui-layer, dap-integration, disassembly
 audience: [Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-11
+last_updated: 2026-04-12
 related:
   - ../ui-layer.md
   - ../../system-specification.md
@@ -92,3 +92,21 @@ Setting a breakpoint in the Assembly gutter should send a `setBreakpoints` reque
 
 - **Recursive Virtual Scroll**: Ensure the IP highlight remains visible even when instructions are lazy-loaded.
 - **Protocol Fail-soft**: If the DA does not support the `disassemble` capability (`capabilities.supportsDisassembleRequest === false`), the Disassembly tab should be hidden or disabled with a clear tooltip.
+
+## 7. Function-Level Assembly Rendering (GDB Style)
+
+To emulate terminal-based CLI debuggers (like GDB/LLDB) which group disassembled instructions by function blocks and provide relative offsets, the application applies post-processing to the DAP payload.
+
+### 7.1 Data Layer: Offset & Boundary Normalization
+
+Adapter responses often lack reliable relative offsets in standard properties. `DapAssemblyService` handles this by:
+- **Interface Extension**: Emitting a custom `TaroDisassembledInstruction` type that extends `DapDisassembledInstruction` with `normalizedSymbol`, `byteOffset`, and `isFunctionStart`.
+- **Base Address Tracking**: Scanning the incoming `instructions[]` array, detecting the first appearance of a new `symbol`, and storing its absolute `address` (parsed from hex) as the Base Address.
+- **Offset Calculation**: For subsequent instructions within the same symbol block, computing `Address - BaseAddress` to reconstruct the `byteOffset` (e.g., `+16`).
+
+### 7.2 Structuring the UI (Sticky Function Header)
+
+To maintain CDK Virtual Scroll performance without breaking uniform `itemSize` assumptions, grouping is decoupled from the scroll list flow:
+- **Offset Column**: A new dedicated `div.offset` element is added between the Address and Machine Code, rendering `<+X>` styled in `var(--mat-sys-tertiary)`.
+- **Viewport State Listener**: The component tracks `viewport.scrolledIndexChange` to identify the instruction currently pinned at the top of the view.
+- **Sticky Header Rendering**: A floating header (`div.function-header`) sits completely outside the `cdk-virtual-scroll-viewport` but within its flex container. It dynamically displays the `normalizedSymbol` of the top-most visible instruction (e.g., `[ Assembly for function: print ]`). This achieves visually seamless visual grouping without introducing recursive DOM restructuring.

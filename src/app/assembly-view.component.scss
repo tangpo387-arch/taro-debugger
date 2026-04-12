@@ -1,0 +1,191 @@
+:host {
+  display: block;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  font-family: var(--font-mono);
+}
+
+.assembly-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Height 100% since parent :host is display: block */
+  width: 100%;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  position: relative;
+}
+
+.function-header {
+  flex-shrink: 0;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--sys-density-panel-padding);
+  background-color: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  z-index: 10;
+
+  .symbol-name {
+    color: var(--mat-sys-primary);
+    font-weight: var(--weight-bold);
+    margin-left: 4px;
+  }
+}
+
+.assembly-viewport {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  /* Prevent browser from messing with scroll position when content updates */
+  overflow-anchor: none;
+  background-color: var(--mat-sys-surface);
+}
+
+.assembly-row {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  width: 100%;
+  /* height is bound in template via [style.height.px] to match itemSize */
+  padding-right: var(--sys-density-panel-padding);
+  font-size: var(--text-base);
+  border-bottom: 1px solid var(--mat-sys-surface-variant);
+  box-sizing: border-box;
+  white-space: nowrap;
+  gap: 12px; /* Add spacing between columns */
+
+  &:hover {
+    background-color: var(--mat-sys-surface-container-high);
+  }
+
+  &.is-active {
+    background-color: var(--mat-sys-primary-container);
+    color: var(--mat-sys-on-primary-container);
+    opacity: 1 !important;
+    /* Ensure full visibility */
+
+    /* Left accent as per rules */
+    box-shadow: inset 4px 0 0 0 var(--mat-sys-primary);
+
+    .address,
+    .opcode,
+    .mnemonic,
+    .annotation {
+      color: inherit;
+      font-style: normal !important;
+      /* Reset italic if any */
+    }
+  }
+
+  &.is-out-of-range {
+    opacity: 0.45;
+    background-color: var(--mat-sys-surface-container-low);
+
+    .mnemonic {
+      font-weight: var(--weight-regular);
+      font-style: italic;
+    }
+  }
+}
+
+.gutter {
+  width: 32px;
+  min-width: 32px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background-color: var(--mat-sys-surface-container);
+  border-right: 1px solid var(--mat-sys-outline-variant);
+  margin-right: var(--sys-density-panel-padding);
+}
+
+.ip-indicator {
+  color: var(--mat-sys-primary);
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.address {
+  flex: 0 0 140px;
+  color: var(--mat-sys-outline);
+  overflow: hidden;
+}
+
+.offset {
+  flex: 0 0 80px;
+  color: var(--mat-sys-tertiary);
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+.opcode {
+  flex: 0 0 120px;
+  color: var(--mat-sys-secondary);
+  overflow: hidden;
+}
+
+.mnemonic {
+  flex: 0 0 250px;
+  font-weight: var(--weight-medium);
+  overflow: hidden;
+}
+
+.annotation {
+  flex: 1 1 auto;
+  color: var(--mat-sys-tertiary);
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.1);
+  color: var(--mat-sys-on-surface);
+  font-size: var(--text-sm);
+  z-index: 10;
+}
+
+.empty-state {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--mat-sys-on-surface-variant);
+  background-color: var(--mat-sys-surface-container-low);
+  gap: 16px;
+  z-index: 5;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    opacity: 0.5;
+  }
+
+  p {
+    margin: 0;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
+}

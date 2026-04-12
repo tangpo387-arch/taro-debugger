@@ -28,6 +28,8 @@ import { FileNode } from './file-tree.service';
 import { DapLogService } from './dap-log.service';
 import { DebugControlGroupComponent } from './debug-control-group.component';
 import { CallStackComponent } from './call-stack.component';
+import { AssemblyViewComponent } from './assembly-view.component';
+import { DapAssemblyService } from './dap-assembly.service';
 
 @Component({
   selector: 'app-debugger',
@@ -50,11 +52,13 @@ import { CallStackComponent } from './call-stack.component';
     LogViewerComponent,
     DebugControlGroupComponent,
     CallStackComponent,
+    AssemblyViewComponent
   ],
   providers: [
     DapSessionService,
     DapVariablesService,
     DapLogService,
+    DapAssemblyService
   ],
   templateUrl: './debugger.component.html',
   styleUrls: ['./debugger.component.scss']
@@ -65,6 +69,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly dapSession = inject(DapSessionService);
   private readonly variablesService = inject(DapVariablesService);
+  private readonly assemblyService = inject(DapAssemblyService);
   private readonly logService = inject(DapLogService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
@@ -139,6 +144,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public activeFrameId: number | null = null;
   public activeLine: number | null = null;
   public activeLineFilePath: string | null = null;
+  public activeInstructionPointer: string | null = null;
 
   /** Resizing state and dimensions */
   public leftWidth: number = 250;
@@ -520,13 +526,19 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     this.activeFrameId = frame.id;
     this.activeLine = frame.line;
     this.activeLineFilePath = frame.source?.path || null;
+    this.activeInstructionPointer = frame.instructionPointerReference || null;
 
     // Load associated file
     if (frame.source && frame.source.path) {
       this.activeFilePath = frame.source.path;
       this.fileRevealTrigger++; // Always trigger a UX reveal on explicit navigation
       this.currentCode = '// Loading source code...';
-      this.activeTabIndex = 0; // Focus Source tab immediately
+
+      // Focus Source tab only if we're already there, or if there's no IP to show in Disassembly
+      if (this.activeTabIndex === 0 || !frame.instructionPointerReference) {
+        this.activeTabIndex = 0;
+      }
+      
       this.cdr.detectChanges();
 
       try {
@@ -541,10 +553,21 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       const mod = frame.moduleId ? `\nModule: ${frame.moduleId}` : '';
       this.currentCode = `// No source code available for this frame.${mod}${ref}`;
 
-      // Switch to Disassembly tab if instruction pointer is available
+      // Force Disassembly tab if instruction pointer is available and we have no source
       if (frame.instructionPointerReference) {
         this.activeTabIndex = 1;
+      } else {
+        this.activeTabIndex = 0; // Fallback to source tab to show the "No source" message
       }
+    }
+
+    // Pre-fetch disassembly for any frame that carries an instruction pointer,
+    // regardless of whether it also has a source file. This ensures the data
+    // is ready when the user switches to the Disassembly tab.
+    if (frame.instructionPointerReference) {
+      this.assemblyService.fetchInstructions(frame.instructionPointerReference).catch(e => {
+        this.logService.consoleLog(`Disassembly failed: ${e.message}`, 'error', 'system');
+      });
     }
 
     // Trigger scope cache update for the newly selected frame
@@ -682,6 +705,8 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     this.activeFrameId = null;
     this.activeLine = null;
     this.activeLineFilePath = null;
+    this.activeInstructionPointer = null;
+    this.assemblyService.clear();
     // Note: initialSourcesLoaded is intentionally NOT reset here.
     // It is only reset on session-level events (terminated, exited) or explicit
     // disconnect/reconnect — to prevent a Resume → StepOver cycle from triggering

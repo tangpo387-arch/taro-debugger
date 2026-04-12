@@ -76,10 +76,7 @@
               (breakpointsChange)="onBreakpointsChange($event)" />
           </mat-tab>
           <mat-tab label="Disassembly">
-            <div class="assembly-placeholder">
-              <mat-icon>terminal</mat-icon>
-              <p>Assembly View is under implementation (WI-29).</p>
-            </div>
+            <app-assembly-view [instructionPointerReference]="activeInstructionPointer"></app-assembly-view>
           </mat-tab>
         </mat-tab-group>
       </div>

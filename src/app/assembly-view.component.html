@@ -1,0 +1,43 @@
+<div class="assembly-container">
+  <!-- Sticky Function Header -->
+  <div *ngIf="activeSymbol && instructions.length > 0 && !isLoading" class="function-header">
+    Dump of assembler code for function <span class="symbol-name">{{ activeSymbol }}</span>:
+  </div>
+
+  <cdk-virtual-scroll-viewport [itemSize]="rowHeight()" 
+                               minBufferPx="200" 
+                               maxBufferPx="400" 
+                               class="assembly-viewport">
+    <div *cdkVirtualFor="let instruction of instructions; trackBy: trackByAddress"
+         class="assembly-row"
+         [class.is-active]="isInstructionPointer(instruction.address)"
+         [class.is-out-of-range]="isOutOfRange(instruction)"
+         [style.height.px]="rowHeight()">
+      
+      <div class="gutter">
+        <mat-icon *ngIf="isInstructionPointer(instruction.address)" class="ip-indicator">arrow_right_alt</mat-icon>
+        <div class="breakpoint-marker"></div> <!-- For future BP integration -->
+      </div>
+      
+      <div class="address">{{ instruction.address }}</div>
+      
+      <!-- Offset column -->
+      <div class="offset">
+        <ng-container *ngIf="instruction.byteOffset !== undefined">&lt;+{{ instruction.byteOffset }}&gt;</ng-container>
+      </div>
+
+      <div class="opcode">{{ instruction.instructionBytes || '' }}</div>
+      <div class="mnemonic">{{ instruction.instruction }}</div>
+      <div class="annotation" *ngIf="instruction.symbol">{{ instruction.symbol }}</div>
+      
+    </div>
+  </cdk-virtual-scroll-viewport>
+  <div *ngIf="isLoading" class="loading-overlay">
+    <span>Loading disassembly...</span>
+  </div>
+
+  <div *ngIf="!isLoading && instructions.length === 0" class="empty-state">
+    <mat-icon>terminal</mat-icon>
+    <p>No assembly instructions loaded.</p>
+  </div>
+</div>
