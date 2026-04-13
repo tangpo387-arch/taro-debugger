@@ -2,7 +2,7 @@
 title: Design Decisions (ADR)
 scope: architecture, decisions, rationale, tradeoffs
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-06
+last_updated: 2026-04-14
 related:
   - docs/architecture.md
   - docs/system-specification.md
@@ -190,3 +190,33 @@ This means both Electron Desktop Mode and Web Browser Mode share the same WebSoc
 - The `net` module is no longer imported in `electron/main.ts`.
 - The `§4.1` communication path in `system-specification.md` is updated to reflect a 4-layer flow including the WebSocket Relay Layer.
 - WI-09 (Node.js WebSocket Bridge) is a **shared dependency** for both deployment modes, not Electron-exclusive.
+
+---
+
+## ADR-08: SemVer Pre-Release Suffix for Active Development (`-dev`, `-rc.N`)
+
+- **WI**: N/A (project management decision)
+- **Status**: Accepted
+- **Date**: 2026-04-14T00:46:00+08:00
+
+### Context
+
+`package.json` carried `"version": "1.0.0"` while 3 work items (WI-09, WI-33, WI-34) remained in `⏳ Pending` state. Publishing or distributing a build labelled `1.0.0` before the milestone is complete would misrepresent the software's readiness.
+
+### Decision
+
+Adopt a **SemVer pre-release suffix** convention for `package.json` throughout the v1.0 development cycle:
+
+| Stage | Version string | Condition to advance |
+| :--- | :--- | :--- |
+| Active development | `1.0.0-dev` | Any WI still pending |
+| Feature-complete, in QA | `1.0.0-rc.1` | All WIs done; regression testing ongoing |
+| Formal release | `1.0.0` | All WIs done + QA sign-off |
+
+`-dev` was preferred over `-develop` to align with SemVer community convention and keep the string concise. RC increments (`-rc.1`, `-rc.2`) are used if stabilization requires multiple passes.
+
+### Consequences
+
+- `package.json` is immediately updated to `1.0.0-dev` (done: 2026-04-14).
+- `Product_Architect` is responsible for bumping the suffix at each stage transition.
+- `electron-builder` output filenames will reflect the suffix (e.g., `taro-debugger-1.0.0-dev.AppImage`), making pre-release artifacts unambiguously distinguishable from the stable release.

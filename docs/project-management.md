@@ -103,6 +103,37 @@ A work item travels through the following states. Only `Product_Architect` may c
 
 ---
 
+## 3. Version Number Convention
+
+The project follows **Semantic Versioning (SemVer)** with pre-release suffixes to clearly communicate the milestone readiness of every build. This section defines the authoritative meaning of each version string and the conditions required to advance between stages.
+
+> [!IMPORTANT]
+> Only `Product_Architect` may approve a version bump. `Lead_Engineer` executes the change in `package.json` after approval is recorded.
+
+### 3.1 Stage Definitions
+
+| Stage | Version String | Meaning | Condition to Advance |
+| :--- | :--- | :--- | :--- |
+| **Active Development** | `X.Y.Z-dev` | Features are still being implemented; one or more WIs remain `⏳ Pending`. | All WIs for the milestone move to `✅ Done`. |
+| **Release Candidate** | `X.Y.Z-rc.N` | Feature-complete; undergoing regression and integration testing. Increment `N` if a blocker is found and fixed. | QA sign-off — no open blockers. |
+| **Formal Release** | `X.Y.Z` | Stable, production-ready build. | All WIs done + QA sign-off granted. |
+
+### 3.3 Promotion Checklist
+
+Before bumping from `-dev` → `-rc.1`:
+
+* [ ] All `⏳ Pending` WIs in `docs/work-items.md` are `✅ Done`.
+* [ ] `npm run test -- --watch=false` passes with no failures.
+* [ ] `Product_Architect` approves the stage transition.
+
+Before bumping from `-rc.N` → formal release:
+
+* [ ] No open regression issues.
+* [ ] `electron-builder` package verified on all target platforms.
+* [ ] `Product_Architect` grants final sign-off.
+
+---
+
 ## 4. Related Documents
 
 | Document | Purpose |
