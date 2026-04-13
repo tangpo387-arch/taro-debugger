@@ -2,7 +2,7 @@
 title: Source File Responsibility Map
 scope: file-map, navigation, ownership, layers
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-10
+last_updated: 2026-04-13
 related:
   - docs/architecture.md
   - .agents/project-context.md
@@ -11,6 +11,13 @@ related:
 # Source File Responsibility Map
 
 This is the **quick-reference cheat sheet** for locating which file to read or modify for a given feature area. All source files are under `src/app/`.
+
+> [!WARNING]
+> **For Autonomous Agents (LLMs):** Do NOT use terminal commands (like `find`, `ls`, or `tree`) to search for source file paths.
+> All files listed in the tables below are guaranteed to be located exactly at `{Repo-path}/src/app/{File}` (unless an explicit subdirectory is shown). Please construct the absolute path directly and use your built-in file-reading/editing tools.
+>
+> **Note:** `{Repo-path}` resolves to the project root — the directory containing `package.json`.
+> **Note:** Test files (`*.spec.ts`) are intentionally omitted from this map to reduce visual noise. For testing requirements and responsibilities, please refer to `docs/test-plan.md` and `.agents/rules/testing-protocol.md`.
 
 ## Application Bootstrap & Routing
 
@@ -29,13 +36,16 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | `environment-detect.service.ts` | Detects whether the app is running in Electron or pure Web | `isElectron()` | - |
 | `setup.validators.ts` | Shared form validators for connection settings | `serverAddressValidator` | - |
 | `electron-redirect.guard.ts` | Route guard on `/setup` that redirects to web or electron setup page | `canActivate()` | - |
-| `debugger.component.ts` | Main debug view: toolbar, three-panel layout, event subscriptions, file source loading, execution context tracking | subscribes `executionState$`, `connectionStatus$`, `onEvent()`; manages `fileRevealTrigger` | `debugger.component.html`, `debugger.component.scss` |
+| `debugger.component.ts` | Main debug view: toolbar, three-panel layout, event subscriptions, file source loading, execution context tracking | **API:** `onEvent()`, `fileRevealTrigger`<br>**RxJS:** `executionState$`, `connectionStatus$` | `debugger.component.html`, `debugger.component.scss` |
+| `debug-control-group.component.ts` | Debug control toolbar: step/continue/stepi/nexti buttons; dynamically adjusts button weight based on active view (Source vs. Disassembly) | `@Input() executionState`, `@Input() activeView`, `@Output() stepAction` | `debug-control-group.component.html`, `debug-control-group.component.scss` |
 | `file-explorer.component.ts` | Left sidenav file explorer: fetches `loadedSources` tree, highlights active file, performs automated 'reveal' and `scrollIntoView` for execution context | `@Input() activeFilePath`, `@Input() reloadTrigger`, `@Input() revealTrigger`, `@Output() fileSelected` | `file-explorer.component.html`, `file-explorer.component.scss` |
 | `editor.component.ts` | Monaco Editor wrapper: source display, line highlight, breakpoint glyph margin | `openFile()`, `highlightLine()`, `clearHighlight()` | `editor.component.html`, `editor.component.scss` |
+| `assembly-view.component.ts` | Disassembly panel: renders DAP instruction list via virtual scroll, sticky function header, GDB-style offset column, active-line highlight | `@Input() frameId`, subscribes `instructions$`, `isLoading$`; `scrollToActiveInstruction()` | `assembly-view.component.html`, `assembly-view.component.scss` |
 | `log-viewer.component.ts` | Bottom panel log viewer: console/program streams, auto-scroll, expression evaluation | subscribes `consoleLogs$`, `programLogs$`; `evaluateCommand()` | `log-viewer.component.html`, `log-viewer.component.scss` |
 | `variables.component.ts` | Right sidebar variables view: tree display for DAP scopes and local variables | subscribes `scopes$`; `toggleNode()` | `variables.component.html`, `variables.component.scss` |
 | `call-stack.component.ts` | Right sidebar Call Stack view: displays DAP stack frames and highlights active frame | `@Input() stackFrames`, `@Input() activeFrameId`, `@Output() frameSelected` | `call-stack.component.html`, `call-stack.component.scss` |
-| `error-dialog/error-dialog.ts` | Dialog for showing connection and session errors | `ErrorDialogData`, `onRetry()`, `onGoBack()` | `error-dialog.html`, `error-dialog.css` |
+
+> **Note on Dialogs:** Subdirectories like `error-dialog/` contain a cohesive set of files (e.g. `error-dialog.ts`, `error-dialog.html`, `error-dialog.css`) implementing a generic dialog service.
 
 ## Electron Desktop Structural Files
 
@@ -61,6 +71,7 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | --- | --- | --- |
 | `dap-transport.service.ts` | Abstract base class defining the transport layer contract | `connect()`, `disconnect()`, `sendRequest()`, `onMessage()`, `onEvent()`, `connectionStatus$` |
 | `websocket-transport.service.ts` | WebSocket implementation with Content-Length header parsing and binary buffer management | Implements all `DapTransportService` abstract methods |
+| `ipc-transport.service.ts` | Electron IPC implementation of the transport contract; bridges DAP messages via Electron's `contextBridge` / `ipcRenderer` | Implements all `DapTransportService` abstract methods |
 | `transport-factory.service.ts` | Factory service creating Transport instances based on `TransportType` | `createTransport(type, address)` |
 
 ## Shared / Cross-Cutting
@@ -68,6 +79,7 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | File | Responsibility | Key Exports |
 | --- | --- | --- |
 | `dap.types.ts` | DAP protocol type definitions | `DapRequest`, `DapResponse`, `DapEvent`, `DapMessage`, `DapStackFrame`, `LogEntry`, `LogCategory`, `DisassembleArguments`, `DapDisassembledInstruction`, `SteppingGranularity`, `StepArguments` |
+| `layout.config.ts` | Static layout dimension constants (panel widths, breakpoints) | — |
 | `file-tree.service.ts` | Abstract file tree interface (implemented by `DapFileTreeService`) | `FileTreeService`, `FileNode` |
 | `dap-log.service.ts` | Dual console log stream management. Written to by `DebuggerComponent`; consumed by `LogViewerComponent`. Classified as Shared: no Session-layer service injects it after this refactor. | `consoleLogs$`, `programLogs$`, `consoleLog()`, `appendProgramLog()`, `clear()` |
 
