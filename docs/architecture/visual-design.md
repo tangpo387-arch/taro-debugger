@@ -202,6 +202,7 @@ The status bar is a fixed-height single-line flex container. The following rules
 4. **`::ng-deep` with `:host &` scope** — only if all alternatives above are not viable.
 
 **Mandatory comment**: Every permitted `::ng-deep` usage must include an inline comment explaining why no alternative exists:
+
 ```scss
 // Material does not expose a CSS variable for .mat-mdc-tab-body-wrapper
 // flex growth — ::ng-deep required to propagate height through tab internals.
@@ -209,3 +210,31 @@ The status bar is a fixed-height single-line flex container. The following rules
   flex: 1;
 }
 ```
+
+## 8. Tabbed Panel Navigation (Modern IDE Style)
+
+To achieve a professional "Flush IDE" aesthetic, all `mat-tab-group` instances — including the **main editor tabs** (Source/Disassembly) and the **console/output tabs** (Debug Console/Output) — must be configured to resemble a native editor tab bar rather than standard Material navigation.
+
+> [!IMPORTANT]
+> These rules apply to **all tab groups** in the application. When adding a new `mat-tab-group`, it must implement this specification by default.
+
+### 8.1 Universal Tab Rules
+
+| Rule | Specification | Rationale |
+| :--- | :--- | :--- |
+| **Alignment** | `justify-content: flex-start` on `.mat-mdc-tab-labels` | VS Code / IntelliJ standard. Prevents tabs from stretching to fill the full header width. |
+| **Sizing** | `flex: 0 1 auto !important` on `.mat-mdc-tab` | Tab width is content-determined. Set a `min-width` appropriate for the context (editor: `100px`, console: `80px`). |
+| **Indicator Removal** | `display: none` on `.mat-mdc-tab-indicator`, `.mdc-tab-indicator`, `.mdc-tab-indicator__content` | Disables the default Material bottom ink-bar. Set `--mat-tab-header-active-indicator-color: transparent` (no `!important`) as a secondary guard. |
+| **Vertical Grid** | Header: `height: 32px; box-sizing: border-box`. Tabs: `height: 32px; box-sizing: border-box` | All heights are identical at 32px. Active state uses `z-index: 1` only — **no `margin-top: -1px`** (§5.1 Negative Margin Prohibition). |
+| **Typography** | `text-transform: uppercase; letter-spacing: 0.8px; font-size: var(--text-sm); font-weight: var(--weight-medium)` | Matches the `.panel-title` weight to maintain a unified header strip across all panels. |
+| **Tab Dividers** | `border-right: 1px solid var(--mat-sys-outline-variant)` on each tab | Provides visual separation between tabs without the need for the ink-bar. |
+| **Hover State** | `background-color: var(--mat-sys-surface-container-highest)` on `:hover:not(.mdc-tab--active)` | Consistent with the tree-node and variable-row hover patterns. |
+
+### 8.2 Context-Specific Active State (Surface Fusion)
+
+The **active tab** must visually "fuse" with its content area by matching the content area's background color. This creates a physical metaphor where the tab is the "open" state of the panel below.
+
+| Context | Active Tab Background | Content Area Background |
+| :--- | :--- | :--- |
+| **Main Editor** (Source / Disassembly) | `var(--mat-sys-surface)` | Monaco Editor / Assembly View background |
+| **Console / Output** | `var(--mat-sys-surface-container-low)` | `.console-viewport` background |

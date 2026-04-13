@@ -15,33 +15,72 @@
   display: flex;
   flex-direction: column;
 
-  // PA spec §9.2: Panel header bar height must be 32px.
-  // Overriding Material's default 48px tab header height to reclaim vertical space in the IDE console.
+  // §8: Header height must be 32px with border-box + section divider
+  // Material does not expose a CSS variable for tab-header height.
   :host & ::ng-deep .mat-mdc-tab-header {
-    --mdc-tab-height: 32px;
+    --mdc-tab-container-height: 32px;
+    height: 32px !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
     background-color: var(--mat-sys-surface-container-high);
     border-bottom: 1px solid var(--mat-sys-outline-variant);
+    // Indicator colors — suppressed via selector below
+    --mat-tab-header-active-indicator-color: transparent;
+    --mat-tab-header-inactive-indicator-color: transparent;
   }
-  
+
+  // §8: Left-aligned, non-stretching tabs
+  // Material does not expose a CSS variable for tab label alignment.
+  :host & ::ng-deep .mat-mdc-tab-labels {
+    justify-content: flex-start !important;
+  }
+
+  // §8: Disable default Material bottom ink-bar
+  // Material does not expose a CSS variable for indicator visibility.
+  :host & ::ng-deep .mat-mdc-tab-indicator,
+  :host & ::ng-deep .mdc-tab-indicator,
+  :host & ::ng-deep .mdc-tab-indicator__content {
+    display: none !important;
+    visibility: hidden !important;
+    border: none !important;
+    height: 0 !important;
+  }
+
+  // §8: Non-stretching tabs with surface-fusion active state
+  // All tabs are 32px; active state uses background-color + z-index only.
+  // Material does not expose a CSS variable for individual tab height.
   :host & ::ng-deep .mat-mdc-tab {
-    height: 32px !important;
     min-height: 32px !important;
+    height: 32px !important;
+    box-sizing: border-box !important;
     padding: 0 16px;
+    flex: 0 1 auto !important;
+    min-width: 80px;
+    border-right: 1px solid var(--mat-sys-outline-variant);
     transition: background-color 0.2s ease;
 
-    // Unified Tool Window Header typography
+    // §8: Uppercase text-sm typography matching .panel-title
     .mdc-tab__text-label {
+      font-size: var(--text-sm);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.8px;
       font-weight: var(--weight-medium) !important;
     }
 
-    &:hover {
+    // §8: Active state: Surface fusion
+    // Matches console viewport background — same fusion metaphor as editor
+    &.mdc-tab--active {
+      background-color: var(--mat-sys-surface-container-low) !important;
+      z-index: 1;
+    }
+
+    &:hover:not(.mdc-tab--active) {
       background-color: var(--mat-sys-surface-container-highest);
     }
   }
 
   // Layer 1: wrapper must grow to fill remaining space after tab header
+  // Material does not expose a CSS variable for tab-body-wrapper flex growth.
   :host & ::ng-deep .mat-mdc-tab-body-wrapper {
     flex: 1;
     min-height: 0; // Prevents flex children from overflowing
@@ -49,6 +88,7 @@
   }
 
   // Layer 2: individual tab body must be a flex column
+  // Material does not expose a CSS variable for tab-body display mode.
   :host & ::ng-deep .mat-mdc-tab-body {
     display: flex;
     flex-direction: column;
@@ -56,6 +96,7 @@
   }
 
   // Layer 3: content area must fill the tab body and allow cdk-virtual-scroll to size
+  // Material does not expose a CSS variable for tab-body-content height.
   :host & ::ng-deep .mat-mdc-tab-body-content {
     height: 100% !important;
     display: flex;
@@ -174,8 +215,8 @@
   display: flex;
   align-items: center;
   padding: 0 8px;
-  /* Sync with density system (§8.2) and align with 8px grid (§9.2): 32px Desktop / 24px Panel */
-  height: var(--sys-density-variable-row, 32px);
+  /* Sync with density system and align with 8px grid: 28px Desktop / 24px Compact */
+  height: var(--sys-density-variable-row, 28px);
   flex-shrink: 0;
   border-top: 1px solid var(--mat-sys-outline-variant);
   background: var(--mat-sys-surface-container-low);

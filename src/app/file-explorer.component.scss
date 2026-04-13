@@ -20,6 +20,7 @@
     display: flex;
     align-items: center;
     height: 32px;
+    box-sizing: border-box;
     /* Panel header bar height per PA spec §9.2 */
     background-color: var(--mat-sys-surface-container-high);
     border-bottom: 1px solid var(--mat-sys-outline-variant);
@@ -110,7 +111,7 @@
   width: 100%;
   display: flex !important;
   align-items: center;
-  min-height: 28px;
+  min-height: var(--sys-density-variable-row, 28px);
   cursor: pointer;
   padding-right: 16px;
   box-sizing: border-box;

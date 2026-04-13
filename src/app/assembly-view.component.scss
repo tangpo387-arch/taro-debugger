@@ -18,7 +18,8 @@
 
 .function-header {
   flex-shrink: 0;
-  height: 32px;
+  height: var(--sys-density-variable-row, 28px);
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   padding: 0 var(--sys-density-panel-padding);
@@ -51,9 +52,10 @@
   overflow: hidden;
   width: 100%;
   /* height is bound in template via [style.height.px] to match itemSize */
-  padding-right: var(--sys-density-panel-padding);
+  padding: 0 var(--sys-density-panel-padding);
   font-size: var(--text-base);
-  border-bottom: 1px solid var(--mat-sys-surface-variant);
+  /* Subtle row divider using the design system outline token */
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
   box-sizing: border-box;
   white-space: nowrap;
   gap: 12px; /* Add spacing between columns */
@@ -68,8 +70,9 @@
     opacity: 1 !important;
     /* Ensure full visibility */
 
-    /* Left accent as per rules */
+    /* Left accent as per rules: perfectly aligned with gutter left edge */
     box-shadow: inset 4px 0 0 0 var(--mat-sys-primary);
+    border-bottom-color: transparent; /* Seamless selection */
 
     .address,
     .opcode,
@@ -93,15 +96,16 @@
 }
 
 .gutter {
-  width: 32px;
-  min-width: 32px;
+  width: 24px;
+  min-width: 24px;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  background-color: var(--mat-sys-surface-container);
+  background-color: var(--mat-sys-surface-container-low);
   border-right: 1px solid var(--mat-sys-outline-variant);
+  margin-left: calc(-1 * var(--sys-density-panel-padding));
   margin-right: var(--sys-density-panel-padding);
 }
 
@@ -113,21 +117,24 @@
 }
 
 .address {
-  flex: 0 0 140px;
+  flex: 0 0 120px;
   color: var(--mat-sys-outline);
+  font-size: var(--text-sm);
   overflow: hidden;
 }
 
 .offset {
-  flex: 0 0 80px;
+  flex: 0 0 70px;
   color: var(--mat-sys-tertiary);
+  font-size: var(--text-sm);
   overflow: hidden;
   text-overflow: clip;
 }
 
 .opcode {
-  flex: 0 0 120px;
+  flex: 0 0 110px;
   color: var(--mat-sys-secondary);
+  font-size: var(--text-sm);
   overflow: hidden;
 }
 
@@ -141,6 +148,7 @@
   flex: 1 1 auto;
   color: var(--mat-sys-tertiary);
   font-style: italic;
+  font-size: var(--text-sm);
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;

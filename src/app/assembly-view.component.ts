@@ -31,9 +31,9 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy, 
   /** Responsive row height for cdk-virtual-scroll itemSize */
   public rowHeight = toSignal(
     this.breakpointObserver.observe(LAYOUT_COMPACT_MQ).pipe(
-      map(state => state.matches ? 24 : 32)
+      map(state => state.matches ? 24 : 28)
     ),
-    { initialValue: 32 }
+    { initialValue: 28 }
   );
 
   public instructions: TaroDisassembledInstruction[] = [];

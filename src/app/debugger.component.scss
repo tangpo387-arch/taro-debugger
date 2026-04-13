@@ -15,6 +15,8 @@
   width: 100%;
   background-color: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
+  /* Master Boundary: Secures top alignment across all panels without negative margins */
+  border-top: 1px solid var(--mat-sys-outline-variant);
 }
 
 /* --- Top toolbar style --- */
@@ -22,7 +24,7 @@
   flex-shrink: 0;
   z-index: 10;
   background-color: var(--mat-sys-surface-container-low);
-  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  /* Border delegated to debugger-container */
 
   /* Use dynamic density for toolbar and touch targets */
   min-height: var(--sys-density-toolbar-height);
@@ -125,8 +127,6 @@
   border-radius: 0 !important;
   /* Remove M3 shape for flush IDE layout */
   border-right: 1px solid var(--mat-sys-outline-variant) !important;
-  border-top: 1px solid var(--mat-sys-outline-variant) !important;
-  margin-top: -1px; /* Align precisely with toolbar bottom border */
 }
 
 .sidenav-right {
@@ -136,8 +136,6 @@
   border-radius: 0 !important;
   /* Remove M3 shape for flush IDE layout */
   border-left: 1px solid var(--mat-sys-outline-variant) !important;
-  border-top: 1px solid var(--mat-sys-outline-variant) !important;
-  margin-top: -1px; /* Align precisely with toolbar bottom border */
 }
 
 .sidenav-left {
@@ -248,13 +246,55 @@
     background-color: var(--mat-sys-surface-container-high);
     // Eliminate MDC top/bottom default paddings
     --mdc-tab-container-height: 32px;
+    height: 32px !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    // Indicator colors handled via ng-deep selector below
+    --mat-tab-header-active-indicator-color: transparent;
+    --mat-tab-header-inactive-indicator-color: transparent;
   }
 
-  // Align tab sizing with the standard panel header bar height (32px)
+  // Modern IDE Tabs: Left-aligned and non-stretching
+  :host & ::ng-deep .mat-mdc-tab-labels {
+    justify-content: flex-start !important;
+  }
+
+  // Modern IDE Tabs: Disable default Material ink-bar indicator
+  :host & ::ng-deep .mat-mdc-tab-indicator,
+  :host & ::ng-deep .mdc-tab-indicator,
+  :host & ::ng-deep .mdc-tab-indicator__content {
+    display: none !important;
+    visibility: hidden !important;
+    border: none !important;
+    height: 0 !important;
+  }
+
+  // Design: Non-stretching tabs with surface-fusion active state
+  // All tabs are set to 32px height; the active state relies solely on
+  // background-color change (surface fusion) and z-index to overlay the
+  // header's border-bottom, eliminating the need for negative margins.
   :host & ::ng-deep .mat-mdc-tab {
     min-height: 32px !important;
     height: 32px !important;
     padding: 0 16px;
+    flex: 0 1 auto !important;
+    // Non-stretching per §8 Alignment rule
+    min-width: 100px;
+    border-right: 1px solid var(--mat-sys-outline-variant);
+    transition: background-color 0.2s ease;
+    box-sizing: border-box !important;
+
+    // Active state: Surface fusion — background matches editor area,
+    // visually "fusing" the active tab to the content area below
+    &.mdc-tab--active {
+      background-color: var(--mat-sys-surface) !important;
+      z-index: 1;
+      // Sit above header border-bottom to complete the fusion effect
+    }
+
+    &:hover:not(.mdc-tab--active) {
+      background-color: var(--mat-sys-surface-container-highest);
+    }
   }
 
   // Align tab semantics with standard .panel-title (Uppercase, text-sm, 0.8px spacing)
@@ -346,8 +386,8 @@
 /* Bottom status bar style */
 .status-bar {
   /* Sync with density system (§8.2) and align with 8px grid (§9.2): 32px Desktop / 24px Panel */
-  min-height: var(--sys-density-variable-row, 32px);
-  height: var(--sys-density-variable-row, 32px);
+  min-height: var(--sys-density-variable-row, 28px);
+  height: var(--sys-density-variable-row, 28px);
   flex-shrink: 0;
   background-color: var(--mat-sys-surface-container-high);
   border-top: 1px solid var(--mat-sys-outline-variant);
@@ -355,7 +395,8 @@
   font-size: var(--text-sm);
   display: flex;
   align-items: center;
-  flex-wrap: nowrap; /* Prevent children from wrapping to a second line */
+  flex-wrap: nowrap;
+  /* Prevent children from wrapping to a second line */
   overflow: hidden;
   padding: 0 16px;
   gap: 8px;
@@ -364,9 +405,12 @@
 .connection-status {
   display: flex;
   align-items: center;
-  flex-shrink: 1;       /* Allow shrinking when space is tight */
-  min-width: 0;         /* Required for inner ellipsis to work */
-  white-space: nowrap;  /* Prevent text wrapping within status group */
+  flex-shrink: 1;
+  /* Allow shrinking when space is tight */
+  min-width: 0;
+  /* Required for inner ellipsis to work */
+  white-space: nowrap;
+  /* Prevent text wrapping within status group */
   overflow: hidden;
 }
 
@@ -392,13 +436,15 @@
   margin-left: 4px;
   opacity: 0.8;
   overflow: hidden;
-  text-overflow: ellipsis; /* Truncate server address when space is tight */
+  text-overflow: ellipsis;
+  /* Truncate server address when space is tight */
   min-width: 0;
 }
 
 .execution-state {
   font-weight: var(--weight-medium);
-  white-space: nowrap;  /* Prevent wrapping in constrained widths */
+  white-space: nowrap;
+  /* Prevent wrapping in constrained widths */
   flex-shrink: 0;
 }
 
