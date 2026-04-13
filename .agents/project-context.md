@@ -64,7 +64,7 @@ Use this decision tree to quickly find the right document based on your current 
 | Modify service reactive state | **Session** | `Lead_Engineer` | **Skill: `state-management`** — load before touching `BehaviorSubject`, `Subject`, or `Observable` streams in services |
 | Implement or fix DAP protocol logic | **Session / Transport** | `Lead_Engineer` | **Skill: `dap-implementation`** |
 | Add a new transport type | **Transport** | `Lead_Engineer` | **Skill: `dap-implementation`** §6 Transport Extension Guide |
-| Write tests | — | `Lead_Engineer` | [test-plan.md](../docs/test-plan.md) + [testing-protocol.md](rules/testing-protocol.md) |
+| Write tests | — | `Lead_Engineer` | [test-plan.md](../docs/test-plan.md) + **Skill: `test-case-writing`** |
 | What's next to build? | — | `Product_Architect` | [work-items.md](../docs/work-items.md) for pending items |
 | Manage work item lifecycle | — | `Product_Architect` | **Skill: `work-item-management`** |
 | Check v1.0 scope boundary | — | All Agents | [future-roadmap.md](../docs/future-roadmap.md) — confirm a feature is **not** a v1.1+ item before implementing |
@@ -98,7 +98,7 @@ To maintain consistency across environments, use these standard CLI commands:
 
 > [!IMPORTANT]
 > All testing commands use **Vitest** via the Angular CLI. The `--` separator is required to pass arguments through npm to the underlying test runner.
-> For advanced mocking strategies and architectural test rules, you MUST consult [.agents/rules/testing-protocol.md](rules/testing-protocol.md).
+> For the complete test-writing workflow, mock patterns, and structural rules, you MUST load the **Skill: `test-case-writing`** before implementing any test.
 
 </cli_commands>
 
@@ -117,18 +117,19 @@ This table consolidates the authoritative reference documents each role relies o
 | `docs/architecture.md` (Index) | ✅ | — | — |
 | `docs/file-map.md` | ✅ | ✅ | ✅ |
 | `.agents/rules/code-style-guide.md` | — | ✅ | ✅ |
-| `.agents/rules/testing-protocol.md` | — | ✅ | ✅ |
 | `docs/future-roadmap.md` | ✅ | ✅ | — |
 | `docs/project-management.md` | ✅ | ✅ | — |
 
 **On-demand Skills** (loaded only when the task matches the skill's trigger conditions):
 
 | Skill | Trigger | Lead_Engineer | Quality_Control_Reviewer |
+
 | :--- | :--- | :---: | :---: |
 | `visual-design` | Modifying CSS, UI layout, typography, or density | ✅ | ✅ |
 | **Skill:** `advanced-angular` | Implementing complex Angular components, Material Tree, RxJS cleanup | ✅ | ✅ |
 | **Skill:** `dap-implementation` | Modifying DAP services, transport, session lifecycle | ✅ | ✅ |
 | **Skill:** `state-management` | Modifying component/service state flow | ✅ | ✅ |
 | **Skill:** `work-item-management` | Creating, progressing, or retiring WIs | — | — |
+| **Skill:** `test-case-writing` | Writing or reviewing any `*.spec.ts` file | ✅ | ✅ |
 
 </context_sources>
