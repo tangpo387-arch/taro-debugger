@@ -1,37 +1,37 @@
+---
+title: Taro Debugger
+scope: project overview, quick start, architecture
+audience: beginner
+last_updated: 2026-04-14
+---
+
 # Taro Debugger
 
-> Professional Remote C/C++ Debugging, Reimagined for the Web.
+> Cross-platform web frontend for C/C++ debugging over the Debug Adapter Protocol (DAP).
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/nobra/gdb-frontend/actions)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 [![Angular](https://img.shields.io/badge/Angular-21%2B-DD0031.svg)](https://angular.io/)
 [![DAP](https://img.shields.io/badge/Protocol-DAP-blue.svg)](https://microsoft.github.io/debug-adapter-protocol/)
 
-Taro Debugger is a professional, cross-platform debugger frontend that delivers an IDE-grade experience. Whether you're working on a remote server or a local desktop, Taro provides the tools you need to debug C/C++ applications with precision and ease.
+Taro Debugger is a cross-platform frontend for debugging C/C++ applications over WebSocket-connected GDB/LLDB instances. It runs in any browser or as an Electron desktop app, requiring no IDE installation.
 
-![Taro Debugger Hero Screenshot](https://via.placeholder.com/1200x600?text=Taro+Debugger+Professional+UI+Screenshot)
+> [!NOTE]
+> **Scope**: C/C++ debugging only. Windows path variants (`\`) are handled internally — no extra configuration required. LLDB setup follows the same steps as GDB. Authentication and multi-user deployment are out of v1.0 scope.
 
 ## Why Taro?
 
 - **Remote-First Architecture**: Connect to debug adapters over WebSockets, enabling real-time debugging of remote systems from any browser.
-- **Professional IDE Experience**: Powered by the **Monaco Editor**, featuring syntax highlighting, breakpoint management, and live execution tracking.
+- **Monaco Editor**: Syntax highlighting, breakpoint glyph margin, and live execution tracking — no IDE installation required.
 - **Universal Deployment**: Run as a standalone **Electron** desktop app for local files or deploy as a **Web Application** for centralized access.
-- **DAP-Native**: Built from the ground up on the Debug Adapter Protocol, ensuring compatibility with GDB, LLDB, and other standard engines.
-
-## Key Features
-
-- 🖥️ **Dual Modes** — Seamlessly switch between Electron desktop and Web browser environments.
-- ✏️ **Advanced Editor** — Glyph margin breakpoints, line highlighting, and integrated terminal.
-- 📂 **Smart File Explorer** — Navigate local or remote source trees efficiently.
-- 🔍 **Variable Inspector** — Inspect complex nested objects with high-performance CDK Virtual Scroll.
-- 💬 **Integrated Console** — Separate streams for system diagnostics and program output.
+- **DAP-Native**: Built on DAP, ensuring compatibility with GDB, LLDB, and other standard debug engines.
 
 ## Tech Stack
 
 | Layer | Technology |
-|---|---|
+| --- | --- |
 | Core Framework | Angular 21+ (Standalone Components) |
-| Desktop App | Electron (native `contextBridge` IPC) |
+| Desktop App | Electron (native `contextBridge` IPC — Inter-Process Communication) |
 | Web Communication | WebSocket |
 | UI Components | Angular Material |
 | Code Editor | Monaco Editor (`ngx-monaco-editor-v2`) |
@@ -67,17 +67,21 @@ A three-panel IDE layout:
 Angular UI  →  contextBridge (IPC)  →  Electron Main Process  →  DAP Server
 ```
 
+> [Diagram: Electron mode — the Angular UI sends DAP commands through Electron's `contextBridge` (IPC) to the main process, which relays them to the DAP Server via stdin/stdout.]
+
 ### Web Browser Mode
 
 ```text
 Angular UI  →  WebSocket  →  DAP Server (or Relay Proxy)
 ```
 
+> [Diagram: Web mode — the Angular UI sends DAP JSON messages over a WebSocket connection directly to the DAP Server, or through an intermediary relay proxy.]
+
 Both modes share the same Angular codebase. The communication layer is abstracted behind a `DapTransportService` so upper-level components remain mode-agnostic.
 
 ## Protocol Support
 
-Taro is fully compatible with the standard **Debug Adapter Protocol (DAP)**. It supports core debugging operations including:
+Taro is fully compatible with the **DAP** standard. It supports core debugging operations including:
 
 - **Execution Control**: Initialize, Launch/Attach, Continue, Step Over/In/Out, Pause, Disconnect.
 - **State Inspection**: Stack Trace, Variable Scopes, Thread management.
@@ -87,9 +91,9 @@ Taro is fully compatible with the standard **Debug Adapter Protocol (DAP)**. It 
 
 ### 1. Prerequisites
 
-- [Node.js](https://nodejs.org/) (LTS recommended)
-- [GDB](https://www.sourceware.org/gdb/) or [LLDB](https://lldb.llvm.org/) with DAP support
-- [websocketd](http://websocketd.com/) (to bridge GDB to the Web)
+- [Node.js](https://nodejs.org/) LTS (Long-Term Support) — v20 or later
+- [GDB](https://www.sourceware.org/gdb/) v13+ or [LLDB](https://lldb.llvm.org/) with DAP support
+- [websocketd](http://websocketd.com/) (bridges GDB/LLDB to WebSocket)
 
 ### 2. Launch the DAP Server
 
@@ -104,20 +108,22 @@ websocketd --port 4711 --binary /usr/bin/gdb -i=dap
 Clone the repo and launch the development server:
 
 ```bash
-git clone https://github.com/nobra/gdb-frontend.git
-cd gdb-frontend
+git clone https://github.com/tangpo387-arch/taro-debugger.git
+cd taro-debugger
 npm install
 npm start
 ```
 
-Visit `http://localhost:4200` to start debugging!
+### 4. Verify the Setup
+
+Open `http://localhost:4200` in your browser. You should see the **Setup View** with connection fields (DAP Server Address, Launch Mode, Executable Path). Enter your DAP Server address (e.g., `localhost:4711`) and click **Connect**. If the status indicator turns green, the session is active and ready.
 
 ## Development
 
 ### Project Commands
 
 | Operation | Command |
-|---|---|
+| --- | --- |
 | **Start Dev Server** | `npm start` |
 | **Build Production** | `npm run build` |
 | **Run Unit Tests** | `npm test` |

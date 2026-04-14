@@ -2,7 +2,7 @@
 title: Test Plan (Index)
 scope: testing, vitest, unit-tests, integration-tests, e2e, coverage
 audience: [Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-13
+last_updated: 2026-04-14
 related:
   - docs/work-items.md
   - docs/system-specification.md
@@ -57,16 +57,11 @@ Each file below corresponds to a specific module or test level. **Open and read 
 | [unit-file-explorer.spec-plan.md](tests/unit-file-explorer.spec-plan.md) | `FileExplorerComponent` |
 | [unit-debugger.spec-plan.md](tests/unit-debugger.spec-plan.md) | `DebuggerComponent` |
 
-### 2.3 Integration Tests
+### 2.3 Integration & E2E
 
 | Spec-Plan File | Coverage |
 | :--- | :--- |
 | [integration.spec-plan.md](tests/integration.spec-plan.md) | DAP Launch Flow, Event-Driven State Sync, FileExplorer ↔ Debugger, Breakpoint & Editor Sync, Connection Error Detection |
-
-### 2.4 E2E & Manual Verification
-
-| Spec-Plan File | Coverage |
-| :--- | :--- |
 | [e2e.spec-plan.md](tests/e2e.spec-plan.md) | Happy path, Error path (Mock DAP Server) |
 | [manual-verification.spec-plan.md](tests/manual-verification.spec-plan.md) | Visual & UX checks, Live breakpoint DAP sync |
 

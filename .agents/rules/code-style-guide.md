@@ -1,12 +1,15 @@
 ---
 trigger: always_on
-description: Follow these coding standards to maintain consistency in the taro-debugger-frontend project.
+applies_to: ["*.ts", "*.scss", "*.html"]
+description: Coding standards for taro-debugger-frontend source files (*.ts, *.scss, *.html).
 ---
 
 # Project Code Style Guide
 
 <guide_overview>
 This document defines the development standards for the `taro-debugger-frontend` project, aiming to maintain code consistency, readability, and modern Angular best practices.
+
+> **Scope**: Source files only (`*.ts`, `*.scss`, `*.html`). Markdown documents (`*.md`) are governed by the `doc-authoring` skill.
 </guide_overview>
 
 <naming_conventions>

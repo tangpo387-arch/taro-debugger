@@ -2,13 +2,15 @@
 title: Documentation Index
 scope: index, reading-order, navigation
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-03-28
+last_updated: 2026-04-14
 ---
 
 # DAP Debugger Frontend — Documentation Index
 
-This directory (`/docs`) contains all core design, specification, and development progress documents for the DAP Debugger Frontend project.
-To help new developers or maintainers get up to speed quickly, the recommended reading order is as follows:
+> [!IMPORTANT]
+> This index is a navigation hub only. It is not authoritative on implementation
+> detail, WI status, or DAP behavior — always follow the link to the referenced
+> document before drawing conclusions.
 
 ## 1. Core Specifications & Design
 

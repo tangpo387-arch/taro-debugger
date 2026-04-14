@@ -42,9 +42,6 @@ These two terms have project-specific meanings that differ from their general DA
 ## 3. Behavioral Constraints
 
 * **Path handling**: C/C++ source code paths may use `/` (Unix) or `\` (Windows). Ensure `DapFileTreeService` and `EditorComponent` can parse both correctly.
-* **Async flow**: After `initialize` completes, send `launch`/`attach` as **fire-and-forget**, then `await initialized` event, then send `setBreakpoints` / `configurationDone`, then finally await the `launch`/`attach` response. See rule **[R1]** / **[R3]** in **Skill: `dap-implementation`**.
-* **Resource cleanup**: Any WebSocket subscriptions or timers must be cleaned up in `disconnect()` or `ngOnDestroy` to prevent buffer misalignment caused by multiple simultaneous sessions.
-* **Source Listing (GDB Restriction)**: In C/C++, fetching source trees is state-dependent. See rule **[R11]** in **Skill: `dap-implementation`** for strict implementation details.
 
 </behavioral_constraints>
 
@@ -57,6 +54,7 @@ Use this decision tree to quickly find the right document based on your current 
 | Task Type | Layer | Primary Agent | Start Here |
 | :--- | :--- | :--- | :--- |
 | Define or update requirements | — | `Product_Architect` | [system-specification.md](../docs/system-specification.md) + [architecture.md](../docs/architecture.md) (Index) |
+| **Write any spec (WI, feature, or data schema)** | — | `Product_Architect` | **MUST read [data-management-spec.md](../docs/data/data-management-spec.md) first** — defines WI schema, status lifecycle, and script behavior |
 | Add a new UI feature | **UI** | `Lead_Engineer` | [system-specification.md §3](../docs/system-specification.md#3-view-navigation--layout-specification) for layout spec |
 | Use Angular Framework APIs (mat-tree) | **UI** | `Lead_Engineer` | **Skill: `advanced-angular`** |
 | Modify visual style or layout | **UI** | `Lead_Engineer` | **Skill: `visual-design`** |
@@ -71,6 +69,10 @@ Use this decision tree to quickly find the right document based on your current 
 | Understand the state machine | **Session** | `Lead_Engineer` | **Skill: `state-management`** |
 | Review code for quality | — | `Quality_Control_Reviewer` | [code-style-guide.md](rules/code-style-guide.md) + **Skills: `dap-implementation`, `state-management`** (as applicable) |
 | Find which file to modify | — | All Agents | [file-map.md](../docs/file-map.md) for source file responsibility map |
+| Review DAP services / transport / session | **Session / Transport** | `Quality_Control_Reviewer` | **Skill: `dap-implementation`** |
+| Review component / service state flow | **UI / Session** | `Quality_Control_Reviewer` | **Skill: `state-management`** |
+| Review any `*.spec.ts` file | — | `Quality_Control_Reviewer` | **Skill: `test-case-writing`** |
+| Review CSS, layout, typography | **UI** | `Quality_Control_Reviewer` | **Skill: `visual-design`** |
 
 </agent_navigation>
 
@@ -108,28 +110,15 @@ To maintain consistency across environments, use these standard CLI commands:
 
 This table consolidates the authoritative reference documents each role relies on. All paths are relative to the project root.
 
-**Always-on references** (loaded as User Rules or read at session start):
+**Role-Required References** (defines the baseline knowledge boundary each role must possess before any task — this is not an automatic injection mechanism):
 
 | Document | Product_Architect | Lead_Engineer | Quality_Control_Reviewer |
 | :--- | :---: | :---: | :---: |
 | `docs/README.md` | ✅ | ✅ | ✅ |
-| `docs/system-specification.md` | ✅ | ✅ | — |
+| `docs/system-specification.md` | ✅ | ✅ | ✅ |
 | `docs/architecture.md` (Index) | ✅ | — | — |
 | `docs/file-map.md` | ✅ | ✅ | ✅ |
 | `.agents/rules/code-style-guide.md` | — | ✅ | ✅ |
-| `docs/future-roadmap.md` | ✅ | ✅ | — |
-| `docs/project-management.md` | ✅ | ✅ | — |
-
-**On-demand Skills** (loaded only when the task matches the skill's trigger conditions):
-
-| Skill | Trigger | Lead_Engineer | Quality_Control_Reviewer |
-
-| :--- | :--- | :---: | :---: |
-| `visual-design` | Modifying CSS, UI layout, typography, or density | ✅ | ✅ |
-| **Skill:** `advanced-angular` | Implementing complex Angular components, Material Tree, RxJS cleanup | ✅ | ✅ |
-| **Skill:** `dap-implementation` | Modifying DAP services, transport, session lifecycle | ✅ | ✅ |
-| **Skill:** `state-management` | Modifying component/service state flow | ✅ | ✅ |
-| **Skill:** `work-item-management` | Creating, progressing, or retiring WIs | — | — |
-| **Skill:** `test-case-writing` | Writing or reviewing any `*.spec.ts` file | ✅ | ✅ |
+| `docs/data/data-management-spec.md` | ✅ | — | — |
 
 </context_sources>
