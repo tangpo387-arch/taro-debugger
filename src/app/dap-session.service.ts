@@ -209,6 +209,9 @@ export class DapSessionService {
       this.pendingRequests.delete(seq);
     }
 
+    // Tear down the file tree service subscriptions and flush its cache.
+    this.fileTree.destroy();
+
     this.transportStatusSubscription?.unsubscribe();
     this.transportStatusSubscription = undefined;
     this.transport?.disconnect();

@@ -366,7 +366,8 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
 
     try {
-      const code = await firstValueFrom(this.dapSession.fileTree.readFile(node.path));
+      // Pass sourceReference so virtual sources (ref > 0) are keyed correctly in the cache.
+      const code = await firstValueFrom(this.dapSession.fileTree.readFile(node.path, node.sourceReference));
       this.currentCode = code;
     } catch (e: any) {
       this.currentCode = `// Error loading file: ${e.message}`;
@@ -542,7 +543,10 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
 
       try {
-        const code = await firstValueFrom(this.dapSession.fileTree.readFile(frame.source.path));
+        // Pass sourceReference so virtual sources (ref > 0) are keyed correctly in the cache.
+        const code = await firstValueFrom(
+          this.dapSession.fileTree.readFile(frame.source.path, frame.source.sourceReference)
+        );
         this.currentCode = code;
       } catch (e: any) {
         this.currentCode = `// Error loading file: ${e.message}`;

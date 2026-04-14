@@ -54,6 +54,8 @@ export interface DapStackFrame {
   source?: {
     name?: string;
     path?: string;
+    /** Non-zero when the source is virtual (not a physical file on disk). */
+    sourceReference?: number;
     [key: string]: any;
   };
   line: number;

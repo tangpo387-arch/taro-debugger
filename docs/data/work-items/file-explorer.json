@@ -27,7 +27,9 @@
     "metadata": {
       "status": "done",
       "size": "M",
-      "dependencies": ["WI-15"]
+      "dependencies": [
+        "WI-15"
+      ]
     },
     "description": "Replace left sidebar hardcoded content with dynamic file tree",
     "details": [
@@ -45,7 +47,7 @@
     "title": "Implement Source Content LRU Cache",
     "featureGroup": "File Explorer",
     "metadata": {
-      "status": "pending",
+      "status": "done",
       "size": "M",
       "milestone": "v1.0",
       "dependencies": []
@@ -61,7 +63,8 @@
     ],
     "timeline": {
       "created": "2026-04-13",
-      "created_by": "Antigravity-Agent"
+      "created_by": "Antigravity-Agent",
+      "completed": "2026-04-14"
     }
   },
   {
@@ -69,7 +72,7 @@
     "title": "Manage Source Cache Lifecycle and Verification",
     "featureGroup": "File Explorer",
     "metadata": {
-      "status": "pending",
+      "status": "done",
       "size": "S",
       "milestone": "v1.0",
       "dependencies": [
@@ -86,7 +89,8 @@
     ],
     "timeline": {
       "created": "2026-04-13",
-      "created_by": "Antigravity-Agent"
+      "created_by": "Antigravity-Agent",
+      "completed": "2026-04-14"
     }
   }
 ]

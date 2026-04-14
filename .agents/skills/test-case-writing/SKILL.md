@@ -148,6 +148,7 @@ it('should cancel long-running Observable on component destroy', async () => {
 | Manual `subscribe()` without teardown in tests | Memory leak; may bleed into subsequent tests |
 | `setTimeout` / `setInterval` in tests without `vi.useFakeTimers()` | Non-deterministic timing |
 | `console.log` left in committed test code | Pollutes CI output |
+| `Overwrite: true` on an existing `*.spec.ts` without prior audit | High risk of silently dropping existing test cases; git history provides no recoverable diff |
 
 ---
 
@@ -158,3 +159,22 @@ it('should cancel long-running Observable on component destroy', async () => {
 | `examples/transport-mock.example.ts` | Subject-based mock for testing `DapSessionService` via raw DAP message injection |
 | `docs/test-plan.md` | Master index of all spec-plan files |
 | `docs/tests/*.spec-plan.md` | Per-module test case specifications |
+
+---
+
+## 9. Pre-Rewrite Audit Protocol (Mandatory)
+
+If structural refactoring makes a full spec rewrite unavoidable, you **MUST** complete this checklist **before** using `Overwrite: true` on any existing `*.spec.ts`:
+
+```bash
+# Step 1 — List every existing test case from git HEAD
+git show HEAD:<path-to-spec-file> | grep "it('"
+
+# Step 2 — List every test case in your new draft
+grep "it('" <path-to-spec-file>
+
+# Step 3 — Diff the two lists and confirm zero omissions before committing
+```
+
+> [!CAUTION]
+> Skipping this audit is what caused Windows-path, content-field, empty-string, and error-propagation tests to be silently dropped during a prior rewrite. A missing test case leaves a production code branch permanently uncovered without any visible warning.
