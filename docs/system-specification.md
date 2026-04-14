@@ -209,3 +209,24 @@ To ensure the system provides clear user feedback under abnormal conditions, the
 
 * **Form Validation**: The setup view form fields should validate input format in real-time (e.g., connection address format, required field checks) and display inline error messages when validation fails.
 * **Pre-launch Check**: Before clicking the Launch/Attach button, the system should verify that all required parameters are filled in and correctly formatted; otherwise, block the operation and indicate missing items.
+
+## 8. Source Content Caching Mechanism
+
+To optimize performance and reduce redundant DAP network traffic, the system implements an intelligent caching layer for source file content.
+
+### 8.1 Storage Strategy (Memory-First)
+
+Source content is cached exclusively in application memory (RAM). This ensures maximum retrieval speed and avoids the storage limitations of `localStorage`. Since source code is session-dependent, providing cross-session persistence is not required and could lead to data staleness.
+
+### 8.2 Cache Management (LRU)
+
+The system uses a **Least Recently Used (LRU)** eviction policy to maintain a balanced memory footprint:
+
+* **Capacity Limit**: The cache is capped at **20MB** (estimated by string length).
+* **Eviction Logic**: When the limit is reached, the least recently accessed file content is removed to make room for new entries.
+* **Keying**: Cache keys are derived from the DAP source path or the `sourceReference` to handle both physical and virtual files.
+
+### 8.3 Lifecycle & Consistency
+
+* **Session-Bound**: The cache is automatically invalidated and cleared whenever a DAP session is initialized or disconnected.
+* **Immutability Assumption**: The system assumes source files do not change on disk during an active debugging session, as GDB/LLDB typically do not provide file-watch events via DAP.

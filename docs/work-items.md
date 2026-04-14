@@ -21,3 +21,32 @@ audience: [Lead_Engineer, Product_Architect]
   - Bidirectional data forwarding: WebSocket → DAP `stdin`; DAP `stdout` → WebSocket back to frontend
   - Handle process termination and resource cleanup
 - **Dependencies**: none
+
+## File Explorer
+
+### WI-33: Implement Source Content LRU Cache
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Implement a memory-based LRU cache in DapFileTreeService to reduce redundant DAP source requests.
+- **Details**:
+  - Implement 20MB LRU eviction logic
+  - Modify readFile() to check cache first
+  - Handle path and sourceReference keys
+  - [Test] Verify cache hit — readFile() called twice with same path sends only one DAP source request
+  - [Test] Verify sourceReference > 0 is keyed by ref, not path (virtual source files)
+  - [Test] Verify in-flight deduplication — concurrent readFile() calls for same path share one underlying DAP request
+- **Dependencies**: none
+
+### WI-34: Manage Source Cache Lifecycle and Verification
+
+- **Status**: ⏳ Pending
+- **Size**: S
+- **Description**: Ensure the source cache is correctly invalidated during session changes and add verification tests.
+- **Details**:
+  - Clear cache on session initialized/disconnect
+  - [Test] Verify eviction — adding content exceeding 20MB removes LRU entry and keeps total size under limit
+  - [Test] Verify complete cache flush on initialized event
+  - [Test] Verify complete cache flush on disconnect()
+  - [Test] Verify no memory leak — after flush, internal Map size is zero
+- **Dependencies**: WI-33

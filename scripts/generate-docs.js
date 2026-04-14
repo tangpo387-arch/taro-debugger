@@ -8,7 +8,6 @@ const FEATURE_COLORS = {
     'Backend Relay': { fill: '#60a5fa', stroke: '#2563eb' },
     'Debug Control UI': { fill: '#f97316', stroke: '#ea580c' },
     'Editor Advanced Interaction': { fill: '#a78bfa', stroke: '#7c3aed' },
-    'File Resource Management': { fill: '#facc15', stroke: '#ca8a04' },
     'Debug Info Panel': { fill: '#f472b6', stroke: '#db2777' },
     'Status & Console UI': { fill: '#2dd4bf', stroke: '#0d9488' },
     'Error Handling': { fill: '#fb923c', stroke: '#ea580c' },
