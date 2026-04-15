@@ -53,6 +53,16 @@ Every document must declare its mandatory sections in the frontmatter or opening
 > [!IMPORTANT]
 > Agents must not omit required sections without explicit user approval.
 
+### 3.4 Edit Integrity
+
+**"Modifying an existing document"** means any task whose stated goal is reformatting, restructuring, fixing errors, or improving clarity — **not** tasks that explicitly request new content, additional sections, or extended scope.
+
+When a task falls under this definition, edits **must not add or remove expressed content**. Only reformatting or structural reorganization of existing meaning is permitted.
+
+- **Permitted**: Fixing grammar, reordering list items for clarity, converting prose to a table, correcting formatting.
+- **Prohibited**: Inserting new constraints, deleting existing rules, or silently narrowing/broadening scope — even if the change seems minor.
+- **Exception**: Additions or removals are allowed only when explicitly requested by the user or required to correct a factual inaccuracy confirmed against authoritative project sources.
+
 ---
 
 ## 4. Style & Tone
@@ -165,3 +175,4 @@ Before finalizing any document, run this self-check:
 - [ ] Have subjective adjectives been replaced with measurable criteria (§4.1)?
 - [ ] Are conciseness rules applied — no redundant clauses, no filler words, inline refs preferred (§4.4)?
 - [ ] Is all content derived from existing project documents or confirmed facts — not inferred? If uncertain, ask the user.
+- [ ] **Edit integrity (§3.4)**: If this task is a reformatting/restructuring task (as defined in §3.4), has no content been silently added or removed — unless explicitly requested by the user or required to correct a confirmed factual inaccuracy?

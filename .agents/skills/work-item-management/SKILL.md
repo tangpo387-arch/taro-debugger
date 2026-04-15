@@ -153,6 +153,6 @@ The script automatically handles timestamps and refreshes all derivative views.
 - **Utility**: `node scripts/generate-docs.js <type> <output_path|"-">` generates specific views on-demand.
 
 > [!IMPORTANT]
-> **Exclusion Boundaries**: This skill covers WI creation, editing, and status progression only.
+> **Exclusion Boundaries**: This skill covers the following operations only: WI creation, content editing, status progression, and Feature Group management (create and inspect).
 > - Do not use this skill to modify Mermaid rendering logic — see `generate-docs.js`.
 > - Do not use this skill to alter the SSOT schema structure — see `wi-data-governance.md`.
