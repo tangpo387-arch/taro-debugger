@@ -1,0 +1,106 @@
+{
+  "groupDefinition": {
+    "name": "Variables & Call Stack",
+    "color": {
+      "fill": "#f472b6",
+      "stroke": "#db2777"
+    },
+    "description": "Interactive inspection of execution context, stack frames, and data structures."
+  },
+  "items": [
+    {
+      "id": "WI-17",
+      "title": "Call Stack Panel",
+      "featureGroup": "Variables & Call Stack",
+      "metadata": {
+        "status": "done",
+        "size": "M",
+        "dependencies": [
+          "WI-11"
+        ]
+      },
+      "description": "Implement call stack display per spec [§3.2.4](system-specification.md#324-right-sidenav)",
+      "details": [
+        "Send `threads` + `stackTrace` requests on `stopped` event",
+        "Display stack frames using `mat-list` (function name, filename:line)",
+        "Click frame → Switch Monaco Editor to corresponding file and line",
+        "Click frame → Trigger `scopes` + `variables` requests to update variable panel"
+      ],
+      "timeline": {
+        "completed": "2026-03"
+      }
+    },
+    {
+      "id": "WI-18.1",
+      "title": "Variables Data State Management",
+      "featureGroup": "Variables & Call Stack",
+      "metadata": {
+        "status": "done",
+        "size": "M",
+        "dependencies": [
+          "WI-11",
+          "WI-17"
+        ]
+      },
+      "description": "Manage derived variable state and DAP requests fetching dynamically.",
+      "details": [
+        "Implement a dedicated `DapVariablesService` to strictly handle derived runtime states.",
+        "Trigger `scopes` → `variables` requests automatically based on the current execution context and selected stack frame.",
+        "Provide a reactive `Observable` interface for lazy-loading expansion when a user interacts with nodes containing `variablesReference > 0`.",
+        "Cache fetched variables reference to avoid redundant DAP `variables` requests.",
+        "[Test] verify scopesFetching, caching logic, implicit clear, and memory safety"
+      ],
+      "timeline": {
+        "completed": "2026-04-05"
+      }
+    },
+    {
+      "id": "WI-18.2",
+      "title": "Variables Tree UI Component",
+      "featureGroup": "Variables & Call Stack",
+      "metadata": {
+        "status": "done",
+        "size": "M",
+        "dependencies": [
+          "WI-18.1"
+        ]
+      },
+      "description": "Implement an independent Angular Standalone Component (`<app-variables>`) to render the nested variable/scope structure.",
+      "details": [
+        "Built `<app-variables>` standalone component with custom flat-tree virtual scrolling (`cdk-virtual-scroll-viewport` + `*cdkVirtualFor`)",
+        "Implemented hierarchical-to-flat data model (`VariableNode` → `FlatVariableNode`) for efficient rendering",
+        "Lazy-loads children on first expand via `DapVariablesService.getVariables()` for nodes with `variablesReference > 0`",
+        "Auto-expands the first scope (e.g., 'Locals') on load for immediate visibility",
+        "Displays variable `name`, `type`, and `value` with expand/collapse toggles and loading spinners",
+        "Integrated into `debugger.component.html` right sidenav, replacing placeholder content"
+      ],
+      "timeline": {
+        "completed": "2026-04-06"
+      }
+    },
+    {
+      "id": "WI-30",
+      "title": "Local Variable Modification",
+      "featureGroup": "Variables & Call Stack",
+      "metadata": {
+        "status": "proposed",
+        "size": "M",
+        "milestone": "v1.1",
+        "dependencies": [
+          "WI-18.1",
+          "WI-18.2"
+        ]
+      },
+      "description": "Allow users to modify the values of local variables during a stopped debug session.",
+      "details": [
+        "Implement a setVariable DAP request within DapSessionService",
+        "Update app-variables tree component UI to support inline editing",
+        "Ensure updated values correctly sync back"
+      ],
+      "timeline": {
+        "created": "2026-04-11",
+        "created_by": "Antigravity-Agent"
+      }
+    }
+  ]
+}

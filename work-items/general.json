@@ -1,0 +1,92 @@
+{
+  "groupDefinition": {
+    "name": "General",
+    "color": {
+      "fill": "#f1f5f9",
+      "stroke": "#64748b"
+    },
+    "description": "Miscellaneous cross-cutting tasks, documentation, and foundational CI/CD workflows."
+  },
+  "items": [
+    {
+      "id": "WI-35",
+      "title": "Migrate Work-Item Data Files to Group-Definition Schema",
+      "featureGroup": "General",
+      "metadata": {
+        "status": "done",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Restructure all 11 work-item JSON files from plain arrays to objects containing groupDefinition and items fields.",
+      "details": [
+        "Migrate all 11 files in docs/data/work-items/ from plain JSON array to object structure: { groupDefinition: { name, color: { fill, stroke }, description }, items: [...] }",
+        "groupDefinition.name must exactly match the featureGroup string used in all items within that file",
+        "groupDefinition.color values are sourced from the existing FEATURE_COLORS map in generate-docs.js",
+        "groupDefinition.description must be a concise one-sentence boundary statement for the group",
+        "[Test] Verify each migrated file parses as valid JSON",
+        "[Test] Verify groupDefinition.name matches every item's featureGroup field within the same file",
+        "[Test] Verify no item's featureGroup references a group not defined in any file's groupDefinition"
+      ],
+      "timeline": {
+        "created": "2026-04-15",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-15"
+      }
+    },
+    {
+      "id": "WI-36",
+      "title": "Update Scripts for Group-Definition Schema",
+      "featureGroup": "General",
+      "metadata": {
+        "status": "done",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-35"
+        ]
+      },
+      "description": "Update generate-docs.js and manage-wi.js to consume the new groupDefinition structure and enforce group validation.",
+      "details": [
+        "Update loadAllItems() in generate-docs.js to read items from file.items instead of the root array",
+        "Build FEATURE_COLORS dynamically from each file's groupDefinition.color — remove the hardcoded constant",
+        "Update manage-wi.js add to validate featureGroup against all groupDefinition.name values across data files; emit error and exit non-zero if no match found",
+        "Update manage-wi.js add to accept a new create-group subflow: when adding a WI to a non-existent group, require explicit --new-group flag with --fill, --stroke, and --group-desc arguments to create the groupDefinition entry",
+        "[Test] Verify generate-docs.js backlog output is identical before and after migration when data is equivalent",
+        "[Test] Verify manage-wi.js add exits with non-zero code when featureGroup does not match any groupDefinition.name",
+        "[Test] Verify manage-wi.js add succeeds and writes groupDefinition when --new-group flag is provided with all required arguments"
+      ],
+      "timeline": {
+        "created": "2026-04-15",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-15"
+      }
+    },
+    {
+      "id": "WI-37",
+      "title": "Update Documentation for Group-Definition Schema",
+      "featureGroup": "General",
+      "metadata": {
+        "status": "done",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-35",
+          "WI-36"
+        ]
+      },
+      "description": "Update data-management-spec.md and project-management.md to reflect the new groupDefinition structure as the canonical Feature Group registry.",
+      "details": [
+        "Update data-management-spec.md §2 Work Item Schema: add groupDefinition block to the file-level schema; update featureGroup field description to state it must match groupDefinition.name in the same file",
+        "Update data-management-spec.md §4.1 manage-wi.js behavior table: document --new-group flag and group validation error behavior",
+        "Update project-management.md §1.4 Feature Groups: replace reference to FEATURE_COLORS with reference to groupDefinition in each work-item JSON file",
+        "[Test] Verify all internal cross-references between updated docs resolve to existing anchors"
+      ],
+      "timeline": {
+        "created": "2026-04-15",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-15"
+      }
+    }
+  ]
+}

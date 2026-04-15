@@ -1,0 +1,120 @@
+{
+  "groupDefinition": {
+    "name": "Low-Level Inspection",
+    "color": {
+      "fill": "#6366f1",
+      "stroke": "#4f46e5"
+    },
+    "description": "Advanced tools for memory viewing, register analysis, and assembly code inspection."
+  },
+  "items": [
+    {
+      "id": "WI-27",
+      "title": "Integration of Tabbed Layout and Navigation",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "done",
+        "size": "S",
+        "dependencies": [
+          "WI-07",
+          "WI-11"
+        ]
+      },
+      "description": "Evolve the main content area into a **tabbed interface** and implement logic for dynamic switching between Source and Disassembly.",
+      "details": [
+        "Replace static Monaco Editor with a `mat-tab-group` containing Source and Disassembly tabs.",
+        "Implement active tab management in `DebuggerComponent`.",
+        "Add logic to automatically switch to Disassembly tab if a selected stack frame has no source but has an instruction pointer."
+      ],
+      "timeline": {
+        "created": "2026-04-11",
+        "completed": "2026-04-11"
+      }
+    },
+    {
+      "id": "WI-28",
+      "title": "DapAssemblyService and Disassemble Request",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "done",
+        "size": "M",
+        "dependencies": [
+          "WI-06"
+        ]
+      },
+      "description": "Implement a dedicated service for assembly data retrieval and interaction with the DAP `disassemble` endpoint.",
+      "details": [
+        "Create `DapAssemblyService` with a component-scoped lifecycle.",
+        "Implement the `disassemble` request with configurable instruction count and offsets.",
+        "Handle symbol resolution and address mapping within the service.",
+        "Expose a reactive `instructions$` stream for the UI.",
+        "[Test] Verify disassemble request serialization with correct memory address and instruction offset",
+        "[Test] Verify instructions$ emits and updates on new disassembly data",
+        "[Test] Verify error handling when disassemble request fails (e.g., restricted memory range)"
+      ],
+      "timeline": {
+        "created": "2026-04-11",
+        "completed": "2026-04-11"
+      }
+    },
+    {
+      "id": "WI-29",
+      "title": "AssemblyViewComponent and Instruction Rendering",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "done",
+        "size": "M",
+        "dependencies": [
+          "WI-27",
+          "WI-28"
+        ]
+      },
+      "description": "Build the high-density instruction list component with **virtual scrolling** and instruction pointer highlighting.",
+      "details": [
+        "Implement `AssemblyViewComponent` using `cdk-virtual-scroll-viewport`.",
+        "Design the high-density table layout (Address, Opcode, Mnemonic, Annotation).",
+        "Implement logic to synchronize the highlighted instruction with the current `instructionPointerReference`.",
+        "Integrate breakpoint markers in the assembly gutter.",
+        "[Test] Verify virtual scrolling correctly renders a subset of the assembly instructions and handles rapid scrolling.",
+        "[Test] Verify the highlighted instruction is synchronized with the current instruction pointer reference.",
+        "[Test] Verify breakpoint markers are accurately mapped to the corresponding address rows."
+      ],
+      "timeline": {
+        "created": "2026-04-11",
+        "completed": "2026-04-11"
+      }
+    },
+    {
+      "id": "WI-32",
+      "title": "Implement Instruction-Level Stepping (stepi/nexti)",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "done",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-29"
+        ]
+      },
+      "description": "Support granular execution control at the instruction level with auto-view switching and strong DAP typing.",
+      "details": [
+        "[dap.types.ts] Add `SteppingGranularity` union type ('statement' | 'line' | 'instruction') and `StepArguments` interface to enforce strong-typed DAP step requests.",
+        "[DapSessionService] Implement `nextInstruction()`: sends `next` request with `{ threadId: 1, granularity: 'instruction' }`. No capability guard — silent degradation via existing `_dapError` synthetic event on unsupported adapters.",
+        "[DapSessionService] Implement `stepInInstruction()`: sends `stepIn` request with `{ threadId: 1, granularity: 'instruction' }`. Same silent-degradation policy.",
+        "[DebugControlGroupComponent] Add two new icon buttons (stepi/nexti) to the 'Stepping' segment with Option B visual weight: reduced opacity/secondary style when active tab is Source; full primary weight when Disassembly tab is active.",
+        "[DebugControlGroupComponent] Add `@Output() stepInstructionTab = new EventEmitter<'stepi' | 'nexti'>()` matching the existing `restart`/`stop` @Output pattern. The emitted value signals which instruction-step action was requested.",
+        "[DebuggerComponent] Subscribe to `stepInstructionTab` output: set `activeTabIndex = 1` (Disassembly), then invoke the corresponding `DapSessionService` method.",
+        "[Test] Verify `nextInstruction()` serializes DAP request with `granularity: 'instruction'` and correct `threadId`.",
+        "[Test] Verify `stepInInstruction()` serializes DAP request with `granularity: 'instruction'` and correct `threadId`.",
+        "[Test] Verify stepi/nexti buttons are disabled when executionState !== 'stopped'.",
+        "[Test] Verify `stepInstructionTab` EventEmitter emits and DebuggerComponent switches to Disassembly tab (activeTabIndex = 1)."
+      ],
+      "timeline": {
+        "created": "2026-04-12",
+        "created_by": "Antigravity-Agent",
+        "spec_reviewed": "2026-04-12",
+        "completed": "2026-04-12"
+      }
+    }
+  ]
+}

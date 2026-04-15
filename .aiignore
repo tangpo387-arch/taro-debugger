@@ -2,4 +2,4 @@
 # Prevents AI models and indexing tools from reading sensitive or high-volume data directories.
 
 # Exclude work item raw data from AI context to prevent pollution
-docs/data/work-items/
+work-items/

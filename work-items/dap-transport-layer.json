@@ -1,0 +1,214 @@
+{
+  "groupDefinition": {
+    "name": "DAP Transport Layer",
+    "color": {
+      "fill": "#4ade80",
+      "stroke": "#22c55e"
+    },
+    "description": "Unified protocol communication layer managing WebSocket transport, Node.js bridges, and the Debug Adapter Protocol lifecycle including error recovery."
+  },
+  "items": [
+    {
+      "id": "WI-04",
+      "title": "Create `DapTransportService` Abstract Interface",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "done",
+        "size": "S",
+        "dependencies": []
+      },
+      "description": "Define a unified communication abstraction layer per spec [§4](system-specification.md#4-communication-architecture)",
+      "details": [
+        "Define abstract class / interface `DapTransportService`",
+        "Methods: `connect()`, `disconnect()`, `sendRequest()`, `onEvent()` (Observable)",
+        "Define DAP Message base types (`DapRequest`, `DapResponse`, `DapEvent`)"
+      ],
+      "timeline": {
+        "completed": "2026-03"
+      }
+    },
+    {
+      "id": "WI-05",
+      "title": "Implement WebSocket Transport Layer (`WebSocketTransportService`)",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "done",
+        "size": "M",
+        "dependencies": [
+          "WI-04"
+        ]
+      },
+      "description": "Implement Web mode WebSocket communication per spec [§4.2](system-specification.md#42-web-browser-mode)",
+      "details": [
+        "Implement `DapTransportService`'s WebSocket version",
+        "WebSocket connection/disconnection management",
+        "DAP message serialization/deserialization (Content-Length header + JSON body)",
+        "Use RxJS Subject to emit received events",
+        "[Test] Header parsing: Packets split by `Content-Length` handled via buffer",
+        "[Test] Sticky/half packet handling: TCP fragmented packets handled via buffer",
+        "[Test] Fail-Fast & Error Isolation: malformed packets handling",
+        "[Test] Buffer Auto-expansion: verified expansion on large payloads"
+      ],
+      "timeline": {
+        "completed": "2026-03"
+      }
+    },
+    {
+      "id": "WI-06",
+      "title": "DAP Session Management Service (`DapSessionService`)",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "done",
+        "size": "M",
+        "dependencies": [
+          "WI-05"
+        ]
+      },
+      "description": "Encapsulate the DAP protocol's request/response lifecycle",
+      "details": [
+        "`initialize()` → Exchange Capabilities",
+        "`launch()` / `attach()` → Start debugging based on configuration",
+        "`configurationDone()` → Notify DAP Server",
+        "`disconnect()` → Terminate session",
+        "Manage request sequence ID and pending response mapping",
+        "[Test] Sequence ID management: Verify `seq` increments correctly"
+      ],
+      "timeline": {
+        "completed": "2026-03"
+      }
+    },
+    {
+      "id": "WI-07",
+      "title": "DAP Request Timeout Mechanism",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "done",
+        "size": "S",
+        "dependencies": [
+          "WI-06"
+        ]
+      },
+      "description": "Implement timeout mechanism for `DapSessionService` requests, preventing permanent waits when the server is unresponsive",
+      "details": [
+        "Modify `sendRequest` method, add `setTimeout` wait limit (e.g., 5 seconds)",
+        "On timeout, clear pending handler and reject `Promise`",
+        "[Test] Promise Mapping: Verify `sendRequest` Promise resolves/rejects on response",
+        "[Test] Timeout mechanism: Simulate server non-response, verify timeout error"
+      ],
+      "timeline": {
+        "completed": "2026-03"
+      }
+    },
+    {
+      "id": "WI-08",
+      "title": "Integrate DapSessionService in DebuggerComponent",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "done",
+        "size": "S",
+        "dependencies": [
+          "WI-06",
+          "WI-07"
+        ]
+      },
+      "description": "Actually invoke DapSessionService in DebuggerComponent to start and terminate debug sessions",
+      "details": [
+        "Execute `initializeSession`, `launchOrAttach`, and `configurationDone` in `ngOnInit`",
+        "Call `disconnect` on `ngOnDestroy` and `goBack` to clear session and connection",
+        "Subscribe to `onEvent()` to log base events to UI in real-time",
+        "Use `try/catch` to capture timeout errors and display friendly notifications in UI (e.g., `MatSnackBar` or `dapLogs`)"
+      ],
+      "timeline": {
+        "completed": "2026-03"
+      }
+    },
+    {
+      "id": "WI-09",
+      "title": "Implement Node.js WebSocket Bridge",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "dependencies": []
+      },
+      "description": "Implement a simple Node.js server that receives frontend WebSocket connections and forwards them to the local DAP executable (e.g., `lldb-dap`)",
+      "details": [
+        "Use the `ws` module to create a WebSocket Server (e.g., running on `:8080`)",
+        "On connection, launch `lldb-dap` or `gdb` as a child process based on the protocol",
+        "Bidirectional data forwarding: WebSocket → DAP `stdin`; DAP `stdout` → WebSocket back to frontend",
+        "Handle process termination and resource cleanup"
+      ],
+      "timeline": {
+        "created": "2026-04-04"
+      }
+    },
+    {
+      "id": "WI-21",
+      "title": "Connection Error Handling",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "done",
+        "size": "M",
+        "dependencies": [
+          "WI-05",
+          "WI-20"
+        ]
+      },
+      "description": "Implement connection error handling mechanism per spec [§7.1](system-specification.md#71-connection-error-handling)",
+      "details": [
+        "Connection timeout → `MatDialog` error dialog + retry button",
+        "Connection lost → Status indicator update + console output of reason",
+        "When in error state, restart button transforms into reconnect button",
+        "Disconnect detection optimization → Fix WebSocket `onerror` / `onclose` signal routing to `DapSessionService` data flow lifecycle",
+        "[Test] Connection timeout auto-catch and disconnect auto-reaction integration"
+      ],
+      "timeline": {
+        "completed": "2026-03"
+      }
+    },
+    {
+      "id": "WI-22",
+      "title": "DAP Server Error Handling",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "done",
+        "size": "S",
+        "dependencies": [
+          "WI-06"
+        ]
+      },
+      "description": "Handle DAP Server errors per spec [§7.2](system-specification.md#72-dap-server-error-handling)",
+      "details": [
+        "Unexpected process termination → Console log",
+        "Invalid DAP response → Log to console, ignore the message",
+        "DAP error response → Display error message to user"
+      ],
+      "timeline": {
+        "completed": "2026-03"
+      }
+    },
+    {
+      "id": "WI-31",
+      "title": "DAP 'terminated' Event _restart Payload Passing",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "proposed",
+        "size": "S",
+        "milestone": "v1.1",
+        "dependencies": [
+          "WI-06"
+        ]
+      },
+      "description": "Support context-aware session restart by forwarding the custom _restart field.",
+      "details": [
+        "Update the DapSessionService to capture the _restart field",
+        "Ensure disconnect() cycle cleans up stale RxJS subscriptions",
+        "Modify startSession() initialization sequence to accept and merge this cached _restart data"
+      ],
+      "timeline": {
+        "created": "2026-04-11",
+        "created_by": "Antigravity-Agent"
+      }
+    }
+  ]
+}

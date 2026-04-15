@@ -32,16 +32,12 @@ last_updated: 2026-04-14
   * **Contents**: WI/TI lifecycle process, naming conventions, and feature group definitions.
   * **When to read**: When creating, progressing, or retiring any work item.
 
-* 📄 **[Data Management Specification (data/data-management-spec.md)](data/data-management-spec.md)**
-  * **Contents**: Technical reference for the JSON-first architecture, SSOT schema, and automation scripts (`add-wi.js`, `update-wi.js`, `generate-docs.js`).
-  * **When to read**: When modifying the task database structure or troubleshooting documentation generation.
-
 * 📄 **[Test Plan (test-plan.md)](test-plan.md)**
   * **Contents**: Describes the project's test pyramid strategy, including the scope of unit tests, integration tests, and E2E tests, along with coverage requirements.
   * **When to read**: When you've finished developing a new feature and need to write tests, or when you want to understand the project's CI/CD testing standards.
 
 * 📄 **[Work Items (work-items.md)](work-items.md)**
-  * **Contents**: Active backlog of pending and in-progress work items (WI-01 ~ WI-25), grouped by Feature Group with a strategic milestone progress view.
+  * **Contents**: Active backlog of pending and in-progress work items, grouped by Feature Group with a strategic milestone progress view.
   * **When to read**: When looking for the next ticket to pick up, or to understand the overall project progress.
 
 ## 3. Troubleshooting & Technical Guides

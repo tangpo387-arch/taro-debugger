@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const DATA_DIR = path.join(__dirname, '../docs/data/work-items');
+const DATA_DIR = path.join(__dirname, '../work-items');
 
 const [targetId, rawStatus] = process.argv.slice(2);
 const newStatus = rawStatus === 'abort' ? 'aborted' : rawStatus;
@@ -20,7 +20,8 @@ function update() {
     files.forEach(file => {
         const filePath = path.join(DATA_DIR, file);
         const content = fs.readFileSync(filePath, 'utf8');
-        let items = JSON.parse(content);
+        let data = JSON.parse(content);
+        const items = data.items || [];
         const index = items.findIndex(i => i.id === targetId);
 
         if (index !== -1) {
@@ -33,7 +34,7 @@ function update() {
                 item.timeline.completed = today;
             }
 
-            fs.writeFileSync(filePath, JSON.stringify(items, null, 2));
+            fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
             console.log(`✅ Updated ${targetId} status to ${newStatus} in ${file}`);
         }
     });
