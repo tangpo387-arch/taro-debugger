@@ -1,6 +1,7 @@
 ---
 name: Work Item Management
 description: Managing the creation, progression, and archival of Work Items (WI) per project standards.
+audience: [Product_Architect, Lead_Engineer]
 ---
 
 # Work Item Management Skill
@@ -90,7 +91,7 @@ node scripts/manage-wi.js add AUTO "Core" "Refactor" "Short desc" "@temp_details
 
 ### Step 3 — Edit an Existing Work Item
 
-To modify content fields of an existing WI (title, description, details, dependencies, size, or milestone), use `manage-wi.js edit`. Only the fields specified via flags are updated.
+Use `manage-wi.js edit` to update content fields. Only the fields specified via flags are changed.
 
 ```bash
 # Update a single field
@@ -129,7 +130,7 @@ After any `add` or `edit`, verify that the item appears correctly in `docs/work-
 
 ---
 
-## 3. Progressing a Work Item
+## 4. Progressing a Work Item
 
 **Owner**: `Lead_Engineer`
 
@@ -143,24 +144,15 @@ Implementation status is updated via the `update-wi.js` script. **Do not** edit 
 
 The script automatically handles timestamps and refreshes all derivative views.
 
-## 4. Machine-Readable Archival
+---
+
+## 5. Machine-Readable Archival
 
 - **Single Source of Truth**: All Work Item records are governed by a centralized SSOT. Markdown views are derived artifacts — never edit them directly.
 - **Governance Reference**: For the authoritative schema, lifecycle rules, and script contracts, see [Work Item Data Governance & Schema](references/wi-data-governance.md).
-- **Automation First**: Never edit `work-items.md` or `project-roadmap.md` manually. Always use the generation scripts.
-- **Utility**: `node scripts/generate-docs.js <type> <output_path|"-">` can be used to manually generate specific views.
+- **Utility**: `node scripts/generate-docs.js <type> <output_path|"-">` generates specific views on-demand.
 
----
-
-## 6. Quick Reference
-
-```text
-Create Group   →  Product_Architect: node scripts/manage-wi.js add-group "Name" "Fill" "Stroke" "Desc"
-Show Groups    →  Product_Architect: node scripts/manage-wi.js show-group [Name]
-Create WI      →  Product_Architect: node scripts/manage-wi.js add AUTO "Group" "Title" ...
-Edit WI        →  Product_Architect: node scripts/manage-wi.js edit WI-## --field "value"
-Inspect WI     →  Product_Architect: node scripts/manage-wi.js show WI-##
-Status update  →  Lead_Engineer:     node scripts/update-wi.js WI-## <done|abort|pending>
-Review         →  Quality_Control_Reviewer approves PR
-Query/Export   →  node scripts/generate-docs.js <backlog|roadmap|changelog|future> <path|"-">
-```
+> [!IMPORTANT]
+> **Exclusion Boundaries**: This skill covers WI creation, editing, and status progression only.
+> - Do not use this skill to modify Mermaid rendering logic — see `generate-docs.js`.
+> - Do not use this skill to alter the SSOT schema structure — see `wi-data-governance.md`.
