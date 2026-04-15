@@ -51,6 +51,35 @@
       "timeline": {
         "completed": "2026-03"
       }
+    },
+    {
+      "id": "WI-38",
+      "title": "Command Serialization: Evaluate Cancel & Timeout",
+      "featureGroup": "Console & Status Bar",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-39"
+        ]
+      },
+      "description": "Implement cancelRequest() and evaluate() on DapSessionService plus Cancel button UI in LogViewerComponent per command-serialization.md R-CS2",
+      "details": [
+        "Gate evaluate on capabilities.supportsCancelRequest — disable input permanently if false",
+        "Add public cancelRequest(requestId: number): Promise<void> to DapSessionService",
+        "Add public evaluate(expression, frameId?): Promise<DapResponse> with 30 s Promise.race timeout — rejects with EvaluateCancelledError",
+        "Add EvaluateCancelledError class",
+        "In LogViewerComponent: add evaluateInFlight$ BehaviorSubject and pendingEvaluateSeq storage",
+        "Swap submit button to Cancel button while in-flight; set input readonly",
+        "Optimistically reset UI on cancel click before awaiting DAP cancel response",
+        "Show snackbar on auto-timeout",
+        "[Test] capability gate disables field; cancel resolves; timeout fires at 30 s"
+      ],
+      "timeline": {
+        "created": "2026-04-15",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }

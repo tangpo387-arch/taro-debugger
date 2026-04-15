@@ -72,6 +72,32 @@
       "timeline": {
         "completed": "2026-03"
       }
+    },
+    {
+      "id": "WI-41",
+      "title": "Command Serialization: setBreakpoints Debounce + Per-File Serialization",
+      "featureGroup": "Editor Features",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-13"
+        ]
+      },
+      "description": "Implement per-file debounce and last-write-wins serialization for setBreakpoints per command-serialization.md R-CS4",
+      "details": [
+        "Add debounceTime(150) on per-file breakpoint mutation stream in EditorComponent",
+        "Add setBreakpoints(path, lines) to DapSessionService with BreakpointFileState Map guard",
+        "While in-flight: store latest breakpoint list as pending (queue depth 1)",
+        "On response: dispatch pending immediately if non-empty",
+        "Distinct files proceed in parallel — no cross-file blocking",
+        "[Test] rapid same-file clicks collapse to one request; pending dispatches after in-flight resolves; two files fire independently"
+      ],
+      "timeline": {
+        "created": "2026-04-15",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }

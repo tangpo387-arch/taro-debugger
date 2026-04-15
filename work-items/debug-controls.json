@@ -56,6 +56,54 @@
       "timeline": {
         "completed": "2026-03"
       }
+    },
+    {
+      "id": "WI-39",
+      "title": "Command Serialization: Control Button In-Flight Guard",
+      "featureGroup": "Debug Controls",
+      "metadata": {
+        "status": "pending",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-10"
+        ]
+      },
+      "description": "Implement commandInFlight$ BehaviorSubject in DapSessionService and bind button [disabled] in DebuggerComponent per command-serialization.md R-CS1",
+      "details": [
+        "Add private commandInFlightSubject to DapSessionService",
+        "Wrap continue/next/stepIn/stepOut/pause with in-flight guard — drop second call while in-flight",
+        "Expose public commandInFlight$ Observable",
+        "Bind [disabled] to commandInFlight$ on all control buttons in DebuggerComponent template",
+        "[Test] guard drops second call; commandInFlight$ emits true/false correctly"
+      ],
+      "timeline": {
+        "created": "2026-04-15",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-40",
+      "title": "Command Serialization: disconnect/terminate One-Shot Guard",
+      "featureGroup": "Debug Controls",
+      "metadata": {
+        "status": "pending",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-10"
+        ]
+      },
+      "description": "Add early-exit guard in DapSessionService.disconnect() and terminate() per command-serialization.md R-CS5",
+      "details": [
+        "Add early-return at top of disconnect(): if executionState is terminated/idle/error return Promise.resolve() immediately",
+        "Apply same guard to terminate()",
+        "[Test] double-call to disconnect() sends only one DAP request; second call returns immediately without error; guard covers all terminal states"
+      ],
+      "timeline": {
+        "created": "2026-04-15",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }

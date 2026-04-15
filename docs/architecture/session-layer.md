@@ -5,6 +5,7 @@ audience: [Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-04-06
 related:
   - ../architecture.md
+  - command-serialization.md
   - ../../.agents/skills/state-management/state-management.md
 ---
 
@@ -131,6 +132,9 @@ Transport instances are **lazily created** by Session via `TransportFactoryServi
 | `disconnect()` | `Promise<void>` | Disconnect and clean up resources |
 | `terminate()` | `Promise<void>` | Terminate the debug target (falls back to `disconnect` if `supportsTerminateRequest` is false) |
 | `reset()` | `void` | Force reset Session to `idle` (cleans up all resources) |
+| `commandInFlight$` | `Observable<boolean>` | Emits `true` while any control command is in-flight. See [command-serialization.md §2](command-serialization.md#2-r-cs1-control-button-serialization). |
+| `cancelRequest(requestId)` | `Promise<void>` | Dispatches a DAP `cancel` request. Pre-condition: `capabilities.supportsCancelRequest`. See [command-serialization.md §3](command-serialization.md#3-r-cs2-evaluate-command). |
+| `evaluate(expression, frameId?)` | `Promise<DapResponse>` | Evaluate with built-in 30 s timeout. Rejects with `EvaluateCancelledError` on cancel/timeout. See [command-serialization.md §3](command-serialization.md#3-r-cs2-evaluate-command). |
 
 ## 7. Configuration Flow (DapConfig)
 

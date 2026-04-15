@@ -11,6 +11,7 @@ last_updated: 2026-04-15
 graph LR
     WI_19["WI-19 Debug Console Functionality"]
     WI_20["WI-20 Connection Status Indicator Functionality"]
+    WI_38["WI-38 Command Serialization: Evaluate Cancel & Timeout"]
     WI_04["WI-04 Create `DapTransportService` Abstract Interface"]
     WI_05["WI-05 Implement WebSocket Transport Layer (`WebSocketTransportService`)"]
     WI_06["WI-06 DAP Session Management Service (`DapSessionService`)"]
@@ -22,9 +23,12 @@ graph LR
     WI_31["WI-31 DAP 'terminated' Event _restart Payload Passing"]
     WI_10["WI-10 Debug Control Button Functionality"]
     WI_11["WI-11 DAP Event Handling & State Management"]
+    WI_39["WI-39 Command Serialization: Control Button In-Flight Guard"]
+    WI_40["WI-40 Command Serialization: disconnect/terminate One-Shot Guard"]
     WI_12["WI-12 Monaco Editor Breakpoint Interaction"]
     WI_13["WI-13 Breakpoint DAP Synchronization"]
     WI_14["WI-14 Current Line Highlight"]
+    WI_41["WI-41 Command Serialization: setBreakpoints Debounce + Per-File Serialization"]
     WI_23["WI-23 Electron Main Process Architecture"]
     WI_26["WI-26 Setup Page Separation"]
     WI_24["WI-24 Electron IPC Transport Layer (`IpcTransportService`)"]
@@ -47,8 +51,10 @@ graph LR
     WI_18_1["WI-18.1 Variables Data State Management"]
     WI_18_2["WI-18.2 Variables Tree UI Component"]
     WI_30["WI-30 Local Variable Modification"]
+    WI_42["WI-42 Command Serialization: Frame Switch Cancel-and-Replace"]
     WI_11 --> WI_19
     WI_05 --> WI_20
+    WI_39 --> WI_38
     WI_04 --> WI_05
     WI_05 --> WI_06
     WI_06 --> WI_07
@@ -60,9 +66,12 @@ graph LR
     WI_06 --> WI_31
     WI_07 --> WI_10
     WI_07 --> WI_11
+    WI_10 --> WI_39
+    WI_10 --> WI_40
     WI_06 --> WI_13
     WI_12 --> WI_13
     WI_11 --> WI_14
+    WI_13 --> WI_41
     WI_04 --> WI_24
     WI_23 --> WI_24
     WI_26 --> WI_24
@@ -88,9 +97,11 @@ graph LR
     WI_18_1 --> WI_18_2
     WI_18_1 --> WI_30
     WI_18_2 --> WI_30
+    WI_17 --> WI_42
 
-    style WI_19 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_20 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_19 fill:#2dd4bf,stroke:#000,stroke-width:2.5px
+    style WI_20 fill:#2dd4bf,stroke:#000,stroke-width:2.5px
+    style WI_38 fill:#2dd4bf,stroke:#0d9488
     style WI_04 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_05 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_06 fill:#4ade80,stroke:#000,stroke-width:2.5px
@@ -100,11 +111,14 @@ graph LR
     style WI_21 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_22 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_31 fill:#4ade80,stroke:#22c55e
-    style WI_10 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_11 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_12 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_13 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_14 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_10 fill:#f97316,stroke:#000,stroke-width:2.5px
+    style WI_11 fill:#f97316,stroke:#000,stroke-width:2.5px
+    style WI_39 fill:#f97316,stroke:#ea580c
+    style WI_40 fill:#f97316,stroke:#ea580c
+    style WI_12 fill:#a78bfa,stroke:#000,stroke-width:2.5px
+    style WI_13 fill:#a78bfa,stroke:#000,stroke-width:2.5px
+    style WI_14 fill:#a78bfa,stroke:#000,stroke-width:2.5px
+    style WI_41 fill:#a78bfa,stroke:#7c3aed
     style WI_23 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_26 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_24 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
@@ -127,6 +141,7 @@ graph LR
     style WI_18_1 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_18_2 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_30 fill:#f472b6,stroke:#db2777
+    style WI_42 fill:#f472b6,stroke:#db2777
 ```
 
 ## Feature Groups
@@ -135,11 +150,11 @@ graph LR
 | :--- | :--- | :--- |
 | Setup View | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%234ade80'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#4ade80"/> `#4ade80` | 💎 Stabilized |
 | DAP Transport Layer | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%234ade80'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#4ade80"/> `#4ade80` | 🔵 Active |
-| Debug Controls | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f97316'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f97316"/> `#f97316` | 💎 Stabilized |
-| Editor Features | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23a78bfa'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#a78bfa"/> `#a78bfa` | 💎 Stabilized |
+| Debug Controls | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f97316'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f97316"/> `#f97316` | 🔵 Active |
+| Editor Features | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23a78bfa'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#a78bfa"/> `#a78bfa` | 🔵 Active |
 | File Explorer | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23facc15'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#facc15"/> `#facc15` | 💎 Stabilized |
 | Variables & Call Stack | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f472b6'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f472b6"/> `#f472b6` | 🔵 Active |
-| Console & Status Bar | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%232dd4bf'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#2dd4bf"/> `#2dd4bf` | 💎 Stabilized |
+| Console & Status Bar | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%232dd4bf'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#2dd4bf"/> `#2dd4bf` | 🔵 Active |
 | Electron Desktop Mode | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%2394a3b8'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#94a3b8"/> `#94a3b8` | 💎 Stabilized |
 | Low-Level Inspection | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%236366f1'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#6366f1"/> `#6366f1` | 💎 Stabilized |
 | General | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f1f5f9'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f1f5f9"/> `#f1f5f9` | 💎 Stabilized |

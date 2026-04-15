@@ -101,6 +101,30 @@
         "created": "2026-04-11",
         "created_by": "Antigravity-Agent"
       }
+    },
+    {
+      "id": "WI-42",
+      "title": "Command Serialization: Frame Switch Cancel-and-Replace",
+      "featureGroup": "Variables & Call Stack",
+      "metadata": {
+        "status": "pending",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-17"
+        ]
+      },
+      "description": "Implement switchMap-based cancel-and-replace for call stack frame selection in DebuggerComponent per command-serialization.md R-CS3",
+      "details": [
+        "Refactor frame-click handler in DebuggerComponent (or call stack component) to use switchMap",
+        "Stale scopes/variables results from prior frame are silently discarded",
+        "No Session Layer changes required",
+        "[Test] rapid frame clicks result in only the last frame's scopes being rendered"
+      ],
+      "timeline": {
+        "created": "2026-04-15",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }
