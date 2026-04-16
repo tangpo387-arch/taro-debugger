@@ -62,7 +62,7 @@
       "title": "Command Serialization: Control Button In-Flight Guard",
       "featureGroup": "Debug Controls",
       "metadata": {
-        "status": "pending",
+        "status": "done",
         "size": "S",
         "milestone": "v1.0",
         "dependencies": [
@@ -79,7 +79,8 @@
       ],
       "timeline": {
         "created": "2026-04-15",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-16"
       }
     },
     {

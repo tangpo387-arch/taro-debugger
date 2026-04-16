@@ -24,3 +24,6 @@ Fully isolated tests for `DebuggerComponent`. Focuses on session lifecycle hooks
 
 * **Control button interaction**
   * Simulate clicking each control button, verify the correct `DapSessionService` method is called (e.g., `continue()`, `pause()`, `next()`, etc.).
+
+* **Command Serialization (R-CS1)**
+  * Verify that all control buttons are actively disabled if the `commandInFlight$` signal is true for the session, regardless of the `executionState`.

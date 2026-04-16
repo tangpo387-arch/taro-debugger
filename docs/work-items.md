@@ -43,19 +43,6 @@ audience: [Lead_Engineer, Product_Architect]
 
 ## Debug Controls
 
-### WI-39: Command Serialization: Control Button In-Flight Guard
-
-- **Status**: ⏳ Pending
-- **Size**: S
-- **Description**: Implement commandInFlight$ BehaviorSubject in DapSessionService and bind button [disabled] in DebuggerComponent per command-serialization.md R-CS1
-- **Details**:
-  - Add private commandInFlightSubject to DapSessionService
-  - Wrap continue/next/stepIn/stepOut/pause with in-flight guard — drop second call while in-flight
-  - Expose public commandInFlight$ Observable
-  - Bind [disabled] to commandInFlight$ on all control buttons in DebuggerComponent template
-  - [Test] guard drops second call; commandInFlight$ emits true/false correctly
-- **Dependencies**: WI-10
-
 ### WI-40: Command Serialization: disconnect/terminate One-Shot Guard
 
 - **Status**: ⏳ Pending

@@ -114,7 +114,7 @@ graph LR
     style WI_31 fill:#4ade80,stroke:#22c55e
     style WI_10 fill:#f97316,stroke:#000,stroke-width:2.5px
     style WI_11 fill:#f97316,stroke:#000,stroke-width:2.5px
-    style WI_39 fill:#f97316,stroke:#ea580c
+    style WI_39 fill:#f97316,stroke:#000,stroke-width:2.5px
     style WI_40 fill:#f97316,stroke:#ea580c
     style WI_43 fill:#f97316,stroke:#000,stroke-width:2.5px
     style WI_12 fill:#a78bfa,stroke:#000,stroke-width:2.5px

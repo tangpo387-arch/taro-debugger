@@ -42,6 +42,9 @@ export class DebugControlGroupComponent {
   public readonly isStarting$ = this.executionState$.pipe(map(state => state === 'starting' || state === 'idle'));
   public readonly isError$ = this.executionState$.pipe(map(state => state === 'error'));
 
+  /** Emits true when a control command is currently being processed by the session */
+  public readonly commandInFlight$ = this.dapSession.commandInFlight$;
+
   // ── Execution Handlers ───────────────────────────────────────────────────
 
   public onResume(): void {

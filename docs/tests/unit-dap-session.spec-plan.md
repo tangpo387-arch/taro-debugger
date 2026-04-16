@@ -24,3 +24,7 @@ Fully isolated tests for `DapSessionService`. Focuses on DAP session lifecycle, 
 
 * **Timeout mechanism**
   * Simulate server non-response, verify whether `sendRequest` triggers a timeout error after the configured time.
+
+* **Command Serialization (R-CS1)**
+  * Verify that control command method execution sets the in-flight signal to true and resets it upon response.
+  * Verify that subsequent control command calls are silently dropped and returned early if an existing continuous command is already in-flight.

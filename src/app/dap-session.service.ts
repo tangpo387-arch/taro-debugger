@@ -56,6 +56,11 @@ export class DapSessionService {
   /** Current debug execution state */
   private executionStateSubject = new BehaviorSubject<ExecutionState>('idle');
 
+  /** Emits true while any execution-control command is in-flight */
+  private commandInFlightSubject = new BehaviorSubject<boolean>(false);
+
+  public readonly commandInFlight$ = this.commandInFlightSubject.asObservable();
+
   get executionState$(): Observable<ExecutionState> {
     return this.executionStateSubject.asObservable();
   }
@@ -218,6 +223,7 @@ export class DapSessionService {
     this.transport = undefined;
     this.connectionStatusSubject.next(false);
     this.executionStateSubject.next('idle');
+    this.commandInFlightSubject.next(false);
   }
 
 
@@ -244,45 +250,93 @@ export class DapSessionService {
    * Continue execution
    */
   async continue(): Promise<DapResponse> {
-    // Note: threadId is currently hardcoded to 1, let DAP server decide (usually the stopped thread)
-    return this.sendRequest('continue', { threadId: 1 });
+    if (this.commandInFlightSubject.value) {
+      return Promise.resolve({ seq: 0, type: 'response', command: 'continue', success: true, request_seq: 0 });
+    }
+    this.commandInFlightSubject.next(true);
+    try {
+      // Note: threadId is currently hardcoded to 1, let DAP server decide (usually the stopped thread)
+      return await this.sendRequest('continue', { threadId: 1 });
+    } finally {
+      this.commandInFlightSubject.next(false);
+    }
   }
 
   /**
    * Step Over (Next)
    */
   async next(): Promise<DapResponse> {
-    return this.sendRequest('next', { threadId: 1 });
+    if (this.commandInFlightSubject.value) {
+      return Promise.resolve({ seq: 0, type: 'response', command: 'next', success: true, request_seq: 0 });
+    }
+    this.commandInFlightSubject.next(true);
+    try {
+      return await this.sendRequest('next', { threadId: 1 });
+    } finally {
+      this.commandInFlightSubject.next(false);
+    }
   }
 
   /**
    * Step Into
    */
   async stepIn(): Promise<DapResponse> {
-    return this.sendRequest('stepIn', { threadId: 1 });
+    if (this.commandInFlightSubject.value) {
+      return Promise.resolve({ seq: 0, type: 'response', command: 'stepIn', success: true, request_seq: 0 });
+    }
+    this.commandInFlightSubject.next(true);
+    try {
+      return await this.sendRequest('stepIn', { threadId: 1 });
+    } finally {
+      this.commandInFlightSubject.next(false);
+    }
   }
 
   /**
    * Step Out
    */
   async stepOut(): Promise<DapResponse> {
-    return this.sendRequest('stepOut', { threadId: 1 });
+    if (this.commandInFlightSubject.value) {
+      return Promise.resolve({ seq: 0, type: 'response', command: 'stepOut', success: true, request_seq: 0 });
+    }
+    this.commandInFlightSubject.next(true);
+    try {
+      return await this.sendRequest('stepOut', { threadId: 1 });
+    } finally {
+      this.commandInFlightSubject.next(false);
+    }
   }
 
   /**
    * Step Over at Instruction Level (Nexti)
    */
   async nextInstruction(): Promise<DapResponse> {
-    const args: StepArguments = { threadId: 1, granularity: 'instruction' };
-    return this.sendRequest('next', args);
+    if (this.commandInFlightSubject.value) {
+      return Promise.resolve({ seq: 0, type: 'response', command: 'next', success: true, request_seq: 0 });
+    }
+    this.commandInFlightSubject.next(true);
+    try {
+      const args: StepArguments = { threadId: 1, granularity: 'instruction' };
+      return await this.sendRequest('next', args);
+    } finally {
+      this.commandInFlightSubject.next(false);
+    }
   }
 
   /**
    * Step Into at Instruction Level (Stepi)
    */
   async stepInInstruction(): Promise<DapResponse> {
-    const args: StepArguments = { threadId: 1, granularity: 'instruction' };
-    return this.sendRequest('stepIn', args);
+    if (this.commandInFlightSubject.value) {
+      return Promise.resolve({ seq: 0, type: 'response', command: 'stepIn', success: true, request_seq: 0 });
+    }
+    this.commandInFlightSubject.next(true);
+    try {
+      const args: StepArguments = { threadId: 1, granularity: 'instruction' };
+      return await this.sendRequest('stepIn', args);
+    } finally {
+      this.commandInFlightSubject.next(false);
+    }
   }
 
   /**
@@ -313,7 +367,15 @@ export class DapSessionService {
    * Pause execution
    */
   async pause(): Promise<DapResponse> {
-    return this.sendRequest('pause', { threadId: 1 });
+    if (this.commandInFlightSubject.value) {
+      return Promise.resolve({ seq: 0, type: 'response', command: 'pause', success: true, request_seq: 0 });
+    }
+    this.commandInFlightSubject.next(true);
+    try {
+      return await this.sendRequest('pause', { threadId: 1 });
+    } finally {
+      this.commandInFlightSubject.next(false);
+    }
   }
 
   /**
@@ -482,6 +544,7 @@ export class DapSessionService {
       body: { reason: 'error', message: errMsg }
     });
     this.executionStateSubject.next('error');
+    this.commandInFlightSubject.next(false);
     for (const [seq, handler] of this.pendingRequests.entries()) {
       handler.reject(err);
       this.pendingRequests.delete(seq);
@@ -498,6 +561,7 @@ export class DapSessionService {
         body: { reason: 'disconnected', message: 'Connection to DAP Server was unexpectedly closed' }
       });
       this.executionStateSubject.next('error');
+      this.commandInFlightSubject.next(false);
       for (const [seq, handler] of this.pendingRequests.entries()) {
         handler.reject(new Error('Connection abruptly closed'));
         this.pendingRequests.delete(seq);
@@ -518,15 +582,18 @@ export class DapSessionService {
 
       case 'stopped':
         this.executionStateSubject.next('stopped');
+        this.commandInFlightSubject.next(false);
         break;
 
       case 'continued':
         this.executionStateSubject.next('running');
+        this.commandInFlightSubject.next(false);
         break;
 
       case 'terminated':
       case 'exited':
         this.executionStateSubject.next('terminated');
+        this.commandInFlightSubject.next(false);
         break;
     }
 

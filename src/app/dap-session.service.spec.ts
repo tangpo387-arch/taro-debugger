@@ -183,4 +183,48 @@ describe('DapSessionService', () => {
       expect((service as any).executionStateSubject.value).toBe('error');
     });
   });
+
+  describe('Command Serialization (R-CS1)', () => {
+    it('should set commandInFlight$ to true during control command execution', async () => {
+      (service as any).transport = mockTransport;
+      const promise = service.continue();
+      
+      expect((service as any).commandInFlightSubject.value).toBe(true);
+      
+      (service as any).handleIncomingMessage({
+        type: 'response',
+        request_seq: 1,
+        success: true,
+        command: 'continue'
+      });
+      
+      await promise;
+      expect((service as any).commandInFlightSubject.value).toBe(false);
+    });
+
+    it('should drop second control command call while one is in-flight', async () => {
+      (service as any).transport = mockTransport;
+      
+      // first call
+      const promise1 = service.continue();
+      expect(mockTransport.sendRequest).toHaveBeenCalledTimes(1);
+      
+      // second call while in-flight
+      const promise2 = service.next();
+      expect(mockTransport.sendRequest).toHaveBeenCalledTimes(1); // Still 1
+      
+      const res2 = await promise2;
+      expect(res2.success).toBe(true); // Silently successful but did nothing
+      expect(res2.request_seq).toBe(0); // Dummy response
+      
+      (service as any).handleIncomingMessage({
+        type: 'response',
+        request_seq: 1,
+        success: true,
+        command: 'continue'
+      });
+      
+      await promise1;
+    });
+  });
 });

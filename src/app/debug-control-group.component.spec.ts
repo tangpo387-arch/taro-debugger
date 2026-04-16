@@ -12,16 +12,19 @@ describe('DebugControlGroupComponent', () => {
   let fixture: ComponentFixture<DebugControlGroupComponent>;
   let mockDapSession: any;
   let executionState$: BehaviorSubject<string>;
+  let commandInFlight$: BehaviorSubject<boolean>;
 
   beforeEach(async () => {
     executionState$ = new BehaviorSubject<string>('idle');
+    commandInFlight$ = new BehaviorSubject<boolean>(false);
     mockDapSession = {
       executionState$: executionState$.asObservable(),
       continue: vi.fn().mockResolvedValue({}),
       pause: vi.fn().mockResolvedValue({}),
       next: vi.fn().mockResolvedValue({}),
       stepIn: vi.fn().mockResolvedValue({}),
-      stepOut: vi.fn().mockResolvedValue({})
+      stepOut: vi.fn().mockResolvedValue({}),
+      commandInFlight$: commandInFlight$.asObservable()
     };
 
     await TestBed.configureTestingModule({
@@ -88,5 +91,29 @@ describe('DebugControlGroupComponent', () => {
     const buttons = fixture.debugElement.queryAll(By.css('button.instruction-step'));
     expect(buttons[0].nativeElement.classList.contains('low-weight')).toBe(true);
     expect(buttons[1].nativeElement.classList.contains('low-weight')).toBe(true);
+  });
+
+  it('should disable all control buttons when commandInFlight$ is true', () => {
+    executionState$.next('stopped');
+    fixture.detectChanges();
+
+    // Verify initially enabled
+    const stepOverButton = fixture.debugElement.query(By.css('button[title^="Step Over"]'));
+    expect(stepOverButton.nativeElement.disabled).toBe(false);
+
+    // Set in-flight
+    commandInFlight$.next(true);
+    fixture.detectChanges();
+
+    expect(stepOverButton.nativeElement.disabled).toBe(true);
+    
+    // Check stop button too
+    const stopButton = fixture.debugElement.query(By.css('button.warn-btn'));
+    expect(stopButton.nativeElement.disabled).toBe(true);
+
+    // Reset in-flight
+    commandInFlight$.next(false);
+    fixture.detectChanges();
+    expect(stepOverButton.nativeElement.disabled).toBe(false);
   });
 });
