@@ -10,21 +10,18 @@ related:
 
 # Project Context & Terminology
 
-<project_overview>
+> [!IMPORTANT]
+> **Exclusion Boundaries:** This document is purely an index and terminology outline. Do NOT include feature specifications, architecture diagrams, or implementation rules here. Route specific logic to dedicated docs or skills.
 
 ## 1. Project Overview
 
-* **Goal**: Provide a modern, cross-platform web frontend debugging interface for GDB/LLDB.
+* **Goal**: Provide a cross-platform web frontend debugging interface for GDB/LLDB.
 * **Tech Stack**:
   * **Frontend**: Angular 21+, Standalone Components.
   * **Styling**: SCSS & Angular Material (TailwindCSS excluded).
   * **Editor**: Monaco Editor (data transmitted via WebSocket).
   * **Protocol**: Debug Adapter Protocol (DAP).
 * **Language Support Scope**: Currently focused on **C/C++** language debugging. Therefore, when handling paths, symbols, and pointers, consider Unix/Windows differences and C-style memory layout.
-
-</project_overview>
-
-<terminology>
 
 ## 2. Terminology
 
@@ -35,27 +32,19 @@ These two terms have project-specific meanings that differ from their general DA
 | **Variables Reference** | A numeric ID used to lazy-load the member contents of complex objects or Scopes. |
 | **Source Reference** | An ID used when the source code is not from a physical path but is virtual content provided by the DA. |
 
-</terminology>
-
-<behavioral_constraints>
-
 ## 3. Behavioral Constraints
 
 * **Path handling**: C/C++ source code paths may use `/` (Unix) or `\` (Windows). Ensure `DapFileTreeService` and `EditorComponent` can parse both correctly.
 
-</behavioral_constraints>
+## 4. Agent Navigation
 
-<agent_navigation>
-
-## 4. Quick Navigation for Agents
-
-Use this decision tree to quickly find the right document based on your current task:
+Locate documents based on task:
 
 | Task Type | Layer | Primary Agent | Start Here |
 | :--- | :--- | :--- | :--- |
-| Define or update requirements | — | `Product_Architect` | [system-specification.md](../docs/system-specification.md) + [architecture.md](../docs/architecture.md) (Index) |
+| Define or update requirements | — | `Product_Architect` | **Skill: `system-architecture`** |
 | **Write any spec (WI, feature, or data schema)** | — | `Product_Architect` | **MUST read [data-management-spec.md](../docs/data/data-management-spec.md) first** — defines WI schema, status lifecycle, and script behavior |
-| Add a new UI feature | **UI** | `Lead_Engineer` | [system-specification.md §3](../docs/system-specification.md#3-view-navigation--layout-specification) for layout spec |
+| Add a new UI feature | **UI** | `Lead_Engineer` | **Skill: `system-architecture`** |
 | Use Angular Framework APIs (mat-tree) | **UI** | `Lead_Engineer` | **Skill: `advanced-angular`** |
 | Modify visual style or layout | **UI** | `Lead_Engineer` | **Skill: `visual-design`** |
 | Modify component local state | **UI** | `Lead_Engineer` | **Skill: `state-management`** — load before touching `@Input`, `BehaviorSubject`, or `async` pipe patterns |
@@ -74,21 +63,13 @@ Use this decision tree to quickly find the right document based on your current 
 | Review any `*.spec.ts` file | — | `Quality_Control_Reviewer` | **Skill: `test-case-writing`** |
 | Review CSS, layout, typography | **UI** | `Quality_Control_Reviewer` | **Skill: `visual-design`** |
 
-</agent_navigation>
-
-<conventions>
-
 ## 5. File Naming Conventions
 
 All filenames use `kebab-case`. For the complete suffix patterns (component, service, spec, types, etc.) see [code-style-guide.md §1](rules/code-style-guide.md#1-naming-conventions).
 
-</conventions>
-
-<cli_commands>
-
 ## 6. Build, Dev & Test Commands
 
-To maintain consistency across environments, use these standard CLI commands:
+Standard CLI commands:
 
 | Operation | Command | Description |
 | :--- | :--- | :--- |
@@ -102,23 +83,9 @@ To maintain consistency across environments, use these standard CLI commands:
 > All testing commands use **Vitest** via the Angular CLI. The `--` separator is required to pass arguments through npm to the underlying test runner.
 > For the complete test-writing workflow, mock patterns, and structural rules, you MUST load the **Skill: `test-case-writing`** before implementing any test.
 
-</cli_commands>
+## 7. Agent Context Sources & Knowledge Acquisition
 
-<context_sources>
+To eliminate the "Cold Start Reading Burden", mandatory pre-reading of architecture documents is deprecated. Knowledge is acquired dynamically through the **Skill System**.
 
-## 7. Agent Context Sources
-
-This table consolidates the authoritative reference documents each role relies on. All paths are relative to the project root.
-
-**Role-Required References** (defines the baseline knowledge boundary each role must possess before any task — this is not an automatic injection mechanism):
-
-| Document | Product_Architect | Lead_Engineer | Quality_Control_Reviewer |
-| :--- | :---: | :---: | :---: |
-| `docs/README.md` | ✅ | ✅ | ✅ |
-| `docs/system-specification.md` | ✅ | ✅ | ✅ |
-| `docs/architecture.md` (Index) | ✅ | — | — |
-| `docs/file-map.md` | ✅ | ✅ | ✅ |
-| `.agents/rules/code-style-guide.md` | — | ✅ | ✅ |
-| `docs/data/data-management-spec.md` | ✅ | — | — |
-
-</context_sources>
+* **Architectural Guidance**: Do **NOT** pre-read `docs/architecture.md` or `docs/system-specification.md`. For architectural, layout, or component boundary questions, load **Skill: `system-architecture`**.
+* **Locating Files**: Use `docs/file-map.md` as an index *only* to locate specific features or source files.
