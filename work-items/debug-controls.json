@@ -104,6 +104,32 @@
         "created": "2026-04-15",
         "created_by": "Antigravity-Agent"
       }
+    },
+    {
+      "id": "WI-43",
+      "title": "VS Code Compatible Keyboard Shortcuts",
+      "featureGroup": "Debug Controls",
+      "metadata": {
+        "status": "done",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Provide F5/F10/F11/etc. global shortcuts for debug controls.",
+      "details": [
+        "Create KeyboardShortcutService using ngZone.runOutsideAngular for global keydown listener",
+        "Implement ActionID enum for debug commands",
+        "Map VS Code keys (F5/F10/F11/F9) to ActionIDs",
+        "Apply input-guard with Monaco whitelist (ignore if tagName is INPUT/TEXTAREA unless class is 'inputarea')",
+        "Integrate with DebuggerComponent handlers using takeUntilDestroyed() cleanup",
+        "EditorComponent.toggleBreakpointAtCurrentPosition() for F9",
+        "[Test] F5 continues; F10 steps; F9 toggles; Typing 'a' in Monaco doesn't trigger change detection; F10 in Monaco works; F10 in Eval-input is ignored"
+      ],
+      "timeline": {
+        "created": "2026-04-16",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-16"
+      }
     }
   ]
 }

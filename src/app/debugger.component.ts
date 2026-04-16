@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, ViewChild, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription, Observable, firstValueFrom } from 'rxjs';
@@ -30,6 +31,7 @@ import { DebugControlGroupComponent } from './debug-control-group.component';
 import { CallStackComponent } from './call-stack.component';
 import { AssemblyViewComponent } from './assembly-view.component';
 import { DapAssemblyService } from './dap-assembly.service';
+import { KeyboardShortcutService, ActionID } from './keyboard-shortcut.service';
 
 @Component({
   selector: 'app-debugger',
@@ -74,6 +76,8 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly shortcutService = inject(KeyboardShortcutService);
+  private readonly destroyRef = inject(DestroyRef);
 
   /** Access the editor component for programmatic breakpoint updates */
   @ViewChild(EditorComponent) private editorComponent?: EditorComponent;
@@ -208,6 +212,9 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     });
 
     await this.startSession();
+
+    // Initialize global keyboard shortcuts (F5-F11)
+    this.initShortcuts();
 
     // Load persisted sizes
     this.loadPersistedSizes();
@@ -753,5 +760,31 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     } catch (e: any) {
       // Handled globally by synthetic DAP events
     }
+  }
+
+  /**
+   * Links the global keyboard shortcut stream to component-level action handlers.
+   * Leverages takeUntilDestroyed() for memory safety.
+   */
+  private initShortcuts(): void {
+    this.shortcutService.onAction$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((actionId) => {
+        // Log the shortcut action for debug visibility in Console
+        this.logService.consoleLog(`Action triggered: ${actionId}`, 'info', 'system');
+        
+        switch (actionId) {
+          case ActionID.DEBUG_CONTINUE: this.onResume(); break;
+          case ActionID.DEBUG_PAUSE: this.onPause(); break;
+          case ActionID.DEBUG_STEP_OVER: this.onStepOver(); break;
+          case ActionID.DEBUG_STEP_INTO: this.onStepInto(); break;
+          case ActionID.DEBUG_STEP_OUT: this.onStepOut(); break;
+          case ActionID.DEBUG_STOP: this.onStop(); break;
+          case ActionID.DEBUG_RESTART: this.onRestart(); break;
+          case ActionID.EDITOR_TOGGLE_BREAKPOINT:
+            this.editorComponent?.toggleBreakpointAtCurrentPosition();
+            break;
+        }
+      });
   }
 }

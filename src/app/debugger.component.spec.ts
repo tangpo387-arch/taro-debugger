@@ -7,9 +7,10 @@ import { DapLogService } from './dap-log.service';
 import { DapAssemblyService } from './dap-assembly.service';
 import { NGX_MONACO_EDITOR_CONFIG } from 'ngx-monaco-editor-v2';
 import { Router } from '@angular/router';
-import { BehaviorSubject, EMPTY, of } from 'rxjs';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { ChangeDetectorRef, Injector } from '@angular/core';
+import { ChangeDetectorRef, Injector, DestroyRef } from '@angular/core';
+import { KeyboardShortcutService, ActionID } from './keyboard-shortcut.service';
+import { Subject, BehaviorSubject, EMPTY, of } from 'rxjs';
 
 /**
  * Unit tests for DebuggerComponent.onStepInstructionTab().
@@ -110,5 +111,98 @@ describe('DebuggerComponent — onStepInstructionTab()', () => {
 
     expect(component.activeTabIndex).toBe(0);
     expect(mockDapSession.nextInstruction).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Unit tests for DebuggerComponent keyboard shortcut integration.
+ */
+describe('DebuggerComponent — Keyboard Shortcut Integration', () => {
+  let component: DebuggerComponent;
+  let mockShortcutService: { onAction$: Subject<ActionID> };
+  let mockDapSession: any;
+
+  beforeEach(() => {
+    mockShortcutService = {
+      onAction$: new Subject<ActionID>()
+    };
+
+    mockDapSession = {
+      connectionStatus$: EMPTY,
+      executionState$: new BehaviorSubject<string>('stopped').asObservable(),
+      onEvent: () => EMPTY,
+      onTraffic$: EMPTY,
+      startSession: vi.fn().mockResolvedValue({}),
+      disconnect: vi.fn(),
+      continue: vi.fn(),
+      next: vi.fn()
+    };
+
+    const mockCdr = { detectChanges: vi.fn(), markForCheck: vi.fn() };
+    const mockLogService = { consoleLog: vi.fn() };
+
+    TestBed.configureTestingModule({
+      providers: [
+        DebuggerComponent,
+        { provide: KeyboardShortcutService, useValue: mockShortcutService },
+        { provide: DapSessionService, useValue: mockDapSession },
+        { provide: DapLogService, useValue: mockLogService },
+        { provide: ChangeDetectorRef, useValue: mockCdr },
+        { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
+        { provide: DapAssemblyService, useValue: { clear: vi.fn() } },
+        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
+        { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
+      ]
+    });
+
+    component = TestBed.inject(DebuggerComponent);
+    // Mimic ngOnInit to trigger initShortcuts()
+    (component as any).initShortcuts();
+  });
+
+  it('should call onResume when DEBUG_CONTINUE action is received', () => {
+    // Arrange
+    const spy = vi.spyOn(component, 'onResume');
+
+    // Act
+    mockShortcutService.onAction$.next(ActionID.DEBUG_CONTINUE);
+
+    // Assert
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('should call onStepOver when DEBUG_STEP_OVER action is received', () => {
+    // Arrange
+    const spy = vi.spyOn(component, 'onStepOver');
+
+    // Act
+    mockShortcutService.onAction$.next(ActionID.DEBUG_STEP_OVER);
+
+    // Assert
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('should call onRestart when DEBUG_RESTART action is received', () => {
+    // Arrange
+    const spy = vi.spyOn(component, 'onRestart');
+
+    // Act
+    mockShortcutService.onAction$.next(ActionID.DEBUG_RESTART);
+
+    // Assert
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('should trigger editor breakpoint toggle when EDITOR_TOGGLE_BREAKPOINT action is received', () => {
+    // Arrange
+    const mockEditor = { toggleBreakpointAtCurrentPosition: vi.fn() };
+    (component as any).editorComponent = mockEditor;
+
+    // Act
+    mockShortcutService.onAction$.next(ActionID.EDITOR_TOGGLE_BREAKPOINT);
+
+    // Assert
+    expect(mockEditor.toggleBreakpointAtCurrentPosition).toHaveBeenCalled();
   });
 });

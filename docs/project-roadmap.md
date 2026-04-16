@@ -2,7 +2,7 @@
 title: Project Roadmap & Dependency Map
 scope: milestones, dependencies, architecture-tracking
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-15
+last_updated: 2026-04-16
 ---
 
 # Project Roadmap & Dependency Map
@@ -25,6 +25,7 @@ graph LR
     WI_11["WI-11 DAP Event Handling & State Management"]
     WI_39["WI-39 Command Serialization: Control Button In-Flight Guard"]
     WI_40["WI-40 Command Serialization: disconnect/terminate One-Shot Guard"]
+    WI_43["WI-43 VS Code Compatible Keyboard Shortcuts"]
     WI_12["WI-12 Monaco Editor Breakpoint Interaction"]
     WI_13["WI-13 Breakpoint DAP Synchronization"]
     WI_14["WI-14 Current Line Highlight"]
@@ -115,6 +116,7 @@ graph LR
     style WI_11 fill:#f97316,stroke:#000,stroke-width:2.5px
     style WI_39 fill:#f97316,stroke:#ea580c
     style WI_40 fill:#f97316,stroke:#ea580c
+    style WI_43 fill:#f97316,stroke:#000,stroke-width:2.5px
     style WI_12 fill:#a78bfa,stroke:#000,stroke-width:2.5px
     style WI_13 fill:#a78bfa,stroke:#000,stroke-width:2.5px
     style WI_14 fill:#a78bfa,stroke:#000,stroke-width:2.5px

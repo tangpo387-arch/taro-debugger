@@ -231,7 +231,19 @@ export class EditorComponent implements OnChanges, OnDestroy {
     }
   }
 
-  private toggleBreakpoint(lineNumber: number): void {
+  /**
+   * Toggles a breakpoint at the current Monaco editor cursor position.
+   * Required for the F9 keyboard shortcut.
+   */
+  public toggleBreakpointAtCurrentPosition(): void {
+    if (!this.editorInstance) return;
+    const position = this.editorInstance.getPosition();
+    if (position) {
+      this.toggleBreakpoint(position.lineNumber);
+    }
+  }
+
+  public toggleBreakpoint(lineNumber: number): void {
     if (!this.filename) return;
 
     let fileBps = this.breakpoints.get(this.filename);
