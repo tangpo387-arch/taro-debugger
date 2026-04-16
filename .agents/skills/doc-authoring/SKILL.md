@@ -88,10 +88,19 @@ Prefer human-readable identifiers over low-level IDs:
 
 ### 4.3 Audience Declaration
 
-Declare the target audience in frontmatter (`audience:`). Calibrate technical density accordingly:
+Every document must explicitly and correctly declare its target audience in the YAML frontmatter (`audience:`). You must select from the following defined audience categories and calibrate the technical density accordingly:
 
-- **Beginner**: define all acronyms on first use; link to external references.
-- **Senior Engineer / Architect**: omit basic definitions; focus on constraints and trade-offs.
+- **Agent Role Play** (e.g., `[Product_Architect, Lead_Engineer, Quality_Control_Reviewer]`): For AI models performing context gathering and task execution. Use strict constraints, explicit inclusion/exclusion boundaries, and precise machine-readable formats.
+- **Human Engineer** (Senior Engineer / Architect): For experienced project developers. Omit basic definitions; focus on architectural constraints, API contracts, system trade-offs, and state management flow. Must prioritize smooth human readability, logical narrative flow, and clean, aesthetic Markdown typography (e.g., well-formatted tables, bold emphasis, and structured spacing).
+- **Beginner** (New contributors / End users): For onboarding materials or general usage guides. Define all acronyms on first use; provide step-by-step instructions; link to fundamental external references. Must feature highly accessible wording, engaging reading flow, and visually appealing layout (e.g., clear paragraph breaks, callout alerts, and structured lists).
+
+#### 4.3.1 Directory and File Mapping Rules
+
+To ensure content is properly directed, enforce the following assignment rules:
+
+- **`docs/` directory files**: MUST include **`Human Engineer`**. Both human engineers and agents often read these, but human comprehensibility is strictly required.
+- **`.agents/` directory files**: MUST exclusively target **`Agent Role Play`** (or specify individual agent personas). Do not include human or beginner audiences here.
+- **`README.md` (Root)**: MUST explicitly target **`Beginner`**, as it serves as the project's foundational onboarding entry point.
 
 ### 4.4 Conciseness Rules
 
@@ -169,7 +178,7 @@ Before finalizing any document, run this self-check:
 
 - [ ] Does each section stand alone (§3.1)?
 - [ ] Are all required sections present for this document type (§3.3)?
-- [ ] Does the content match the declared `audience:` density (§4.3)?
+- [ ] Is a defined `audience:` correctly declared in the frontmatter, and does the content match its technical density (§4.3)?
 - [ ] Is every diagram accompanied by a text description (§6.1)?
 - [ ] Are all exclusion boundaries stated (§5.3)?
 - [ ] Have subjective adjectives been replaced with measurable criteria (§4.1)?

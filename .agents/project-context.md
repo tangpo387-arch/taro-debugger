@@ -16,12 +16,18 @@ related:
 ## 1. Project Overview
 
 * **Goal**: Provide a cross-platform web frontend debugging interface for GDB/LLDB.
-* **Tech Stack**:
-  * **Frontend**: Angular 21+, Standalone Components.
-  * **Styling**: SCSS & Angular Material (TailwindCSS excluded).
-  * **Editor**: Monaco Editor (data transmitted via WebSocket).
-  * **Protocol**: Debug Adapter Protocol (DAP).
 * **Language Support Scope**: Currently focused on **C/C++** language debugging. Therefore, when handling paths, symbols, and pointers, consider Unix/Windows differences and C-style memory layout.
+
+### Tech Stack
+
+```yaml
+tech_stack:
+  angular: ">=21"              # Constraint: Standalone Components only
+  styling: "Angular Material"  # Constraint: TailwindCSS strictly excluded
+  monaco_editor: "ngx-monaco-editor-v2"
+  desktop_app: "Electron"      # contextBridge / IPC
+  protocol: "DAP"              # transmitted via WebSocket/IPC
+```
 
 ## 2. Terminology
 

@@ -28,14 +28,14 @@ Taro Debugger is a cross-platform frontend for debugging C/C++ applications over
 
 ## Tech Stack
 
-| Layer | Technology |
-| --- | --- |
-| Core Framework | Angular 21+ (Standalone Components) |
-| Desktop App | Electron (native `contextBridge` IPC — Inter-Process Communication) |
-| Web Communication | WebSocket |
-| UI Components | Angular Material |
-| Code Editor | Monaco Editor (`ngx-monaco-editor-v2`) |
-| State & Routing | Angular Router + DI Services |
+| Layer | Technology | Rules & Constraints |
+| :--- | :--- | :--- |
+| **Framework** | Angular 21+ | Standalone Components only |
+| **UI & Styling** | Angular Material + SCSS | **TailwindCSS explicitly excluded** |
+| **Code Editor** | Monaco Editor | via `ngx-monaco-editor-v2` |
+| **Desktop API** | Electron | Native `contextBridge` IPC / `IpcTransportService` |
+| **Web Comm.** | WebSocket | |
+| **Routing / State** | Angular Router | Shared DI Services |
 
 ## Views
 
