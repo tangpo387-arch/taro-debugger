@@ -57,7 +57,7 @@
       "title": "Command Serialization: Evaluate Cancel & Timeout",
       "featureGroup": "Console & Status Bar",
       "metadata": {
-        "status": "pending",
+        "status": "done",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": [
@@ -78,7 +78,8 @@
       ],
       "timeline": {
         "created": "2026-04-15",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-17"
       }
     }
   ]

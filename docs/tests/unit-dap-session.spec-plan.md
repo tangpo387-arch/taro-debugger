@@ -28,3 +28,8 @@ Fully isolated tests for `DapSessionService`. Focuses on DAP session lifecycle, 
 * **Command Serialization (R-CS1)**
   * Verify that control command method execution sets the in-flight signal to true and resets it upon response.
   * Verify that subsequent control command calls are silently dropped and returned early if an existing continuous command is already in-flight.
+
+* **Evaluate Cancellation (R-CS2)**
+  * Verify that `cancelRequest` sends a cancel command when capabilities support it.
+  * Verify that `cancelRequest` does NOT send a cancel command if capabilities do not support it.
+  * Verify that `evaluate` times out after 30 seconds and rejects with an EvaluateCancelledError.

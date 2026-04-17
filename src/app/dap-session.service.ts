@@ -4,6 +4,15 @@ import { filter, timeout } from 'rxjs/operators';
 import { DapTransportService } from './dap-transport.service';
 import { DapConfigService } from './dap-config.service';
 import { DapRequest, DapResponse, DapEvent, DisassembleArguments, StepArguments } from './dap.types';
+
+/** Error thrown when an evaluate request is cancelled or times out */
+export class EvaluateCancelledError extends Error {
+  constructor(public source: 'user' | 'timeout' = 'user') {
+    super(source === 'timeout' ? 'Evaluate timed out' : 'Evaluate cancelled by user');
+    this.name = 'EvaluateCancelledError';
+  }
+}
+
 import { TransportFactoryService } from './transport-factory.service';
 import { FileTreeService } from './file-tree.service';
 import { DapFileTreeService } from './dap-file-tree.service';
@@ -419,6 +428,55 @@ export class DapSessionService {
   async disassemble(args: DisassembleArguments): Promise<DapResponse> {
     this.ensureStopped();
     return this.sendRequest('disassemble', args);
+  }
+
+  /**
+   * Sends a DAP `cancel` request for the given in-flight request.
+   * No-op if called after session disconnect.
+   * Pre-condition: capabilities.supportsCancelRequest must be true.
+   * @param requestId - The `seq` of the request to cancel.
+   */
+  public async cancelRequest(requestId: number): Promise<void> {
+    if (!this.capabilities?.supportsCancelRequest) {
+      return;
+    }
+    if (this.transport && this.executionStateSubject.value !== 'idle' && this.executionStateSubject.value !== 'error') {
+      try {
+        await this.sendRequest('cancel', { requestId });
+      } catch (e) {
+        // Ignored; typically means adapter rejected the cancel or already completed
+      }
+    }
+  }
+
+  /**
+   * Sends a DAP `evaluate` request with a built-in 30 s cancel timeout.
+   * Rejects with EvaluateCancelledError on user cancel or timeout.
+   * Returns the full DAP response on success.
+   */
+  public evaluate(expression: string, frameId?: number): Promise<DapResponse> {
+    const TIMEOUT_MS = 30_000;
+    
+    // sendRequest generates the next seq internally right away, but to capture it,
+    // we use the current seq value. Keep in mind seq is incremented synchronously.
+    const expectedSeq = this.seq;
+    // We provide 35000 here so the internal DAP timeout doesn't fire before our 30000 timer.
+    const evaluatePromise = this.sendRequest('evaluate', { expression, frameId, context: 'repl' }, 35000);
+
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.cancelRequest(expectedSeq);
+        reject(new EvaluateCancelledError('timeout'));
+      }, TIMEOUT_MS);
+
+      evaluatePromise.then((res) => {
+        clearTimeout(timer);
+        resolve(res);
+      }).catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+    });
   }
 
   /**

@@ -227,4 +227,48 @@ describe('DapSessionService', () => {
       await promise1;
     });
   });
+
+  describe('Evaluate Cancellation (R-CS2)', () => {
+    it('should send cancel request if capabilities support it', async () => {
+      (service as any).transport = mockTransport;
+      (service as any).executionStateSubject.next('stopped');
+      service.capabilities = { supportsCancelRequest: true };
+
+      const promise = service.cancelRequest(5);
+      
+      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+        command: 'cancel',
+        arguments: { requestId: 5 }
+      }));
+    });
+
+    it('should NOT send cancel request if capabilities do not support it', async () => {
+      (service as any).transport = mockTransport;
+      (service as any).executionStateSubject.next('stopped');
+      service.capabilities = { supportsCancelRequest: false };
+
+      const promise = service.cancelRequest(5);
+      
+      expect(mockTransport.sendRequest).not.toHaveBeenCalledWith(expect.objectContaining({ command: 'cancel' }));
+    });
+
+    it('should timeout evaluate request after 30s and reject with EvaluateCancelledError', async () => {
+      (service as any).transport = mockTransport;
+      (service as any).executionStateSubject.next('stopped');
+      service.capabilities = { supportsCancelRequest: true };
+
+      const promise = service.evaluate('slow');
+      
+      // Fast forward 30 seconds
+      vi.advanceTimersByTime(30000);
+      
+      await expect(promise).rejects.toThrow('Evaluate timed out');
+      
+      // The seq is 1
+      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+        command: 'cancel',
+        arguments: { requestId: 1 }
+      }));
+    });
+  });
 });

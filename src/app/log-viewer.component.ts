@@ -16,11 +16,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
 
-import { Observable, Subscription, merge } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, merge } from 'rxjs';
 import { auditTime } from 'rxjs/operators';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { DapLogService } from './dap-log.service';
-import { DapSessionService, ExecutionState } from './dap-session.service';
+import { DapSessionService, ExecutionState, EvaluateCancelledError } from './dap-session.service';
 import { LogEntry } from './dap.types';
 
 // ── Component ─────────────────────────────────────────────────────────────
@@ -36,6 +38,8 @@ import { LogEntry } from './dap.types';
     MatButtonModule,
     MatInputModule,
     ScrollingModule,
+    MatSnackBarModule,
+    MatProgressSpinnerModule,
   ],
   templateUrl: './log-viewer.component.html',
   styleUrls: ['./log-viewer.component.scss'],
@@ -46,6 +50,7 @@ export class LogViewerComponent implements OnInit, OnDestroy {
   private readonly logService = inject(DapLogService);
   private readonly dapSession = inject(DapSessionService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly snackBar = inject(MatSnackBar);
 
   // ── Observables (SSOT from DapLogService) ───────────────────────────────
   public readonly consoleLogs$: Observable<LogEntry[]> = this.logService.consoleLogs$;
@@ -62,13 +67,20 @@ export class LogViewerComponent implements OnInit, OnDestroy {
   /** Local mirror of execution state to gate the evaluate button. */
   public executionState: ExecutionState = 'idle';
 
-  /** Guard flag to prevent concurrent evaluate requests. */
-  public isEvaluating: boolean = false;
+  /** Guard flag for in-flight evaluate request (cancels auto timeout) */
+  public readonly evaluateInFlight$ = new BehaviorSubject<boolean>(false);
+
+  get isEvaluateSupported(): boolean {
+    if (this.executionState === 'idle' || this.executionState === 'starting') return true;
+    return !!this.dapSession.capabilities?.supportsCancelRequest;
+  }
 
   // ── Private State ────────────────────────────────────────────────────────
 
   private stateSubscription?: Subscription;
   private logSubscription?: Subscription;
+  private evaluateTrafficSub?: Subscription;
+  public pendingEvaluateSeq?: number;
 
   /** References to all virtual scroll viewports for auto-scrolling. */
   @ViewChildren(CdkVirtualScrollViewport)
@@ -89,11 +101,18 @@ export class LogViewerComponent implements OnInit, OnDestroy {
     this.logSubscription = merge(this.consoleLogs$, this.programLogs$)
       .pipe(auditTime(50))
       .subscribe(() => this.scrollToBottom());
+
+    this.evaluateTrafficSub = this.dapSession.onTraffic$.subscribe(msg => {
+      if (this.evaluateInFlight$.value && msg.type === 'request' && msg.command === 'evaluate') {
+        this.pendingEvaluateSeq = msg.seq;
+      }
+    });
   }
 
   public ngOnDestroy(): void {
     this.stateSubscription?.unsubscribe();
     this.logSubscription?.unsubscribe();
+    this.evaluateTrafficSub?.unsubscribe();
     // R_SM5: clear UI-only state to release orphan timestamp keys
     this.expandedLogs.clear();
   }
@@ -125,30 +144,42 @@ export class LogViewerComponent implements OnInit, OnDestroy {
 
   /** Send an evaluate DAP request and log the result to the console. */
   public async evaluateCommand(): Promise<void> {
-    if (this.isEvaluating || !this.evaluateExpression.trim() || this.executionState !== 'stopped') {
+    if (this.evaluateInFlight$.value || !this.evaluateExpression.trim() || this.executionState !== 'stopped' || !this.isEvaluateSupported) {
       return;
     }
 
     const expr = this.evaluateExpression;
-    this.evaluateExpression = '';
-    this.isEvaluating = true;
+    this.evaluateInFlight$.next(true);
     this.logService.consoleLog(`> ${expr}`, 'info', 'system');
 
     try {
-      const response = await this.dapSession.sendRequest('evaluate', {
-        expression: expr,
-        context: 'repl',
-      });
+      const response = await this.dapSession.evaluate(expr);
 
       if (response.body?.result) {
         this.logService.consoleLog(response.body.result, 'info', 'stdout');
       }
+      this.evaluateExpression = '';
     } catch (e: any) {
-      // Handled globally by synthetic DAP events
+      if (e instanceof EvaluateCancelledError) {
+         if (e.source === 'timeout') {
+            this.snackBar.open('Evaluate timed out. The debugger may be unresponsive.', 'Dismiss', { duration: 5000 });
+         }
+      }
+      // other errors are Handled globally by synthetic DAP events
     } finally {
-      this.isEvaluating = false;
+      this.evaluateInFlight$.next(false);
+      this.pendingEvaluateSeq = undefined;
       this.cdr.detectChanges();
     }
+  }
+
+  public onCancelEvaluate(): void {
+    if (this.pendingEvaluateSeq !== undefined) {
+      this.dapSession.cancelRequest(this.pendingEvaluateSeq);
+      this.pendingEvaluateSeq = undefined;
+    }
+    this.evaluateInFlight$.next(false);
+    this.cdr.detectChanges();
   }
 
   // ── Public Template Methods (Tab) ───────────────────────────────────────
