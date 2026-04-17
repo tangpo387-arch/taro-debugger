@@ -70,6 +70,19 @@ audience: [Lead_Engineer, Product_Architect]
   - [Test] rapid same-file clicks collapse to one request; pending dispatches after in-flight resolves; two files fire independently
 - **Dependencies**: WI-13
 
+## General
+
+### WI-44: Enrich manage-wi.js show & Update Governance Doc
+
+- **Status**: ⏳ Pending
+- **Size**: S
+- **Description**: Extend 'show' command to include dependency statuses and update the data governance reference.
+- **Details**:
+  - Modify scripts/manage-wi.js cmdShow to provide _dependencyStatuses
+  - Update .agents/skills/work-item-management/references/wi-data-governance.md §4.1
+  - [Test] Verify show output contains status for all listed dependencies
+- **Dependencies**: none
+
 ## Variables & Call Stack
 
 ### WI-42: Command Serialization: Frame Switch Cancel-and-Replace

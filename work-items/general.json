@@ -87,6 +87,27 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-15"
       }
+    },
+    {
+      "id": "WI-44",
+      "title": "Enrich manage-wi.js show & Update Governance Doc",
+      "featureGroup": "General",
+      "metadata": {
+        "status": "pending",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Extend 'show' command to include dependency statuses and update the data governance reference.",
+      "details": [
+        "Modify scripts/manage-wi.js cmdShow to provide _dependencyStatuses",
+        "Update .agents/skills/work-item-management/references/wi-data-governance.md §4.1",
+        "[Test] Verify show output contains status for all listed dependencies"
+      ],
+      "timeline": {
+        "created": "2026-04-17",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }

@@ -127,10 +127,11 @@ The management of the JSON files is strictly controlled by a suite of scripts in
 | :--- | :--- | :---: |
 | `add <ID\|AUTO> <Group> <Title> [Desc] [Details] [Deps] [Size] [Milestone]` | Creates a new WI entry in an existing Feature Group. | ✅ Yes |
 | `edit <WI-##> [--title <v>] [--desc <v>] [--details <v>] [--deps <v>] [--size <v>] [--milestone <v>]` | Updates specific content fields of an existing WI. | ✅ Yes |
-| `show <WI-##>` | Prints the full JSON of a single WI to stdout. Read-only. | ❌ No |
+| `show <WI-##>` | Prints the enriched JSON of a WI (includes dependency statuses) to stdout. | ❌ No |
 | `add-group <Name> <Fill> <Stroke> <Description>` | Creates a new JSON file with a group definition and empty items list. | ✅ Yes |
 | `show-group [Name]` | Lists all registered groups or shows a specific group's definition. | ❌ No |
 
+- **Dependency Enrichment**: The `show` command automatically computes and appends a synthetic `_dependencyStatuses` field to the JSON output, mapping each dependency ID to its current status (e.g., `done`, `pending`, `missing`). This allows for quick bottleneck identification without manual lookups.
 - **Group Validation**: `add` verifies if the `Group` exists in any `groupDefinition.name`. If not found, the script exits with an error and instructs the user to use `add-group`.
 - **ID Assignment**: `AUTO` scans all items in all JSON files to find the next available ID.
 - **Content Resolution**: Supports `@` prefix to read values from external text files (for `add` and `edit --details / --desc`).

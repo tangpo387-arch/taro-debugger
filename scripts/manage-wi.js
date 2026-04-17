@@ -39,6 +39,8 @@ function loadAllEntries() {
       const data = JSON.parse(fs.readFileSync(path.join(DATA_DIR, file), 'utf8'));
       const items = data.items || [];
       const groupDef = data.groupDefinition || null;
+      // Always include at least one entry per group to ensure it's "known" even if empty
+      entries.push({ item: null, file, groupDef });
       items.forEach(item => entries.push({ item, file, groupDef }));
     } catch (e) {
       console.warn(`Warning: Could not parse ${file}: ${e.message}`);
@@ -72,7 +74,7 @@ function getNextId() {
   const entries = loadAllEntries();
   let maxId = 0;
   entries.forEach(({ item }) => {
-    const match = item.id?.match(/^WI-(\d+)$/);
+    const match = item?.id?.match(/^WI-(\d+)$/);
     if (match) {
       const num = parseInt(match[1], 10);
       if (num > maxId) maxId = num;
@@ -327,7 +329,7 @@ Flags:
   }
 
   const entries = loadAllEntries();
-  const entry = entries.find(e => e.item.id === targetId);
+  const entry = entries.find(e => e.item?.id === targetId);
 
   if (!entry) {
     console.error(`Error: Could not find ${targetId} in any JSON file.`);
@@ -381,14 +383,25 @@ function cmdShow(args) {
   }
 
   const entries = loadAllEntries();
-  const entry = entries.find(e => e.item.id === targetId);
+  const entry = entries.find(e => e.item?.id === targetId);
 
   if (!entry) {
     console.error(`Error: Could not find ${targetId} in any JSON file.`);
     process.exit(1);
   }
 
-  process.stdout.write(JSON.stringify(entry.item, null, 2) + '\n');
+  // Enrich with dependency statuses for easier inspection
+  const item = JSON.parse(JSON.stringify(entry.item));
+  const deps = item.metadata.dependencies || [];
+  if (deps.length > 0) {
+    item._dependencyStatuses = {};
+    deps.forEach(depId => {
+      const depEntry = entries.find(e => e.item?.id === depId);
+      item._dependencyStatuses[depId] = depEntry ? depEntry.item.metadata.status : 'missing';
+    });
+  }
+
+  process.stdout.write(JSON.stringify(item, null, 2) + '\n');
 }
 
 // ── CLI Router ───────────────────────────────────────────────────────
