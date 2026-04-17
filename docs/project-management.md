@@ -106,34 +106,124 @@ A work item travels through the following states. Only `Product_Architect` may c
 
 ---
 
-## 3. Version Number Convention
+### 2.2 Specification Handoff Protocol (Product_Architect → Lead_Engineer)
 
-The project follows **Semantic Versioning (SemVer)** with pre-release suffixes to clearly communicate the milestone readiness of every build. This section defines the authoritative meaning of each version string and the conditions required to advance between stages.
+**Goal**: Transfer a fully scoped Work Item from `Product_Architect` to `Lead_Engineer` for implementation.
+
+**Prerequisites**:
+* WI status is `Proposed`.
+* All dependency WIs (`deps`) are `✅ Done`.
+
+#### 2.2.1 Product_Architect Steps (Scoping)
+
+**Steps**:
+1. Verify WI record completeness: `id`, `title`, `description`, `details[]` (requires ≥1 `[Test]`), `size`, `deps`.
+2. Identify relevant Skills and note them in the WI details.
+3. Evaluate the Complexity Gate. If the WI meets ANY of the following conditions:
+   * Introduces a new architectural pattern or design rule.
+   * Requires coordinating changes across ≥3 files or layers.
+   * Involves non-obvious protocol constraints (e.g., async sequencing, DAP edge cases).
+   * Size is `M` or above.
+
+   **Then you MUST**:
+   * Structure a spec document under `docs/` (name the file based on the feature content using kebab-case, e.g., `docs/feature-name-spec.md`).
+   * Update related project documents to reflect the new design.
+   * Link the spec document in the WI details.
+
+**Verification**:
+* WI status is updated to `Pending`.
+
+#### 2.2.2 Lead_Engineer Steps (Implementation Prep)
+
+**Prerequisites**:
+* WI status is `Pending`.
+
+**Steps**:
+1. Execute `node scripts/manage-wi.js show {WI-ID}` and read `details[]` and `deps`.
+2. Halt execution and notify `Product_Architect` if any dependency WIs are not `✅ Done`.
+3. Load all relevant Skills listed in the WI or `project-context.md`.
+4. Read the spec document (`docs/{WI-ID}-spec.md`) in full if linked in the WI details.
+
+**Verification**:
+* Begin implementation only after Steps 1-4 are complete.
+
+---
+
+### 2.3 QCR Handoff Protocol (Lead_Engineer → Quality_Control_Reviewer)
+
+Before any `QCR review` request can be submitted, `Lead_Engineer` **must** complete the following handoff sequence. `Quality_Control_Reviewer` **must** reject any submission that does not comply.
+
+```text
+Lead_Engineer
+  1. Implement all items listed in the WI's details.
+  2. Run: npm run test -- --watch=false   (all tests must pass)
+  3. Produce: docs/reviews/{WI-ID}.review-package.md
+        — §1 Acceptance Criteria  (copied verbatim from manage-wi.js show)
+        — §2 Diff Summary         (file + line ranges only; no pasted code)
+        — §3 Edge Cases           (🔍 flags for areas requiring deeper QCR inspection)
+        — §4 Tests Added          (suite names + test descriptions)
+        — §5 Spec-Plan Updates    (list of spec-plan files updated)
+        — §6 Self-Verification    (pasted terminal output proving tests pass)
+  4. Submit: "QCR review {WI-ID}"
+
+Quality_Control_Reviewer
+  1. Read docs/reviews/{WI-ID}.review-package.md  (primary input)
+  2. Load only the Skills listed in `skills-required` frontmatter.
+  3. Verify §1 Acceptance Criteria — read only the diff line ranges in §2.
+  4. Inspect only 🔍-flagged areas in §3.
+  5. Verify tests in §4 match the spec-plan entries in §5.
+  6. Issue APPROVED or REJECTED with precise, actionable findings.
+```
+
+> [!NOTE]
+> The full Review Package format is defined in Skill: `review-package` (`docs/reviews/{WI-ID}.review-package.md`).
+> [!CAUTION]
+> `Quality_Control_Reviewer` is FORBIDDEN from re-reading full source files. All required context must be sourced from the Review Package and the specific line ranges listed in its §2 Diff Summary.
+
+---
+
+## 3. Package Release Flow (SemVer)
+
+The project follows strict Semantic Versioning (SemVer) using pre-release suffixes to track milestone readiness.
 
 > [!IMPORTANT]
-> Only `Product_Architect` may approve a version bump. `Lead_Engineer` executes the change in `package.json` after approval is recorded.
+> * `Product_Architect` MUST explicitly state "Version bump approved" in the conversation to authorize a transition.
+> * `Lead_Engineer` MUST NOT modify `package.json` until this authorization is granted.
 
 ### 3.1 Stage Definitions
 
-| Stage | Version String | Meaning | Condition to Advance |
-| :--- | :--- | :--- | :--- |
-| **Active Development** | `X.Y.Z-dev` | Features are still being implemented; one or more WIs remain `⏳ Pending`. | All WIs for the milestone move to `✅ Done`. |
-| **Release Candidate** | `X.Y.Z-rc.N` | Feature-complete; undergoing regression and integration testing. Increment `N` if a blocker is found and fixed. | QA sign-off — no open blockers. |
-| **Formal Release** | `X.Y.Z` | Stable, production-ready build. | All WIs done + QA sign-off granted. |
+| Stage | Version Pattern | Objective |
+| :--- | :--- | :--- |
+| **Active Development** | `X.Y.Z-dev` | Default state. Features are being implemented. |
+| **Release Candidate** | `X.Y.Z-rc.N` | Feature-complete. Regression and integration testing. |
+| **Formal Release** | `X.Y.Z` | Stable, production-ready build. |
 
-### 3.3 Promotion Checklist
+### 3.2 Transition to Release Candidate (`-dev` → `-rc.1`)
 
-Before bumping from `-dev` → `-rc.1`:
+**Goal**: Freeze feature development and begin integration testing.
 
-* [ ] All `⏳ Pending` WIs in `docs/work-items.md` are `✅ Done`.
-* [ ] `npm run test -- --watch=false` passes with no failures.
-* [ ] `Product_Architect` approves the stage transition.
+**Prerequisites**:
+* [ ] All `⏳ Pending` items in `docs/work-items.md` are `✅ Done`.
+* [ ] `npm run test -- --watch=false` passes with 0 failures.
 
-Before bumping from `-rc.N` → formal release:
+**Steps**:
+1. `Lead_Engineer` verifies prerequisites and requests transition approval.
+2. `Product_Architect` evaluates and outputs "Version bump approved".
+3. `Lead_Engineer` updates `package.json` version to `X.Y.Z-rc.1`.
 
+### 3.3 Transition to Formal Release (`-rc.N` → Formal Release)
+
+**Goal**: Publish the stable build.
+
+**Prerequisites**:
 * [ ] No open regression issues.
-* [ ] `electron-builder` package verified on all target platforms.
-* [ ] `Product_Architect` grants final sign-off.
+* [ ] `electron-builder` packages verified on all target platforms.
+* [ ] If a blocker is fixed during the RC phase, increment `N` (e.g., `-rc.1` → `-rc.2`) and re-verify.
+
+**Steps**:
+1. `Lead_Engineer` confirms prerequisites and requests final sign-off.
+2. `Product_Architect` outputs "Version bump approved".
+3. `Lead_Engineer` updates `package.json` to `X.Y.Z` (removing the `-rc.N` suffix).
 
 ---
 

@@ -156,3 +156,85 @@ The script automatically handles timestamps and refreshes all derivative views.
 > **Exclusion Boundaries**: This skill covers the following operations only: WI creation, content editing, status progression, and Feature Group management (create and inspect).
 > - Do not use this skill to modify Mermaid rendering logic — see `generate-docs.js`.
 > - Do not use this skill to alter the SSOT schema structure — see `wi-data-governance.md`.
+
+---
+
+## 6. Specification Handoff Protocol (Product_Architect → Lead_Engineer)
+
+**Goal**: Transfer a fully scoped Work Item from `Product_Architect` to `Lead_Engineer` for implementation.
+
+**Prerequisites**:
+- WI status is `Proposed`.
+- All dependency WIs (`deps`) are `✅ Done`.
+
+### 6.1 Product_Architect Steps (Scoping)
+
+**Steps**:
+1. Verify WI record completeness: `id`, `title`, `description`, `details[]` (requires ≥1 `[Test]`), `size`, `deps`.
+2. Identify relevant Skills and note them in the WI details.
+3. Evaluate the Complexity Gate. If the WI meets ANY of the following conditions:
+   - Introduces a new architectural pattern or design rule.
+   - Requires coordinating changes across ≥3 files or layers.
+   - Involves non-obvious protocol constraints (e.g., async sequencing, DAP edge cases).
+   - Size is `M` or above.
+
+   **Then you MUST**:
+   - Structure a spec document under `docs/` (name the file based on the feature content using kebab-case, e.g., `docs/feature-name-spec.md`).
+   - Update related project documents to reflect the new design.
+   - Link the spec document in the WI details.
+
+**Verification**:
+- WI status is updated to `Pending`.
+
+### 6.2 Lead_Engineer Steps (Implementation Prep)
+
+**Prerequisites**:
+- WI status is `Pending`.
+
+**Steps**:
+1. Execute `node scripts/manage-wi.js show {WI-ID}` and read `details[]` and `deps`.
+2. Halt execution and notify `Product_Architect` if any dependency WIs are not `✅ Done`.
+3. Load all relevant Skills listed in the WI or `project-context.md`.
+4. Read the spec document (`docs/feature-name-spec.md`) in full if linked in the WI details.
+
+**Verification**:
+- Begin implementation only after Steps 1-4 are complete.
+
+## 7. Package Release Flow
+
+> [!IMPORTANT]
+> - `Product_Architect` MUST explicitly state "Version bump approved" in the conversation to authorize a transition.
+> - `Lead_Engineer` MUST NOT execute release transition before this authorization is granted.
+
+### 7.1 Stage Definitions
+
+| Stage | Version Pattern | Objective |
+| :--- | :--- | :--- |
+| **Active Development** | `X.Y.Z-dev` | Default state. Features are being implemented. |
+| **Release Candidate** | `X.Y.Z-rc.N` | Feature-complete. Regression and integration testing. |
+| **Formal Release** | `X.Y.Z` | Stable, production-ready build. |
+
+### 7.2 Transition to Release Candidate (`-dev` → `-rc.1`)
+
+**Goal**: Freeze feature development and begin integration testing.
+
+**Prerequisites**:
+- [ ] No `⏳ Pending` items in `docs/work-items.md`.
+- [ ] `npm run test -- --watch=false` passes with 0 failures.
+
+**Steps**:
+1. `Lead_Engineer` verifies prerequisites and requests transition approval.
+2. `Lead_Engineer` updates `package.json` version to `X.Y.Z-rc.1`.
+
+### 7.3 Transition to Formal Release (`-rc.N` → Formal Release)
+
+**Goal**: Publish the stable build.
+
+**Prerequisites**:
+- [ ] No open regression issues.
+- [ ] `electron-builder` packages verified on all target platforms.
+- [ ] If a blocker is fixed during the RC phase, increment `N` (e.g., `-rc.1` → `-rc.2`) and re-verify.
+
+**Steps**:
+1. `Lead_Engineer` confirms prerequisites and requests final sign-off.
+2. `Lead_Engineer` updates `package.json` to `X.Y.Z` (removing the `-rc.N` suffix).

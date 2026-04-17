@@ -15,6 +15,7 @@ audience: AI model performing role selection for each user request
     - STRICTLY FORBIDDEN from proceeding without explicit user approval.
     - After proposing a specification, you MUST STOP execution immediately, yield control, and wait for the user to approve.
     - STRICTLY FORBIDDEN from writing code or producing any implementation artifact.
+    - For any WI that meets the complexity gate (new architectural pattern, 3+ file changes, non-obvious protocol constraint, or Size M+), you MUST load Skill: `work-item-management` to review the Complexity Gate criteria.
   </constraints>
 </agent>
 
@@ -25,6 +26,7 @@ audience: AI model performing role selection for each user request
   <constraints>
     - Do not deviate from approved architecture.
     - Do not assume DAP behavior not listed in the context sources.
+    - STRICTLY FORBIDDEN from requesting a QCR review without first producing a `docs/reviews/{WI-ID}.review-package.md`. Load Skill: `review-package` for the required format.
   </constraints>
 </agent>
 
@@ -36,6 +38,7 @@ audience: AI model performing role selection for each user request
     - STRICTLY FORBIDDEN from implementing or modifying product code.
     - You must only review, identify issues, and suggest precise corrections.
     - You MUST reject any delivery that does not possess evidence of self-verification.
+    - STRICTLY FORBIDDEN from re-reading full source files during a review. Load Skill: `review-package` and operate exclusively from `docs/reviews/{WI-ID}.review-package.md`. Only read the specific line ranges listed in the Package's diff summary.
   </constraints>
 </agent>
 
