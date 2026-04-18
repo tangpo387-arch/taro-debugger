@@ -69,6 +69,9 @@ node scripts/manage-wi.js show-group "Network Layer"
 
 Use `manage-wi.js add` to create the task. The script auto-assigns the next ID, validates the group, and syncs all derivative Markdown files.
 
+> [!TIP]
+> **Delegated Authorization**: While `Product_Architect` remains the primary owner for requirements, `Lead_Engineer` is authorized to use this subcommand to self-initiate **Technical WIs** (e.g., refactoring, performance optimization, and architectural alignment).
+
 ```bash
 # Usage:
 # node scripts/manage-wi.js add <ID|AUTO> <Group> <Title> [Desc] [Details] [Deps] [Size] [Milestone]
@@ -77,6 +80,7 @@ node scripts/manage-wi.js add AUTO "Editor Advanced Interaction" "Search UI" "Ad
 ```
 
 - **AUTO**: Let the system allocate the numeric ID.
+- **Sub-IDs**: Supports fractional IDs for sub-tasks (e.g., `WI-18.1`).
 - **Group**: Must match an existing Feature Group name. Use `show-group` to list available names or `add-group` to create a new one if needed.
 - **Details**: Use `|` to separate multiple sub-tasks. **Must include at least one `[Test]` entry** describing a verifiable test scenario (e.g., `[Test] Confirm X behavior when Y occurs`). See `wi-data-governance.md §2` for the full rule.
 - **Deps**: Comma-separated list of dependent IDs (or `none`).
@@ -110,8 +114,8 @@ node scripts/manage-wi.js edit WI-38 --details "@temp_details.txt"
 Available flags: `--title`, `--desc`, `--details`, `--deps`, `--size`, `--milestone`.
 
 > [!NOTE]
-> Status lifecycle (`pending` → `done` / `aborted`) is **not** managed here.
-> Use `update-wi.js` (owned by `Lead_Engineer`) for status transitions.
+> Status lifecycle (for example, `pending` → `done`) is **not** managed here.
+> Use `update-wi.js` for status transitions.
 
 ### Step 4 — Inspect a Work Item
 
@@ -120,8 +124,8 @@ Use `manage-wi.js show` to print the full details of a single WI to stdout befor
 ```bash
 node scripts/manage-wi.js show WI-38
 
-# Pipe to jq for field-level inspection
-node scripts/manage-wi.js show WI-38 | jq .details
+# Filter for a specific field (e.g. details, status, deps)
+node scripts/manage-wi.js show WI-38 details
 ```
 
 ### Step 5 — Verification
@@ -132,17 +136,19 @@ After any `add` or `edit`, verify that the item appears correctly in `docs/work-
 
 ## 4. Progressing a Work Item
 
-**Owner**: `Lead_Engineer`
+**Owner**: `Product_Architect`, `Lead_Engineer`, `Quality_Control_Reviewer`
 
 Implementation status is updated via the `update-wi.js` script. **Do not** edit Markdown files manually.
 
-| Action | Command | Result |
-| :--- | :--- | :--- |
-| **Complete** | `node scripts/update-wi.js WI-## done` | Moves to ✅ Done; item is archived in the SSOT. |
-| **Abort** | `node scripts/update-wi.js WI-## abort` | Moves to ❌ Aborted; item is archived in the SSOT. |
-| **Revert** | `node scripts/update-wi.js WI-## pending` | Moves back to ⏳ Pending. |
+| Action | Command | Result | Owner |
+| :--- | :--- | :--- | :--- |
+| **Commit** | `node scripts/update-wi.js WI-## pending` | Moves to ⏳ Pending | `Product_Architect` |
+| **Submit** | `node scripts/update-wi.js WI-## done` | Moves to 🔍 Done | `Lead_Engineer` |
+| **Approve** | `node scripts/update-wi.js WI-## accepted` | Moves to ✅ Accepted | `Quality_Control_Reviewer` |
+| **Reject** | `node scripts/update-wi.js WI-## rework` | Moves to 🛠️ Rework | `Quality_Control_Reviewer` |
+| **Abort** | `node scripts/update-wi.js WI-## abort` | Moves to ❌ Aborted | All Agents |
 
-The script automatically handles timestamps and refreshes all derivative views.
+The script automatically handles timestamps for `accepted` and `aborted` statuses and refreshes all derivative views.
 
 ---
 
@@ -186,19 +192,22 @@ The script automatically handles timestamps and refreshes all derivative views.
 **Verification**:
 - WI status is updated to `Pending`.
 
-### 6.2 Lead_Engineer Steps (Implementation Prep)
+### 6.3 Handoff Verdict Protocol (Lead_Engineer → Quality_Control_Reviewer)
 
 **Prerequisites**:
-- WI status is `Pending`.
+- WI status is `done`.
+- `docs/reviews/{WI-ID}.review-package.md` exists and is complete.
 
 **Steps**:
-1. Execute `node scripts/manage-wi.js show {WI-ID}` and read `details[]` and `deps`.
-2. Halt execution and notify `Product_Architect` if any dependency WIs are not `✅ Done`.
-3. Load all relevant Skills listed in the WI or `project-context.md`.
-4. Read the spec document (`docs/feature-name-spec.md`) in full if linked in the WI details.
+1. `Quality_Control_Reviewer` follows the review protocol in `Skill: review-package`.
+2. Issue `APPROVED` or `REJECTED` verdict.
+3. If `APPROVED`, transition status to `accepted`.
+4. If `REJECTED`, transition status to `rework` and provide findings in the review package.
 
 **Verification**:
-- Begin implementation only after Steps 1-4 are complete.
+- Verify status in `project-roadmap.md` reflects the verdict.
+
+---
 
 ## 7. Package Release Flow
 
@@ -238,3 +247,28 @@ The script automatically handles timestamps and refreshes all derivative views.
 **Steps**:
 1. `Lead_Engineer` confirms prerequisites and requests final sign-off.
 2. `Lead_Engineer` updates `package.json` to `X.Y.Z` (removing the `-rc.N` suffix).
+
+---
+
+## 9. Trivial Changes & Maintenance
+
+**Definition of "Trivial Changes"**: Pure maintenance operations that do not involve logic changes (e.g., typo fixes, comment optimization, IDE setting adjustments, bug fixes, small enhancements), for which the WI flow may be bypassed.
+
+> [!IMPORTANT]
+> **User Authorization**: Lead_Engineer executes trivial changes **ONLY** after receiving explicit authorization **OR** a direct hint/instruction from the **USER** in the conversation. Unauthorized autonomous bypass of the WI flow is strictly forbidden.
+
+1. **WI Exemption**: If a change meets the definition above and is authorized/hinted by the USER, it does not require a dedicated Work Item.
+2. **Review Requirement**: Any code or documentation change MUST still be reviewed by the `Quality_Control_Reviewer`.
+3. **Submission**: Submit the Review Package directly for QCR evaluation without a formal Work Item ID.
+4. **Commits**: Reference "Minor tweak" or "Refactor" in the commit message.
+
+### 9.1 Dialog Example (Authorization Handshake)
+
+**USER**: "Fix the typo in the DAP configuration guide."
+**Lead_Engineer**: "I have identified this as a **Trivial Change** (documentation typo). Pursuant to the protocol, may I have your authorization to bypass the formal WI flow and submit this directly for review?"
+**USER**: "Approved. Proceed."
+**Lead_Engineer**: "Understood. I will execute the fix and notify QCR for a trivial review."
+
+**Example 2 (User Hint)**:
+**USER**: "Fix the copyright year in the footer. You can treat this as a trivial change."
+**Lead_Engineer**: "Understood. Following your hint, I will bypass the standard WI flow and submit the fix for review immediately."

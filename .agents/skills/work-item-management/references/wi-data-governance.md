@@ -69,10 +69,12 @@ Every JSON file in the registry MUST follow this top-level structure:
 - **`featureGroup`**: Must exactly match the `groupDefinition.name` within the same file.
 - **`metadata`**: **(Mandatory Object)** Defines the lifecycle and sizing of the work item.
   - `status`: **Required**. Controls view routing (see [§3.3 View Filter Rules](#33-view-filter-rules)):
-    - `pending` — Active backlog; appears in `work-items.md`.
+    - `pending` — Active implementation; appears in `work-items.md`.
     - `proposed` — Future roadmap; requires a `milestone` value.
-    - `done` — Completed; archived in changelog, reflected in roadmap.
-    - `aborted` — Terminated; treated identically to `done` in view routing.
+    - `done` — Implementation complete; awaiting QCR review.
+    - `rework` — Review failed; returned to LE for fixes.
+    - `accepted` — Formally approved; archived in changelog, reflected in roadmap.
+    - `aborted` — Terminated; treated identically to `accepted` in view routing.
   - `size`: **Required**. T-shirt sizing (`S`, `M`, `L`).
   - `milestone`: **Required for `proposed` status**. Target version (e.g., `v1.1`).
   - `dependencies`: **Required**. Array of WI ID strings; use `[]` if none.
@@ -108,9 +110,9 @@ The mapping of `X.Y.Z` (SemVer) to `vX.Y` (Milestone) is designed for:
 
 | View | Output | Filter Logic |
 | :--- | :--- | :--- |
-| **Active Backlog** | `work-items.md` | `status: "pending"` AND `milestone: CURRENT_MILESTONE` |
+| **Active Backlog** | `work-items.md` | `status` IN [`pending`, `done`, `rework`] AND `milestone: CURRENT_MILESTONE` |
 | **Future Roadmap** | `future-roadmap.md` | `status: "proposed"` OR (`status: "pending"` AND `milestone: NOT CURRENT_MILESTONE`) |
-| **Project Changelog** | *(on-demand)* | `status: "done"` OR `status: "aborted"` — generated manually |
+| **Project Changelog** | *(on-demand)* | `status: "accepted"` OR `status: "aborted"` — generated manually |
 | **Dependency Roadmap** | `project-roadmap.md` | All items; node style is derived from WI `status` and Feature Group stabilization state |
 
 ---
@@ -127,11 +129,12 @@ The management of the JSON files is strictly controlled by a suite of scripts in
 | :--- | :--- | :---: |
 | `add <ID\|AUTO> <Group> <Title> [Desc] [Details] [Deps] [Size] [Milestone]` | Creates a new WI entry in an existing Feature Group. | ✅ Yes |
 | `edit <WI-##> [--title <v>] [--desc <v>] [--details <v>] [--deps <v>] [--size <v>] [--milestone <v>]` | Updates specific content fields of an existing WI. | ✅ Yes |
-| `show <WI-##>` | Prints the enriched JSON of a WI (includes dependency statuses) to stdout. | ❌ No |
+| `show <WI-##> [field]` | Prints the enriched JSON of a WI or a specific field to stdout. | ❌ No |
 | `add-group <Name> <Fill> <Stroke> <Description>` | Creates a new JSON file with a group definition and empty items list. | ✅ Yes |
 | `show-group [Name]` | Lists all registered groups or shows a specific group's definition. | ❌ No |
 
-- **Dependency Enrichment**: The `show` command automatically computes and appends a synthetic `_dependencyStatuses` field to the JSON output, mapping each dependency ID to its current status (e.g., `done`, `pending`, `missing`). This allows for quick bottleneck identification without manual lookups.
+- **Dependency Enrichment & Filtering**: The `show` command automatically appends a synthetic `_dependencyStatuses` field. If a second argument is provided (e.g., `details`, `status`, `deps`), the script filters output to that specific field.
+- **ID Support**: Supports both integer IDs (e.g., `WI-45`) and sub-item IDs (e.g., `WI-18.1`).
 - **Group Validation**: `add` verifies if the `Group` exists in any `groupDefinition.name`. If not found, the script exits with an error and instructs the user to use `add-group`.
 - **ID Assignment**: `AUTO` scans all items in all JSON files to find the next available ID.
 - **Content Resolution**: Supports `@` prefix to read values from external text files (for `add` and `edit --details / --desc`).
@@ -141,7 +144,7 @@ The management of the JSON files is strictly controlled by a suite of scripts in
 ### 4.2 `update-wi.js` (Lifecycle)
 
 - **Lookup**: Searches for the target ID across all JSON files in the data directory.
-- **State Transition**: Updates the `status` field. If the status is set to `done` or `aborted`, it automatically appends the current date to `timeline.completed`.
+- **State Transition**: Updates the `status` field. If the status is set to `accepted` or `aborted`, it automatically appends the current date to `timeline.completed`.
 - **Sync**: Triggers documentation refresh via `generate-docs.js` for the `backlog`, `roadmap`, and `future` views. The `changelog` view is **excluded** from auto-sync and must be generated on-demand.
 
 ### 4.3 `generate-docs.js` (Rendering)

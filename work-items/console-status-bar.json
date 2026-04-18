@@ -13,7 +13,7 @@
       "title": "Debug Console Functionality",
       "featureGroup": "Console & Status Bar",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "M",
         "dependencies": [
           "WI-11"
@@ -35,7 +35,7 @@
       "title": "Connection Status Indicator Functionality",
       "featureGroup": "Console & Status Bar",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "S",
         "dependencies": [
           "WI-05"
@@ -57,7 +57,7 @@
       "title": "Command Serialization: Evaluate Cancel & Timeout",
       "featureGroup": "Console & Status Bar",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": [

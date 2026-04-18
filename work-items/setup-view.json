@@ -13,7 +13,7 @@
       "title": "Extend `GdbConfigService` Configuration Model",
       "featureGroup": "Setup View",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "S",
         "dependencies": []
       },
@@ -33,7 +33,7 @@
       "title": "Setup Form Field Completion",
       "featureGroup": "Setup View",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "M",
         "dependencies": [
           "WI-01"
@@ -55,7 +55,7 @@
       "title": "Setup Form Validation",
       "featureGroup": "Setup View",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "S",
         "dependencies": [
           "WI-02"

@@ -13,7 +13,7 @@
       "title": "Debug Control Button Functionality",
       "featureGroup": "Debug Controls",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "M",
         "dependencies": [
           "WI-07"
@@ -38,7 +38,7 @@
       "title": "DAP Event Handling & State Management",
       "featureGroup": "Debug Controls",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "M",
         "dependencies": [
           "WI-07"
@@ -62,7 +62,7 @@
       "title": "Command Serialization: Control Button In-Flight Guard",
       "featureGroup": "Debug Controls",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "S",
         "milestone": "v1.0",
         "dependencies": [
@@ -111,7 +111,7 @@
       "title": "VS Code Compatible Keyboard Shortcuts",
       "featureGroup": "Debug Controls",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "S",
         "milestone": "v1.0",
         "dependencies": []

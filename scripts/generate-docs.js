@@ -57,7 +57,9 @@ function formatWorkItemMarkdown(item, { showStatus = false, showSize = false, sh
     let titleLine = `### ${item.id}: ${item.title}`;
 
     if (showStatus) {
-        if (status === 'done') titleLine += ' ✅';
+        if (status === 'accepted') titleLine += ' ✅';
+        else if (status === 'done') titleLine += ' 🔍';
+        else if (status === 'rework') titleLine += ' 🛠️';
         else if (status === 'aborted') titleLine += ' 🚫';
         else titleLine += ` (Status: ${status})`;
 
@@ -68,6 +70,10 @@ function formatWorkItemMarkdown(item, { showStatus = false, showSize = false, sh
 
     if (status === 'pending' && !showStatus) {
         md += `- **Status**: ⏳ Pending\n`;
+    } else if (status === 'rework' && !showStatus) {
+        md += `- **Status**: 🛠️ Rework\n`;
+    } else if (status === 'done' && !showStatus) {
+        md += `- **Status**: 🔍 Under Review\n`;
     }
     if (showSize) {
         md += `- **Size**: ${item.metadata.size || 'M'}\n`;
@@ -91,8 +97,9 @@ function formatWorkItemMarkdown(item, { showStatus = false, showSize = false, sh
 // ── Views ────────────────────────────────────────────────────────────
 
 function getBacklogView(items) {
+    const backlogStatuses = ['pending', 'done', 'rework'];
     const activeItems = items.filter(item =>
-        item.metadata.status === 'pending' &&
+        backlogStatuses.includes(item.metadata.status) &&
         (item.metadata.milestone === CURRENT_MILESTONE || !item.metadata.milestone)
     );
     let markdown = `---\ntitle: Active Work Items\nscope: tasks, progress, dependencies\naudience: [Lead_Engineer, Product_Architect]\n---\n\n# Active Backlog (${CURRENT_MILESTONE})\n\n`;
@@ -144,7 +151,7 @@ function buildFeatureGroupsLegend(items) {
             };
         }
         groupData[group].itemIds.push(item.id);
-        if (item.metadata.status !== 'done' && item.metadata.status !== 'aborted') {
+        if (item.metadata.status !== 'accepted' && item.metadata.status !== 'aborted') {
             groupData[group].isStabilized = false;
         }
     });
@@ -179,7 +186,7 @@ function getRoadmapView(items) {
     items.forEach(item => {
         const group = item.featureGroup || 'General';
         if (!groupStates[group]) groupStates[group] = { isStabilized: true };
-        if (item.metadata.status !== 'done' && item.metadata.status !== 'aborted') {
+        if (item.metadata.status !== 'accepted' && item.metadata.status !== 'aborted') {
             groupStates[group].isStabilized = false;
         }
     });
@@ -199,10 +206,25 @@ function getRoadmapView(items) {
             // Stabilized Group Style: Unsaturated grey background with thin dashed border
             styles += `    style ${mId} fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2\n`;
         } else {
+            const isAccepted = status === 'accepted';
             const isDone = status === 'done';
-            const stroke = isDone ? '#000' : color.stroke;
-            const strokeWidth = isDone ? ',stroke-width:2.5px' : '';
-            styles += `    style ${mId} fill:${color.fill},stroke:${stroke}${strokeWidth}\n`;
+            const isRework = status === 'rework';
+
+            let stroke = color.stroke;
+            let strokeWidth = '';
+            let dash = '';
+
+            if (isAccepted) {
+                stroke = '#000';
+                strokeWidth = ',stroke-width:2.5px';
+            } else if (isDone) {
+                dash = ',stroke-dasharray: 4';
+            } else if (isRework) {
+                stroke = '#ef4444';
+                strokeWidth = ',stroke-width:2px';
+            }
+
+            styles += `    style ${mId} fill:${color.fill},stroke:${stroke}${strokeWidth}${dash}\n`;
         }
     });
 
@@ -231,7 +253,7 @@ ${buildFeatureGroupsLegend(items)}`.trim() + '\n';
 }
 
 function getChangelogView(items) {
-    const completedItems = items.filter(item => item.metadata.status === 'done' || item.metadata.status === 'aborted');
+    const completedItems = items.filter(item => item.metadata.status === 'accepted' || item.metadata.status === 'aborted');
     completedItems.sort((a, b) => a.id.localeCompare(b.id));
 
     let markdown = `---\ntitle: Project Changelog\nscope: history, completed-phases, archived-tasks\naudience: [Product_Architect, Lead_Engineer]\n---\n\n# Project Changelog\n\n`;

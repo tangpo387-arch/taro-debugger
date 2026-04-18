@@ -13,7 +13,7 @@
       "title": "File Tree Service Abstraction (`FileTreeService`)",
       "featureGroup": "File Explorer",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "S",
         "dependencies": []
       },
@@ -34,7 +34,7 @@
       "title": "Left Sidenav File Tree UI",
       "featureGroup": "File Explorer",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "M",
         "dependencies": [
           "WI-15"
@@ -56,7 +56,7 @@
       "title": "Implement Source Content LRU Cache",
       "featureGroup": "File Explorer",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": [
@@ -83,7 +83,7 @@
       "title": "Manage Source Cache Lifecycle and Verification",
       "featureGroup": "File Explorer",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "S",
         "milestone": "v1.0",
         "dependencies": [

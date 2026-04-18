@@ -371,14 +371,16 @@ Flags:
 // ── Subcommand: show ─────────────────────────────────────────────────
 
 /**
- * Prints the full JSON of a single Work Item to stdout.
+ * Prints the full JSON of a single Work Item or a specific field.
+ * Supports a field name as the second argument.
  * Read-only — does not trigger doc sync.
- * @param {string[]} args - [WI-##]
+ * @param {string[]} args - [WI-##, field]
  */
 function cmdShow(args) {
-  const targetId = args[0];
-  if (!targetId || !targetId.match(/^WI-\d+$/)) {
-    console.error('Usage: manage-wi.js show <WI-##>');
+  const [targetId, filter] = args;
+
+  if (!targetId || !targetId.match(/^WI-\d+(\.\d+)?$/)) {
+    console.error('Usage: manage-wi.js show <WI-##> [field]');
     process.exit(1);
   }
 
@@ -390,18 +392,35 @@ function cmdShow(args) {
     process.exit(1);
   }
 
-  // Enrich with dependency statuses for easier inspection
+  // Enrich with dependency statuses
   const item = JSON.parse(JSON.stringify(entry.item));
   const deps = item.metadata.dependencies || [];
+  item._dependencyStatuses = {};
   if (deps.length > 0) {
-    item._dependencyStatuses = {};
     deps.forEach(depId => {
       const depEntry = entries.find(e => e.item?.id === depId);
       item._dependencyStatuses[depId] = depEntry ? depEntry.item.metadata.status : 'missing';
     });
   }
 
-  process.stdout.write(JSON.stringify(item, null, 2) + '\n');
+  // Handle filtering
+  let output = item;
+  if (filter === 'deps') {
+    output = item._dependencyStatuses;
+  } else if (filter) {
+    // Basic property access (including common metadata shortcuts)
+    if (filter === 'status') output = item.metadata.status;
+    else if (filter === 'size') output = item.metadata.size;
+    else if (filter === 'milestone') output = item.metadata.milestone;
+    else output = item[filter];
+
+    if (output === undefined) {
+      console.error(`Error: Field "${filter}" not found in ${targetId}.`);
+      process.exit(1);
+    }
+  }
+
+  process.stdout.write(JSON.stringify(output, null, 2) + '\n');
 }
 
 // ── CLI Router ───────────────────────────────────────────────────────
@@ -414,14 +433,15 @@ Usage: node scripts/manage-wi.js <subcommand> [args]
 Subcommands:
   add         <ID|AUTO> <Group> <Title> ...
   edit        <WI-##> [Flags]
-  show        <WI-##>
+  show        <WI-##> [field]
   add-group   <Name> <Fill> <Stroke> <Description>
   show-group  [Name]
 
 Notes:
   - Details use "|" as separator; prefix any value with "@" to load from a file.
   - Groups must be managed via add-group/show-group.
-  - Status changes (done/pending/aborted) are handled by update-wi.js.
+  - "show <field>" filters output to a specific field (e.g. details, status, deps).
+  - Status changes (done/pending/accepted/rework/aborted) are handled by update-wi.js.
 `.trim();
 
 switch (subcommand) {

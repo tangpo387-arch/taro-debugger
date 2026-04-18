@@ -13,7 +13,7 @@
       "title": "Monaco Editor Breakpoint Interaction",
       "featureGroup": "Editor Features",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "M",
         "dependencies": []
       },
@@ -33,7 +33,7 @@
       "title": "Breakpoint DAP Synchronization",
       "featureGroup": "Editor Features",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "S",
         "dependencies": [
           "WI-06",
@@ -56,7 +56,7 @@
       "title": "Current Line Highlight",
       "featureGroup": "Editor Features",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "S",
         "dependencies": [
           "WI-11"

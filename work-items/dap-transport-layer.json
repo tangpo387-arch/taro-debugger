@@ -13,7 +13,7 @@
       "title": "Create `DapTransportService` Abstract Interface",
       "featureGroup": "DAP Transport Layer",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "S",
         "dependencies": []
       },
@@ -32,7 +32,7 @@
       "title": "Implement WebSocket Transport Layer (`WebSocketTransportService`)",
       "featureGroup": "DAP Transport Layer",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "M",
         "dependencies": [
           "WI-04"
@@ -58,7 +58,7 @@
       "title": "DAP Session Management Service (`DapSessionService`)",
       "featureGroup": "DAP Transport Layer",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "M",
         "dependencies": [
           "WI-05"
@@ -82,7 +82,7 @@
       "title": "DAP Request Timeout Mechanism",
       "featureGroup": "DAP Transport Layer",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "S",
         "dependencies": [
           "WI-06"
@@ -104,7 +104,7 @@
       "title": "Integrate DapSessionService in DebuggerComponent",
       "featureGroup": "DAP Transport Layer",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "S",
         "dependencies": [
           "WI-06",
@@ -147,7 +147,7 @@
       "title": "Connection Error Handling",
       "featureGroup": "DAP Transport Layer",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "M",
         "dependencies": [
           "WI-05",
@@ -171,7 +171,7 @@
       "title": "DAP Server Error Handling",
       "featureGroup": "DAP Transport Layer",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "S",
         "dependencies": [
           "WI-06"

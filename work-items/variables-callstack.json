@@ -13,7 +13,7 @@
       "title": "Call Stack Panel",
       "featureGroup": "Variables & Call Stack",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "M",
         "dependencies": [
           "WI-11"
@@ -35,7 +35,7 @@
       "title": "Variables Data State Management",
       "featureGroup": "Variables & Call Stack",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "M",
         "dependencies": [
           "WI-11",
@@ -59,7 +59,7 @@
       "title": "Variables Tree UI Component",
       "featureGroup": "Variables & Call Stack",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "M",
         "dependencies": [
           "WI-18.1"

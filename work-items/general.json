@@ -13,7 +13,7 @@
       "title": "Migrate Work-Item Data Files to Group-Definition Schema",
       "featureGroup": "General",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "S",
         "milestone": "v1.0",
         "dependencies": []
@@ -39,7 +39,7 @@
       "title": "Update Scripts for Group-Definition Schema",
       "featureGroup": "General",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": [
@@ -67,7 +67,7 @@
       "title": "Update Documentation for Group-Definition Schema",
       "featureGroup": "General",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "S",
         "milestone": "v1.0",
         "dependencies": [
@@ -93,7 +93,7 @@
       "title": "Enrich manage-wi.js show & Update Governance Doc",
       "featureGroup": "General",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "S",
         "milestone": "v1.0",
         "dependencies": []
@@ -108,6 +108,102 @@
         "created": "2026-04-17",
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-17"
+      }
+    },
+    {
+      "id": "WI-45",
+      "title": "Spec: Extended WI Lifecycle",
+      "featureGroup": "General",
+      "metadata": {
+        "status": "accepted",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Update wi-data-governance.md to reflect new statuses and filters.",
+      "details": [
+        "Update status definitions",
+        "Update view filter rules",
+        "Update timeline logic description",
+        "[Test] Verify wi-data-governance.md contains 'accepted' and 'rework' in §2.2"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-18"
+      }
+    },
+    {
+      "id": "WI-46",
+      "title": "Logic: update-wi.js Lifecycle Update",
+      "featureGroup": "General",
+      "metadata": {
+        "status": "accepted",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-45"
+        ]
+      },
+      "description": "Update the script to support the new statues and timeline completion rules.",
+      "details": [
+        "Inject new validStatuses",
+        "Update timeline logic for 'accepted' and 'aborted'",
+        "[Test] Verify 'node scripts/update-wi.js WI-## accepted' updates status and completed date"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-18"
+      }
+    },
+    {
+      "id": "WI-47",
+      "title": "Logic: generate-docs.js Rendering Engine",
+      "featureGroup": "General",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-46"
+        ]
+      },
+      "description": "Update the rendering engine to handle the new lifecycle statuses in all views.",
+      "details": [
+        "Update getBacklogView filter",
+        "Update getChangelogView filter",
+        "Update getRoadmapView Mermaid styling logic",
+        "[Test] Verify roadmap renders 'done' as dashed and 'rework' as red"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-18"
+      }
+    },
+    {
+      "id": "WI-48",
+      "title": "Spec: work-item-management Skill Update",
+      "featureGroup": "General",
+      "metadata": {
+        "status": "accepted",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-45"
+        ]
+      },
+      "description": "Reflect status ownership and transitions in the agent instructions.",
+      "details": [
+        "Update §4 Progressing a Work Item",
+        "Add role ownership table",
+        "[Test] Verify Skill file contains 'accepted' status instructions"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-18"
       }
     }
   ]

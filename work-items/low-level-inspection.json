@@ -13,7 +13,7 @@
       "title": "Integration of Tabbed Layout and Navigation",
       "featureGroup": "Low-Level Inspection",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "S",
         "dependencies": [
           "WI-07",
@@ -36,7 +36,7 @@
       "title": "DapAssemblyService and Disassemble Request",
       "featureGroup": "Low-Level Inspection",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "M",
         "dependencies": [
           "WI-06"
@@ -62,7 +62,7 @@
       "title": "AssemblyViewComponent and Instruction Rendering",
       "featureGroup": "Low-Level Inspection",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "M",
         "dependencies": [
           "WI-27",
@@ -89,7 +89,7 @@
       "title": "Implement Instruction-Level Stepping (stepi/nexti)",
       "featureGroup": "Low-Level Inspection",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": [

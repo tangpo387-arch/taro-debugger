@@ -2,7 +2,7 @@
 title: Project Roadmap & Dependency Map
 scope: milestones, dependencies, architecture-tracking
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-17
+last_updated: 2026-04-18
 ---
 
 # Project Roadmap & Dependency Map
@@ -42,6 +42,10 @@ graph LR
     WI_36["WI-36 Update Scripts for Group-Definition Schema"]
     WI_37["WI-37 Update Documentation for Group-Definition Schema"]
     WI_44["WI-44 Enrich manage-wi.js show & Update Governance Doc"]
+    WI_45["WI-45 Spec: Extended WI Lifecycle"]
+    WI_46["WI-46 Logic: update-wi.js Lifecycle Update"]
+    WI_47["WI-47 Logic: generate-docs.js Rendering Engine"]
+    WI_48["WI-48 Spec: work-item-management Skill Update"]
     WI_27["WI-27 Integration of Tabbed Layout and Navigation"]
     WI_28["WI-28 DapAssemblyService and Disassemble Request"]
     WI_29["WI-29 AssemblyViewComponent and Instruction Rendering"]
@@ -85,6 +89,9 @@ graph LR
     WI_35 --> WI_36
     WI_35 --> WI_37
     WI_36 --> WI_37
+    WI_45 --> WI_46
+    WI_46 --> WI_47
+    WI_45 --> WI_48
     WI_07 --> WI_27
     WI_11 --> WI_27
     WI_06 --> WI_28
@@ -134,6 +141,10 @@ graph LR
     style WI_36 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_37 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_44 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_45 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_46 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_47 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_48 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_27 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_28 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_29 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2

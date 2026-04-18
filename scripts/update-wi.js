@@ -6,10 +6,10 @@ const DATA_DIR = path.join(__dirname, '../work-items');
 
 const [targetId, rawStatus] = process.argv.slice(2);
 const newStatus = rawStatus === 'abort' ? 'aborted' : rawStatus;
-const validStatuses = ['pending', 'done', 'aborted'];
+const validStatuses = ['pending', 'done', 'accepted', 'rework', 'aborted', 'proposed'];
 
 if (!targetId || !validStatuses.includes(newStatus)) {
-    console.error('Usage: node update-wi.js WI-## <pending|done|aborted>');
+    console.error('Usage: node update-wi.js WI-## <pending|done|accepted|rework|aborted|proposed>');
     process.exit(1);
 }
 
@@ -30,7 +30,7 @@ function update() {
             item.metadata.status = newStatus;
 
             const today = new Date().toISOString().split('T')[0];
-            if (newStatus === 'done' || newStatus === 'aborted') {
+            if (newStatus === 'accepted' || newStatus === 'aborted') {
                 item.timeline.completed = today;
             }
 
