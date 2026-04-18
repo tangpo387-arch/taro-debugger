@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AssemblyViewComponent } from './assembly-view.component';
 import { DapAssemblyService } from './dap-assembly.service';
 import { BehaviorSubject, of } from 'rxjs';
-import { DapDisassembledInstruction } from './dap.types';
+import { DapDisassembledInstruction } from '@taro/dap-core';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { CommonModule } from '@angular/common';
 

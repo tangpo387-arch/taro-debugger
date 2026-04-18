@@ -3,6 +3,9 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "paths": {
+      "@taro/dap-core": ["./projects/dap-core/src/public-api.ts"]
+    },
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
@@ -28,6 +31,12 @@
     },
     {
       "path": "./projects/taro-debugger-frontend/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/dap-core/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/dap-core/tsconfig.spec.json"
     }
   ]
 }

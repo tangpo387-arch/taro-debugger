@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatListModule } from '@angular/material/list';
-import { DapStackFrame } from './dap.types';
+import { DapStackFrame } from '@taro/dap-core';
 
 @Component({
   selector: 'app-call-stack',

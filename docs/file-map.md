@@ -10,11 +10,11 @@ related:
 
 # Source File Responsibility Map
 
-This is the **quick-reference cheat sheet** for locating which file to read or modify for a given feature area. All source files are under `projects/taro-debugger-frontend/projects/taro-debugger-frontend/src/app/`.
+This is the **quick-reference cheat sheet** for locating which file to read or modify for a given feature area. All source files are under the `projects/` directory.
 
 > [!WARNING]
 > **For Autonomous Agents (LLMs):** Do NOT use terminal commands (like `find`, `ls`, or `tree`) to search for source file paths.
-> All files listed in the tables below are guaranteed to be located exactly at `{Repo-path}/projects/taro-debugger-frontend/projects/taro-debugger-frontend/src/app/{File}` (unless an explicit subdirectory is shown). Please construct the absolute path directly and use your built-in file-reading/editing tools.
+> All files listed in the tables below are relative to the project root. Please construct the absolute path directly and use your built-in file-reading/editing tools.
 > **Note:** `{Repo-path}` resolves to the project root — the directory containing `package.json`.
 > **Note:** Test files (`*.spec.ts`) are intentionally omitted from this map to reduce visual noise. For testing requirements and responsibilities, please refer to `docs/test-plan.md` and the **Skill: `test-case-writing`** (`.agents/skills/test-case-writing/SKILL.md`).
 
@@ -77,7 +77,7 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 
 | File | Responsibility | Key Exports |
 | --- | --- | --- |
-| `dap.types.ts` | DAP protocol type definitions | `DapRequest`, `DapResponse`, `DapEvent`, `DapMessage`, `DapStackFrame`, `LogEntry`, `LogCategory`, `DisassembleArguments`, `DapDisassembledInstruction`, `SteppingGranularity`, `StepArguments` |
+| `projects/dap-core/src/lib/dap.types.ts` | DAP protocol type definitions | `DapRequest`, `DapResponse`, `DapEvent`, `DapMessage`, `DapStackFrame`, `LogEntry`, `LogCategory`, `DisassembleArguments`, `DapDisassembledInstruction`, `SteppingGranularity`, `StepArguments` |
 | `layout.config.ts` | Static layout dimension constants (panel widths, breakpoints) | — |
 | `file-tree.service.ts` | Abstract file tree interface (implemented by `DapFileTreeService`) | `FileTreeService`, `FileNode` |
 | `dap-log.service.ts` | Dual console log stream management. Written to by `DebuggerComponent`; consumed by `LogViewerComponent`. Classified as Shared: no Session-layer service injects it after this refactor. | `consoleLogs$`, `programLogs$`, `consoleLog()`, `appendProgramLog()`, `clear()` |

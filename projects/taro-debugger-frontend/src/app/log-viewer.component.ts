@@ -23,7 +23,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { DapLogService } from './dap-log.service';
 import { DapSessionService, ExecutionState, EvaluateCancelledError } from './dap-session.service';
-import { LogEntry } from './dap.types';
+import { LogEntry } from '@taro/dap-core';
 
 // ── Component ─────────────────────────────────────────────────────────────
 

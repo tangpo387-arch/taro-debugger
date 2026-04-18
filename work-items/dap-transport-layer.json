@@ -242,7 +242,7 @@
       "title": "Lib: Initialize & Extract API Types",
       "featureGroup": "DAP Transport Layer",
       "metadata": {
-        "status": "pending",
+        "status": "accepted",
         "size": "S",
         "milestone": "v1.0",
         "dependencies": [
@@ -258,7 +258,8 @@
       ],
       "timeline": {
         "created": "2026-04-18",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-18"
       }
     },
     {

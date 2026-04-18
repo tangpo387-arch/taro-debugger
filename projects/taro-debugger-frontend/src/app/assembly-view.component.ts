@@ -7,7 +7,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map, Subscription } from 'rxjs';
 
 import { DapAssemblyService, TaroDisassembledInstruction } from './dap-assembly.service';
-import { DapDisassembledInstruction } from './dap.types';
+import { DapDisassembledInstruction } from '@taro/dap-core';
 import { LAYOUT_COMPACT_MQ } from './layout.config';
 
 @Component({

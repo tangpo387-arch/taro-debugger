@@ -1,7 +1,7 @@
 import { firstValueFrom, Subject, BehaviorSubject } from 'rxjs';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { DapFileTreeService } from './dap-file-tree.service';
-import { DapResponse, DapEvent } from './dap.types';
+import { DapResponse, DapEvent } from '@taro/dap-core';
 import { FileNode } from './file-tree.service';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

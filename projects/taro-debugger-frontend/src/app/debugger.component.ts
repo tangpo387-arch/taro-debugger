@@ -24,7 +24,7 @@ import { ErrorDialog, ErrorDialogData } from './error-dialog/error-dialog';
 import { DapConfigService, DapConfig } from './dap-config.service';
 import { DapSessionService, ExecutionState, VerifiedBreakpoint } from './dap-session.service';
 import { DapVariablesService } from './dap-variables.service';
-import { DapEvent, DapStackFrame } from './dap.types';
+import { DapEvent, DapStackFrame } from '@taro/dap-core';
 import { FileNode } from './file-tree.service';
 import { DapLogService } from './dap-log.service';
 import { DebugControlGroupComponent } from './debug-control-group.component';

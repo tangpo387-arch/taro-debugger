@@ -3,7 +3,7 @@ import { Observable, Subject, BehaviorSubject, Subscription, firstValueFrom } fr
 import { filter, timeout } from 'rxjs/operators';
 import { DapTransportService } from './dap-transport.service';
 import { DapConfigService } from './dap-config.service';
-import { DapRequest, DapResponse, DapEvent, DisassembleArguments, StepArguments } from './dap.types';
+import { DapRequest, DapResponse, DapEvent, DisassembleArguments, StepArguments } from '@taro/dap-core';
 
 /** Error thrown when an evaluate request is cancelled or times out */
 export class EvaluateCancelledError extends Error {

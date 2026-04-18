@@ -118,16 +118,20 @@ npm start
 
 Open `http://localhost:4200` in your browser. You should see the **Setup View** with connection fields (DAP Server Address, Launch Mode, Executable Path). Enter your DAP Server address (e.g., `localhost:4711`) and click **Connect**. If the status indicator turns green, the session is active and ready.
 
-## Development
+### Project Structure
+
+The project follows an **Angular Workspace (Monorepo)** architecture:
+
+- **`projects/taro-debugger-frontend`**: The primary Angular application (UI/UX).
+- **`projects/dap-core`**: The core library containing DAP type definitions and (soon) shared transport logic.
 
 ### Project Commands
-
-The project uses an **Angular Workspace (Monorepo)** structure. Standard commands target the primary application (`taro-debugger-frontend`).
 
 | Operation | Command |
 | --- | --- |
 | **Start Dev Server** | `npm start` |
-| **Build Production** | `npm run build` |
+| **Build Full App** | `npm run build` |
+| **Build Library** | `ng build dap-core` |
 | **Run Unit Tests** | `npm test` |
 | **Scaffold Component** | `ng generate component <name> --project taro-debugger-frontend` |
 

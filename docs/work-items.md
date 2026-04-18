@@ -22,18 +22,6 @@ audience: [Lead_Engineer, Product_Architect]
   - Handle process termination and resource cleanup
 - **Dependencies**: none
 
-### WI-59: Lib: Initialize & Extract API Types
-
-- **Status**: ⏳ Pending
-- **Size**: S
-- **Description**: Create @taro/dap-core library and migrate global DAP type definitions.
-- **Details**:
-  - Generate library project projects/dap-core
-  - Relocate dap.types.ts to library
-  - Update app imports to use type-only workspace paths
-  - [Test] Verify build-success for library and application
-- **Dependencies**: WI-58
-
 ### WI-60: Lib: Extract Transport Layer
 
 - **Status**: ⏳ Pending
@@ -98,6 +86,21 @@ audience: [Lead_Engineer, Product_Architect]
   - Distinct files proceed in parallel — no cross-file blocking
   - [Test] rapid same-file clicks collapse to one request; pending dispatches after in-flight resolves; two files fire independently
 - **Dependencies**: WI-13
+
+## General
+
+### WI-64: Monorepo: Comprehensive Documentation Audit
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Perform a full audit of all project documentation to reflect the finalized monorepo architecture and @taro/dap-core integration.
+- **Details**:
+  - Verify accuracy of docs/architecture.md Mermaid diagrams relative to extracted library
+  - Update docs/system-specification.md deployment modes (Web vs Electron in monorepo)
+  - Perform final validation of docs/file-map.md against the completed projects/ hierarchy
+  - Validate all .agents/ instructions against the migrated service locations
+  - [Test] Confirm node scripts/doc-guard.js verify passes on all modified files
+- **Dependencies**: WI-62
 
 ## Variables & Call Stack
 

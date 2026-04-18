@@ -78,6 +78,32 @@
           }
         }
       }
+    },
+    "dap-core": {
+      "projectType": "library",
+      "root": "projects/dap-core",
+      "sourceRoot": "projects/dap-core/src",
+      "prefix": "taro",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/dap-core/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/dap-core/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/dap-core/tsconfig.spec.json"
+          }
+        }
+      }
     }
   }
 }
