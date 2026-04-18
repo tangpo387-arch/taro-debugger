@@ -81,6 +81,56 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-17"
       }
+    },
+    {
+      "id": "WI-67",
+      "title": "Library Extraction: LogViewerComponent",
+      "featureGroup": "Console & Status Bar",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-62"
+        ]
+      },
+      "description": "Extract LogViewerComponent into a dedicated library @taro/ui-console and modularize it into separate sub-components for better maintainability.",
+      "details": [
+        "Create projects/ui-console library",
+        "Split LogViewerComponent into DebugConsole (evaluation), OutputConsole (program), and LogViewer (orchestrator)",
+        "Relocate virtual scroll logic and styles to the library",
+        "Update DebuggerComponent imports",
+        "[Test] Verify both tabs function correctly and auto-scroll behaves as expected"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-68",
+      "title": "DAP Protocol Inspector (3-Tab Support)",
+      "featureGroup": "Console & Status Bar",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-67"
+        ]
+      },
+      "description": "Add a third tab to the console for raw DAP protocol traffic (requests, responses, and events) to isolate diagnostic data from user program output.",
+      "details": [
+        "Add ProtocolConsole sub-component to @taro/ui-console",
+        "Modify LogViewerComponent to include 3rd tab with category 'dap' filter",
+        "Update DebuggerComponent traffic subscription to feed the new stream",
+        "Add JSON expansion support for protocol payloads",
+        "[Test] Verify DAP traffic appears in the 3rd tab and the main Debug Console remains clean"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }

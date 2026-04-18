@@ -115,6 +115,31 @@
         "spec_reviewed": "2026-04-12",
         "completed": "2026-04-12"
       }
+    },
+    {
+      "id": "WI-66",
+      "title": "Library Extraction: AssemblyViewComponent",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-62"
+        ]
+      },
+      "description": "Extract the AssemblyViewComponent into a dedicated library @taro/ui-assembly to isolate specialized disassembly rendering logic.",
+      "details": [
+        "Create projects/ui-assembly library",
+        "Relocate assembly-view.component.ts and associated styles/templates to the library",
+        "Ensure virtual-scroll and DAP type dependencies are correctly handled",
+        "Update DebuggerComponent to consume from @taro/ui-assembly",
+        "[Test] Verify disassembly view renders and highlights correctly"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }

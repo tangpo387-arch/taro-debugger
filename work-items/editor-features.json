@@ -122,6 +122,31 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-18"
       }
+    },
+    {
+      "id": "WI-65",
+      "title": "Library Extraction: EditorComponent",
+      "featureGroup": "Editor Features",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-62"
+        ]
+      },
+      "description": "Extract the Monaco-based EditorComponent into a dedicated library @taro/ui-editor to improve modularity and build isolation.",
+      "details": [
+        "Create projects/ui-editor library",
+        "Relocate editor.component.ts and associated styles/templates to the library",
+        "Export component through public-api.ts",
+        "Update DebuggerComponent to consume from @taro/ui-editor",
+        "[Test] Verify app builds and editor functions (breakpoints/highlights) identically"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }
