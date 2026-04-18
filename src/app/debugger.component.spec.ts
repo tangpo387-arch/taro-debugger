@@ -206,3 +206,62 @@ describe('DebuggerComponent — Keyboard Shortcut Integration', () => {
     expect(mockEditor.toggleBreakpointAtCurrentPosition).toHaveBeenCalled();
   });
 });
+
+/**
+ * Unit tests for DebuggerComponent reveal logic (WI-49 bug fix).
+ */
+describe('DebuggerComponent — Reveal Logic', () => {
+  let component: DebuggerComponent;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        DebuggerComponent,
+        { 
+          provide: DapSessionService, 
+          useValue: { 
+            connectionStatus$: EMPTY, 
+            executionState$: EMPTY, 
+            onEvent: () => EMPTY, 
+            onTraffic$: EMPTY, 
+            disconnect: vi.fn(),
+            fileTree: { readFile: () => of('') } 
+          } 
+        },
+        { 
+          provide: DapVariablesService, 
+          useValue: { 
+            executionState$: EMPTY, 
+            scopes$: EMPTY, 
+            clear: vi.fn(), 
+            fetchScopes: vi.fn().mockResolvedValue(undefined) 
+          } 
+        },
+        { provide: DapLogService, useValue: { consoleLog: vi.fn() } },
+        { provide: DapAssemblyService, useValue: { clear: vi.fn() } },
+        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
+        { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
+        { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } }
+      ]
+    });
+    component = TestBed.inject(DebuggerComponent);
+  });
+
+  it('should increment fileRevealTrigger only on onFrameClick and not on onFileSelected', async () => {
+    // Arrange
+    const initialTrigger = component.fileRevealTrigger;
+
+    // Act - File Selection (Passive/Manual Tree Navigation)
+    await component.onFileSelected({ path: 'test.cpp', type: 'file', name: 'test.cpp' });
+    const triggerAfterFileSelect = component.fileRevealTrigger;
+
+    // Act - Frame Click (Active Reveal)
+    await component.onFrameClick({ id: 1, name: 'main', line: 10, column: 1, source: { path: 'test.cpp' } } as any);
+    const triggerAfterFrameClick = component.fileRevealTrigger;
+
+    // Assert
+    expect(triggerAfterFileSelect).toBe(initialTrigger);
+    expect(triggerAfterFrameClick).toBe(initialTrigger + 1);
+  });
+});

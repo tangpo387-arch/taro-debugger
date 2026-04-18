@@ -77,6 +77,7 @@
           <mat-tab label="Source">
             <app-editor class="monaco-editor-instance" [code]="currentCode" [filename]="activeFilePath"
               [activeLine]="activeFilePath === activeLineFilePath ? activeLine : null"
+              [revealTrigger]="fileRevealTrigger"
               (breakpointsChange)="onBreakpointsChange($event)" />
           </mat-tab>
           <mat-tab label="Disassembly">

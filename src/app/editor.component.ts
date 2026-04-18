@@ -79,6 +79,8 @@ export class EditorComponent implements OnChanges, OnDestroy {
   @Input() public filename: string | null = null;
   @Input() public code: string = '// Loading source code...';
   @Input() public activeLine: number | null = null;
+  /** Incrementing trigger to force the editor to snap to the active line (e.g., on step or stack-frame click) */
+  @Input() public revealTrigger: number = 0;
 
   /** Emits the full breakpoint list for a file whenever it changes */
   @Output() public readonly breakpointsChange = new EventEmitter<BreakpointChangeEvent>();
@@ -89,7 +91,11 @@ export class EditorComponent implements OnChanges, OnDestroy {
   private readonly breakpoints: Map<string, Set<number>> = new Map();
   /** Verified breakpoints per file (line numbers confirmed by the DAP adapter) */
   private readonly verifiedBreakpoints: Map<string, Set<number>> = new Map();
+  /** Stores Monaco view state (cursor, scroll, selection) per absolute file path */
+  private readonly viewStates = new Map<string, any>();
   private readonly updateQueue$ = new Subject<void>();
+  private lastRestoredFilename: string | null = null;
+  private lastProcessedRevealTrigger: number = 0;
 
   // ── Dependencies ────────────────────────────────────────────────────
 
@@ -106,8 +112,30 @@ export class EditorComponent implements OnChanges, OnDestroy {
     ).subscribe(() => {
       this.updateActiveLineDecoration();
       this.updateBreakpointDecorations();
-      if (this.activeLine) {
+
+      const hasFilenameChanged = this.filename !== this.lastRestoredFilename;
+      const wasRevealRequested = this.revealTrigger > this.lastProcessedRevealTrigger;
+      let stateRestored = false;
+
+      // Restore view state if we switched to a new file and a state exists
+      if (this.filename && hasFilenameChanged) {
+        const savedState = this.viewStates.get(this.filename);
+        if (this.editorInstance && savedState) {
+          this.editorInstance.restoreViewState(savedState);
+          stateRestored = true;
+        }
+        this.lastRestoredFilename = this.filename;
+      }
+
+      // Snap to active line only if:
+      // 1. A reveal was explicitly requested (e.g., step or stack frame click)
+      // 2. OR we switched to a file for the first time in this session (no saved state)
+      if (this.activeLine && (wasRevealRequested || !stateRestored)) {
         this.scrollToLine(this.activeLine);
+      }
+
+      if (wasRevealRequested) {
+        this.lastProcessedRevealTrigger = this.revealTrigger;
       }
     });
 
@@ -125,9 +153,14 @@ export class EditorComponent implements OnChanges, OnDestroy {
 
   public ngOnChanges(changes: SimpleChanges): void {
     if (changes['filename'] && this.editorInstance) {
+      // Save state of the previous file before switching
+      const prevFile = changes['filename'].previousValue;
+      if (prevFile && prevFile !== changes['filename'].currentValue) {
+        this.viewStates.set(prevFile, this.editorInstance.saveViewState());
+      }
       this.updateLanguage();
     }
-    if ((changes['activeLine'] || changes['code'] || changes['filename']) && this.editorInstance) {
+    if ((changes['activeLine'] || changes['code'] || changes['filename'] || changes['revealTrigger']) && this.editorInstance) {
       this.updateQueue$.next();
     }
   }

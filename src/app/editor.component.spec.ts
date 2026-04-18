@@ -81,4 +81,142 @@ describe('EditorComponent', () => {
        expect(toggleSpy).not.toHaveBeenCalled();
     });
   });
+
+  describe('View State Persistence', () => {
+    let mockEditor: any;
+
+    beforeEach(() => {
+      mockEditor = {
+        saveViewState: vi.fn(),
+        restoreViewState: vi.fn(),
+        updateOptions: vi.fn(),
+        getModel: vi.fn().mockReturnValue({}),
+        deltaDecorations: vi.fn().mockReturnValue([]),
+        revealLineInCenter: vi.fn(),
+        setPosition: vi.fn()
+      };
+      (window as any).monaco.editor = {
+        setModelLanguage: vi.fn()
+      };
+      (component as any).editorInstance = mockEditor;
+    });
+
+    it('should save view state when filename changes', () => {
+      // Arrange
+      component.filename = 'file1.cpp';
+      const mockState = { cursor: 10 };
+      mockEditor.saveViewState.mockReturnValue(mockState);
+
+      // Act
+      const changes = {
+        filename: {
+          previousValue: 'file1.cpp',
+          currentValue: 'file2.cpp',
+          firstChange: false,
+          isFirstChange: () => false
+        }
+      };
+      component.ngOnChanges(changes as any);
+
+      // Assert
+      expect(mockEditor.saveViewState).toHaveBeenCalled();
+      expect((component as any).viewStates.get('file1.cpp')).toBe(mockState);
+    });
+
+    it('should restore view state when switching back to a file', async () => {
+      // Arrange
+      const mockState = { cursor: 10 };
+      (component as any).viewStates.set('file1.cpp', mockState);
+      component.filename = 'file1.cpp';
+
+      // Act
+      component.ngOnChanges({
+        filename: {
+          previousValue: 'file2.cpp',
+          currentValue: 'file1.cpp',
+          firstChange: false,
+          isFirstChange: () => false
+        }
+      } as any);
+
+      // The restore happens in the debounced updateQueue$ subscriber
+      // Wait for it (UPDATE_DEBOUNCE_MS is 50ms)
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Assert
+      expect(mockEditor.restoreViewState).toHaveBeenCalledWith(mockState);
+    });
+
+    it('should not restore if no state exists for the file', async () => {
+      // Arrange
+      component.filename = 'new-file.cpp';
+
+      // Act
+      component.ngOnChanges({
+        filename: {
+          previousValue: 'file2.cpp',
+          currentValue: 'new-file.cpp',
+          firstChange: false,
+          isFirstChange: () => false
+        }
+      } as any);
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Assert
+      expect(mockEditor.restoreViewState).not.toHaveBeenCalled();
+    });
+
+    it('should NOT snap to active line if state was restored and no reveal was requested', async () => {
+      // Arrange
+      const mockState = { cursor: 10 };
+      (component as any).viewStates.set('file1.cpp', mockState);
+      component.filename = 'file1.cpp';
+      component.activeLine = 42;
+      (component as any).lastProcessedRevealTrigger = 0;
+      component.revealTrigger = 0;
+
+      // Act
+      component.ngOnChanges({
+        filename: {
+          previousValue: 'file2.cpp',
+          currentValue: 'file1.cpp'
+        }
+      } as any);
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Assert
+      expect(mockEditor.restoreViewState).toHaveBeenCalledWith(mockState);
+      expect(mockEditor.revealLineInCenter).not.toHaveBeenCalled();
+    });
+
+    it('should snap to active line if revealTrigger was incremented even if state was restored', async () => {
+      // Arrange
+      const mockState = { cursor: 10 };
+      (component as any).viewStates.set('file1.cpp', mockState);
+      component.filename = 'file1.cpp';
+      component.activeLine = 42;
+      (component as any).lastProcessedRevealTrigger = 0;
+      component.revealTrigger = 1;
+
+      // Act
+      component.ngOnChanges({
+        filename: {
+          previousValue: 'file2.cpp',
+          currentValue: 'file1.cpp'
+        },
+        revealTrigger: {
+          previousValue: 0,
+          currentValue: 1
+        }
+      } as any);
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Assert
+      expect(mockEditor.restoreViewState).toHaveBeenCalledWith(mockState);
+      expect(mockEditor.revealLineInCenter).toHaveBeenCalledWith(42);
+    });
+  });
 });

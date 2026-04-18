@@ -25,6 +25,12 @@ To improve user experience when navigating between multiple source files during 
 - **Restore Trigger**: When a new file is opened and its code is loaded into the editor, the component must check if a saved view state exists for this path and restore it if found.
 - **Initial State**: If no saved state exists for a file, the cursor should default to the top of the file (or the active line if one is provided).
 
+### R-EVS4: Navigation Priority
+
+- **Passive vs. Active Navigation**: The system must differentiate between background file selection (passive) and explicit debugging reveals (active).
+- **Priority Rule**: When a user selects a file via the file tree, the saved view state (scroll/cursor) MUST take precedence over any current `activeLine` highlight in that file.
+- **Reveal Overrides**: Explicit debug actions (Breakpoint hits, Stepping, or Stack-Frame clicks) MUST force a "reveal" that scrolls to the `activeLine`, even if a view state was recently restored.
+
 ### R-EVS3: Session Lifecycle
 
 - View state persistence is session-scoped only.
@@ -46,7 +52,10 @@ private readonly viewStates = new Map<string, any>();
 1. `EditorComponent` receives a new `filename` via `ngOnChanges`.
 2. Component saves the current view state using the *old* filename (if not null).
 3. Component updates the editor model with the new code and language.
-4. Component calls `editorInstance.restoreViewState()` using the *new* filename's entry from the map (if it exists).
+4. Component checks for a saved view state for the *new* filename:
+   - If found: call `editorInstance.restoreViewState()`.
+   - If not found: check if `activeLine` is provided; if so, scroll to it.
+5. **Priority Override**: If the navigation was triggered by an explicit reveal (tracked via an incrementing `revealTrigger` input), `editorInstance.scrollToLine(activeLine)` is called *after* restoration, ensuring the execution context and breakpoint are visible.
 
 ## 4. Acceptance Criteria (Verification)
 
@@ -54,6 +63,8 @@ private readonly viewStates = new Map<string, any>();
 - [ ] **T-EVS2**: Select a block of text in `main.cpp`. Switch to another file and back. Verify the selection is restored.
 - [ ] **T-EVS3**: Verify that switching to a new file that has never been opened defaults to line 1 or the `activeLine` highlight.
 - [ ] **T-EVS4**: Restoring state for a large source file (e.g., 5k+ lines) occurs without visible UI lag (<16ms).
+- [ ] **T-EVS5**: While at a breakpoint in `main.cpp`, scroll to the bottom of the file. Switch to `utils.cpp`. Switch back to `main.cpp` using the **File Tree**. Verify the viewport remains at the bottom, NOT snapped to the breakpoint.
+- [ ] **T-EVS6**: Perform the same as T-EVS5, but switch back to `main.cpp` by clicking the **Stack Frame** in the Call Stack panel. Verify the viewport snaps to the breakpoint line.
 
 ## 5. Scope & Exclusions
 

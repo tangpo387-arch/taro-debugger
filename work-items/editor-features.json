@@ -104,7 +104,7 @@
       "title": "Editor View State Persistence",
       "featureGroup": "Editor Features",
       "metadata": {
-        "status": "pending",
+        "status": "accepted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": []
@@ -119,7 +119,8 @@
       ],
       "timeline": {
         "created": "2026-04-18",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-18"
       }
     }
   ]

@@ -51,19 +51,6 @@ audience: [Lead_Engineer, Product_Architect]
   - [Test] rapid same-file clicks collapse to one request; pending dispatches after in-flight resolves; two files fire independently
 - **Dependencies**: WI-13
 
-### WI-49: Editor View State Persistence
-
-- **Status**: ⏳ Pending
-- **Size**: M
-- **Description**: Record and restore cursor location and selection for each file in the source view.
-- **Details**:
-  - Implement Map-based view state storage in EditorComponent
-  - Use Monaco saveViewState/restoreViewState APIs
-  - Restore state on filename change
-  - Link to spec: docs/editor-view-state-spec.md
-  - [Test] Verify cursor and scroll position are restored when switching between files
-- **Dependencies**: none
-
 ## Variables & Call Stack
 
 ### WI-42: Command Serialization: Frame Switch Cancel-and-Replace
