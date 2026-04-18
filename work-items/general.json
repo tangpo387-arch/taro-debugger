@@ -283,6 +283,74 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-18"
       }
+    },
+    {
+      "id": "WI-54",
+      "title": "Convert to Angular Workspace",
+      "featureGroup": "General",
+      "metadata": {
+        "status": "aborted",
+        "size": "L",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Transition the project to a monorepo structure to support secondary libraries.",
+      "details": [
+        "Refactor angular.json to workspace format",
+        "Move app source to projects/",
+        "Adjust build scripts and relative paths",
+        "[Test] Verify app builds and runs in the new structure"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-18"
+      }
+    },
+    {
+      "id": "54.1",
+      "title": "Monorepo: Relocate Application Source",
+      "featureGroup": "General",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Move src contents to projects/taro-debugger-frontend and update angular.json.",
+      "details": [
+        "Create projects/ folder",
+        "Move src/ to projects/taro-debugger-frontend/src/",
+        "Update UI-related paths in angular.json",
+        "[Test] Confirm npm start launches successfully"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "54.2",
+      "title": "Monorepo: Adapt Build & Electron Scripts",
+      "featureGroup": "General",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-54.1"
+        ]
+      },
+      "description": "Update root TS configurations and Electron scripts for the new workspace structure.",
+      "details": [
+        "Update tsconfig.app.json and tsconfig.spec.json references",
+        "Fixed electron-builder search patterns in package.json",
+        "[Test] Confirm npm run electron:dev successfully launches desktop mode"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }

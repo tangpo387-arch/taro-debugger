@@ -21,6 +21,11 @@ graph LR
     WI_21["WI-21 Connection Error Handling"]
     WI_22["WI-22 DAP Server Error Handling"]
     WI_31["WI-31 DAP 'terminated' Event _restart Payload Passing"]
+    WI_53["WI-53 Extract DAP Core Library"]
+    53_1["53.1 Lib: Initialize & Extract API Types"]
+    53_2["53.2 Lib: Extract Transport Layer"]
+    53_3["53.3 Lib: Extract Session Manager"]
+    53_4["53.4 Lib: Final Integration & Cleanup"]
     WI_10["WI-10 Debug Control Button Functionality"]
     WI_11["WI-11 DAP Event Handling & State Management"]
     WI_39["WI-39 Command Serialization: Control Button In-Flight Guard"]
@@ -50,6 +55,9 @@ graph LR
     WI_50["WI-50 Enhanced Work Item Querying"]
     WI_51["WI-51 Documentation Workflow Automation (Doc-Guard)"]
     WI_52["WI-52 Workflow Integration: Doc-Guard Protocol"]
+    WI_54["WI-54 Convert to Angular Workspace"]
+    54_1["54.1 Monorepo: Relocate Application Source"]
+    54_2["54.2 Monorepo: Adapt Build & Electron Scripts"]
     WI_27["WI-27 Integration of Tabbed Layout and Navigation"]
     WI_28["WI-28 DapAssemblyService and Disassemble Request"]
     WI_29["WI-29 AssemblyViewComponent and Instruction Rendering"]
@@ -74,6 +82,11 @@ graph LR
     WI_20 --> WI_21
     WI_06 --> WI_22
     WI_06 --> WI_31
+    WI_54 --> WI_53
+    WI_54_2 --> 53_1
+    WI_53_1 --> 53_2
+    WI_53_2 --> 53_3
+    WI_53_3 --> 53_4
     WI_07 --> WI_10
     WI_07 --> WI_11
     WI_10 --> WI_39
@@ -97,6 +110,7 @@ graph LR
     WI_46 --> WI_47
     WI_45 --> WI_48
     WI_51 --> WI_52
+    WI_54_1 --> 54_2
     WI_07 --> WI_27
     WI_11 --> WI_27
     WI_06 --> WI_28
@@ -125,6 +139,11 @@ graph LR
     style WI_21 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_22 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_31 fill:#4ade80,stroke:#22c55e
+    style WI_53 fill:none,stroke-dasharray:5
+    style 53_1 fill:#4ade80,stroke:#22c55e
+    style 53_2 fill:#4ade80,stroke:#22c55e
+    style 53_3 fill:#4ade80,stroke:#22c55e
+    style 53_4 fill:#4ade80,stroke:#22c55e
     style WI_10 fill:#f97316,stroke:#000,stroke-width:2.5px
     style WI_11 fill:#f97316,stroke:#000,stroke-width:2.5px
     style WI_39 fill:#f97316,stroke:#000,stroke-width:2.5px
@@ -143,17 +162,20 @@ graph LR
     style WI_16 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_33 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_34 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_35 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_36 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_37 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_44 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_45 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_46 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_47 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_48 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_50 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_51 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_52 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_35 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_36 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_37 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_44 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_45 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_46 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_47 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_48 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_50 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_51 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_52 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_54 fill:none,stroke-dasharray:5
+    style 54_1 fill:#f1f5f9,stroke:#64748b
+    style 54_2 fill:#f1f5f9,stroke:#64748b
     style WI_27 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_28 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_29 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
@@ -181,4 +203,4 @@ graph LR
 | Console & Status Bar | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%232dd4bf'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#2dd4bf"/> `#2dd4bf` | 💎 Stabilized |
 | Electron Desktop Mode | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%2394a3b8'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#94a3b8"/> `#94a3b8` | 💎 Stabilized |
 | Low-Level Inspection | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%236366f1'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#6366f1"/> `#6366f1` | 💎 Stabilized |
-| General | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f1f5f9'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f1f5f9"/> `#f1f5f9` | 💎 Stabilized |
+| General | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f1f5f9'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f1f5f9"/> `#f1f5f9` | 🔵 Active |

@@ -209,6 +209,129 @@
         "created": "2026-04-11",
         "created_by": "Antigravity-Agent"
       }
+    },
+    {
+      "id": "WI-53",
+      "title": "Extract DAP Core Library",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "aborted",
+        "size": "L",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-54"
+        ]
+      },
+      "description": "Refactor DAP session, transport, and API types into a standalone Angular library.",
+      "details": [
+        "Define @taro/dap-core library structure",
+        "Migrate dap.types.ts to library",
+        "Migrate transport layer services",
+        "Migrate session layer services",
+        "Update app to consume labels",
+        "[Test] Verify connection and session lifecycle tests pass"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-18"
+      }
+    },
+    {
+      "id": "53.1",
+      "title": "Lib: Initialize & Extract API Types",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "pending",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-54.2"
+        ]
+      },
+      "description": "Create @taro/dap-core library and migrate global DAP type definitions.",
+      "details": [
+        "Generate library project projects/dap-core",
+        "Relocate dap.types.ts to library",
+        "Update app imports to use type-only workspace paths",
+        "[Test] Verify build-success for library and application"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "53.2",
+      "title": "Lib: Extract Transport Layer",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-53.1"
+        ]
+      },
+      "description": "Migrate transport services and factory to @taro/dap-core.",
+      "details": [
+        "Migrate abstract transport and implementations (WS/IPC)",
+        "Configure library providers for DI abstraction",
+        "Update main app to provide transport via library tokens",
+        "[Test] Verify WebSocket connection handshake in dev mode"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "53.3",
+      "title": "Lib: Extract Session Manager",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "pending",
+        "size": "L",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-53.2"
+        ]
+      },
+      "description": "Relocate DapSessionService state machine to @taro/dap-core.",
+      "details": [
+        "Migrate DapSessionService and DapConfigService",
+        "Ensure executionState$ and event bus remain stable",
+        "Update app to inject session from library scope",
+        "[Test] Verify stepping and state transitions in active debug session"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "53.4",
+      "title": "Lib: Final Integration & Cleanup",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "pending",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-53.3"
+        ]
+      },
+      "description": "Perform final refactoring, documentation updates, and UI-layer optimization.",
+      "details": [
+        "Update file-map.md and architecture documentation",
+        "Remove deprecated local service copies from app/",
+        "Run full regression suite on UI+Library integration",
+        "[Test] Verify 0 lint errors and all unit tests pass (app+lib)"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }

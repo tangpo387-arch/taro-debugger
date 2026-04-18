@@ -22,6 +22,54 @@ audience: [Lead_Engineer, Product_Architect]
   - Handle process termination and resource cleanup
 - **Dependencies**: none
 
+### 53.1: Lib: Initialize & Extract API Types
+
+- **Status**: ⏳ Pending
+- **Size**: S
+- **Description**: Create @taro/dap-core library and migrate global DAP type definitions.
+- **Details**:
+  - Generate library project projects/dap-core
+  - Relocate dap.types.ts to library
+  - Update app imports to use type-only workspace paths
+  - [Test] Verify build-success for library and application
+- **Dependencies**: WI-54.2
+
+### 53.2: Lib: Extract Transport Layer
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Migrate transport services and factory to @taro/dap-core.
+- **Details**:
+  - Migrate abstract transport and implementations (WS/IPC)
+  - Configure library providers for DI abstraction
+  - Update main app to provide transport via library tokens
+  - [Test] Verify WebSocket connection handshake in dev mode
+- **Dependencies**: WI-53.1
+
+### 53.3: Lib: Extract Session Manager
+
+- **Status**: ⏳ Pending
+- **Size**: L
+- **Description**: Relocate DapSessionService state machine to @taro/dap-core.
+- **Details**:
+  - Migrate DapSessionService and DapConfigService
+  - Ensure executionState$ and event bus remain stable
+  - Update app to inject session from library scope
+  - [Test] Verify stepping and state transitions in active debug session
+- **Dependencies**: WI-53.2
+
+### 53.4: Lib: Final Integration & Cleanup
+
+- **Status**: ⏳ Pending
+- **Size**: S
+- **Description**: Perform final refactoring, documentation updates, and UI-layer optimization.
+- **Details**:
+  - Update file-map.md and architecture documentation
+  - Remove deprecated local service copies from app/
+  - Run full regression suite on UI+Library integration
+  - [Test] Verify 0 lint errors and all unit tests pass (app+lib)
+- **Dependencies**: WI-53.3
+
 ## Debug Controls
 
 ### WI-40: Command Serialization: disconnect/terminate One-Shot Guard
@@ -50,6 +98,31 @@ audience: [Lead_Engineer, Product_Architect]
   - Distinct files proceed in parallel — no cross-file blocking
   - [Test] rapid same-file clicks collapse to one request; pending dispatches after in-flight resolves; two files fire independently
 - **Dependencies**: WI-13
+
+## General
+
+### 54.1: Monorepo: Relocate Application Source
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Move src contents to projects/taro-debugger-frontend and update angular.json.
+- **Details**:
+  - Create projects/ folder
+  - Move src/ to projects/taro-debugger-frontend/src/
+  - Update UI-related paths in angular.json
+  - [Test] Confirm npm start launches successfully
+- **Dependencies**: none
+
+### 54.2: Monorepo: Adapt Build & Electron Scripts
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Update root TS configurations and Electron scripts for the new workspace structure.
+- **Details**:
+  - Update tsconfig.app.json and tsconfig.spec.json references
+  - Fixed electron-builder search patterns in package.json
+  - [Test] Confirm npm run electron:dev successfully launches desktop mode
+- **Dependencies**: WI-54.1
 
 ## Variables & Call Stack
 
