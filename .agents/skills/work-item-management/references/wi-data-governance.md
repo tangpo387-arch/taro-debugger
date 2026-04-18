@@ -69,8 +69,8 @@ Every JSON file in the registry MUST follow this top-level structure:
 - **`featureGroup`**: Must exactly match the `groupDefinition.name` within the same file.
 - **`metadata`**: **(Mandatory Object)** Defines the lifecycle and sizing of the work item.
   - `status`: **Required**. Controls view routing (see [§3.3 View Filter Rules](#33-view-filter-rules)):
-    - `pending` — Active implementation; appears in `work-items.md`.
-    - `proposed` — Future roadmap; requires a `milestone` value.
+    - `proposed` — Idea raised and recorded in SSOT; not yet formally scoped; requires a `milestone` value.
+    - `pending` — Scoped, spec'd (if needed), and promoted to Active Backlog; ready for implementation.
     - `done` — Implementation complete; awaiting QCR review.
     - `rework` — Review failed; returned to LE for fixes.
     - `accepted` — Formally approved; archived in changelog, reflected in roadmap.

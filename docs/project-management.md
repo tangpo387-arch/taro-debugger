@@ -95,11 +95,11 @@ A work item travels through the following states. Only `Product_Architect` may c
 
 | State | Symbol | Location | Description |
 | :--- | :--- | :--- | :--- |
-| **Proposed** | 💡 | Discussion / PR comment | Idea raised; not yet formally scoped |
-| **Pending** | ⏳ | `docs/work-items.md` | Scoped & approved; waiting for implementation |
-| **Done** | ✅ | JSON SSOT | Implementation complete & reviewed; accessible via `node scripts/generate-docs.js changelog` |
-| **Aborted** | ❌ | JSON SSOT | Task cancelled or superseded; permanently stopped |
-| **Stabilized** | 💎 | Roadmap (auto) | All WIs in the group are `done`/`aborted`; roadmap style updated automatically by `generate-docs.js`. No manual action required. |
+| **Proposed** | 💡 | JSON SSOT | Idea raised; not yet formally scoped. Roadmap entry: milestone required. |
+| **Pending** | ⏳ | `docs/work-items.md` | Scoped & approved; spec written if needed; ready for implementation. |
+| **Done** | ✅ | JSON SSOT | Implementation complete & reviewed; archived in changelog. |
+| **Aborted** | ❌ | JSON SSOT | Task cancelled or superseded; permanently stopped. |
+| **Stabilized** | 💎 | Roadmap (auto) | All WIs in the group are `done`/`aborted`; roadmap style updated automatically. |
 
 > [!IMPORTANT]
 > **Never edit `work-items.md` or `project-roadmap.md` manually.** These files are auto-generated from the JSON SSOT; manual changes will be overwritten during the next sync. Always use the generation scripts.
@@ -114,24 +114,23 @@ A work item travels through the following states. Only `Product_Architect` may c
 * WI status is `Proposed`.
 * All dependency WIs (`deps`) are `✅ Done`.
 
-#### 2.2.1 Product_Architect Steps (Scoping)
+#### 2.2.1 Product_Architect Steps (Scoping & Promotion)
+
+**Objective**: Transition a WI from `Proposed` to `Pending`.
 
 **Steps**:
-1. Verify WI record completeness: `id`, `title`, `description`, `details[]` (requires ≥1 `[Test]`), `size`, `deps`.
-2. Identify relevant Skills and note them in the WI details.
-3. Evaluate the Complexity Gate. If the WI meets ANY of the following conditions:
+1. **Creation**: User and PA define the idea and create a `Proposed` record using `manage-wi.js add`.
+2. **Review**: Verify WI record completeness: `id`, `title`, `description`, `details[]` (requires ≥1 `[Test]`), `size`, `deps`.
+3. **Complexity Gate**: Evaluate if the WI meets Spec criteria. A formal specification document (`docs/*.md`) is **mandatory** if any of the following conditions are met:
    * Introduces a new architectural pattern or design rule.
    * Requires coordinating changes across ≥3 files or layers.
    * Involves non-obvious protocol constraints (e.g., async sequencing, DAP edge cases).
-   * Size is `M` or above.
-
-   **Then you MUST**:
-   * Structure a spec document under `docs/` (name the file based on the feature content using kebab-case, e.g., `docs/feature-name-spec.md`).
-   * Update related project documents to reflect the new design.
-   * Link the spec document in the WI details.
+   * Work Item Size is **M** or above.
+4. **Spec Authoring**: If the gate is passed, author the `docs/*.md` spec and link it in the WI details.
+5. **Promotion**: Run `node scripts/update-wi.js WI-## pending` to authorize development.
 
 **Verification**:
-* WI status is updated to `Pending`.
+* WI status is updated to `Pending` and appears in the Active Backlog.
 
 #### 2.2.2 Lead_Engineer Steps (Implementation Prep)
 

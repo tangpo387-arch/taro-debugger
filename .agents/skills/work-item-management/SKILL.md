@@ -173,12 +173,14 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
 - WI status is `Proposed`.
 - All dependency WIs (`deps`) are `✅ Done`.
 
-### 6.1 Product_Architect Steps (Scoping)
+### 6.1 Product_Architect Steps (Scoping & Promotion)
+
+**Goal**: Transition a WI from `Proposed` to `Pending`.
 
 **Steps**:
-1. Verify WI record completeness: `id`, `title`, `description`, `details[]` (requires ≥1 `[Test]`), `size`, `deps`.
-2. Identify relevant Skills and note them in the WI details.
-3. Evaluate the Complexity Gate. If the WI meets ANY of the following conditions:
+1. **Creation**: User and PA define the idea and create a `Proposed` record using `manage-wi.js add`.
+2. **Review**: Verify WI record completeness: `id`, `title`, `description`, `details[]` (requires ≥1 `[Test]`), `size`, `deps`.
+3. **Complexity Gate**: Evaluate the Complexity Gate. If the WI meets ANY of the following conditions:
    - Introduces a new architectural pattern or design rule.
    - Requires coordinating changes across ≥3 files or layers.
    - Involves non-obvious protocol constraints (e.g., async sequencing, DAP edge cases).
@@ -189,8 +191,10 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
    - Update related project documents to reflect the new design.
    - Link the spec document in the WI details.
 
+4. **Promotion**: Transition the status from `Proposed` to `Pending` via `update-wi.js`. This authorizes development to begin.
+
 **Verification**:
-- WI status is updated to `Pending`.
+- WI status is updated to `Pending` and appears in `work-items.md`.
 
 ### 6.3 Handoff Verdict Protocol (Lead_Engineer → Quality_Control_Reviewer)
 
