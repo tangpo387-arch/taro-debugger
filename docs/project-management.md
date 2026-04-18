@@ -129,8 +129,9 @@ stateDiagram-v2
 | :--- | :--- | :--- | :--- |
 | **Proposed** | 💡 | JSON SSOT | Idea raised; not yet formally scoped. Roadmap entry: milestone required. |
 | **Pending** | ⏳ | `docs/work-items.md` | Scoped & approved; spec written if needed; ready for implementation. |
-| **Done** | 🔍 | JSON SSOT | Implementation complete; awaiting QCR review. |
-| **Accepted** | ✅ | JSON SSOT | Formally approved; archived in changelog. |
+| **Done** | 🔍 | JSON SSOT | Implementation complete; awaiting Quality Control Review (QCR). |
+| **Rework** | 🛠️ | JSON SSOT | Review failed; item returned to Lead_Engineer for fixes. |
+| **Accepted** | ✅ | JSON SSOT | Formally approved by QCR; archived in changelog, reflected in roadmap. |
 | **Aborted** | ❌ | JSON SSOT | Task cancelled or superseded; permanently stopped. |
 | **Stabilized** | 💎 | Roadmap (auto) | All WIs in the group are `accepted`/`aborted`; roadmap style updated automatically. |
 
