@@ -122,16 +122,18 @@ Open `http://localhost:4200` in your browser. You should see the **Setup View** 
 
 ### Project Commands
 
+The project uses an **Angular Workspace (Monorepo)** structure. Standard commands target the primary application (`taro-debugger-frontend`).
+
 | Operation | Command |
 | --- | --- |
 | **Start Dev Server** | `npm start` |
 | **Build Production** | `npm run build` |
 | **Run Unit Tests** | `npm test` |
-| **Scaffold Component** | `ng generate component name` |
+| **Scaffold Component** | `ng generate component <name> --project taro-debugger-frontend` |
 
 ### Environment Setup
 
-Taro uses [Vitest](https://vitest.dev/) for unit testing and follows a strict [DAP Implementation Policy](docs/dap-integration-faq.md). For detailed architectural insights, see [Architecture Overview](docs/architecture.md).
+Taro source code is located in `projects/taro-debugger-frontend/src`. The core logic is being migrated to a standalone library in the same workspace.
 
 ## AI Coding Assistance
 

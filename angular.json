@@ -9,28 +9,31 @@
     "taro-debugger-frontend": {
       "projectType": "application",
       "schematics": {},
-      "root": "",
-      "sourceRoot": "src",
+      "root": "projects/taro-debugger-frontend",
+      "sourceRoot": "projects/taro-debugger-frontend/src",
       "prefix": "app",
       "architect": {
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "browser": "src/main.ts",
-            "tsConfig": "tsconfig.app.json",
+            "browser": "projects/taro-debugger-frontend/src/main.ts",
+            "tsConfig": "projects/taro-debugger-frontend/tsconfig.app.json",
             "assets": [
               {
                 "glob": "**/*",
-                "input": "public"
+                "input": "projects/taro-debugger-frontend/public"
               },
-              "src/assets",
+              "projects/taro-debugger-frontend/src/assets",
               {
                 "glob": "**/*",
                 "input": "node_modules/monaco-editor/min/vs",
                 "output": "/assets/monaco/"
               }
             ],
-            "styles": ["src/material-theme.scss", "src/styles.scss"]
+            "styles": [
+              "projects/taro-debugger-frontend/src/material-theme.scss",
+              "projects/taro-debugger-frontend/src/styles.scss"
+            ]
           },
           "configurations": {
             "production": {

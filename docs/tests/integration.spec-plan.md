@@ -2,7 +2,7 @@
 title: Integration Tests — Spec Plan
 scope: integration-test
 audience: [Lead_Engineer, Quality_Control_Reviewer]
-target-file: src/app/
+target-file: projects/taro-debugger-frontend/projects/taro-debugger-frontend/src/app/
 related-wi: ~
 last_updated: 2026-04-13
 ---
@@ -77,7 +77,7 @@ Tests for interactions and data flow between multiple Services or Components. Th
 
 ## Connection Error & Intent Detection
 
-> **Note**: 12 logic-dense tests are implemented in `src/app/connection-error-integration.spec.ts`.
+> **Note**: 12 logic-dense tests are implemented in `projects/taro-debugger-frontend/projects/taro-debugger-frontend/src/app/connection-error-integration.spec.ts`.
 
 * **Normal stop & intent interception**
   * Call `disconnect()` then simulate transport layer `complete()`, verify `DapSessionService` correctly intercepts the signal without emitting `_transportError` synthetic event.

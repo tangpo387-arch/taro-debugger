@@ -19,7 +19,7 @@ Provide a low-level view of machine instructions (Assembly) to support debugging
 ### 2.1 AssemblyViewComponent (`app-assembly-view`)
 
 - **Type**: Standalone Component.
-- **Location**: `/src/app/assembly-view.component.ts`.
+- **Location**: `/projects/taro-debugger-frontend/src/app/assembly-view.component.ts`.
 - **Primary Responsibility**: Render the disassembled instruction list and synchronized Instruction Pointer (IP) highlight.
 
 ### 2.2 DapAssemblyService

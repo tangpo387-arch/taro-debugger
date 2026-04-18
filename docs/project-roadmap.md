@@ -175,7 +175,7 @@ graph LR
     style WI_51 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
     style WI_52 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
     style WI_54 fill:none,stroke-dasharray:5
-    style WI_57 fill:#f1f5f9,stroke:#64748b
+    style WI_57 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
     style WI_58 fill:#f1f5f9,stroke:#64748b
     style WI_63 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
     style WI_27 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2

@@ -2,7 +2,7 @@
 title: SetupComponent — Unit Spec Plan
 scope: unit-test
 audience: [Lead_Engineer, Quality_Control_Reviewer]
-target-file: src/app/setup/setup.component.ts
+target-file: projects/taro-debugger-frontend/projects/taro-debugger-frontend/src/app/setup/setup.component.ts
 related-wi: ~
 last_updated: 2026-04-13
 ---

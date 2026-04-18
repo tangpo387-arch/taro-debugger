@@ -63,7 +63,7 @@ Locate documents based on task:
 | Check v1.0 scope boundary | — | All Agents | [future-roadmap.md](../docs/future-roadmap.md) — confirm a feature is **not** a v1.1+ item before implementing |
 | Understand the state machine | **Session** | `Lead_Engineer` | **Skill: `state-management`** |
 | Review code for quality | — | `Quality_Control_Reviewer` | [code-style-guide.md](rules/code-style-guide.md) + **Skills: `dap-implementation`, `state-management`** (as applicable) |
-| Find which file to modify | — | All Agents | [file-map.md](../docs/file-map.md) for source file responsibility map |
+| Find which file to modify | — | All Agents | [file-map.md](../docs/file-map.md) for source file responsibility map (under `projects/taro-debugger-frontend/src/app/`) |
 | Review DAP services / transport / session | **Session / Transport** | `Quality_Control_Reviewer` | **Skill: `dap-implementation`** |
 | Review component / service state flow | **UI / Session** | `Quality_Control_Reviewer` | **Skill: `state-management`** |
 | Review any `*.spec.ts` file | — | `Quality_Control_Reviewer` | **Skill: `test-case-writing`** |

@@ -2,7 +2,7 @@
 title: EditorComponent — Unit Spec Plan
 scope: unit-test
 audience: [Lead_Engineer, Quality_Control_Reviewer]
-target-file: src/app/editor.component.ts
+target-file: projects/taro-debugger-frontend/projects/taro-debugger-frontend/src/app/editor.component.ts
 related-wi: [WI-49]
 last_updated: 2026-04-18
 ---

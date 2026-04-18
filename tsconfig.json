@@ -24,10 +24,10 @@
   "files": [],
   "references": [
     {
-      "path": "./tsconfig.app.json"
+      "path": "./projects/taro-debugger-frontend/tsconfig.app.json"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "./projects/taro-debugger-frontend/tsconfig.spec.json"
     }
   ]
 }

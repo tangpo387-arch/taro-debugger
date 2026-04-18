@@ -10,12 +10,11 @@ related:
 
 # Source File Responsibility Map
 
-This is the **quick-reference cheat sheet** for locating which file to read or modify for a given feature area. All source files are under `src/app/`.
+This is the **quick-reference cheat sheet** for locating which file to read or modify for a given feature area. All source files are under `projects/taro-debugger-frontend/projects/taro-debugger-frontend/src/app/`.
 
 > [!WARNING]
 > **For Autonomous Agents (LLMs):** Do NOT use terminal commands (like `find`, `ls`, or `tree`) to search for source file paths.
-> All files listed in the tables below are guaranteed to be located exactly at `{Repo-path}/src/app/{File}` (unless an explicit subdirectory is shown). Please construct the absolute path directly and use your built-in file-reading/editing tools.
->
+> All files listed in the tables below are guaranteed to be located exactly at `{Repo-path}/projects/taro-debugger-frontend/projects/taro-debugger-frontend/src/app/{File}` (unless an explicit subdirectory is shown). Please construct the absolute path directly and use your built-in file-reading/editing tools.
 > **Note:** `{Repo-path}` resolves to the project root — the directory containing `package.json`.
 > **Note:** Test files (`*.spec.ts`) are intentionally omitted from this map to reduce visual noise. For testing requirements and responsibilities, please refer to `docs/test-plan.md` and the **Skill: `test-case-writing`** (`.agents/skills/test-case-writing/SKILL.md`).
 

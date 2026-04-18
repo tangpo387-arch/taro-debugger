@@ -3,7 +3,7 @@
  * @description Angular service unit test template for the taro-debugger project.
  *
  * Usage:
- *   1. Copy this file to src/app/<your-service>.spec.ts
+ *   1. Copy this file to projects/taro-debugger-frontend/src/app/<your-service>.spec.ts
  *   2. Replace all occurrences of `ExampleService` with your service class name.
  *   3. Replace the mock factory contents to match the service's actual dependencies.
  *   4. Map each spec-plan heading to an `it()` block inside the appropriate `describe()`.

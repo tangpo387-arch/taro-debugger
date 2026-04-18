@@ -46,4 +46,4 @@ The primary goal of this architectural refactor is to extract the core Debug Ada
 2. **Protocol Parity**: The DAP handshake (initialize, launch/attach) works exactly as it did before the extraction.
 3. **Unit Test Migration**: All existing `.spec.ts` files for the migrated services pass within the new library workspace.
 4. [Test] **UI Integration**: The main application loads, connects, and displays variables/stack-frames using the extracted library.
-5. **No Layer Violations**: A dependency check confirms the library does not import any files from `src/app/`.
+5. **No Layer Violations**: A dependency check confirms the library does not import any files from `projects/taro-debugger-frontend/projects/taro-debugger-frontend/src/app/`.

@@ -223,7 +223,7 @@ Adopt a **SemVer pre-release suffix** convention for `package.json` throughout t
 
 ---
 
-## ADR-09: 全面實施扁平化 ID 管理 (System-wide ID Flattening)
+## ADR-09: System-wide ID Flattening
 
 - **WI**: WI-63 (System-wide ID Flattening and Script Hardening)
 - **Status**: Accepted
@@ -231,19 +231,19 @@ Adopt a **SemVer pre-release suffix** convention for `package.json` throughout t
 
 ### Context
 
-專案早期允許使用 Fractional IDs（例如 `WI-18.1`, `54.1`），旨在表達任務間的父子關係。然而，這在實踐中引入了顯著的技術債：
-1. **工具鏈脆弱性**：`manage-wi.js` 與 `update-wi.js` 對 ID 的正則校驗不一致，導致點號常被錯誤解析或攔截。
-2. **可視化斷裂**：`generate-docs.js` 在將 ID 轉換為 Mermaid 節點名稱時（`.` 轉 `_`），若 ID 缺少 `WI-` 前綴或格式不一，會產生孤立重複節點，破壞 Roadmap 的依賴追蹤。
+In the early stages of the project, Fractional IDs (e.g., `WI-18.1`, `54.1`) were permitted to express parent-child relationships between tasks. However, this introduced significant technical debt in practice:
+1. **Toolchain Fragility**: Inconsistent regex validation for IDs between `manage-wi.js` and `update-wi.js` caused dots to be incorrectly parsed or intercepted.
+2. **Visualization Breakage**: `generate-docs.js`, when converting IDs to Mermaid node names (transforming `.` to `_`), would produce orphaned or duplicate nodes if the `WI-` prefix was missing or inconsistently formatted, breaking the dependency tracking in the Roadmap.
 
 ### Decision
 
-全面廢止小數位子項目標記法，並在管理腳本中實施硬性檢查：
-1. **扁平化 ID**：所有工作項統一使用 `WI-####` 格式（如 `WI-55`, `WI-57`）。
-2. **解耦分組**：任務間的父子邏輯回歸到 `dependencies` (依賴欄位) 與 `Feature Group` (功能分組) 來表達，不再依賴 ID 編號。
-3. **強制校驗**：若手動輸入不合規範的 ID，`manage-wi.js` 將直接終止報錯。
+Completely abolish the fractional sub-item notation and implement hard validation checks within the management scripts:
+1. **Flattened IDs**: All work items must strictly follow the `WI-####` format (e.g., `WI-55`, `WI-57`).
+2. **Decoupled Grouping**: Parent-child logic between tasks is expressed via the `dependencies` field and `Feature Group` categorization, rather than ID numbering.
+3. **Mandatory Validation**: `manage-wi.js` will terminate with an error if an non-compliant ID is manually entered.
 
 ### Consequences
 
-- 徹底解決了 Roadmap 渲染斷裂的 Bug。
-- 簡化了所有自動化工具對 ID 的處理邏輯，提高了系統的可擴展性。
-- 降低了未來 AI 代理在創建 Work Item 時產生數據污染的風險。
+- Resolved the bug causing Roadmap rendering breakage.
+- Simplified the processing logic across all automation tools, improving system scalability.
+- Reduced the risk of data contamination by AI agents when creating new Work Items.

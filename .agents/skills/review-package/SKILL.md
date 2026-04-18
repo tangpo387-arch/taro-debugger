@@ -72,8 +72,8 @@ skills-required: [skill-name-1, skill-name-2]
 
 | File | Changed Lines | Nature of Change |
 | :--- | :--- | :--- |
-| `src/app/foo.service.ts` | L56–62, L252–287 | Added commandInFlightSubject + guard logic |
-| `src/app/bar.component.ts` | L44–46 | Exposed commandInFlight$ |
+| `projects/taro-debugger-frontend/src/app/foo.service.ts` | L56–62, L252–287 | Added commandInFlightSubject + guard logic |
+| `projects/taro-debugger-frontend/src/app/bar.component.ts` | L44–46 | Exposed commandInFlight$ |
 
 ## 3. Edge Cases & Design Decisions
 
@@ -86,8 +86,8 @@ skills-required: [skill-name-1, skill-name-2]
 
 | File | Suite | Test Case |
 | :--- | :--- | :--- |
-| `src/app/foo.service.spec.ts` | `Command Serialization (R-CS1)` | should set commandInFlight$ to true |
-| `src/app/foo.service.spec.ts` | `Command Serialization (R-CS1)` | should drop second call while in-flight |
+| `projects/taro-debugger-frontend/src/app/foo.service.spec.ts` | `Command Serialization (R-CS1)` | should set commandInFlight$ to true |
+| `projects/taro-debugger-frontend/src/app/foo.service.spec.ts` | `Command Serialization (R-CS1)` | should drop second call while in-flight |
 
 ## 5. Spec-Plan Updates
 

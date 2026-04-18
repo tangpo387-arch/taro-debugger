@@ -312,13 +312,14 @@
       "title": "Monorepo: Relocate Application Source",
       "featureGroup": "General",
       "metadata": {
-        "status": "pending",
+        "status": "accepted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": []
       },
       "description": "Move src contents to projects/taro-debugger-frontend and update angular.json.",
       "details": [
+        "Ref: docs/monorepo-migration-spec.md",
         "Create projects/ folder",
         "Move src/ to projects/taro-debugger-frontend/src/",
         "Update UI-related paths in angular.json",
@@ -326,7 +327,8 @@
       ],
       "timeline": {
         "created": "2026-04-18",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-18"
       }
     },
     {
@@ -343,6 +345,7 @@
       },
       "description": "Update root TS configurations and Electron scripts for the new workspace structure.",
       "details": [
+        "Ref: docs/monorepo-migration-spec.md",
         "Update tsconfig.app.json and tsconfig.spec.json references",
         "Fixed electron-builder search patterns in package.json",
         "[Test] Confirm npm run electron:dev successfully launches desktop mode"

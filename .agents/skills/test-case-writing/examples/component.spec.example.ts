@@ -3,7 +3,7 @@
  * @description Angular component unit test template for the taro-debugger project.
  *
  * Usage:
- *   1. Copy this file to src/app/<your-component>.spec.ts
+ *   1. Copy this file to projects/taro-debugger-frontend/src/app/<your-component>.spec.ts
  *   2. Replace all occurrences of `ExampleComponent` with your component class name.
  *   3. Update the imports and mock providers to match the component's actual dependencies.
  *   4. Map each spec-plan heading to an `it()` block inside the appropriate `describe()`.
