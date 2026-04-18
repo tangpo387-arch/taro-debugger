@@ -49,7 +49,7 @@ Locate documents based on task:
 | Task Type | Layer | Primary Agent | Start Here |
 | :--- | :--- | :--- | :--- |
 | Define or update requirements | — | `Product_Architect` | **Skill: `system-architecture`** |
-| **Write any spec (WI, feature, or data schema)** | — | `Product_Architect` | **MUST read [data-management-spec.md](../docs/data/data-management-spec.md) first** — defines WI schema, status lifecycle, and script behavior |
+| **Write any spec (WI, feature, or data schema)** | — | `Product_Architect` | **Skill: `work-item-management`** |
 | Add a new UI feature | **UI** | `Lead_Engineer` | **Skill: `system-architecture`** |
 | Use Angular Framework APIs (mat-tree) | **UI** | `Lead_Engineer` | **Skill: `advanced-angular`** |
 | Modify visual style or layout | **UI** | `Lead_Engineer` | **Skill: `visual-design`** |

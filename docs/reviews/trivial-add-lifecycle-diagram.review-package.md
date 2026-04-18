@@ -42,7 +42,7 @@ skills-required: [doc-authoring]
 
 ## 6. Self-Verification
 
-> Verified via visual inspection of the Markdown structure and Mermaid syntax. 
+> Verified via visual inspection of the Markdown structure and Mermaid syntax.
 > Fixed a nested code block issue (`MD040`) during implementation.
 
 ```markdown

@@ -1,7 +1,7 @@
 ---
 title: Project Management Guide
 scope: process, work-items, lifecycle, naming, feature-groups
-audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
+audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-04-12
 related:
   - docs/work-items.md
@@ -91,8 +91,6 @@ A work item travels through the following states. Only `Product_Architect` may c
 stateDiagram-v2
     direction TB
 
-    [*] --> Proposed: manage-wi.js add
-    
     state "💡 Proposed" as Proposed
     state "⏳ Pending" as Pending
     state "🔍 Done" as Done
@@ -100,14 +98,13 @@ stateDiagram-v2
     state "✅ Accepted" as Accepted
     state "❌ Aborted" as Aborted
 
-    Proposed --> Pending: update-wi.js pending\n(Promotion by PA)
+    [*] --> Proposed: manage-wi.js add
     
+    Proposed --> Pending: update-wi.js pending\n(Promotion by PA)
     Pending --> Done: update-wi.js done\n(Submission by Lead)
     
     Done --> Accepted: update-wi.js accepted\n(Approval by QCR)
-    
     Done --> Rework: update-wi.js rework\n(Rejection by QCR)
-    
     Rework --> Done: update-wi.js done\n(Re-submission)
     
     Proposed --> Aborted: update-wi.js abort
@@ -132,9 +129,10 @@ stateDiagram-v2
 | :--- | :--- | :--- | :--- |
 | **Proposed** | 💡 | JSON SSOT | Idea raised; not yet formally scoped. Roadmap entry: milestone required. |
 | **Pending** | ⏳ | `docs/work-items.md` | Scoped & approved; spec written if needed; ready for implementation. |
-| **Done** | ✅ | JSON SSOT | Implementation complete & reviewed; archived in changelog. |
+| **Done** | 🔍 | JSON SSOT | Implementation complete; awaiting QCR review. |
+| **Accepted** | ✅ | JSON SSOT | Formally approved; archived in changelog. |
 | **Aborted** | ❌ | JSON SSOT | Task cancelled or superseded; permanently stopped. |
-| **Stabilized** | 💎 | Roadmap (auto) | All WIs in the group are `done`/`aborted`; roadmap style updated automatically. |
+| **Stabilized** | 💎 | Roadmap (auto) | All WIs in the group are `accepted`/`aborted`; roadmap style updated automatically. |
 
 > [!IMPORTANT]
 > **Never edit `work-items.md` or `project-roadmap.md` manually.** These files are auto-generated from the JSON SSOT; manual changes will be overwritten during the next sync. Always use the generation scripts.
@@ -147,7 +145,7 @@ stateDiagram-v2
 
 **Prerequisites**:
 * WI status is `Proposed`.
-* All dependency WIs (`deps`) are `✅ Done`.
+* All dependency WIs (`deps`) are `✅ Accepted`.
 
 #### 2.2.1 Product_Architect Steps (Scoping & Promotion)
 
@@ -174,7 +172,7 @@ stateDiagram-v2
 
 **Steps**:
 1. Execute `node scripts/manage-wi.js show {WI-ID}` and read `details[]` and `deps`.
-2. Halt execution and notify `Product_Architect` if any dependency WIs are not `✅ Done`.
+2. Halt execution and notify `Product_Architect` if any dependency WIs are not `✅ Accepted`.
 3. Load all relevant Skills listed in the WI or `project-context.md`.
 4. Read the spec document (`docs/{WI-ID}-spec.md`) in full if linked in the WI details.
 
@@ -237,7 +235,7 @@ The project follows strict Semantic Versioning (SemVer) using pre-release suffix
 **Goal**: Freeze feature development and begin integration testing.
 
 **Prerequisites**:
-* [ ] All `⏳ Pending` items in `docs/work-items.md` are `✅ Done`.
+* [ ] All `⏳ Pending` items in `docs/work-items.md` are `✅ Accepted`.
 * [ ] `npm run test -- --watch=false` passes with 0 failures.
 
 **Steps**:

@@ -12,6 +12,17 @@ audience: [Product_Architect, Lead_Engineer]
 
 ---
 
+## 0. Context Management & Efficiency
+
+> [!CAUTION]
+> **Context Protection Rule**: Do NOT read `references/wi-data-governance.md` for routine CLI operations (add, edit, update).
+> You MUST only load the governance reference if your task involves:
+> 1. Modifying the underlying JSON schema.
+> 2. Debugging or extending the logic within the `scripts/` directory.
+> 3. Resolving a data corruption issue in the SSOT.
+
+---
+
 ## 1. Operational Context
 
 ### 1.1 Trigger Conditions
@@ -171,7 +182,7 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
 
 **Prerequisites**:
 - WI status is `Proposed`.
-- All dependency WIs (`deps`) are `✅ Done`.
+- All dependency WIs (`deps`) are `✅ Accepted`.
 
 ### 6.1 Product_Architect Steps (Scoping & Promotion)
 

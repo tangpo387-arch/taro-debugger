@@ -1,3 +1,9 @@
+---
+title: Work Item Data Governance & Schema
+scope: json-schema, script-logic, data-integrity
+audience: Agent Role Play
+---
+
 # Work Item Data Governance & Schema
 
 > **Work Item (WI)**: The formal, atomic, and trackable unit of execution within the project. It serves as the primary artifact for planning, dependency resolution, and quality control across all project phases.
