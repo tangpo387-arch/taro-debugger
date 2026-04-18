@@ -1,6 +1,7 @@
 {
   "name": "taro-debugger-frontend",
   "version": "1.0.0-dev",
+  "author": "Tang Po <tangpo387@gmail.com>",
   "main": "dist/electron/main.js",
   "scripts": {
     "ng": "ng",

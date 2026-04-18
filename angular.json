@@ -16,6 +16,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
+            "outputPath": "dist/taro-debugger-frontend",
             "browser": "projects/taro-debugger-frontend/src/main.ts",
             "tsConfig": "projects/taro-debugger-frontend/tsconfig.app.json",
             "assets": [
@@ -23,7 +24,6 @@
                 "glob": "**/*",
                 "input": "projects/taro-debugger-frontend/public"
               },
-              "projects/taro-debugger-frontend/src/assets",
               {
                 "glob": "**/*",
                 "input": "node_modules/monaco-editor/min/vs",
@@ -72,7 +72,10 @@
           "defaultConfiguration": "development"
         },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/taro-debugger-frontend/tsconfig.spec.json"
+          }
         }
       }
     }

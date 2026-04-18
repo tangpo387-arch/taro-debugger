@@ -99,20 +99,6 @@ audience: [Lead_Engineer, Product_Architect]
   - [Test] rapid same-file clicks collapse to one request; pending dispatches after in-flight resolves; two files fire independently
 - **Dependencies**: WI-13
 
-## General
-
-### WI-58: Monorepo: Adapt Build & Electron Scripts
-
-- **Status**: ⏳ Pending
-- **Size**: M
-- **Description**: Update root TS configurations and Electron scripts for the new workspace structure.
-- **Details**:
-  - Ref: docs/monorepo-migration-spec.md
-  - Update tsconfig.app.json and tsconfig.spec.json references
-  - Fixed electron-builder search patterns in package.json
-  - [Test] Confirm npm run electron:dev successfully launches desktop mode
-- **Dependencies**: WI-57
-
 ## Variables & Call Stack
 
 ### WI-42: Command Serialization: Frame Switch Cancel-and-Replace
