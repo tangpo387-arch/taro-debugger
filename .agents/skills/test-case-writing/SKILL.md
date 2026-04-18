@@ -1,6 +1,7 @@
 ---
 name: Test Case Writing
 description: Step-by-step workflow for translating a spec-plan file into a production-ready Vitest .spec.ts file, covering TestBed setup, mock patterns, Angular service and component test structures, and assertion conventions.
+audience: [Lead_Engineer, Quality_Control_Reviewer]
 ---
 
 # Test Case Writing Skill

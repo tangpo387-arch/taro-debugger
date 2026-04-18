@@ -1,6 +1,7 @@
 ---
 name: DAP Implementation Rules
 description: Mandatory protocol constraints for implementing or modifying DAP-related Services, Transport layers, and session lifecycle logic.
+audience: [Lead_Engineer, Quality_Control_Reviewer]
 ---
 
 # DAP Implementation Rules

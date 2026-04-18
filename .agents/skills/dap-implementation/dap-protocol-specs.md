@@ -1,3 +1,8 @@
+---
+title: DAP Protocol Implementation Specs
+scope: protocol, session, transport
+audience: [Lead_Engineer, Quality_Control_Reviewer]
+---
 # DAP Protocol Implementation Specs (Agent-Specific Rules)
 
 This document defines the mandatory rules that AI Agents must follow when modifying DAP-related Services to prevent Race Conditions, Deadlocks, or generating code that violates the layered architecture.
@@ -75,8 +80,7 @@ abstract class DapTransportService {
   abstract connect(address: string): Observable<void>;
   abstract disconnect(): void;
   abstract sendRequest(request: DapRequest): void;
-  abstract onEvent(): Observable<DapEvent>;      // Raw event stream
-  abstract onMessage(): Observable<DapMessage>;  // All message stream
+  abstract onMessage(): Observable<DapMessage>;  // All message stream (Response/Event)
   abstract get connectionStatus$(): Observable<boolean>;
 }
 ```

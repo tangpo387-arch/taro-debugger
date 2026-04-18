@@ -1,6 +1,7 @@
 ---
 name: Documentation Authoring Rules
 description: Structure, tone, context, and verification standards for writing or reviewing any project Markdown document.
+audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
 ---
 
 # Documentation Authoring Rules

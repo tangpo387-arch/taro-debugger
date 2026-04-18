@@ -28,8 +28,8 @@ related:
 | Snackbar notifications (termination, errors) | **UI** | Displays user notifications upon receiving events |
 | Error retry dialog | **UI** | Displays `ErrorDialog` on connection failure (retry / go back) |
 | Debug control button states | **UI** | disabled/enabled based on `executionState` |
-| File tree display & collapse | **UI** | `FileExplorerComponent` fetches via `dapSession.fileTree`, emits `fileSelected` |
-| File source loading & editor update | **UI** | `DebuggerComponent.onFileSelected()` calls DAP `source`, updates `EditorComponent` |
+| File tree display & collapse | **UI** | `FileExplorerComponent` fetches via `DapFileTreeService`, emits `fileSelected` |
+| File source loading & editor update | **UI** | `DebuggerComponent.onFileSelected()` calls `DapFileTreeService.readFile()`, updates `EditorComponent` |
 | Layout size persistence | **UI** | Sidebar widths, visibility, console height stored in localStorage |
 
 ## 3. DebuggerComponent Layout Structure

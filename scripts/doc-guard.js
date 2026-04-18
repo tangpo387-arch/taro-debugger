@@ -163,7 +163,11 @@ function cmdVerify(targetPath) {
       }
     } else {
       const fm = fmMatch[1];
-      if (!fm.includes('title:') && !basename.endsWith('.review-package')) errors.push('Frontmatter missing "title"');
+      const hasTitle = fm.includes('title:');
+      const hasName = fm.includes('name:');
+      if (!hasTitle && !hasName && !basename.endsWith('.review-package')) {
+        errors.push('Frontmatter missing "title" (or "name" for SKILL files)');
+      }
       // review-packages have 'wi:' instead of 'title' sometimes, but actually template shows 'title' too.
       // doc-authoring §4.3 says MUST include audience for docs/ files.
       if (!fm.includes('audience:') && !basename.endsWith('.review-package')) {
@@ -179,7 +183,9 @@ function cmdVerify(targetPath) {
     }
 
     // 4. Heading Hierarchy (no skip levels)
-    const headings = [...content.matchAll(/^#+ /gm)].map(m => m[0].trim().length);
+    // Ignore headings inside code blocks
+    const contentWithoutCodeBlocks = content.replace(/```[\s\S]*?```/g, '');
+    const headings = [...contentWithoutCodeBlocks.matchAll(/^#+ /gm)].map(m => m[0].trim().length);
     let lastLevel = 0;
     headings.forEach((level, idx) => {
       if (level > lastLevel + 1) {

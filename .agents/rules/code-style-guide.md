@@ -1,4 +1,7 @@
 ---
+title: Project Code Style Guide
+scope: code-style, linting, typescript, angular
+audience: [Lead_Engineer, Quality_Control_Reviewer]
 trigger: always_on
 applies_to: ["*.ts", "*.scss", "*.html"]
 description: Coding standards for taro-debugger-frontend source files (*.ts, *.scss, *.html).

@@ -123,11 +123,13 @@ Transport instances are **lazily created** by Session via `TransportFactoryServi
 | `executionState$` | `Observable<ExecutionState>` | Debug execution state |
 | `onEvent()` | `Observable<DapEvent>` | Processed event stream |
 | `onTraffic$` | `Observable<any>` | Diagnostic traffic stream for raw DAP protocol messages |
-| `fileTree` | `FileTreeService` | File tree service dedicated to this Session (created with Session) |
 | `capabilities` | `any` | Capabilities obtained from the Server |
 | `startSession()` | `Promise<DapResponse>` | Complete startup flow (connect → initialize → launch) |
 | `continue() / next() / stepIn() / stepOut() / pause()` | `Promise<DapResponse>` | Debug control commands |
+| `nextInstruction() / stepInInstruction()` | `Promise<DapResponse>` | Instruction-level stepping commands (granularity = 'instruction') |
+| `setBreakpoints(path, lines)` | `Promise<VerifiedBreakpoint[]>` | Synchronize all breakpoints for a file; returns verified results from adapter |
 | `threads() / stackTrace() / scopes() / variables()` | `Promise<DapResponse>` | Thread and variable exploration commands (available in `stopped` state) |
+| `disassemble(args)` | `Promise<DapResponse>` | Retrieve disassembly instructions; available in `stopped` state |
 | `sendRequest()` | `Promise<DapResponse>` | Generic DAP request |
 | `disconnect()` | `Promise<void>` | Disconnect and clean up resources |
 | `terminate()` | `Promise<void>` | Terminate the debug target (falls back to `disconnect` if `supportsTerminateRequest` is false) |

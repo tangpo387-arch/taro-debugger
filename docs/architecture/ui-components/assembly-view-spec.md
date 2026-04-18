@@ -24,7 +24,7 @@ Provide a low-level view of machine instructions (Assembly) to support debugging
 
 ### 2.2 DapAssemblyService
 
-- **Type**: Component-scoped Service (provided in `AssemblyViewComponent`).
+- **Type**: Component-scoped Service (provided in `DebuggerComponent` to persist state across tab switches).
 - **Responsibility**:
   - Manage the lifecycle of instruction data.
   - Execute DAP `disassemble` requests.

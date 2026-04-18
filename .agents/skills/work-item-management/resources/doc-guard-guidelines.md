@@ -1,3 +1,8 @@
+---
+title: Documentation Guard Checklist & Templates
+scope: guidance, documentation, workflow
+audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
+---
 # Documentation Guard Checklist & Templates
 
 > [!IMPORTANT]
