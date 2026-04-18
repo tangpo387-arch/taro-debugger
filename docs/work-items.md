@@ -66,19 +66,6 @@ audience: [Lead_Engineer, Product_Architect]
 
 ## General
 
-### WI-51: Documentation Workflow Automation (Doc-Guard)
-
-- **Status**: ⏳ Pending
-- **Size**: S
-- **Description**: Create a unified tool for standardized doc creation and quality verification.
-- **Details**:
-  - Implement doc-guard.js with 'init-spec' and 'verify' subcommands
-  - Centralize Doc Schema definition (Frontmatter, Mandatory Sections)
-  - Pre-populate WI context into specs
-  - Implement CI-ready linting for the docs/ directory
-  - [Test] Verify init-spec generates compliant files; verify script rejects malformed MDs
-- **Dependencies**: none
-
 ### WI-52: Workflow Integration: Doc-Guard Protocol
 
 - **Status**: ⏳ Pending
