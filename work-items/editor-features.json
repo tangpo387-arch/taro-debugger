@@ -98,6 +98,29 @@
         "created": "2026-04-15",
         "created_by": "Antigravity-Agent"
       }
+    },
+    {
+      "id": "WI-49",
+      "title": "Editor View State Persistence",
+      "featureGroup": "Editor Features",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Record and restore cursor location and selection for each file in the source view.",
+      "details": [
+        "Implement Map-based view state storage in EditorComponent",
+        "Use Monaco saveViewState/restoreViewState APIs",
+        "Restore state on filename change",
+        "Link to spec: docs/editor-view-state-spec.md",
+        "[Test] Verify cursor and scroll position are restored when switching between files"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }

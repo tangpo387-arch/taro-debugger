@@ -30,6 +30,7 @@ graph LR
     WI_13["WI-13 Breakpoint DAP Synchronization"]
     WI_14["WI-14 Current Line Highlight"]
     WI_41["WI-41 Command Serialization: setBreakpoints Debounce + Per-File Serialization"]
+    WI_49["WI-49 Editor View State Persistence"]
     WI_23["WI-23 Electron Main Process Architecture"]
     WI_26["WI-26 Setup Page Separation"]
     WI_24["WI-24 Electron IPC Transport Layer (`IpcTransportService`)"]
@@ -46,6 +47,9 @@ graph LR
     WI_46["WI-46 Logic: update-wi.js Lifecycle Update"]
     WI_47["WI-47 Logic: generate-docs.js Rendering Engine"]
     WI_48["WI-48 Spec: work-item-management Skill Update"]
+    WI_50["WI-50 Enhanced Work Item Querying"]
+    WI_51["WI-51 Documentation Workflow Automation (Doc-Guard)"]
+    WI_52["WI-52 Workflow Integration: Doc-Guard Protocol"]
     WI_27["WI-27 Integration of Tabbed Layout and Navigation"]
     WI_28["WI-28 DapAssemblyService and Disassemble Request"]
     WI_29["WI-29 AssemblyViewComponent and Instruction Rendering"]
@@ -92,6 +96,7 @@ graph LR
     WI_45 --> WI_46
     WI_46 --> WI_47
     WI_45 --> WI_48
+    WI_51 --> WI_52
     WI_07 --> WI_27
     WI_11 --> WI_27
     WI_06 --> WI_28
@@ -129,6 +134,7 @@ graph LR
     style WI_13 fill:#a78bfa,stroke:#000,stroke-width:2.5px
     style WI_14 fill:#a78bfa,stroke:#000,stroke-width:2.5px
     style WI_41 fill:#a78bfa,stroke:#7c3aed
+    style WI_49 fill:#a78bfa,stroke:#7c3aed
     style WI_23 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_26 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_24 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
@@ -137,14 +143,17 @@ graph LR
     style WI_16 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_33 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_34 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_35 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_36 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_37 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_44 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_45 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_46 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_47 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_48 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_35 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_36 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_37 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_44 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_45 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_46 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_47 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_48 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_50 fill:#f1f5f9,stroke:#64748b
+    style WI_51 fill:#f1f5f9,stroke:#64748b
+    style WI_52 fill:#f1f5f9,stroke:#64748b
     style WI_27 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_28 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_29 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
@@ -172,4 +181,4 @@ graph LR
 | Console & Status Bar | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%232dd4bf'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#2dd4bf"/> `#2dd4bf` | 💎 Stabilized |
 | Electron Desktop Mode | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%2394a3b8'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#94a3b8"/> `#94a3b8` | 💎 Stabilized |
 | Low-Level Inspection | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%236366f1'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#6366f1"/> `#6366f1` | 💎 Stabilized |
-| General | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f1f5f9'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f1f5f9"/> `#f1f5f9` | 💎 Stabilized |
+| General | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f1f5f9'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f1f5f9"/> `#f1f5f9` | 🔵 Active |

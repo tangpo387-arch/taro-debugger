@@ -51,6 +51,65 @@ audience: [Lead_Engineer, Product_Architect]
   - [Test] rapid same-file clicks collapse to one request; pending dispatches after in-flight resolves; two files fire independently
 - **Dependencies**: WI-13
 
+### WI-49: Editor View State Persistence
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Record and restore cursor location and selection for each file in the source view.
+- **Details**:
+  - Implement Map-based view state storage in EditorComponent
+  - Use Monaco saveViewState/restoreViewState APIs
+  - Restore state on filename change
+  - Link to spec: docs/editor-view-state-spec.md
+  - [Test] Verify cursor and scroll position are restored when switching between files
+- **Dependencies**: none
+
+## General
+
+### WI-50: Enhanced Work Item Querying
+
+- **Status**: ⏳ Pending
+- **Size**: S
+- **Description**: Upgrade manage-wi.js to support listing by group and filtering.
+- **Details**:
+  - Implement list-group <Name> subcommand
+  - Default: single-line summary of active items only
+  - Support --status <all
+  - pending
+  - ...> and --detailed flags
+  - Maintain high signal-to-noise ratio in output
+  - Update wi-data-governance.md (§4.1) to reflect new CLI behavior
+  - Update project-management.md references to manage-wi.js capabilities
+  - [Test] Verify 'list-group' handles non-existent groups gracefully
+- **Dependencies**: none
+
+### WI-51: Documentation Workflow Automation (Doc-Guard)
+
+- **Status**: ⏳ Pending
+- **Size**: S
+- **Description**: Create a unified tool for standardized doc creation and quality verification.
+- **Details**:
+  - Implement doc-guard.js with 'init-spec' and 'verify' subcommands
+  - Centralize Doc Schema definition (Frontmatter, Mandatory Sections)
+  - Pre-populate WI context into specs
+  - Implement CI-ready linting for the docs/ directory
+  - [Test] Verify init-spec generates compliant files; verify script rejects malformed MDs
+- **Dependencies**: none
+
+### WI-52: Workflow Integration: Doc-Guard Protocol
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Integrate doc-guard.js into Specification and Review handoff processes.
+- **Details**:
+  - Integrate init-spec into PA scoping: run script instead of manual MD creation
+  - Integrate verify into LE/QCR protocol: run lint:docs before/at start of review
+  - Update project-management.md and Agent Skills (work-item-management, review-package)
+  - [Expected] 100% compliance with Documentation Authoring Rules (§4.3 Formatter)
+  - [Expected] Reduce QCR format-related rejections by automating pre-checks
+  - [Test] Verify agent SOPs correctly enforce mandatory script usage
+- **Dependencies**: WI-51
+
 ## Variables & Call Stack
 
 ### WI-42: Command Serialization: Frame Switch Cancel-and-Replace

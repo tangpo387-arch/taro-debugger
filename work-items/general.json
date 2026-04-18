@@ -205,6 +205,83 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-18"
       }
+    },
+    {
+      "id": "WI-50",
+      "title": "Enhanced Work Item Querying",
+      "featureGroup": "General",
+      "metadata": {
+        "status": "pending",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Upgrade manage-wi.js to support listing by group and filtering.",
+      "details": [
+        "Implement list-group <Name> subcommand",
+        "Default: single-line summary of active items only",
+        "Support --status <all",
+        "pending",
+        "...> and --detailed flags",
+        "Maintain high signal-to-noise ratio in output",
+        "Update wi-data-governance.md (§4.1) to reflect new CLI behavior",
+        "Update project-management.md references to manage-wi.js capabilities",
+        "[Test] Verify 'list-group' handles non-existent groups gracefully"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-51",
+      "title": "Documentation Workflow Automation (Doc-Guard)",
+      "featureGroup": "General",
+      "metadata": {
+        "status": "pending",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Create a unified tool for standardized doc creation and quality verification.",
+      "details": [
+        "Implement doc-guard.js with 'init-spec' and 'verify' subcommands",
+        "Centralize Doc Schema definition (Frontmatter, Mandatory Sections)",
+        "Pre-populate WI context into specs",
+        "Implement CI-ready linting for the docs/ directory",
+        "[Test] Verify init-spec generates compliant files; verify script rejects malformed MDs"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-52",
+      "title": "Workflow Integration: Doc-Guard Protocol",
+      "featureGroup": "General",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-51"
+        ]
+      },
+      "description": "Integrate doc-guard.js into Specification and Review handoff processes.",
+      "details": [
+        "Integrate init-spec into PA scoping: run script instead of manual MD creation",
+        "Integrate verify into LE/QCR protocol: run lint:docs before/at start of review",
+        "Update project-management.md and Agent Skills (work-item-management, review-package)",
+        "[Expected] 100% compliance with Documentation Authoring Rules (§4.3 Formatter)",
+        "[Expected] Reduce QCR format-related rejections by automating pre-checks",
+        "[Test] Verify agent SOPs correctly enforce mandatory script usage"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-18"
+      }
     }
   ]
 }
