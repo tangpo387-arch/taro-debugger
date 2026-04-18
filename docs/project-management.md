@@ -87,8 +87,43 @@ A **Feature Group** is a named domain category that groups related `WI-##` items
 
 A work item travels through the following states. Only `Product_Architect` may create or promote items; only `Lead_Engineer` may set an item to `done` or `abort`.
 
-```text
-[Proposed] → [Pending] → [Done] / [Aborted] → (Group: Stabilized 💎)
+```mermaid
+stateDiagram-v2
+    direction TB
+
+    [*] --> Proposed: manage-wi.js add
+    
+    state "💡 Proposed" as Proposed
+    state "⏳ Pending" as Pending
+    state "🔍 Done" as Done
+    state "🛠️ Rework" as Rework
+    state "✅ Accepted" as Accepted
+    state "❌ Aborted" as Aborted
+
+    Proposed --> Pending: update-wi.js pending\n(Promotion by PA)
+    
+    Pending --> Done: update-wi.js done\n(Submission by Lead)
+    
+    Done --> Accepted: update-wi.js accepted\n(Approval by QCR)
+    
+    Done --> Rework: update-wi.js rework\n(Rejection by QCR)
+    
+    Rework --> Done: update-wi.js done\n(Re-submission)
+    
+    Proposed --> Aborted: update-wi.js abort
+    Pending --> Aborted: update-wi.js abort
+    Done --> Aborted: update-wi.js abort
+    Rework --> Aborted: update-wi.js abort
+
+    note right of Accepted
+        Terminal State:
+        Capability Delivered
+    end note
+
+    note left of Aborted
+        Terminal State:
+        Work Terminated
+    end note
 ```
 
 ### 2.1 State Definitions
