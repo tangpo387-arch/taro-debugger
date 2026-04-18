@@ -263,7 +263,7 @@
       "title": "Workflow Integration: Doc-Guard Protocol",
       "featureGroup": "General",
       "metadata": {
-        "status": "pending",
+        "status": "accepted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": [
@@ -275,8 +275,7 @@
         "Integrate init-spec into PA scoping: run script instead of manual MD creation",
         "Integrate verify into LE/QCR protocol: run lint:docs before/at start of review",
         "Update project-management.md and Agent Skills (work-item-management, review-package)",
-        "[Expected] 100% compliance with Documentation Authoring Rules (§4.3 Formatter)",
-        "[Expected] Reduce QCR format-related rejections by automating pre-checks",
+        "[Link] docs/doc-guard-protocol-spec.md",
         "[Test] Verify agent SOPs correctly enforce mandatory script usage"
       ],
       "timeline": {

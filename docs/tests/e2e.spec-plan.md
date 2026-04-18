@@ -1,6 +1,7 @@
 ---
 title: End-to-End Tests — Spec Plan
 scope: e2e
+audience: [Lead_Engineer, Quality_Control_Reviewer]
 target-file: ~
 related-wi: ~
 last_updated: 2026-04-13

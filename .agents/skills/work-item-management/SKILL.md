@@ -9,6 +9,8 @@ audience: [Product_Architect, Lead_Engineer]
 > [!IMPORTANT]
 > **Principles & Nomenclature**: For authoritative naming conventions, lifecycle state definitions, and Feature Group mappings, refer to the project guide:
 > [docs/project-management.md](../../../docs/project-management.md)
+> [docs/doc-guard-protocol-spec.md](../../../docs/doc-guard-protocol-spec.md)
+> [resources/doc-guard-guidelines.md](resources/doc-guard-guidelines.md)
 
 ---
 
@@ -198,7 +200,8 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
    - Size is `M` or above.
 
    **Then you MUST**:
-   - Structure a spec document under `docs/` (name the file based on the feature content using kebab-case, e.g., `docs/feature-name-spec.md`).
+   - Initialize a spec document using `node scripts/doc-guard.js init-spec <WI-ID> <type> [Filename]`. Reference [resources/doc-guard-guidelines.md](resources/doc-guard-guidelines.md) for template details.
+   - Complete the generated template under `docs/` (name based on kebab-case).
    - Update related project documents to reflect the new design.
    - Link the spec document in the WI details.
 

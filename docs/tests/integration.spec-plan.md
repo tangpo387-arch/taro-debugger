@@ -1,6 +1,7 @@
 ---
 title: Integration Tests — Spec Plan
 scope: integration-test
+audience: [Lead_Engineer, Quality_Control_Reviewer]
 target-file: src/app/
 related-wi: ~
 last_updated: 2026-04-13

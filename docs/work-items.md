@@ -64,22 +64,6 @@ audience: [Lead_Engineer, Product_Architect]
   - [Test] Verify cursor and scroll position are restored when switching between files
 - **Dependencies**: none
 
-## General
-
-### WI-52: Workflow Integration: Doc-Guard Protocol
-
-- **Status**: ⏳ Pending
-- **Size**: M
-- **Description**: Integrate doc-guard.js into Specification and Review handoff processes.
-- **Details**:
-  - Integrate init-spec into PA scoping: run script instead of manual MD creation
-  - Integrate verify into LE/QCR protocol: run lint:docs before/at start of review
-  - Update project-management.md and Agent Skills (work-item-management, review-package)
-  - [Expected] 100% compliance with Documentation Authoring Rules (§4.3 Formatter)
-  - [Expected] Reduce QCR format-related rejections by automating pre-checks
-  - [Test] Verify agent SOPs correctly enforce mandatory script usage
-- **Dependencies**: WI-51
-
 ## Variables & Call Stack
 
 ### WI-42: Command Serialization: Frame Switch Cancel-and-Replace

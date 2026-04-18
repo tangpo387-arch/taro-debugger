@@ -1,6 +1,7 @@
 ---
 title: DapConfigService — Unit Spec Plan
 scope: unit-test
+audience: [Lead_Engineer, Quality_Control_Reviewer]
 target-file: src/app/dap-config.service.ts
 related-wi: ~
 last_updated: 2026-04-13

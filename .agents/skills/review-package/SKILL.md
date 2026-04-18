@@ -18,6 +18,7 @@ audience: [Lead_Engineer, Quality_Control_Reviewer]
 Load before completing **any** implementation task:
 
 - You MUST produce a `docs/reviews/{WI-ID}.review-package.md` file **before** requesting a QCR review.
+- You MUST run `node scripts/doc-guard.js verify` (or `npm run lint:docs`) and ensure all documents pass before submission.
 - STRICTLY FORBIDDEN from submitting to QCR without a complete Review Package.
 - Do not generate this file until all tests are passing.
 
@@ -113,13 +114,14 @@ Test Files  1 passed (1)
 When given a `QCR review {WI-ID}` request, the QCR MUST follow this exact sequence:
 
 ```text
-Step 1  Read docs/reviews/{WI-ID}.review-package.md
-Step 2  Load only the Skills listed in `skills-required`
-Step 3  Verify Acceptance Criteria — check only the diff line ranges listed
-Step 4  Verify Edge Cases — inspect only 🔍-flagged areas
-Step 5  Verify Tests — confirm test count and suite names match §4 of the Package
-Step 6  Verify Spec-Plan Updates — check §5 of the Package
-Step 7  Issue APPROVED or REJECTED verdict with precise, actionable findings
+Step 1  Run node scripts/doc-guard.js verify (baseline document quality check)
+Step 2  Read docs/reviews/{WI-ID}.review-package.md
+Step 3  Load only the Skills listed in `skills-required`
+Step 4  Verify Acceptance Criteria — check only the diff line ranges listed
+Step 5  Verify Edge Cases — inspect only 🔍-flagged areas
+Step 6  Verify Tests — confirm test count and suite names match §4 of the Package
+Step 7  Verify Spec-Plan Updates — check §5 of the Package
+Step 8  Issue APPROVED or REJECTED verdict with precise, actionable findings
 ```
 
 > [!CAUTION]

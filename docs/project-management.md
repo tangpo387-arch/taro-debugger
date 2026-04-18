@@ -159,7 +159,7 @@ stateDiagram-v2
    * Requires coordinating changes across ≥3 files or layers.
    * Involves non-obvious protocol constraints (e.g., async sequencing, DAP edge cases).
    * Work Item Size is **M** or above.
-4. **Spec Authoring**: If the gate is passed, author the `docs/*.md` spec and link it in the WI details.
+4. **Spec Authoring**: If the gate is passed, initialize the spec using `node scripts/doc-guard.js init-spec <WI-ID> <type> [Filename]`. Complete the generated template and link it in the WI details.
 5. **Promotion**: Run `node scripts/update-wi.js WI-## pending` to authorize development.
 
 **Verification**:
@@ -189,22 +189,24 @@ Before any `QCR review` request can be submitted, `Lead_Engineer` **must** compl
 Lead_Engineer
   1. Implement all items listed in the WI's details.
   2. Run: npm run test -- --watch=false   (all tests must pass)
-  3. Produce: docs/reviews/{WI-ID}.review-package.md
+  3. Run: npm run lint:docs                (all documents must pass verification; alias for node scripts/doc-guard.js verify)
+  4. Produce: docs/reviews/{WI-ID}.review-package.md
         — §1 Acceptance Criteria  (copied verbatim from manage-wi.js show)
         — §2 Diff Summary         (file + line ranges only; no pasted code)
         — §3 Edge Cases           (🔍 flags for areas requiring deeper QCR inspection)
         — §4 Tests Added          (suite names + test descriptions)
         — §5 Spec-Plan Updates    (list of spec-plan files updated)
         — §6 Self-Verification    (pasted terminal output proving tests pass)
-  4. Submit: "QCR review {WI-ID}"
+  5. Submit: "QCR review {WI-ID}"
 
 Quality_Control_Reviewer
-  1. Read docs/reviews/{WI-ID}.review-package.md  (primary input)
-  2. Load only the Skills listed in `skills-required` frontmatter.
-  3. Verify §1 Acceptance Criteria — read only the diff line ranges in §2.
-  4. Inspect only 🔍-flagged areas in §3.
-  5. Verify tests in §4 match the spec-plan entries in §5.
-  6. Issue APPROVED or REJECTED with precise, actionable findings.
+  1. Run: npm run lint:docs                (baseline document quality check)
+  2. Read docs/reviews/{WI-ID}.review-package.md  (primary input)
+  3. Load only the Skills listed in `skills-required` frontmatter.
+  4. Verify §1 Acceptance Criteria — read only the diff line ranges in §2.
+  5. Inspect only 🔍-flagged areas in §3.
+  6. Verify tests in §4 match the spec-plan entries in §5.
+  7. Issue APPROVED or REJECTED with precise, actionable findings.
 ```
 
 > [!NOTE]

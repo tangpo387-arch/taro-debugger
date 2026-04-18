@@ -13,7 +13,8 @@
     "electron:run": "electron . --no-sandbox",
     "electron:dev": "npm run electron:build && electron . --no-sandbox",
     "electron:start": "ng build && npm run electron:build && electron . --no-sandbox",
-    "electron:package": "ng build && npm run electron:build && electron-builder -lw"
+    "electron:package": "ng build && npm run electron:build && electron-builder -lw",
+    "lint:docs": "node scripts/doc-guard.js verify"
   },
   "private": true,
   "license": "Apache-2.0",
