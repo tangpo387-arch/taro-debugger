@@ -18,14 +18,19 @@ The system adopts a three-layer architecture to separate concerns. From top to b
 
 ```mermaid
 graph TD
-    UI["<b>UI Layer</b><br/>DebuggerComponent (Angular)<br/>Pure UI logic: log, snackbar, binding"]
-    Session["<b>Session Layer</b><br/>DapSessionService<br/>DAP session management, state machine, event handling"]
-    Transport["<b>Transport Layer</b><br/>DapTransportService (abstract)<br/>Low-level connection, binary parsing, message I/O"]
+    subgraph App ["<b>taro-debugger-frontend</b>"]
+        UI["<b>UI Layer</b><br/>DebuggerComponent (Angular)<br/>Pure UI logic: log, snackbar, binding"]
+    end
+
+    subgraph Lib ["<b>@taro/dap-core Library</b>"]
+        Session["<b>Session Layer</b><br/>DapSessionService<br/>DAP session management, state machine, event handling"]
+        Transport["<b>Transport Layer</b><br/>DapTransportService (abstract)<br/>Low-level connection, binary parsing, message I/O"]
+    end
 
     UI --> Session
     Session --> Transport
 
-    subgraph Implementations ["Transport Implementations"]
+    subgraph Implementations ["Transport Implementations (in Lib)"]
         direction LR
         WSS["WebSocketTransportService<br/>"]
         IPC["IpcTransportService<br/>"]
@@ -37,8 +42,9 @@ graph TD
     Transport -.-> STS
 
     style UI fill:#f9f9f9,stroke:#333,stroke-width:2px
-    style Session fill:#f9f9f9,stroke:#333,stroke-width:2px
-    style Transport fill:#f9f9f9,stroke:#333,stroke-width:2px
+    style Session fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    style Transport fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    style Lib fill:#f0f4c3,stroke:#827717,stroke-width:2px,stroke-dasharray: 5 5
 ```
 
 **Design Principle**: Each layer depends only on the abstract interface of the layer below it. Cross-layer access or direct coupling to concrete implementations is prohibited.

@@ -22,18 +22,6 @@ audience: [Lead_Engineer, Product_Architect]
   - Handle process termination and resource cleanup
 - **Dependencies**: none
 
-### WI-62: Lib: Final Integration & Cleanup
-
-- **Status**: ⏳ Pending
-- **Size**: S
-- **Description**: Perform final refactoring, documentation updates, and UI-layer optimization.
-- **Details**:
-  - Update file-map.md and architecture documentation
-  - Remove deprecated local service copies from app/
-  - Run full regression suite on UI+Library integration
-  - [Test] Verify 0 lint errors and all unit tests pass (app+lib)
-- **Dependencies**: WI-61
-
 ## Debug Controls
 
 ### WI-40: Command Serialization: disconnect/terminate One-Shot Guard
