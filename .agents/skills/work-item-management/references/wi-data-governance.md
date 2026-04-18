@@ -132,6 +132,7 @@ The management of the JSON files is strictly controlled by a suite of scripts in
 | `show <WI-##> [field]` | Prints the enriched JSON of a WI or a specific field to stdout. | ❌ No |
 | `add-group <Name> <Fill> <Stroke> <Description>` | Creates a new JSON file with a group definition and empty items list. | ✅ Yes |
 | `show-group [Name]` | Lists all registered groups or shows a specific group's definition. | ❌ No |
+| `list-group <Name> [--status <v>] [--detailed]` | Lists all WIs in a specific group with filtering. | ❌ No |
 
 - **Dependency Enrichment & Filtering**: The `show` command automatically appends a synthetic `_dependencyStatuses` field. If a second argument is provided (e.g., `details`, `status`, `deps`), the script filters output to that specific field.
 - **ID Support**: Supports both integer IDs (e.g., `WI-45`) and sub-item IDs (e.g., `WI-18.1`).

@@ -66,23 +66,6 @@ audience: [Lead_Engineer, Product_Architect]
 
 ## General
 
-### WI-50: Enhanced Work Item Querying
-
-- **Status**: ⏳ Pending
-- **Size**: S
-- **Description**: Upgrade manage-wi.js to support listing by group and filtering.
-- **Details**:
-  - Implement list-group <Name> subcommand
-  - Default: single-line summary of active items only
-  - Support --status <all
-  - pending
-  - ...> and --detailed flags
-  - Maintain high signal-to-noise ratio in output
-  - Update wi-data-governance.md (§4.1) to reflect new CLI behavior
-  - Update project-management.md references to manage-wi.js capabilities
-  - [Test] Verify 'list-group' handles non-existent groups gracefully
-- **Dependencies**: none
-
 ### WI-51: Documentation Workflow Automation (Doc-Guard)
 
 - **Status**: ⏳ Pending

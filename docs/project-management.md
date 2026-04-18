@@ -79,7 +79,7 @@ To maintain the **Capability Delivery Map**'s clarity, we distinguish between tw
 A **Feature Group** is a named domain category that groups related `WI-##` items by functional area. Feature Groups appear as `## Heading` sections in `docs/work-items.md`.
 
 > [!NOTE]
-> The canonical Feature Group registry—including names, colors, and descriptions—is managed via the project's data layer. New groups are established using `node scripts/manage-wi.js add-group <Name> <FillHex> <StrokeHex> <Desc>`, which initializes a new functional domain.
+> The canonical Feature Group registry—including names, colors, and descriptions—is managed via the project's data layer. New groups are established using `node scripts/manage-wi.js add-group <Name> <FillHex> <StrokeHex> <Desc>`, which initializes a new functional domain. Items within a group can be inspected using `node scripts/manage-wi.js list-group <Name>`.
 
 ---
 

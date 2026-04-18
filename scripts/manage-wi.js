@@ -164,6 +164,78 @@ function cmdShowGroup(args) {
   }
 }
 
+// ── Subcommand: list-group ───────────────────────────────────────────
+
+/**
+ * Lists all Work Items in a specific group with filtering.
+ * @param {string[]} args - [GroupName, ...flags]
+ */
+function cmdListGroup(args) {
+  const flags = { status: 'active', detailed: false };
+  const posArgs = [];
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--detailed') {
+      flags.detailed = true;
+    } else if (args[i] === '--status') {
+      flags.status = args[i + 1];
+      i++;
+    } else if (args[i].startsWith('--')) {
+      console.error(`Error: Unknown flag "${args[i]}"`);
+      process.exit(1);
+    } else {
+      posArgs.push(args[i]);
+    }
+  }
+
+  const groupName = posArgs[0];
+  if (!groupName) {
+    console.error('Usage: manage-wi.js list-group <Name> [--status <all|pending|...>] [--detailed]');
+    process.exit(1);
+  }
+
+  const entries = loadAllEntries();
+  const groupExists = entries.some(e => e.groupDef && e.groupDef.name === groupName);
+
+  if (!groupExists) {
+    console.error(`Error: Group "${groupName}" not found. use show-group to list valid groups.`);
+    process.exit(1);
+  }
+
+  const activeStatuses = ['pending', 'done', 'rework'];
+  const items = entries
+    .filter(e => e.item && e.item.featureGroup === groupName)
+    .map(e => e.item)
+    .filter(item => {
+      if (flags.status === 'all') return true;
+      if (flags.status === 'active') return activeStatuses.includes(item.metadata.status);
+      return item.metadata.status === flags.status;
+    });
+
+  if (items.length === 0) {
+    console.log(`No items found in group "${groupName}" matching status "${flags.status}".`);
+    return;
+  }
+
+  console.log(`\nItems in Group: ${groupName} (Status: ${flags.status})`);
+  console.log(''.padEnd(80, '-'));
+
+  items.sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true })).forEach(item => {
+    const summary = `${item.id.padEnd(7)} | ${item.metadata.status.padEnd(8)} | ${item.metadata.size.padEnd(2)} | ${item.title}`;
+    console.log(summary);
+
+    if (flags.detailed) {
+      if (item.description) console.log(`   Desc: ${item.description}`);
+      if (item.details && item.details.length > 0) {
+        console.log('   Tasks:');
+        item.details.forEach(d => console.log(`     - ${d}`));
+      }
+      console.log('');
+    }
+  });
+  console.log(''.padEnd(80, '-'));
+}
+
 /**
  * Triggers regeneration of all derivative Markdown views.
  */
@@ -436,11 +508,13 @@ Subcommands:
   show        <WI-##> [field]
   add-group   <Name> <Fill> <Stroke> <Description>
   show-group  [Name]
+  list-group  <Name> [--status <all|active|pending|...>] [--detailed]
 
 Notes:
   - Details use "|" as separator; prefix any value with "@" to load from a file.
   - Groups must be managed via add-group/show-group.
   - "show <field>" filters output to a specific field (e.g. details, status, deps).
+  - "list-group" defaults to active items (pending, done, rework) in a single-line summary.
   - Status changes (done/pending/accepted/rework/aborted) are handled by update-wi.js.
 `.trim();
 
@@ -459,6 +533,9 @@ switch (subcommand) {
     break;
   case 'show-group':
     cmdShowGroup(subArgs);
+    break;
+  case 'list-group':
+    cmdListGroup(subArgs);
     break;
   default:
     console.log(USAGE);
