@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { DapRequest, DapMessage } from '@taro/dap-core';
+import { DapRequest, DapMessage } from '../dap.types';
 
 export abstract class DapTransportService {
   /**

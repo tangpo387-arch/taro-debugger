@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { DapTransportService } from './dap-transport.service';
-import { DapMessage, DapRequest } from '@taro/dap-core';
+import { DapMessage, DapRequest } from '../dap.types';
 
 @Injectable()
 export class WebSocketTransportService extends DapTransportService {

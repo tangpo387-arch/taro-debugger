@@ -107,3 +107,12 @@ export interface StepArguments {
   singleThread?: boolean;
   granularity?: SteppingGranularity;
 }
+
+/** 
+ * Transport Type:
+ * - 'websocket': standard TCP connection to a debugger port.
+ * - 'ipc': Electron IPC bridge to a Node.js-managed debugger session.
+ * - 'serial': Serial port connection.
+ * - 'tcp': Raw TCP socket connection.
+ */
+export type TransportType = 'websocket' | 'ipc' | 'serial' | 'tcp';

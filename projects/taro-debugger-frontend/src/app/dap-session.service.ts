@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, Subject, BehaviorSubject, Subscription, firstValueFrom } from 'rxjs';
 import { filter, timeout } from 'rxjs/operators';
-import { DapTransportService } from './dap-transport.service';
+import { DapTransportService, TransportFactoryService } from '@taro/dap-core';
 import { DapConfigService } from './dap-config.service';
 import { DapRequest, DapResponse, DapEvent, DisassembleArguments, StepArguments } from '@taro/dap-core';
 
@@ -13,7 +13,6 @@ export class EvaluateCancelledError extends Error {
   }
 }
 
-import { TransportFactoryService } from './transport-factory.service';
 import { FileTreeService } from './file-tree.service';
 import { DapFileTreeService } from './dap-file-tree.service';
 

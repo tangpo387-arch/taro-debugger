@@ -22,18 +22,6 @@ audience: [Lead_Engineer, Product_Architect]
   - Handle process termination and resource cleanup
 - **Dependencies**: none
 
-### WI-60: Lib: Extract Transport Layer
-
-- **Status**: ⏳ Pending
-- **Size**: M
-- **Description**: Migrate transport services and factory to @taro/dap-core.
-- **Details**:
-  - Migrate abstract transport and implementations (WS/IPC)
-  - Configure library providers for DI abstraction
-  - Update main app to provide transport via library tokens
-  - [Test] Verify WebSocket connection handshake in dev mode
-- **Dependencies**: WI-59
-
 ### WI-61: Lib: Extract Session Manager
 
 - **Status**: ⏳ Pending

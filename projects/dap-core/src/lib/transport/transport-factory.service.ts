@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { TransportType } from './dap-config.service';
+import { inject, Injectable, Injector } from '@angular/core';
+import { TransportType } from '../dap.types';
 import { DapTransportService } from './dap-transport.service';
 import { WebSocketTransportService } from './websocket-transport.service';
 import { IpcTransportService } from './ipc-transport.service';
@@ -12,12 +12,14 @@ import { IpcTransportService } from './ipc-transport.service';
   providedIn: 'root'
 })
 export class TransportFactoryService {
+  private readonly injector = inject(Injector);
+
   createTransport(type: TransportType): DapTransportService {
     switch (type) {
       case 'websocket':
-        return new WebSocketTransportService();
+        return this.injector.get(WebSocketTransportService);
       case 'ipc':
-        return new IpcTransportService();
+        return this.injector.get(IpcTransportService);
       default:
         throw new Error(`Unsupported transport type: ${type}`);
     }

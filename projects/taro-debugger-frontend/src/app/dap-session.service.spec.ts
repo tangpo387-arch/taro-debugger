@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { DapSessionService, ExecutionState } from './dap-session.service';
 import { DapConfigService } from './dap-config.service';
-import { TransportFactoryService } from './transport-factory.service';
+import { TransportFactoryService } from '@taro/dap-core';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Subject, of, BehaviorSubject } from 'rxjs';
 

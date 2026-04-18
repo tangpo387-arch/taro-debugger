@@ -1,22 +1,12 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { DapTransportService } from './dap-transport.service';
-import { DapMessage, DapRequest } from '@taro/dap-core';
-
-export interface ElectronAPI {
-  send: (channel: string, data: unknown) => void;
-  on: (channel: string, func: (...args: unknown[]) => void) => () => void;
-  invoke: (channel: string, data: unknown) => Promise<unknown>;
-}
-
-declare global {
-  interface Window {
-    electronAPI?: ElectronAPI;
-  }
-}
+import { DapMessage, DapRequest } from '../dap.types';
+import { ELECTRON_API } from './electron-api.token';
 
 @Injectable()
 export class IpcTransportService extends DapTransportService {
+  private readonly electronAPI = inject(ELECTRON_API, { optional: true });
   private messageSubject = new Subject<DapMessage>();
   private connectionStatusSubject = new Subject<boolean>();
   private _removeEventListeners: Array<() => void> = [];
@@ -27,8 +17,8 @@ export class IpcTransportService extends DapTransportService {
 
   override connect(address: string): Observable<void> {
     return new Observable<void>(observer => {
-      if (!window.electronAPI) {
-        observer.error(new Error('Electron API not found. Cannot launch IPC Transport.'));
+      if (!this.electronAPI) {
+        observer.error(new Error('Electron API not provided. Cannot launch IPC Transport.'));
         return;
       }
 
@@ -37,13 +27,13 @@ export class IpcTransportService extends DapTransportService {
       this._removeEventListeners = [];
 
       this._removeEventListeners.push(
-        window.electronAPI.on('dap-message', (msg: unknown) => {
+        this.electronAPI.on('dap-message', (msg: unknown) => {
           this.messageSubject.next(msg as DapMessage);
         })
       );
 
       this._removeEventListeners.push(
-        window.electronAPI.on('dap-error', (err: unknown) => {
+        this.electronAPI.on('dap-error', (err: unknown) => {
           this.connectionStatusSubject.next(false);
           this.messageSubject.error(new Error('IPC DAP protocol error: ' + String(err)));
           if (!observer.closed) observer.error(err);
@@ -51,7 +41,7 @@ export class IpcTransportService extends DapTransportService {
       );
 
       this._removeEventListeners.push(
-        window.electronAPI.on('dap-closed', () => {
+        this.electronAPI.on('dap-closed', () => {
           this.connectionStatusSubject.next(false);
           this.messageSubject.complete();
         })
@@ -59,13 +49,13 @@ export class IpcTransportService extends DapTransportService {
 
       const resolvedAddress = address || 'localhost:4711';
 
-      window.electronAPI.invoke('dap-invoke', { action: 'connect', address: resolvedAddress })
+      this.electronAPI.invoke('dap-invoke', { action: 'connect', address: resolvedAddress })
         .then(() => {
           this.connectionStatusSubject.next(true);
           observer.next();
           observer.complete();
         })
-        .catch(err => {
+        .catch((err: any) => {
           this.connectionStatusSubject.next(false);
           observer.error(err);
         });
@@ -73,8 +63,8 @@ export class IpcTransportService extends DapTransportService {
   }
 
   override disconnect(): void {
-    if (window.electronAPI) {
-      window.electronAPI.invoke('dap-invoke', { action: 'disconnect' }).catch(console.error);
+    if (this.electronAPI) {
+      this.electronAPI.invoke('dap-invoke', { action: 'disconnect' }).catch(console.error);
     }
     this._removeEventListeners.forEach(cleanup => cleanup());
     this._removeEventListeners = [];
@@ -87,11 +77,11 @@ export class IpcTransportService extends DapTransportService {
   }
 
   override sendRequest(request: DapRequest): void {
-    if (!window.electronAPI) {
-      console.error('Electron API not found');
+    if (!this.electronAPI) {
+      console.error('Electron API not provided');
       return;
     }
-    window.electronAPI.send('dap-request', request);
+    this.electronAPI.send('dap-request', request);
   }
 
   override onMessage(): Observable<DapMessage> {
