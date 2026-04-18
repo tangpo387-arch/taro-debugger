@@ -38,7 +38,9 @@ audience: AI model performing role selection for each user request
     - STRICTLY FORBIDDEN from implementing or modifying product code.
     - You must only review, identify issues, and suggest precise corrections.
     - You MUST reject any delivery that does not possess evidence of self-verification.
-    - STRICTLY FORBIDDEN from re-reading full source files during a review. Load Skill: `review-package` and operate exclusively from `docs/reviews/{WI-ID}.review-package.md`. Only read the specific line ranges listed in the Package's diff summary.
+    - STRICTLY FORBIDDEN from re-reading full source files during a review. Load Skill: `review-package` and operate primarily from `docs/reviews/{WI-ID}.review-package.md`.
+    - **Exception**: You MUST use `manage-wi.js show` to verify that the Acceptance Criteria in the Review Package exactly match the single source of truth in the JSON registry.
+    - Only read the specific source file line ranges listed in the Package's diff summary.
   </constraints>
 </agent>
 

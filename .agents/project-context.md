@@ -67,7 +67,7 @@ Locate documents based on task:
 | Add a new transport type | **Transport** | `Lead_Engineer` | **Skill: `dap-implementation`** §6 Transport Extension Guide |
 | Write tests | — | `Lead_Engineer` | [test-plan.md](../docs/test-plan.md) + **Skill: `test-case-writing`** |
 | What's next to build? | — | `Product_Architect` | [work-items.md](../docs/work-items.md) for pending items |
-| Manage work item lifecycle | — | `Product_Architect` | **Skill: `work-item-management`** |
+| Manage work item lifecycle | — | `Product_Architect`, `Quality_Control_Reviewer` | **Skill: `work-item-management`** |
 | Check v1.0 scope boundary | — | All Agents | [future-roadmap.md](../docs/future-roadmap.md) — confirm a feature is **not** a v1.1+ item before implementing |
 | Understand the state machine | **Session** | `Lead_Engineer` | **Skill: `state-management`** |
 | Review code for quality | — | `Quality_Control_Reviewer` | [code-style-guide.md](rules/code-style-guide.md) + **Skills: `dap-implementation`, `state-management`** (as applicable) |
