@@ -1,7 +1,8 @@
+import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, Subject, BehaviorSubject } from 'rxjs';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { DapFileTreeService } from './dap-file-tree.service';
-import { DapResponse, DapEvent } from '@taro/dap-core';
+import { DapResponse, DapEvent, DapSessionService } from '@taro/dap-core';
 import { FileNode } from './file-tree.service';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -26,8 +27,6 @@ interface MockSession {
 
 /**
  * Factory — always returns a fresh mock to prevent cross-test state leakage.
- * @param responseBody   Optional body returned by sendRequest on success.
- * @param shouldFail     When true, sendRequest rejects with 'DAP request failed'.
  */
 function makeMockSession(responseBody?: any, shouldFail = false): MockSession {
   const eventSubject = new Subject<DapEvent>();
@@ -70,13 +69,19 @@ describe('DapFileTreeService', () => {
   let session: MockSession;
   let svc: DapFileTreeService;
 
-  // Rebuild both mock and service before every test to guarantee full isolation.
   beforeEach(() => {
     session = makeMockSession();
-    svc = new DapFileTreeService(session as any);
+    
+    TestBed.configureTestingModule({
+      providers: [
+        DapFileTreeService,
+        { provide: DapSessionService, useValue: session }
+      ]
+    });
+
+    svc = TestBed.inject(DapFileTreeService);
   });
 
-  // Tear down subscriptions after every test to prevent bleeding between suites.
   afterEach(() => {
     svc.destroy();
   });

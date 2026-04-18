@@ -12,8 +12,8 @@
 
 // @vitest-environment jsdom
 import { TestBed } from '@angular/core/testing';
-import { DapSessionService, ExecutionState } from './dap-session.service';
-import { DapConfigService } from './dap-config.service';
+import { DapSessionService, ExecutionState } from '@taro/dap-core';
+import { DapConfigService } from '@taro/dap-core';
 import { TransportFactoryService } from '@taro/dap-core';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Subject, BehaviorSubject, of, NEVER, throwError } from 'rxjs';

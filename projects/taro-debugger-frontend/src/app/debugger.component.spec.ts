@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { DebuggerComponent } from './debugger.component';
-import { DapSessionService } from './dap-session.service';
-import { DapConfigService } from './dap-config.service';
+import { DapSessionService } from '@taro/dap-core';
+import { DapConfigService } from '@taro/dap-core';
 import { DapVariablesService } from './dap-variables.service';
 import { DapLogService } from './dap-log.service';
 import { DapAssemblyService } from './dap-assembly.service';
@@ -10,6 +10,7 @@ import { Router } from '@angular/router';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ChangeDetectorRef, Injector, DestroyRef } from '@angular/core';
 import { KeyboardShortcutService, ActionID } from './keyboard-shortcut.service';
+import { DapFileTreeService } from './dap-file-tree.service';
 import { Subject, BehaviorSubject, EMPTY, of } from 'rxjs';
 
 /**
@@ -76,6 +77,7 @@ describe('DebuggerComponent — onStepInstructionTab()', () => {
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: { baseUrl: 'assets/monaco' } },
         { provide: ChangeDetectorRef, useValue: mockCdr },
+        { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
       ]
     });
 
@@ -153,6 +155,7 @@ describe('DebuggerComponent — Keyboard Shortcut Integration', () => {
         { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
+        { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
       ]
     });
 
@@ -242,7 +245,8 @@ describe('DebuggerComponent — Reveal Logic', () => {
         { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
-        { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } }
+        { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } },
+        { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
       ]
     });
     component = TestBed.inject(DebuggerComponent);

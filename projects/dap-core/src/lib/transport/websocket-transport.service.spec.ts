@@ -282,4 +282,57 @@ describe('WebSocketTransportService', () => {
       expect((err as Error).message).toContain('Unsupported message data type');
     });
   });
+
+  // ── Session Reuse / Relaunch ──────────────────────────────────────────
+
+  describe('Session Reuse / Relaunch', () => {
+    it('should allow a second connection to receive messages after the first is closed', async () => {
+      // 1. First connection
+      connectService('localhost:4711');
+      latestSocket.triggerOpen();
+      
+      const firstMsgPromise = firstValueFrom(service.onMessage().pipe(take(1)));
+      await latestSocket.triggerMessage(buildPacket({ seq: 1, type: 'event', event: 'first' }));
+      expect((await firstMsgPromise).seq).toBe(1);
+
+      // 2. Disconnect (completes the current Subject)
+      service.disconnect();
+      expect(latestSocket.close).toHaveBeenCalled();
+
+      // 3. Second connection (re-connects)
+      connectService('localhost:4711');
+      latestSocket.triggerOpen();
+
+      // 4. Verify that the second connection can receive messages
+      // If the bug exists, this promise will never resolve or will result in an empty/completed error
+      const secondMsgPromise = firstValueFrom(service.onMessage().pipe(take(1)));
+      await latestSocket.triggerMessage(buildPacket({ seq: 2, type: 'event', event: 'second' }));
+      
+      const secondMsg = await secondMsgPromise as any;
+      expect(secondMsg.seq).toBe(2);
+      expect(secondMsg.event).toBe('second');
+    });
+
+    it('should allow a second connection even if the first ended in error', async () => {
+      // 1. First connection ends in error
+      connectService('localhost:4711');
+      latestSocket.triggerOpen();
+      
+      const firstMsgPromise = firstValueFrom(service.onMessage()).catch(e => e);
+      latestSocket.triggerError('Socket failure');
+      expect(await firstMsgPromise).toBeDefined();
+
+      // 2. Disconnect to cleanup
+      service.disconnect();
+
+      // 3. Second connection
+      connectService('localhost:4711');
+      latestSocket.triggerOpen();
+
+      // 4. Verify messages still flow
+      const secondMsgPromise = firstValueFrom(service.onMessage().pipe(take(1)));
+      await latestSocket.triggerMessage(buildPacket({ seq: 10, type: 'event', event: 'recovery' }));
+      expect((await secondMsgPromise as any).seq).toBe(10);
+    });
+  });
 });

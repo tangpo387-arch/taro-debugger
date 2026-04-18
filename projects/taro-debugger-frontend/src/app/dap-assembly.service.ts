@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { DapSessionService } from './dap-session.service';
+import { DapSessionService } from '@taro/dap-core';
 import { DapDisassembledInstruction, DisassembleArguments } from '@taro/dap-core';
 
 export interface TaroDisassembledInstruction extends DapDisassembledInstruction {

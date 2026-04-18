@@ -21,8 +21,8 @@ import { FileExplorerComponent } from './file-explorer.component';
 import { VariablesComponent } from './variables.component';
 import { LogViewerComponent } from './log-viewer.component';
 import { ErrorDialog, ErrorDialogData } from './error-dialog/error-dialog';
-import { DapConfigService, DapConfig } from './dap-config.service';
-import { DapSessionService, ExecutionState, VerifiedBreakpoint } from './dap-session.service';
+import { DapConfigService, DapConfig } from '@taro/dap-core';
+import { DapSessionService, ExecutionState, VerifiedBreakpoint } from '@taro/dap-core';
 import { DapVariablesService } from './dap-variables.service';
 import { DapEvent, DapStackFrame } from '@taro/dap-core';
 import { FileNode } from './file-tree.service';
@@ -32,6 +32,7 @@ import { CallStackComponent } from './call-stack.component';
 import { AssemblyViewComponent } from './assembly-view.component';
 import { DapAssemblyService } from './dap-assembly.service';
 import { KeyboardShortcutService, ActionID } from './keyboard-shortcut.service';
+import { DapFileTreeService } from './dap-file-tree.service';
 
 @Component({
   selector: 'app-debugger',
@@ -58,6 +59,7 @@ import { KeyboardShortcutService, ActionID } from './keyboard-shortcut.service';
   ],
   providers: [
     DapSessionService,
+    DapFileTreeService,
     DapVariablesService,
     DapLogService,
     DapAssemblyService
@@ -77,6 +79,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   private readonly dialog = inject(MatDialog);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly shortcutService = inject(KeyboardShortcutService);
+  private readonly fileTreeService = inject(DapFileTreeService);
   private readonly destroyRef = inject(DestroyRef);
 
   /** Access the editor component for programmatic breakpoint updates */
@@ -374,7 +377,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
     try {
       // Pass sourceReference so virtual sources (ref > 0) are keyed correctly in the cache.
-      const code = await firstValueFrom(this.dapSession.fileTree.readFile(node.path, node.sourceReference));
+      const code = await firstValueFrom(this.fileTreeService.readFile(node.path, node.sourceReference));
       this.currentCode = code;
     } catch (e: any) {
       this.currentCode = `// Error loading file: ${e.message}`;
@@ -552,7 +555,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       try {
         // Pass sourceReference so virtual sources (ref > 0) are keyed correctly in the cache.
         const code = await firstValueFrom(
-          this.dapSession.fileTree.readFile(frame.source.path, frame.source.sourceReference)
+          this.fileTreeService.readFile(frame.source.path, frame.source.sourceReference)
         );
         this.currentCode = code;
       } catch (e: any) {

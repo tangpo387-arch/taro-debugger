@@ -9,3 +9,5 @@ export * from './lib/transport/websocket-transport.service';
 export * from './lib/transport/ipc-transport.service';
 export * from './lib/transport/transport-factory.service';
 export * from './lib/transport/electron-api.token';
+export * from './lib/session/dap-session.service';
+export * from './lib/session/dap-config.service';

@@ -16,7 +16,7 @@ import { debounceTime } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
-import { DapConfigService } from './dap-config.service';
+import { DapConfigService } from '@taro/dap-core';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { LAYOUT_COMPACT_MQ } from './layout.config';
 /** Payload emitted when breakpoints change in the editor */

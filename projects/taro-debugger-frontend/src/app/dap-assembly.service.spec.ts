@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DapAssemblyService } from './dap-assembly.service';
-import { DapSessionService } from './dap-session.service';
+import { DapSessionService } from '@taro/dap-core';
 
 /** Builds a minimal mock DAP disassemble response. */
 function makeDisassembleResponse(instructions: { address: string; instruction: string }[]) {

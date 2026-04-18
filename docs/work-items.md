@@ -22,18 +22,6 @@ audience: [Lead_Engineer, Product_Architect]
   - Handle process termination and resource cleanup
 - **Dependencies**: none
 
-### WI-61: Lib: Extract Session Manager
-
-- **Status**: ⏳ Pending
-- **Size**: L
-- **Description**: Relocate DapSessionService state machine to @taro/dap-core.
-- **Details**:
-  - Migrate DapSessionService and DapConfigService
-  - Ensure executionState$ and event bus remain stable
-  - Update app to inject session from library scope
-  - [Test] Verify stepping and state transitions in active debug session
-- **Dependencies**: WI-60
-
 ### WI-62: Lib: Final Integration & Cleanup
 
 - **Status**: ⏳ Pending

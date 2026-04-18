@@ -1,8 +1,11 @@
+import { Injectable, inject } from '@angular/core';
 import { Observable, Subscription, catchError, from, map, throwError, tap, shareReplay, of, filter } from 'rxjs';
 import { FileNode, FileTreeService } from './file-tree.service';
-import { DapSessionService } from './dap-session.service';
+import { DapSessionService } from '@taro/dap-core';
 
+@Injectable()
 export class DapFileTreeService extends FileTreeService {
+  private readonly dapSession = inject(DapSessionService);
   private readonly cache = new Map<string, string>();
   private readonly inFlight = new Map<string, Observable<string>>();
   private readonly lruOrder: string[] = [];
@@ -11,7 +14,7 @@ export class DapFileTreeService extends FileTreeService {
   /** Tracks all subscriptions for teardown via destroy(). */
   private readonly subscriptions: Subscription[] = [];
 
-  constructor(private dapSession: DapSessionService) {
+  constructor() {
     super();
     // Defensive guard: flushes any cache entries that may have been populated
     // during an edge-case flow before a clean disconnect was observed.
@@ -34,7 +37,7 @@ export class DapFileTreeService extends FileTreeService {
 
   /**
    * Unsubscribes all internal subscriptions and flushes the cache.
-   * Must be called by DapSessionService.reset() before session teardown.
+   * Called by `DebuggerComponent.ngOnDestroy()` as part of component lifecycle teardown.
    */
   public destroy(): void {
     this.subscriptions.forEach(s => s.unsubscribe());

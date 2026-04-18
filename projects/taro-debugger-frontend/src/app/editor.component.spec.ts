@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { EditorComponent } from './editor.component';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { NGX_MONACO_EDITOR_CONFIG } from 'ngx-monaco-editor-v2';
-import { DapConfigService } from './dap-config.service';
+import { DapConfigService } from '@taro/dap-core';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { of } from 'rxjs';
 import { ChangeDetectorRef } from '@angular/core';

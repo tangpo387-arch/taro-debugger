@@ -19,13 +19,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTreeModule, MatTree } from '@angular/material/tree';
 
-import { DapSessionService } from './dap-session.service';
-import { DapConfigService } from './dap-config.service';
+import { DapSessionService } from '@taro/dap-core';
+import { DapConfigService } from '@taro/dap-core';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { LAYOUT_COMPACT_MQ } from './layout.config';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { FileNode } from './file-tree.service';
+import { DapFileTreeService } from './dap-file-tree.service';
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -48,6 +49,7 @@ export class FileExplorerComponent implements OnChanges {
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly fileTreeService = inject(DapFileTreeService);
 
   // ── Inputs ────────────────────────────────────────────────────────────────────
 
@@ -182,7 +184,7 @@ export class FileExplorerComponent implements OnChanges {
     // Cancel any in-flight request to prevent race conditions on rapid reloads.
     this.loadTreeSub?.unsubscribe();
 
-    this.loadTreeSub = this.dapSession.fileTree.getTree(rootPath)
+    this.loadTreeSub = this.fileTreeService.getTree(rootPath)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (rootNode) => {

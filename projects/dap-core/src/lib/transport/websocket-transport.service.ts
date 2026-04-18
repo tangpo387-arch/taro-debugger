@@ -24,6 +24,7 @@ export class WebSocketTransportService extends DapTransportService {
       // Reset state to avoid asynchronous operations from old connections contaminating the new one
       this.bufferLength = 0;
       this.messageQueue = Promise.resolve();
+      this.messageSubject = new Subject<DapMessage>();
 
       // If an old socket exists, clear all its handlers and close it to prevent memory leaks and duplicate event triggering
       if (this.socket) {
@@ -79,9 +80,20 @@ export class WebSocketTransportService extends DapTransportService {
 
   override disconnect(): void {
     if (this.socket) {
+      // Clear handlers before closing to prevent onclose/onerror from triggering 
+      // during intentional disconnect
+      this.socket.onopen = null;
+      this.socket.onmessage = null;
+      this.socket.onerror = null;
+      this.socket.onclose = null;
       this.socket.close();
       this.socket = undefined;
     }
+    
+    // Complete the current message stream; a fresh one will be used for the next connect()
+    this.messageSubject.complete();
+    this.messageSubject = new Subject<DapMessage>();
+    
     this.connectionStatusSubject.next(false);
   }
 

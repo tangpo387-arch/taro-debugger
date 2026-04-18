@@ -27,7 +27,8 @@ Before writing a single line of test code, you **MUST**:
 1. Identify the target module (e.g., `DapSessionService`, `FileExplorerComponent`).
 2. Open the matching `docs/tests/*.spec-plan.md` file.
 3. Read every test case description in full.
-4. Map each **bold heading** in the spec-plan to an `it('...', ...)` block in the `.spec.ts`.
+4. If the task involves adding **new** test cases not found in the spec-plan, you **MUST first** (or simultaneously) update the `docs/tests/*.spec-plan.md` to reflect these cases.
+5. Map each **bold heading** in the spec-plan to an `it('...', ...)` block in the `.spec.ts`.
 
 > [!IMPORTANT]
 > The `it()` description string must faithfully reflect the spec-plan heading.
@@ -38,11 +39,12 @@ Before writing a single line of test code, you **MUST**:
 ## 4. Workflow: Spec-Plan → `.spec.ts`
 
 ```text
-Step 1  Read spec-plan → enumerate test cases
+Step 1  Read/Update spec-plan → enumerate test cases
 Step 2  Choose template (Service or Component — see §5)
 Step 3  Configure TestBed / mock factory
 Step 4  Implement each it() block using the 3A pattern (Arrange / Act / Assert)
 Step 5  Verify no cross-test state leakage (use beforeEach / afterEach)
+Step 6  Confirm that the .spec.ts content reflects 100% of the spec-plan cases
 ```
 
 ---

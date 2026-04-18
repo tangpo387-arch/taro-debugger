@@ -12,7 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDividerModule } from '@angular/material/divider';
 
-import { DapConfigService } from './dap-config.service';
+import { DapConfigService } from '@taro/dap-core';
 
 @Component({
   selector: 'app-setup-electron',

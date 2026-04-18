@@ -36,6 +36,8 @@ The rules document contains these critical sections:
 | §2 Storage Breakdown | — | State type → recommended storage location table |
 | §3 Reactive Access | R_SM3–R_SM4, R_SM6 | Async pipe, no prop drilling, derived observables |
 | §4 Cleanup | R_SM5 | Service state cleanup and subscription cancellation |
+| §4 DI Scope | R_SM5.1 | Component-scoped services must NOT use `providedIn: 'root'` |
+| §4 DI Scope | R_SM5.2 | Services that depend on component-scoped services must co-locate in the same `providers` array |
 
 ## 4. Additional Context
 

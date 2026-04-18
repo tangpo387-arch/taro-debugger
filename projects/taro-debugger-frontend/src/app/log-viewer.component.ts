@@ -22,7 +22,7 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { DapLogService } from './dap-log.service';
-import { DapSessionService, ExecutionState, EvaluateCancelledError } from './dap-session.service';
+import { DapSessionService, ExecutionState, EvaluateCancelledError } from '@taro/dap-core';
 import { LogEntry } from '@taro/dap-core';
 
 // ── Component ─────────────────────────────────────────────────────────────

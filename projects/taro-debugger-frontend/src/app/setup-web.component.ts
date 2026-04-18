@@ -14,7 +14,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDividerModule } from '@angular/material/divider';
 
 // Import global configuration services
-import { DapConfigService } from './dap-config.service';
+import { DapConfigService } from '@taro/dap-core';
 
 import { serverAddressValidator } from './setup.validators';
 

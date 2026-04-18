@@ -2,8 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DapVariablesService } from './dap-variables.service';
-import { DapSessionService } from './dap-session.service';
-import type { ExecutionState } from './dap-session.service';
+import { DapSessionService } from '@taro/dap-core';
+import type { ExecutionState } from '@taro/dap-core';
 
 // ── Test Helpers ────────────────────────────────────────────────────────────
 

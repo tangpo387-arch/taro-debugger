@@ -1,6 +1,6 @@
 import { Injectable, inject, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
-import { DapSessionService } from './dap-session.service';
+import { DapSessionService } from '@taro/dap-core';
 
 /** A single scope in the current stack frame. */
 export interface DapScope {

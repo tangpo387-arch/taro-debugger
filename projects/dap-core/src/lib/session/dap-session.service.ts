@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, Subject, BehaviorSubject, Subscription, firstValueFrom } from 'rxjs';
 import { filter, timeout } from 'rxjs/operators';
-import { DapTransportService, TransportFactoryService } from '@taro/dap-core';
+import { DapTransportService } from '../transport/dap-transport.service';
+import { TransportFactoryService } from '../transport/transport-factory.service';
 import { DapConfigService } from './dap-config.service';
-import { DapRequest, DapResponse, DapEvent, DisassembleArguments, StepArguments } from '@taro/dap-core';
+import { DapRequest, DapResponse, DapEvent, DisassembleArguments, StepArguments } from '../dap.types';
 
 /** Error thrown when an evaluate request is cancelled or times out */
 export class EvaluateCancelledError extends Error {
@@ -13,8 +14,7 @@ export class EvaluateCancelledError extends Error {
   }
 }
 
-import { FileTreeService } from './file-tree.service';
-import { DapFileTreeService } from './dap-file-tree.service';
+
 
 
 /** A single verified breakpoint returned by the DAP adapter */
@@ -41,7 +41,7 @@ export class DapSessionService {
   private readonly pendingRequests = new Map<number, { resolve: (response: DapResponse) => void; reject: (error: any) => void }>();
   private messageSubscription?: Subscription;
 
-  public readonly fileTree: FileTreeService;
+
   public capabilities: any = {};
   private transport?: DapTransportService;
   private connectionStatusSubject = new BehaviorSubject<boolean>(false);
@@ -73,9 +73,7 @@ export class DapSessionService {
     return this.executionStateSubject.asObservable();
   }
 
-  constructor() {
-    this.fileTree = new DapFileTreeService(this);
-  }
+  constructor() {}
 
 
   /**
@@ -222,8 +220,7 @@ export class DapSessionService {
       this.pendingRequests.delete(seq);
     }
 
-    // Tear down the file tree service subscriptions and flush its cache.
-    this.fileTree.destroy();
+
 
     this.transportStatusSubscription?.unsubscribe();
     this.transportStatusSubscription = undefined;

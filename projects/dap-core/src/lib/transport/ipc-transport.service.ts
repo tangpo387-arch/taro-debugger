@@ -25,6 +25,7 @@ export class IpcTransportService extends DapTransportService {
       // Cleanup any pre-existing listeners
       this._removeEventListeners.forEach(cleanup => cleanup());
       this._removeEventListeners = [];
+      this.messageSubject = new Subject<DapMessage>();
 
       this._removeEventListeners.push(
         this.electronAPI.on('dap-message', (msg: unknown) => {

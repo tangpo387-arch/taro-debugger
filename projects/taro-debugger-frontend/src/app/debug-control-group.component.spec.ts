@@ -1,6 +1,6 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { DebugControlGroupComponent } from './debug-control-group.component';
-import { DapSessionService } from './dap-session.service';
+import { DapSessionService } from '@taro/dap-core';
 import { BehaviorSubject, of } from 'rxjs';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { MatButtonModule } from '@angular/material/button';

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { TransportType } from '@taro/dap-core';
+import { TransportType } from '../dap.types';
 
 /**
  * Interface for the complete DAP connection configuration.

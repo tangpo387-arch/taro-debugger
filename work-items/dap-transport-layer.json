@@ -292,7 +292,7 @@
       "title": "Lib: Extract Session Manager",
       "featureGroup": "DAP Transport Layer",
       "metadata": {
-        "status": "pending",
+        "status": "accepted",
         "size": "L",
         "milestone": "v1.0",
         "dependencies": [
@@ -301,14 +301,16 @@
       },
       "description": "Relocate DapSessionService state machine to @taro/dap-core.",
       "details": [
-        "Migrate DapSessionService and DapConfigService",
-        "Ensure executionState$ and event bus remain stable",
-        "Update app to inject session from library scope",
+        "Migrate DapSessionService and DapConfigService to @taro/dap-core",
+        "Update dap-core.provider.ts and public-api.ts",
+        "Update app imports to use @taro/dap-core",
+        "Link: docs/WI-61-implementation-plan.md",
         "[Test] Verify stepping and state transitions in active debug session"
       ],
       "timeline": {
         "created": "2026-04-18",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-18"
       }
     },
     {
