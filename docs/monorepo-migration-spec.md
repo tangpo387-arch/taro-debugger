@@ -7,10 +7,10 @@ related:
   - file-map.md
 ---
 
-# Convert to Angular Workspace (WI-54.1 - 54.2)
+# Convert to Angular Workspace (WI-57 - WI-58)
 
 > [!NOTE]
-> **Source Work Items**: WI-54.1, WI-54.2
+> **Source Work Items**: WI-57, WI-58
 > **Description**: Phased transition of the project to a monorepo structure.
 
 ## Purpose

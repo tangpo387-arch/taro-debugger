@@ -93,7 +93,6 @@ node scripts/manage-wi.js add AUTO "Editor Advanced Interaction" "Search UI" "Ad
 ```
 
 - **AUTO**: Let the system allocate the numeric ID.
-- **Sub-IDs**: Supports fractional IDs for sub-tasks (e.g., `WI-18.1`).
 - **Group**: Must match an existing Feature Group name. Use `show-group` to list available names or `add-group` to create a new one if needed.
 - **Details**: Use `|` to separate multiple sub-tasks. **Must include at least one `[Test]` entry** describing a verifiable test scenario (e.g., `[Test] Confirm X behavior when Y occurs`). See `wi-data-governance.md §2` for the full rule.
 - **Deps**: Comma-separated list of dependent IDs (or `none`).

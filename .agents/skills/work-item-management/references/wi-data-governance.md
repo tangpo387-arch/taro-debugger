@@ -141,7 +141,7 @@ The management of the JSON files is strictly controlled by a suite of scripts in
 | `list-group <Name> [--status <v>] [--detailed]` | Lists all WIs in a specific group with filtering. | ❌ No |
 
 - **Dependency Enrichment & Filtering**: The `show` command automatically appends a synthetic `_dependencyStatuses` field. If a second argument is provided (e.g., `details`, `status`, `deps`), the script filters output to that specific field.
-- **ID Support**: Supports both integer IDs (e.g., `WI-45`) and sub-item IDs (e.g., `WI-18.1`).
+- **ID Support**: Only single integer IDs are supported (e.g., `WI-45`).
 - **Group Validation**: `add` verifies if the `Group` exists in any `groupDefinition.name`. If not found, the script exits with an error and instructs the user to use `add-group`.
 - **ID Assignment**: `AUTO` scans all items in all JSON files to find the next available ID.
 - **Content Resolution**: Supports `@` prefix to read values from external text files (for `add` and `edit --details / --desc`).

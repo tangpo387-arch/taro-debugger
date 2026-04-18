@@ -238,7 +238,7 @@
       }
     },
     {
-      "id": "53.1",
+      "id": "WI-59",
       "title": "Lib: Initialize & Extract API Types",
       "featureGroup": "DAP Transport Layer",
       "metadata": {
@@ -246,7 +246,7 @@
         "size": "S",
         "milestone": "v1.0",
         "dependencies": [
-          "WI-54.2"
+          "WI-58"
         ]
       },
       "description": "Create @taro/dap-core library and migrate global DAP type definitions.",
@@ -262,7 +262,7 @@
       }
     },
     {
-      "id": "53.2",
+      "id": "WI-60",
       "title": "Lib: Extract Transport Layer",
       "featureGroup": "DAP Transport Layer",
       "metadata": {
@@ -270,7 +270,7 @@
         "size": "M",
         "milestone": "v1.0",
         "dependencies": [
-          "WI-53.1"
+          "WI-59"
         ]
       },
       "description": "Migrate transport services and factory to @taro/dap-core.",
@@ -286,7 +286,7 @@
       }
     },
     {
-      "id": "53.3",
+      "id": "WI-61",
       "title": "Lib: Extract Session Manager",
       "featureGroup": "DAP Transport Layer",
       "metadata": {
@@ -294,7 +294,7 @@
         "size": "L",
         "milestone": "v1.0",
         "dependencies": [
-          "WI-53.2"
+          "WI-60"
         ]
       },
       "description": "Relocate DapSessionService state machine to @taro/dap-core.",
@@ -310,7 +310,7 @@
       }
     },
     {
-      "id": "53.4",
+      "id": "WI-62",
       "title": "Lib: Final Integration & Cleanup",
       "featureGroup": "DAP Transport Layer",
       "metadata": {
@@ -318,7 +318,7 @@
         "size": "S",
         "milestone": "v1.0",
         "dependencies": [
-          "WI-53.3"
+          "WI-61"
         ]
       },
       "description": "Perform final refactoring, documentation updates, and UI-layer optimization.",

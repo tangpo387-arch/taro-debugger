@@ -7,10 +7,10 @@ related:
   - file-map.md
 ---
 
-# Extract DAP Core Library (WI-53.1 - 53.4)
+# Extract DAP Core Library (WI-59 - WI-62)
 
 > [!NOTE]
-> **Source Work Items**: WI-53.1 through WI-53.4
+> **Source Work Items**: WI-59 through WI-62
 > **Description**: Granular refactoring of DAP session, transport, and API types into a standalone Angular library.
 
 ## Purpose

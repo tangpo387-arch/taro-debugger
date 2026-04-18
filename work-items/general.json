@@ -308,7 +308,7 @@
       }
     },
     {
-      "id": "54.1",
+      "id": "WI-57",
       "title": "Monorepo: Relocate Application Source",
       "featureGroup": "General",
       "metadata": {
@@ -330,7 +330,7 @@
       }
     },
     {
-      "id": "54.2",
+      "id": "WI-58",
       "title": "Monorepo: Adapt Build & Electron Scripts",
       "featureGroup": "General",
       "metadata": {
@@ -338,7 +338,7 @@
         "size": "M",
         "milestone": "v1.0",
         "dependencies": [
-          "WI-54.1"
+          "WI-57"
         ]
       },
       "description": "Update root TS configurations and Electron scripts for the new workspace structure.",
@@ -350,6 +350,30 @@
       "timeline": {
         "created": "2026-04-18",
         "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-63",
+      "title": "System-wide ID Flattening and Script Hardening",
+      "featureGroup": "General",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Banning fractional/unprefixed IDs and hardening manage-wi.js validation logic per Product_Architect spec.",
+      "details": [
+        "Update all JSON IDs and dependency references",
+        "Fix regex in manage-wi.js for fractional ID ban",
+        "Add manual ID prefix enforcement in cmdAdd",
+        "[Test] Verify roadmap rendering has no duplicate/broken nodes",
+        "[Test] Verify manage-wi.js rejects non-compliant IDs"
+      ],
+      "timeline": {
+        "created": "2026-04-18",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-18"
       }
     }
   ]

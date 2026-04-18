@@ -31,7 +31,7 @@
       }
     },
     {
-      "id": "WI-18.1",
+      "id": "WI-55",
       "title": "Variables Data State Management",
       "featureGroup": "Variables & Call Stack",
       "metadata": {
@@ -55,14 +55,14 @@
       }
     },
     {
-      "id": "WI-18.2",
+      "id": "WI-56",
       "title": "Variables Tree UI Component",
       "featureGroup": "Variables & Call Stack",
       "metadata": {
         "status": "accepted",
         "size": "M",
         "dependencies": [
-          "WI-18.1"
+          "WI-55"
         ]
       },
       "description": "Implement an independent Angular Standalone Component (`<app-variables>`) to render the nested variable/scope structure.",
@@ -87,8 +87,8 @@
         "size": "M",
         "milestone": "v1.1",
         "dependencies": [
-          "WI-18.1",
-          "WI-18.2"
+          "WI-55",
+          "WI-56"
         ]
       },
       "description": "Allow users to modify the values of local variables during a stopped debug session.",

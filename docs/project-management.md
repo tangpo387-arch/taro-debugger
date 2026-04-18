@@ -39,7 +39,7 @@ Used for any **functional implementation task** — UI features, service logic, 
 | Field | Rule |
 | :--- | :--- |
 | **Format** | `WI-` + zero-padded two-digit number (e.g., `WI-01`, `WI-18`) |
-| **Sub-tasks** | Append a decimal suffix for tightly coupled splits (e.g., `WI-18.1`, `WI-18.2`) |
+| **Sub-tasks** | Split into standard incremental IDs (e.g., `WI-55`, `WI-56`) using `dependencies` for tracking. |
 | **Assignment** | Assigned by `Product_Architect` when creating or splitting a work item |
 | **Uniqueness** | Numbers are never reused, even after an item is retired from `work-items.md` |
 

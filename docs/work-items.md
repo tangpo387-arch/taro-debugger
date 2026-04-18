@@ -22,7 +22,7 @@ audience: [Lead_Engineer, Product_Architect]
   - Handle process termination and resource cleanup
 - **Dependencies**: none
 
-### 53.1: Lib: Initialize & Extract API Types
+### WI-59: Lib: Initialize & Extract API Types
 
 - **Status**: ⏳ Pending
 - **Size**: S
@@ -32,9 +32,9 @@ audience: [Lead_Engineer, Product_Architect]
   - Relocate dap.types.ts to library
   - Update app imports to use type-only workspace paths
   - [Test] Verify build-success for library and application
-- **Dependencies**: WI-54.2
+- **Dependencies**: WI-58
 
-### 53.2: Lib: Extract Transport Layer
+### WI-60: Lib: Extract Transport Layer
 
 - **Status**: ⏳ Pending
 - **Size**: M
@@ -44,9 +44,9 @@ audience: [Lead_Engineer, Product_Architect]
   - Configure library providers for DI abstraction
   - Update main app to provide transport via library tokens
   - [Test] Verify WebSocket connection handshake in dev mode
-- **Dependencies**: WI-53.1
+- **Dependencies**: WI-59
 
-### 53.3: Lib: Extract Session Manager
+### WI-61: Lib: Extract Session Manager
 
 - **Status**: ⏳ Pending
 - **Size**: L
@@ -56,9 +56,9 @@ audience: [Lead_Engineer, Product_Architect]
   - Ensure executionState$ and event bus remain stable
   - Update app to inject session from library scope
   - [Test] Verify stepping and state transitions in active debug session
-- **Dependencies**: WI-53.2
+- **Dependencies**: WI-60
 
-### 53.4: Lib: Final Integration & Cleanup
+### WI-62: Lib: Final Integration & Cleanup
 
 - **Status**: ⏳ Pending
 - **Size**: S
@@ -68,7 +68,7 @@ audience: [Lead_Engineer, Product_Architect]
   - Remove deprecated local service copies from app/
   - Run full regression suite on UI+Library integration
   - [Test] Verify 0 lint errors and all unit tests pass (app+lib)
-- **Dependencies**: WI-53.3
+- **Dependencies**: WI-61
 
 ## Debug Controls
 
@@ -101,7 +101,7 @@ audience: [Lead_Engineer, Product_Architect]
 
 ## General
 
-### 54.1: Monorepo: Relocate Application Source
+### WI-57: Monorepo: Relocate Application Source
 
 - **Status**: ⏳ Pending
 - **Size**: M
@@ -113,7 +113,7 @@ audience: [Lead_Engineer, Product_Architect]
   - [Test] Confirm npm start launches successfully
 - **Dependencies**: none
 
-### 54.2: Monorepo: Adapt Build & Electron Scripts
+### WI-58: Monorepo: Adapt Build & Electron Scripts
 
 - **Status**: ⏳ Pending
 - **Size**: M
@@ -122,7 +122,7 @@ audience: [Lead_Engineer, Product_Architect]
   - Update tsconfig.app.json and tsconfig.spec.json references
   - Fixed electron-builder search patterns in package.json
   - [Test] Confirm npm run electron:dev successfully launches desktop mode
-- **Dependencies**: WI-54.1
+- **Dependencies**: WI-57
 
 ## Variables & Call Stack
 

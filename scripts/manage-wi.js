@@ -298,6 +298,9 @@ Flags:
 
   if (id.toUpperCase() === 'AUTO') {
     id = getNextId();
+  } else if (!id.match(/^WI-\d+$/)) {
+    console.error('Error: Manual ID must follow the format "WI-##".');
+    process.exit(1);
   }
 
   const description = resolveContent(rawDesc);
@@ -451,7 +454,7 @@ Flags:
 function cmdShow(args) {
   const [targetId, filter] = args;
 
-  if (!targetId || !targetId.match(/^WI-\d+(\.\d+)?$/)) {
+  if (!targetId || !targetId.match(/^WI-\d+$/)) {
     console.error('Usage: manage-wi.js show <WI-##> [field]');
     process.exit(1);
   }

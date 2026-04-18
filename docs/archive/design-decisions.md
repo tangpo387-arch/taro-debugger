@@ -63,7 +63,7 @@ The DAP `setBreakpoints` request replaces **all** breakpoints for a given file i
 
 ## ADR-03: Dedicated `DapVariablesService` (not embedded in `DapSessionService`)
 
-- **WI**: WI-18.1 (Variables Data State Management)
+- **WI**: WI-55 (Variables Data State Management)
 - **Status**: Accepted
 - **Date**: 2026-04-04T00:00:00+08:00
 
@@ -85,7 +85,7 @@ Extract all variable-related derived state and caching into a dedicated **`DapVa
 
 ## ADR-04: Flat Tree + Virtual Scrolling for Variable Inspection
 
-- **WI**: WI-18.2 (Variables Tree UI Component)
+- **WI**: WI-56 (Variables Tree UI Component)
 - **Status**: Accepted
 - **Date**: 2026-04-04T00:00:00+08:00
 
@@ -220,3 +220,30 @@ Adopt a **SemVer pre-release suffix** convention for `package.json` throughout t
 - `package.json` is immediately updated to `1.0.0-dev` (done: 2026-04-14).
 - `Product_Architect` is responsible for bumping the suffix at each stage transition.
 - `electron-builder` output filenames will reflect the suffix (e.g., `taro-debugger-1.0.0-dev.AppImage`), making pre-release artifacts unambiguously distinguishable from the stable release.
+
+---
+
+## ADR-09: 全面實施扁平化 ID 管理 (System-wide ID Flattening)
+
+- **WI**: WI-63 (System-wide ID Flattening and Script Hardening)
+- **Status**: Accepted
+- **Date**: 2026-04-18T21:14:00+08:00
+
+### Context
+
+專案早期允許使用 Fractional IDs（例如 `WI-18.1`, `54.1`），旨在表達任務間的父子關係。然而，這在實踐中引入了顯著的技術債：
+1. **工具鏈脆弱性**：`manage-wi.js` 與 `update-wi.js` 對 ID 的正則校驗不一致，導致點號常被錯誤解析或攔截。
+2. **可視化斷裂**：`generate-docs.js` 在將 ID 轉換為 Mermaid 節點名稱時（`.` 轉 `_`），若 ID 缺少 `WI-` 前綴或格式不一，會產生孤立重複節點，破壞 Roadmap 的依賴追蹤。
+
+### Decision
+
+全面廢止小數位子項目標記法，並在管理腳本中實施硬性檢查：
+1. **扁平化 ID**：所有工作項統一使用 `WI-####` 格式（如 `WI-55`, `WI-57`）。
+2. **解耦分組**：任務間的父子邏輯回歸到 `dependencies` (依賴欄位) 與 `Feature Group` (功能分組) 來表達，不再依賴 ID 編號。
+3. **強制校驗**：若手動輸入不合規範的 ID，`manage-wi.js` 將直接終止報錯。
+
+### Consequences
+
+- 徹底解決了 Roadmap 渲染斷裂的 Bug。
+- 簡化了所有自動化工具對 ID 的處理邏輯，提高了系統的可擴展性。
+- 降低了未來 AI 代理在創建 Work Item 時產生數據污染的風險。
