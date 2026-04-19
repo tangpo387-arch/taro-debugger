@@ -1,7 +1,7 @@
 ---
 title: Source File Responsibility Map
 scope: file-map, navigation, ownership, layers
-audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
+audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-04-19
 related:
   - docs/architecture.md

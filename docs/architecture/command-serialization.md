@@ -1,7 +1,7 @@
 ---
 title: Architecture - Command Serialization
 scope: architecture, command-serialization, session-layer, ui-layer, dap-cancel
-audience: [Lead_Engineer, Quality_Control_Reviewer]
+audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-04-15
 related:
   - ../architecture.md

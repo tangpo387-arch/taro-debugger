@@ -1,7 +1,6 @@
 ---
 name: Advanced Angular Rules
 description: Component structure, Material API standards, and framework-level coding practices.
-audience: [Lead_Engineer, Quality_Control_Reviewer]
 ---
 
 # Advanced Angular Rules

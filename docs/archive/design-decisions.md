@@ -1,7 +1,7 @@
 ---
 title: Design Decisions (ADR)
 scope: architecture, decisions, rationale, tradeoffs
-audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
+audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-04-14
 related:
   - docs/architecture.md

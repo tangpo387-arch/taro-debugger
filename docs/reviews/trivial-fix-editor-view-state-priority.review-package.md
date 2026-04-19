@@ -4,6 +4,7 @@ title: Fix Editor View State Priority vs Active Line Snap
 author: Lead_Engineer
 status: ready-for-review
 skills-required: [advanced-angular, visual-design, test-case-writing]
+audience: [Human Engineer]
 ---
 
 # Review Package: trivial-fix-editor-view-state-priority

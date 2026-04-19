@@ -1,7 +1,7 @@
 ---
 title: Debug Adapter Protocol (DAP) Integration FAQ
 scope: dap, initialization, lifecycle, troubleshooting, sequence
-audience: [Lead_Engineer, Quality_Control_Reviewer]
+audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-03-28
 related:
   - docs/architecture.md

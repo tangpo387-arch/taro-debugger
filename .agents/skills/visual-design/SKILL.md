@@ -1,7 +1,6 @@
 ---
 name: Visual Design Rules
 description: Structural, layout, CSS density, and typography rules for the UI.
-audience: [Lead_Engineer, Quality_Control_Reviewer]
 ---
 
 # Visual Design Rules

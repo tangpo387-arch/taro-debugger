@@ -1,7 +1,7 @@
 ---
 title: Architecture - Transport Layer
 scope: architecture, transport-layer, websockets, ipc
-audience: [Lead_Engineer, Quality_Control_Reviewer]
+audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-04-06
 related:
   - ../architecture.md

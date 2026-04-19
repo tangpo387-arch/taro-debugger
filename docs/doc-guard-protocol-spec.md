@@ -1,7 +1,7 @@
 ---
 title: Documentation Guard Protocol Specification
 scope: General
-audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
+audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
 related:
   - work-items.md
   - doc-guard.js

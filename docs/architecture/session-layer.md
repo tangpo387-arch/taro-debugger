@@ -1,7 +1,7 @@
 ---
 title: Architecture - Session Layer
 scope: architecture, session-layer, state-machine, data-flow
-audience: [Lead_Engineer, Quality_Control_Reviewer]
+audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-04-06
 related:
   - ../architecture.md

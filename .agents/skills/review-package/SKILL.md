@@ -1,7 +1,6 @@
 ---
 name: Review Package
 description: Defines the mandatory structured handoff document that Lead_Engineer must produce before requesting a QCR review. Enables QCR to operate entirely from the Review Package without re-discovering context.
-audience: [Lead_Engineer, Quality_Control_Reviewer]
 ---
 
 # Review Package Skill

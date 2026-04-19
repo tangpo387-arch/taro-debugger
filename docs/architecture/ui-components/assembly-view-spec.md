@@ -1,7 +1,7 @@
 ---
 title: Specification - Assembly View (Disassembly)
 scope: architecture, ui-layer, dap-integration, disassembly
-audience: [Lead_Engineer, Quality_Control_Reviewer]
+audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-04-12
 related:
   - ../ui-layer.md

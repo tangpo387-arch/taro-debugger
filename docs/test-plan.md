@@ -1,7 +1,7 @@
 ---
 title: Test Plan (Index)
 scope: testing, vitest, unit-tests, integration-tests, e2e, coverage
-audience: [Lead_Engineer, Quality_Control_Reviewer]
+audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-04-14
 related:
   - docs/work-items.md

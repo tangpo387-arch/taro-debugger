@@ -1,7 +1,7 @@
 ---
 title: KeyboardShortcutService — Unit Spec Plan
 scope: unit-test
-audience: [Lead_Engineer, Quality_Control_Reviewer]
+audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 target-file: projects/taro-debugger-frontend/projects/taro-debugger-frontend/src/app/keyboard-shortcut.service.ts
 related-wi: WI-43
 last_updated: 2026-04-16

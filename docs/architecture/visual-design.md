@@ -1,7 +1,7 @@
 ---
 title: Architecture - Visual Design
 scope: architecture, visual-design, css, density, typography
-audience: [Lead_Engineer, Quality_Control_Reviewer]
+audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-04-12
 related:
   - ../architecture.md

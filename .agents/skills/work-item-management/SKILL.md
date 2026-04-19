@@ -1,7 +1,6 @@
 ---
 name: Work Item Management
 description: Managing the creation, progression, and archival of Work Items (WI) per project standards.
-audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
 ---
 
 # Work Item Management Skill

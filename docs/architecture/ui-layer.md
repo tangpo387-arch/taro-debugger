@@ -1,7 +1,7 @@
 ---
 title: Architecture - UI Layer
 scope: architecture, ui-layer, dependency-injection, logging, state
-audience: [Lead_Engineer, Quality_Control_Reviewer]
+audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-04-07
 related:
   - ../architecture.md

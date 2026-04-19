@@ -1,7 +1,7 @@
 ---
 title: Documentation Index
 scope: index, reading-order, navigation
-audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
+audience: [Beginner, Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-04-14
 ---
 

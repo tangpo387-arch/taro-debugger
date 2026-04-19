@@ -1,7 +1,7 @@
 ---
 title: Extract DAP Core Library
 scope: DAP Transport Layer
-audience: [Lead_Engineer, Quality_Control_Reviewer, Product_Architect]
+audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer, Product_Architect]
 related:
   - work-items.md
   - file-map.md

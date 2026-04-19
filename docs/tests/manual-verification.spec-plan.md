@@ -1,7 +1,7 @@
 ---
 title: Manual Verification — Spec Plan
 scope: manual
-audience: [Lead_Engineer, Quality_Control_Reviewer]
+audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 target-file: ~
 related-wi: ~
 last_updated: 2026-04-13

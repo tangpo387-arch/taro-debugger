@@ -1,7 +1,7 @@
 ---
 title: Active Work Items
 scope: tasks, progress, dependencies
-audience: [Lead_Engineer, Product_Architect]
+audience: [Human Engineer, Lead_Engineer, Product_Architect]
 ---
 
 # Active Backlog (v1.0)

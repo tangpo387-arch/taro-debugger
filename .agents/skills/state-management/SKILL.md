@@ -1,7 +1,6 @@
 ---
 name: State Management Rules
 description: SSOT and reactive state management rules for Angular components and services in the taro-debugger-frontend project.
-audience: [Lead_Engineer, Quality_Control_Reviewer]
 ---
 
 # State Management Rules

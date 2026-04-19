@@ -1,7 +1,7 @@
 ---
 title: VS Code Compatible Keyboard Shortcuts Specification
 scope: ux, keyboard, shortcut, global-events
-audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
+audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
 tech_stack:
   angular: 21
   rxjs: "~7.8.0"

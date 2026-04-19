@@ -1,7 +1,7 @@
 ---
 title: WebSocketTransportService — Unit Spec Plan
 scope: unit-test
-audience: [Lead_Engineer, Quality_Control_Reviewer]
+audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 target-file: projects/dap-core/src/lib/transport/websocket-transport.service.ts
 related-wi: WI-61
 last_updated: 2026-04-18

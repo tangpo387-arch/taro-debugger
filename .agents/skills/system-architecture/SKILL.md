@@ -1,7 +1,6 @@
 ---
 name: System Architecture
 description: "Core system architecture, UI layout rules, and component hierarchies. Load this skill when designing a new feature or determining how components and services interact to avoid architectural violations."
-audience: [Product_Architect, Lead_Engineer]
 ---
 
 # System Architecture & Specifications
