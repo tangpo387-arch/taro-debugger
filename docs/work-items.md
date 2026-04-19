@@ -111,7 +111,7 @@ audience: [Lead_Engineer, Product_Architect]
 
 ### WI-72: Refactor doc-guard.js
 
-- **Status**: ⏳ Pending
+- **Status**: 🔍 Under Review
 - **Size**: S
 - **Description**: Refactor doc-guard.js to split verification logic into domain-specific subfunctions
 - **Details**:

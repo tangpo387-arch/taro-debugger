@@ -411,7 +411,7 @@
       "title": "Refactor doc-guard.js",
       "featureGroup": "General",
       "metadata": {
-        "status": "pending",
+        "status": "done",
         "size": "S",
         "milestone": "v1.0",
         "dependencies": []
