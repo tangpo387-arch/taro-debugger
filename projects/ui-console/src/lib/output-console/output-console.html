@@ -1,0 +1,10 @@
+<cdk-virtual-scroll-viewport itemSize="20" class="console-viewport"
+                             minBufferPx="200" maxBufferPx="400">
+  <div *cdkVirtualFor="let log of programLogs$ | async; trackBy: trackByLog"
+       class="console-line">
+    <span class="log-timestamp">[{{ log.timestamp | date:'HH:mm:ss.SSS' }}]</span>
+    <span class="log-message" [ngClass]="log.category" [class.log-level-error]="log.level === 'error'">
+      {{ log.message }}
+    </span>
+  </div>
+</cdk-virtual-scroll-viewport>

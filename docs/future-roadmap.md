@@ -1,7 +1,7 @@
 ---
 title: Future Roadmap
 scope: future features, backlog
-audience: [Human Engineer, Product_Architect, Lead_Engineer]
+audience: [Product_Architect, Lead_Engineer, Human Engineer]
 ---
 
 # Future Roadmap

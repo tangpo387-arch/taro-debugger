@@ -14,6 +14,7 @@ export class DapLogService {
   public readonly programLogs$: Observable<LogEntry[]> = this.programLogsSubject.asObservable();
 
   private readonly MAX_LOG_MEMORY_SIZE = 1 * 1024 * 1024; // 1MB (approximate)
+  private nextLogId = 1;
 
   /**
    * Append a log entry to the main console stream.
@@ -33,6 +34,7 @@ export class DapLogService {
     const newEntries: LogEntry[] = lines
       .filter(line => line.length > 0) // QC Item 1: Filter out empty entries
       .map((line, index) => ({
+        id: this.nextLogId++,
         timestamp: now,
         message: line,
         category,
@@ -68,6 +70,7 @@ export class DapLogService {
     const newEntries: LogEntry[] = lines
       .filter(line => line.length > 0) // QC Item 1: Filter out empty entries
       .map(line => ({
+        id: this.nextLogId++,
         timestamp: now,
         message: line,
         category,

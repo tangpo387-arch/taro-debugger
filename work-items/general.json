@@ -411,7 +411,7 @@
       "title": "Refactor doc-guard.js",
       "featureGroup": "General",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "S",
         "milestone": "v1.0",
         "dependencies": []
@@ -424,7 +424,8 @@
       ],
       "timeline": {
         "created": "2026-04-19",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-20"
       }
     }
   ]

@@ -1,0 +1,56 @@
+<cdk-virtual-scroll-viewport itemSize="20" class="console-viewport"
+                             minBufferPx="200" maxBufferPx="400">
+  <div *cdkVirtualFor="let log of consoleLogs$ | async; trackBy: trackByLog"
+       class="console-line"
+       [class.expanded]="isLogExpanded(log)">
+    
+    <div class="log-line-header">
+      <span class="log-timestamp">[{{ log.timestamp | date:'HH:mm:ss.SSS' }}]</span>
+      <span class="log-message" [ngClass]="log.category" [class.log-level-error]="log.level === 'error'">
+        {{ log.message }}
+        @if (log.data) {
+          <button class="log-expand-btn" (click)="toggleLogExpand(log)"
+                  [attr.aria-label]="isLogExpanded(log) ? 'Collapse payload' : 'Expand payload'">
+            <mat-icon style="font-size: var(--text-base); width: 14px; height: 14px; line-height: 14px;">
+              {{ isLogExpanded(log) ? 'expand_less' : 'expand_more' }}
+            </mat-icon>
+          </button>
+        }
+      </span>
+    </div>
+
+    @if (isLogExpanded(log) && log.data) {
+      <div class="log-data-view">{{ log.data | json }}</div>
+    }
+  </div>
+</cdk-virtual-scroll-viewport>
+
+<div class="console-input-area" [title]="!isEvaluateSupported ? 'Evaluate not supported: this debug adapter does not support request cancellation.' : ''">
+  <mat-icon>chevron_right</mat-icon>
+  <input matInput
+         type="text"
+         id="evaluate-expression-input"
+         placeholder="Evaluate expression..."
+         [(ngModel)]="evaluateExpression"
+         (keyup.enter)="evaluateCommand()"
+         [readonly]="(evaluateInFlight$ | async)"
+         [disabled]="!isEvaluateSupported">
+  @if (evaluateInFlight$ | async) {
+    <mat-spinner diameter="20" style="margin-right: 8px"></mat-spinner>
+    <button mat-icon-button
+            id="cancel-evaluate-btn"
+            color="warn"
+            (click)="onCancelEvaluate()"
+            aria-label="Cancel evaluate command">
+      <mat-icon>stop</mat-icon>
+    </button>
+  } @else {
+    <button mat-icon-button
+            id="evaluate-send-btn"
+            (click)="evaluateCommand()"
+            [disabled]="executionState !== 'stopped' || !isEvaluateSupported"
+            aria-label="Send evaluate command">
+      <mat-icon>send</mat-icon>
+    </button>
+  }
+</div>

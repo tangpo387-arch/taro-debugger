@@ -87,7 +87,7 @@
       "title": "Library Extraction: LogViewerComponent",
       "featureGroup": "Console & Status Bar",
       "metadata": {
-        "status": "pending",
+        "status": "accepted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": [
@@ -100,11 +100,13 @@
         "Split LogViewerComponent into DebugConsole (evaluation), OutputConsole (program), and LogViewer (orchestrator)",
         "Relocate virtual scroll logic and styles to the library",
         "Update DebuggerComponent imports",
-        "[Test] Verify both tabs function correctly and auto-scroll behaves as expected"
+        "[Test] Verify both tabs function correctly and auto-scroll behaves as expected",
+        "[Doc] docs/log-viewer-library-extraction.md"
       ],
       "timeline": {
         "created": "2026-04-18",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-20"
       }
     },
     {

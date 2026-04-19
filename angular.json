@@ -104,6 +104,32 @@
           }
         }
       }
+    },
+    "ui-console": {
+      "projectType": "library",
+      "root": "projects/ui-console",
+      "sourceRoot": "projects/ui-console/src",
+      "prefix": "taro",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/ui-console/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/ui-console/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/ui-console/tsconfig.spec.json"
+          }
+        }
+      }
     }
   }
 }

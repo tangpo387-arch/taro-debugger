@@ -36,6 +36,7 @@ export type LogCategory = 'console' | 'stdout' | 'stderr' | 'system' | 'dap';
 
 /** Log Entry structure */
 export interface LogEntry {
+  id: number;
   timestamp: Date;
   message: string;
   category: LogCategory;

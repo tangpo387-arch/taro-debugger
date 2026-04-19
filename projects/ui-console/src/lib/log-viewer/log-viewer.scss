@@ -1,0 +1,82 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.log-tab-group {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  :host & ::ng-deep .mat-mdc-tab-header {
+    --mdc-tab-container-height: 32px;
+    height: 32px !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    background-color: var(--mat-sys-surface-container-high);
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    --mat-tab-header-active-indicator-color: transparent;
+    --mat-tab-header-inactive-indicator-color: transparent;
+  }
+
+  :host & ::ng-deep .mat-mdc-tab-labels {
+    justify-content: flex-start !important;
+  }
+
+  :host & ::ng-deep .mat-mdc-tab-indicator,
+  :host & ::ng-deep .mdc-tab-indicator,
+  :host & ::ng-deep .mdc-tab-indicator__content {
+    display: none !important;
+    visibility: hidden !important;
+    border: none !important;
+    height: 0 !important;
+  }
+
+  :host & ::ng-deep .mat-mdc-tab {
+    min-height: 32px !important;
+    height: 32px !important;
+    box-sizing: border-box !important;
+    padding: 0 16px;
+    flex: 0 1 auto !important;
+    min-width: 80px;
+    border-right: 1px solid var(--mat-sys-outline-variant);
+    transition: background-color 0.2s ease;
+
+    .mdc-tab__text-label {
+      font-size: var(--text-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: var(--weight-medium) !important;
+    }
+
+    &.mdc-tab--active {
+      background-color: var(--mat-sys-surface-container-low) !important;
+      z-index: 1;
+    }
+
+    &:hover:not(.mdc-tab--active) {
+      background-color: var(--mat-sys-surface-container-highest);
+    }
+  }
+
+  :host & ::ng-deep .mat-mdc-tab-body-wrapper {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  :host & ::ng-deep .mat-mdc-tab-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  :host & ::ng-deep .mat-mdc-tab-body-content {
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+}
