@@ -94,7 +94,7 @@ node scripts/manage-wi.js add AUTO "Editor Advanced Interaction" "Search UI" "Ad
 
 - **AUTO**: Let the system allocate the numeric ID.
 - **Group**: Must match an existing Feature Group name. Use `show-group` to list available names or `add-group` to create a new one if needed.
-- **Details**: Use `|` to separate multiple sub-tasks. **Must include at least one `[Test]` entry** describing a verifiable test scenario (e.g., `[Test] Confirm X behavior when Y occurs`). See `wi-data-governance.md §2` for the full rule.
+- **Details**: Use `|` to separate multiple sub-tasks. **Must include at least one `[Test]` entry** describing a verifiable test scenario (e.g., `[Test] Confirm X behavior when Y occurs`). If a spec document exists, you MUST include a `[Doc]` entry (e.g., `[Doc] docs/my-spec.md`). See `wi-data-governance.md §2` for the full rule.
 - **Deps**: Comma-separated list of dependent IDs (or `none`).
 
 ### Step 2 — Long Content Handling
@@ -202,7 +202,7 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
    - Initialize a spec document using `node scripts/doc-guard.js init-spec <WI-ID> <type> [Filename]`. Reference [resources/doc-guard-guidelines.md](resources/doc-guard-guidelines.md) for template details.
    - Complete the generated template under `docs/` (name based on kebab-case).
    - Update related project documents to reflect the new design.
-   - Link the spec document in the WI details.
+   - <critical_instruction>**Link the Spec**: You MUST append the spec document link to the WI details (e.g., `|[Doc] docs/feature-spec.md`). Use `manage-wi.js show <WI-ID>` to read existing details, then `manage-wi.js edit <WI-ID> --details "<original>|[Doc] docs/feature-spec.md"`. You are STRICTLY FORBIDDEN from moving to the Promotion step without verifying the `[Doc]` link is present in the Work Item's `details`.</critical_instruction>
 
 4. **Promotion**: Transition the status from `Proposed` to `Pending` via `update-wi.js`. This authorizes development to begin.
 

@@ -113,6 +113,12 @@ To ensure content is properly directed, enforce the following assignment rules:
   - **Exception**: If a sub-resource is the sole entry point to a required workflow (i.e., an agent would not find it by other means), keep it as a standalone bullet.
 - **Write for skimming**: Omit filler words: "in order to", "it is worth noting that", "as mentioned above".
 
+### 4.5 DRY Principle (Single Source of Truth)
+
+Never duplicate constraints, system architectures, or procedural rules across multiple documents. Documentation duplication causes "context drift" when one file is updated but another is forgotten.
+- **Rule**: Define a concept in exactly **one** authoritative document.
+- **Action**: Any other document referencing that concept MUST use a Markdown link (e.g., `[view definition](file.md)`) instead of restating the rules.
+
 ---
 
 ## 5. Precision Requirements for AI Readability
@@ -184,5 +190,6 @@ Before finalizing any document, run this self-check:
 - [ ] Are all exclusion boundaries stated (§5.3)?
 - [ ] Have subjective adjectives been replaced with measurable criteria (§4.1)?
 - [ ] Are conciseness rules applied — no redundant clauses, no filler words, inline refs preferred (§4.4)?
+- [ ] Does the document follow the DRY principle (§4.5) by linking to Single Sources of Truth rather than duplicating rules?
 - [ ] Is all content derived from existing project documents or confirmed facts — not inferred? If uncertain, ask the user.
 - [ ] **Edit integrity (§3.4)**: If this task is a reformatting/restructuring task (as defined in §3.4), has no content been silently added or removed — unless explicitly requested by the user or required to correct a confirmed factual inaccuracy?
