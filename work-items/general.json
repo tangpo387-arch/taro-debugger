@@ -405,6 +405,27 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-18"
       }
+    },
+    {
+      "id": "WI-72",
+      "title": "Refactor doc-guard.js",
+      "featureGroup": "General",
+      "metadata": {
+        "status": "pending",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Refactor doc-guard.js to split verification logic into domain-specific subfunctions",
+      "details": [
+        "Extract getFileProfile() router",
+        "Create domain validators (skill, docs, project-context)",
+        "[Test] Verify doc-guard.js still passes testing on .agents and docs"
+      ],
+      "timeline": {
+        "created": "2026-04-19",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }

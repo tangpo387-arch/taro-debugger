@@ -92,6 +92,34 @@ audience: [Lead_Engineer, Product_Architect]
   - [Test] Verify app builds and editor functions (breakpoints/highlights) identically
 - **Dependencies**: WI-62
 
+### WI-71: Data Binding: Global Breakpoint Synchronization
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Centralize breakpoint state in DapSessionService and synchronize with the Breakpoints Panel and Editor. Reference: [inspection-panels-data-binding.md](docs/inspection-panels-data-binding.md)
+- **Details**:
+  - Refactor breakpoint state into a centralized Map in DapSessionService
+  - Implement breakpoints$ Observable with per-file grouping
+  - Bind app-breakpoints to centralized state via async pipe
+  - Implement 'Jump to Source' from Breakpoints panel
+  - Ensure setBreakpoints responses update centralized state
+  - [Test] Verify breakpoints added in editor appear in the Breakpoints panel immediately
+  - [Test] Verify clicking a breakpoint in the list reveals the line in Monaco
+- **Dependencies**: WI-69, WI-41
+
+## General
+
+### WI-72: Refactor doc-guard.js
+
+- **Status**: ⏳ Pending
+- **Size**: S
+- **Description**: Refactor doc-guard.js to split verification logic into domain-specific subfunctions
+- **Details**:
+  - Extract getFileProfile() router
+  - Create domain validators (skill, docs, project-context)
+  - [Test] Verify doc-guard.js still passes testing on .agents and docs
+- **Dependencies**: none
+
 ## Low-Level Inspection
 
 ### WI-66: Library Extraction: AssemblyViewComponent
@@ -120,3 +148,31 @@ audience: [Lead_Engineer, Product_Architect]
   - No Session Layer changes required
   - [Test] rapid frame clicks result in only the last frame's scopes being rendered
 - **Dependencies**: WI-17
+
+### WI-69: UI Layout: Thread & Breakpoint Panels
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Revamp the DebuggerComponent layout to support dedicated sections for Threads (right) and Breakpoints (left). Reference: [ui-layout-inspection-panels.md](docs/ui-layout-inspection-panels.md)
+- **Details**:
+  - Refactor sidenav-left to use panel-section structure for File Explorer
+  - Add panel-section for Breakpoints below File Explorer in sidenav-left
+  - Add panel-section for Threads at the top of sidenav-right
+  - Ensure flush dividers and 32px headers per visual-design.md
+  - [Test] Verify both sidenavs correctly render nested panels with 1px dividers
+  - [Test] Verify panels collapse/expand cleanly without layout jumping
+- **Dependencies**: WI-62, WI-41
+
+### WI-70: Data Binding: Thread List Integration
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Implement reactive data flow for thread enumeration and selection using DapSessionService as SSOT. Reference: [inspection-panels-data-binding.md](docs/inspection-panels-data-binding.md)
+- **Details**:
+  - Add threadsSubject and threads$ to DapSessionService
+  - Implement fetchThreads() triggered on 'stopped' event
+  - Expose setCurrentThread(threadId) to trigger stackTrace refresh
+  - Implement app-threads component using async pipe subscription
+  - [Test] Verify threads list updates automatically when program stops
+  - [Test] Verify selecting a thread refreshes the Call Stack below it
+- **Dependencies**: WI-69

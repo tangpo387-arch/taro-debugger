@@ -147,6 +147,34 @@
         "created": "2026-04-18",
         "created_by": "Antigravity-Agent"
       }
+    },
+    {
+      "id": "WI-71",
+      "title": "Data Binding: Global Breakpoint Synchronization",
+      "featureGroup": "Editor Features",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-69",
+          "WI-41"
+        ]
+      },
+      "description": "Centralize breakpoint state in DapSessionService and synchronize with the Breakpoints Panel and Editor. Reference: [inspection-panels-data-binding.md](docs/inspection-panels-data-binding.md)",
+      "details": [
+        "Refactor breakpoint state into a centralized Map in DapSessionService",
+        "Implement breakpoints$ Observable with per-file grouping",
+        "Bind app-breakpoints to centralized state via async pipe",
+        "Implement 'Jump to Source' from Breakpoints panel",
+        "Ensure setBreakpoints responses update centralized state",
+        "[Test] Verify breakpoints added in editor appear in the Breakpoints panel immediately",
+        "[Test] Verify clicking a breakpoint in the list reveals the line in Monaco"
+      ],
+      "timeline": {
+        "created": "2026-04-19",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }

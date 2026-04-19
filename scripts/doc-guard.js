@@ -156,22 +156,46 @@ function cmdVerify(targetPath) {
     }
 
     // 2. Frontmatter Check
+    const isSkill = relPath.includes('.agents/skills/') && basename === 'SKILL';
+    const isAgentRule = relPath.includes('.agents/rules/');
+    const isProjectContext = basename === 'project-context' && relPath.includes('.agents/');
+    
     const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
     if (!fmMatch) {
-      if (basename !== 'README' && !basename.endsWith('.review-package')) {
+      if (basename !== 'README' && !basename.endsWith('.review-package') && !isAgentRule && !isProjectContext) {
         errors.push('Missing YAML frontmatter (--- ... ---)');
       }
     } else {
       const fm = fmMatch[1];
-      const hasTitle = fm.includes('title:');
-      const hasName = fm.includes('name:');
-      if (!hasTitle && !hasName && !basename.endsWith('.review-package')) {
-        errors.push('Frontmatter missing "title" (or "name" for SKILL files)');
-      }
-      // review-packages have 'wi:' instead of 'title' sometimes, but actually template shows 'title' too.
-      // doc-authoring §4.3 says MUST include audience for docs/ files.
-      if (!fm.includes('audience:') && !basename.endsWith('.review-package')) {
-        errors.push('Frontmatter missing "audience"');
+
+      if (isSkill) {
+        const keys = fm.split('\n')
+          .filter(l => l.includes(':') && !l.startsWith(' '))
+          .map(l => l.split(':')[0].trim());
+        if (keys.length !== 2 || !keys.includes('name') || !keys.includes('description')) {
+          errors.push('SKILL.md YAML MUST contain exactly two fields: "name" and "description"');
+        }
+      } else {
+        const hasTitle = fm.includes('title:');
+        const hasName = fm.includes('name:');
+        if (!hasTitle && !hasName && !basename.endsWith('.review-package')) {
+          errors.push('Frontmatter missing "title" (or "name" for SKILL files)');
+        }
+        
+        // Audience Directory Mapping Rules (Doc Authoring §4.3.1)
+        if (!fm.includes('audience:') && !basename.endsWith('.review-package') && !isProjectContext) {
+          errors.push('Frontmatter missing "audience"');
+        } else if (fm.includes('audience:')) {
+          if (relPath.includes('docs/') && !basename.endsWith('.review-package') && !fm.includes('Human Engineer')) {
+            errors.push('Frontmatter in docs/ MUST include "Human Engineer" audience');
+          }
+          if (relPath.includes('.agents/') && (fm.includes('Human Engineer') || fm.includes('Beginner'))) {
+            errors.push('.agents/ files MUST NOT target Human Engineer or Beginner audience');
+          }
+          if (basename === 'README' && !fm.includes('Beginner')) {
+            errors.push('README.md MUST explicitly target "Beginner" audience');
+          }
+        }
       }
     }
 
@@ -193,6 +217,51 @@ function cmdVerify(targetPath) {
       }
       lastLevel = level;
     });
+
+    // 5. XML Tag Rendering Rules for .agents/ (Agent Skill Authoring §4.5)
+    if (relPath.includes('.agents/')) {
+      const lines = content.split('\n');
+      let activeTag = null;
+      let inCodeBlock = false;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmed = line.trim();
+
+        if (trimmed.startsWith('```')) {
+          inCodeBlock = !inCodeBlock;
+          continue;
+        }
+        if (inCodeBlock) continue;
+
+        // 5.1 No Indentation
+        if (/^\s+<[a-zA-Z0-9-]+>/.test(line)) {
+          errors.push(`XML tags MUST NOT be indented (line ${i+1})`);
+        }
+
+        // Tag state tracking
+        if (/^<[a-zA-Z0-9-]+>$/.test(trimmed)) {
+          activeTag = trimmed;
+          // 5.2 Blank Line Separation (Opening)
+          if (i + 1 < lines.length && lines[i + 1].trim() !== '') {
+            errors.push(`MUST leave an empty line after opening XML tag ${trimmed} (line ${i+1})`);
+          }
+        }
+        
+        if (/^<\/[a-zA-Z0-9-]+>$/.test(trimmed)) {
+          activeTag = null;
+          // 5.2 Blank Line Separation (Closing)
+          if (i - 1 >= 0 && lines[i - 1].trim() !== '') {
+            errors.push(`MUST leave an empty line before closing XML tag ${trimmed} (line ${i+1})`);
+          }
+        }
+
+        // 5.3 Header Placement
+        if (activeTag && /^#+\s/.test(trimmed)) {
+          errors.push(`Markdown headers MUST NOT be placed inside XML tags (line ${i+1})`);
+        }
+      }
+    }
 
     if (errors.length > 0) {
       console.log(`❌ ${relPath}`);
