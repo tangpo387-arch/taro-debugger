@@ -1,12 +1,12 @@
 ---
-name: System Architecture
+name: "[DEV:ARCH] System Architecture"
 description: "Core system architecture, UI layout rules, and component hierarchies. Load this skill when designing a new feature or determining how components and services interact to avoid architectural violations."
 ---
 
 # System Architecture & Specifications
 
 > [!IMPORTANT]
-> **Exclusion Boundaries:** This skill does NOT define DAP protocol payloads, state machine lifecycles, or exact CSS variable tokens. For those, consult `dap-implementation`, `state-management`, or `visual-design` skills.
+> **Exclusion Boundaries:** This skill does NOT define DAP protocol payloads, state machine lifecycles, or exact CSS variable tokens. For those, consult `[DEV:DAP] Protocol Implementation`, `[DEV:STATE] Reactive State Flows`, or `[DEV:VIS] Visual & UI Density` skills.
 
 ## Core Architectural Axioms
 

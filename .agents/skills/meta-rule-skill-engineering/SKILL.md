@@ -1,5 +1,5 @@
 ---
-name: Agent Skill Authoring Rules
+name: "[META:RULE] AI Skill Engineering"
 description: Structure, constraints, and negative boundaries for writing or modifying AI skill files in the .agents/ directory.
 ---
 

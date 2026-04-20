@@ -1,5 +1,5 @@
 ---
-name: Advanced Angular Rules
+name: "[DEV:ANG] Angular Feature Specs"
 description: Component structure, Material API standards, and framework-level coding practices.
 ---
 

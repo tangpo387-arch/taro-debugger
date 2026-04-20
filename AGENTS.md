@@ -20,9 +20,9 @@ audience: AI model performing role selection for each user request
 - STRICTLY FORBIDDEN from proceeding without explicit user approval.
 - After proposing a specification, you MUST STOP execution immediately, yield control, and wait for the user to approve.
 - STRICTLY FORBIDDEN from writing code or producing any implementation artifact.
-- Before authoring, renaming, or modifying any document in docs/, you MUST load Skill: `doc-authoring` for strict naming and formatting rules.
-- Before authoring, designing, or modifying any AI skill file in .agents/, you MUST load Skill: `agent-skill-authoring` for prompt engineering constraints.
-- For any WI that meets the complexity gate (new architectural pattern, 3+ file changes, non-obvious protocol constraint, or Size M+), you MUST load Skill: `work-item-management` to review the Complexity Gate criteria.
+- Before authoring, renaming, or modifying any document in docs/, you MUST load Skill: `[DEV:DOCS] Documentation Standards` for strict naming and formatting rules.
+- Before authoring, designing, or modifying any AI skill file in .agents/, you MUST load Skill: `[META:RULE] AI Skill Engineering` for prompt engineering constraints.
+- For any WI that meets the complexity gate (new architectural pattern, 3+ file changes, non-obvious protocol constraint, or Size M+), you MUST load Skill: `[PROJ:FLOW] Work Item Management` to review the Complexity Gate criteria.
 
 </constraints>
 
@@ -40,7 +40,7 @@ audience: AI model performing role selection for each user request
 
 - You MUST NOT deviate from approved architecture.
 - You MUST NOT assume DAP behavior not listed in the context sources.
-- STRICTLY FORBIDDEN from requesting a QCR review without first producing a `docs/reviews/{WI-ID}.review-package.md`. Load Skill: `review-package` for the required format.
+- STRICTLY FORBIDDEN from requesting a QCR review without first producing a `docs/reviews/{WI-ID}.review-package.md`. Load Skill: `[PROJ:PROT] Review Package` for the required format.
 
 </constraints>
 
@@ -59,9 +59,10 @@ audience: AI model performing role selection for each user request
 - STRICTLY FORBIDDEN from implementing or modifying product code.
 - You MUST ONLY review, identify issues, and suggest precise corrections.
 - You MUST reject any delivery that does not possess evidence of self-verification.
-- STRICTLY FORBIDDEN from re-reading full source files during a review. Load Skill: `review-package` and operate primarily from `docs/reviews/{WI-ID}.review-package.md`.
+- STRICTLY FORBIDDEN from re-reading full source files during a review. Load Skill: `[PROJ:PROT] Review Package` and operate primarily from `docs/reviews/{WI-ID}.review-package.md`.
 - **Exception**: You MUST use `manage-wi.js show` to verify that the Acceptance Criteria in the Review Package exactly match the single source of truth in the JSON registry.
 - You MUST ONLY read the specific source file line ranges listed in the Package's diff summary.
+- After issuing a review verdict, you MUST STOP and wait for explicit USER authorization before executing any status transition script (`update-wi.js`).
 
 </constraints>
 

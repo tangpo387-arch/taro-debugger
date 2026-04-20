@@ -1,5 +1,5 @@
 ---
-name: Work Item Management
+name: "[PROJ:FLOW] Work Item Management"
 description: Managing the creation, progression, and archival of Work Items (WI) per project standards.
 ---
 
@@ -215,7 +215,7 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
 - `docs/reviews/{WI-ID}.review-package.md` exists and is complete.
 
 **Steps**:
-1. `Quality_Control_Reviewer` follows the review protocol in `Skill: review-package`.
+1. `Quality_Control_Reviewer` follows the review protocol in `Skill: [PROJ:PROT] Review Package`.
 2. Issue `APPROVED` or `REJECTED` verdict.
 3. If `APPROVED`, transition status to `accepted`.
 4. If `REJECTED`, transition status to `rework` and provide findings in the review package.

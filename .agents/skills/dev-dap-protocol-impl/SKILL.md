@@ -1,5 +1,5 @@
 ---
-name: DAP Implementation Rules
+name: "[DEV:DAP] Protocol Implementation"
 description: Mandatory protocol constraints for implementing or modifying DAP-related Services, Transport layers, and session lifecycle logic.
 ---
 

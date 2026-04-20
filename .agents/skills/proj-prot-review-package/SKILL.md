@@ -1,5 +1,5 @@
 ---
-name: Review Package
+name: "[PROJ:PROT] Review Package"
 description: Defines the mandatory structured handoff document that Lead_Engineer must produce before requesting a QCR review. Enables QCR to operate entirely from the Review Package without re-discovering context.
 ---
 
@@ -121,8 +121,11 @@ Step 5  Verify Edge Cases — inspect only 🔍-flagged areas
 Step 6  Verify Tests — confirm test count and suite names match §4 of the Package
 Step 7  Verify Spec-Plan Updates — check §5 of the Package
 Step 8  Issue APPROVED or REJECTED verdict with precise, actionable findings
+Step 9  Propose status transition via `node scripts/update-wi.js {WI-ID} <accepted|rework>` and STOP to wait for USER confirmation.
 ```
 
+> [!IMPORTANT]
+> **Mandatory Transition**: Step 9 is NOT optional. QCR MUST NOT end the session without proposing the `update-wi.js` command corresponding to the verdict. You MUST explicitly ask the USER: "Shall I proceed to update the Work Item status to [accepted/rework]?"
 > [!CAUTION]
 > Skipping Step 1 and reading source files directly is a protocol violation. It inflates context cost and defeats the purpose of the Review Package.
 
@@ -130,6 +133,6 @@ Step 8  Issue APPROVED or REJECTED verdict with precise, actionable findings
 
 ## 5. Exclusion Boundaries
 
-- This skill does NOT govern how to write test cases (see `test-case-writing` skill).
-- This skill does NOT govern spec-plan content structure (see `test-case-writing` §3).
-- This skill does NOT govern WI lifecycle transitions (see `work-item-management` skill).
+- This skill does NOT govern how to write test cases (see `[DEV:TEST] Test Case Writing` skill).
+- This skill does NOT govern spec-plan content structure (see `[DEV:TEST] Test Case Writing` §3).
+- This skill does NOT govern WI lifecycle transitions (see `[PROJ:FLOW] Work Item Management` skill).

@@ -1,5 +1,5 @@
 ---
-name: Visual Design Rules
+name: "[DEV:VIS] Visual & UI Density"
 description: Structural, layout, CSS density, and typography rules for the UI.
 ---
 

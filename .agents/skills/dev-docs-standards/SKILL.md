@@ -1,5 +1,5 @@
 ---
-name: Documentation Authoring Rules
+name: "[DEV:DOCS] Documentation Standards"
 description: Structure, tone, context, and verification standards for writing or reviewing any project Markdown document.
 ---
 
