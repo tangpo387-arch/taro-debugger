@@ -22,19 +22,6 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - Handle process termination and resource cleanup
 - **Dependencies**: none
 
-## Debug Controls
-
-### WI-40: Command Serialization: disconnect/terminate One-Shot Guard
-
-- **Status**: ⏳ Pending
-- **Size**: S
-- **Description**: Add early-exit guard in DapSessionService.disconnect() and terminate() per command-serialization.md R-CS5
-- **Details**:
-  - Add early-return at top of disconnect(): if executionState is terminated/idle/error return Promise.resolve() immediately
-  - Apply same guard to terminate()
-  - [Test] double-call to disconnect() sends only one DAP request; second call returns immediately without error; guard covers all terminal states
-- **Dependencies**: WI-10
-
 ## Editor Features
 
 ### WI-41: Command Serialization: setBreakpoints Debounce + Per-File Serialization

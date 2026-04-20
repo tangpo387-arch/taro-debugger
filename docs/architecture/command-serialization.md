@@ -33,7 +33,6 @@ interleaved DAP messages reaching the Debug Adapter (DA) before it has transitio
 
 ---
 
-
 ## 2. R-CS1: Control Button Serialization
 
 ### Behavior
@@ -254,8 +253,8 @@ public async setBreakpoints(path: string, lines: number[]): Promise<DapResponse>
 - Once `disconnect()` or `terminate()` is dispatched, all subsequent calls to either method are **no-ops** until `reset()` returns the session to `idle`.
 - The guard is enforced via the existing `ExecutionState` machine — no new signal is introduced.
 - When `executionState` is already `terminated`, `idle`, or `error`, both methods return `Promise.resolve()` immediately without sending any DAP request.
-- Rationale: `disconnect()` tears down the Transport and sets it to `undefined`. A second call on a destroyed Transport causes unhandled rejections and potential state corruption.
-- The existing `executionState$` transition to `terminated` already causes the Stop button to be hidden or disabled in the UI — this rule adds the complementary **service-level** guard.
+- Rationale: `disconnect()` natively triggers the teardown of the underlying socket or IPC channel. Because this operation is asynchronous, rapid clicks by a user waiting for a slow Debug Adapter to detach could spawn multiple concurrent `disconnect()` calls. The first call destroys the transport. A second call attempting to pipe data to the now-closed transport causes fatal unhandled Promise rejections and exception noise. Furthermore, a double-dispatch could leave the internal flags and event listeners in a race condition, leading to state machine corruption. By transitioning the `ExecutionState` to `terminated` identically on the first pass (the "one-shot" guard), we instantly shield the rest of the application.
+- The existing `executionState$` transition to `terminated` already causes the Stop button to be hidden or disabled in the UI — this rule adds the complementary **service-level** guard to account for API calls, latency, and shortcut spamming.
 
 ### Enforcement
 

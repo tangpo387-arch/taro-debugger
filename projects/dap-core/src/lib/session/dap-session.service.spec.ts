@@ -271,4 +271,77 @@ describe('DapSessionService', () => {
       }));
     });
   });
+
+  describe('Disconnect/Terminate One-Shot (R-CS5)', () => {
+    it('should return immediately without sending a DAP request if state is already terminated', async () => {
+      (service as any).transport = mockTransport;
+      (service as any).executionStateSubject.next('terminated');
+
+      await service.disconnect();
+
+      expect(mockTransport.sendRequest).not.toHaveBeenCalled();
+    });
+
+    it('should return immediately without sending a DAP request if state is already idle', async () => {
+      (service as any).transport = mockTransport;
+      (service as any).executionStateSubject.next('idle');
+
+      await service.disconnect();
+
+      expect(mockTransport.sendRequest).not.toHaveBeenCalled();
+    });
+
+    it('should prevent double-call to disconnect from sending multiple requests', async () => {
+      (service as any).transport = mockTransport;
+      (service as any).executionStateSubject.next('running');
+
+      const p1 = service.disconnect();
+      const p2 = service.disconnect();
+
+      // Trigger response for the first request (seq 1)
+      (service as any).handleIncomingMessage({
+        type: 'response', request_seq: 1, command: 'disconnect', success: true
+      });
+
+      await Promise.all([p1, p2]);
+
+      expect(mockTransport.sendRequest).toHaveBeenCalledTimes(1);
+      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({ command: 'disconnect' }));
+    });
+
+    it('should return immediately in terminate() if already terminated', async () => {
+      (service as any).transport = mockTransport;
+      (service as any).executionStateSubject.next('terminated');
+      service.capabilities = { supportsTerminateRequest: true };
+
+      await service.terminate();
+
+      expect(mockTransport.sendRequest).not.toHaveBeenCalled();
+    });
+
+    it('should fallback to disconnect and still be one-shot if terminate fails', async () => {
+      (service as any).transport = mockTransport;
+      (service as any).executionStateSubject.next('running');
+      service.capabilities = { supportsTerminateRequest: true };
+      
+      // Setup mock to fail terminate but allow disconnect
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        if (req.command === 'terminate') {
+          (service as any).handleIncomingMessage({
+            type: 'response', request_seq: req.seq, command: 'terminate', success: false, message: 'Failed'
+          });
+        } else if (req.command === 'disconnect') {
+          (service as any).handleIncomingMessage({
+            type: 'response', request_seq: req.seq, command: 'disconnect', success: true
+          });
+        }
+      });
+
+      await service.terminate();
+
+      // Expect terminate request AND disconnect request (fallback)
+      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({ command: 'terminate' }));
+      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({ command: 'disconnect' }));
+    });
+  });
 });

@@ -88,7 +88,7 @@
       "title": "Command Serialization: disconnect/terminate One-Shot Guard",
       "featureGroup": "Debug Controls",
       "metadata": {
-        "status": "pending",
+        "status": "accepted",
         "size": "S",
         "milestone": "v1.0",
         "dependencies": [
@@ -103,7 +103,8 @@
       ],
       "timeline": {
         "created": "2026-04-15",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-20"
       }
     },
     {

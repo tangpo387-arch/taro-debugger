@@ -34,3 +34,9 @@ Fully isolated tests for `DapSessionService`. Focuses on DAP session lifecycle, 
   * Verify that `cancelRequest` sends a cancel command when capabilities support it.
   * Verify that `cancelRequest` does NOT send a cancel command if capabilities do not support it.
   * Verify that `evaluate` times out after 30 seconds and rejects with an EvaluateCancelledError.
+
+* **Disconnect/Terminate One-Shot Guard (R-CS5)**
+  * Verify that `disconnect()` returns immediately without sending a DAP request if the execution state is already `terminated`, `idle`, or `error`.
+  * Verify that a second call to `disconnect()` while the first is in-flight returns immediately.
+  * Verify that `terminate()` returns immediately without sending a DAP request if the execution state is already `terminated`, `idle`, or `error`.
+  * Verify that `terminate()` transitions the state to `terminated` (or `idle` via fallback) to block subsequent calls.

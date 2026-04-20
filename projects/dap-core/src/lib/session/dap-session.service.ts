@@ -188,9 +188,16 @@ export class DapSessionService {
    * Disconnect the session calmly.
    */
   async disconnect(): Promise<void> {
+    const state = this.executionStateSubject.value;
+    if (state === 'terminated' || state === 'idle' || state === 'error') {
+      return;
+    }
+
+    // Transition to terminated immediately to block concurrent calls
+    this.executionStateSubject.next('terminated');
+
     try {
-      // Skip disconnect request if in error or idle state — transport may already be unavailable
-      if (this.transport && this.executionStateSubject.value !== 'error' && this.executionStateSubject.value !== 'idle') {
+      if (this.transport) {
         // Send disconnect request to DAP Server
         await this.sendRequest('disconnect', {
           restart: false,
@@ -238,12 +245,21 @@ export class DapSessionService {
    * Otherwise, it falls back to a disconnect request with terminateDebuggee.
    */
   async terminate(): Promise<void> {
+    const state = this.executionStateSubject.value;
+    if (state === 'terminated' || state === 'idle' || state === 'error') {
+      return;
+    }
+
     if (this.capabilities?.supportsTerminateRequest) {
+      // Transition to terminated immediately to block concurrent calls
+      this.executionStateSubject.next('terminated');
       try {
         await this.sendRequest('terminate');
         return;
       } catch (e) {
         console.warn('Terminate request failed, falling back to disconnect', e);
+        // Reset state so that disconnect() can proceed (it has its own guard)
+        this.executionStateSubject.next('running');
       }
     }
 
