@@ -198,7 +198,7 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
    - Size is `M` or above.
 
    **Then you MUST**:
-   - Initialize a spec document using `node scripts/doc-guard.js init-spec <WI-ID> <type> [Filename]`. Reference [resources/doc-guard-guidelines.md](resources/doc-guard-guidelines.md) for template details.
+   - Initialize a spec document using `node scripts/doc-guard.js init-spec <WI-ID> feature [Filename]`. Reference [resources/doc-guard-guidelines.md](resources/doc-guard-guidelines.md) for template details.
    - Complete the generated template under `docs/` (name based on kebab-case).
    - Update related project documents to reflect the new design.
    - <critical_instruction>**Link the Spec**: You MUST append the spec document link to the WI details (e.g., `|[Doc] docs/feature-spec.md`). Use `manage-wi.js show <WI-ID>` to read existing details, then `manage-wi.js edit <WI-ID> --details "<original>|[Doc] docs/feature-spec.md"`. You are STRICTLY FORBIDDEN from moving to the Promotion step without verifying the `[Doc]` link is present in the Work Item's `details`.</critical_instruction>
