@@ -156,6 +156,32 @@
           }
         }
       }
+    },
+    "ui-assembly": {
+      "projectType": "library",
+      "root": "projects/ui-assembly",
+      "sourceRoot": "projects/ui-assembly/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/ui-assembly/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/ui-assembly/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/ui-assembly/tsconfig.spec.json"
+          }
+        }
+      }
     }
   }
 }

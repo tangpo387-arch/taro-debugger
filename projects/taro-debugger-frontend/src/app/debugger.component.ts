@@ -29,8 +29,7 @@ import { FileNode } from './file-tree.service';
 import { DapLogService } from '@taro/ui-console';
 import { DebugControlGroupComponent } from './debug-control-group.component';
 import { CallStackComponent } from './call-stack.component';
-import { AssemblyViewComponent } from './assembly-view.component';
-import { DapAssemblyService } from './dap-assembly.service';
+import { AssemblyViewComponent, DapAssemblyService } from '@taro/ui-assembly';
 import { KeyboardShortcutService, ActionID } from './keyboard-shortcut.service';
 import { DapFileTreeService } from './dap-file-tree.service';
 
@@ -564,7 +563,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     // regardless of whether it also has a source file. This ensures the data
     // is ready when the user switches to the Disassembly tab.
     if (frame.instructionPointerReference) {
-      this.assemblyService.fetchInstructions(frame.instructionPointerReference).catch(e => {
+      this.assemblyService.fetchInstructions(frame.instructionPointerReference).catch((e: Error) => {
         this.logService.consoleLog(`Disassembly failed: ${e.message}`, 'error', 'system');
       });
     }

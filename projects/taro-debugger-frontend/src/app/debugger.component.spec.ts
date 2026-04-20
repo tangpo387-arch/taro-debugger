@@ -4,7 +4,7 @@ import { DapSessionService } from '@taro/dap-core';
 import { DapConfigService } from '@taro/dap-core';
 import { DapVariablesService } from './dap-variables.service';
 import { DapLogService } from '@taro/ui-console';
-import { DapAssemblyService } from './dap-assembly.service';
+import { DapAssemblyService } from '@taro/ui-assembly';
 import { NGX_MONACO_EDITOR_CONFIG } from 'ngx-monaco-editor-v2';
 import { Router } from '@angular/router';
 import { vi, describe, it, expect, beforeEach } from 'vitest';

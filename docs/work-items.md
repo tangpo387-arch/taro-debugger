@@ -66,21 +66,6 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - [Test] Verify clicking a breakpoint in the list reveals the line in Monaco
 - **Dependencies**: WI-69, WI-41
 
-## Low-Level Inspection
-
-### WI-66: Library Extraction: AssemblyViewComponent
-
-- **Status**: ⏳ Pending
-- **Size**: M
-- **Description**: Extract the AssemblyViewComponent into a dedicated library @taro/ui-assembly to isolate specialized disassembly rendering logic.
-- **Details**:
-  - Create projects/ui-assembly library
-  - Relocate assembly-view.component.ts and associated styles/templates to the library
-  - Ensure virtual-scroll and DAP type dependencies are correctly handled
-  - Update DebuggerComponent to consume from @taro/ui-assembly
-  - [Test] Verify disassembly view renders and highlights correctly
-- **Dependencies**: WI-62
-
 ## Variables & Call Stack
 
 ### WI-42: Command Serialization: Frame Switch Cancel-and-Replace

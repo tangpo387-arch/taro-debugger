@@ -48,7 +48,7 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy, 
   private viewportCheckTimeout?: any;
 
   public ngOnInit(): void {
-    this.instructionsSubscription = this.assemblyService.instructions$.subscribe(inst => {
+    this.instructionsSubscription = this.assemblyService.instructions$.subscribe((inst: TaroDisassembledInstruction[]) => {
       this.instructions = inst || [];
       this.cdr.detectChanges();
       
@@ -65,7 +65,7 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy, 
       }, 0);
     });
 
-    this.loadingSubscription = this.assemblyService.isLoading$.subscribe(loading => {
+    this.loadingSubscription = this.assemblyService.isLoading$.subscribe((loading: boolean) => {
       this.isLoading = loading;
       this.cdr.detectChanges();
     });

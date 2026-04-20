@@ -203,11 +203,11 @@ graph LR
     style WI_63 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_64 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_72 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_27 fill:#6366f1,stroke:#000,stroke-width:2.5px
-    style WI_28 fill:#6366f1,stroke:#000,stroke-width:2.5px
-    style WI_29 fill:#6366f1,stroke:#000,stroke-width:2.5px
-    style WI_32 fill:#6366f1,stroke:#000,stroke-width:2.5px
-    style WI_66 fill:#6366f1,stroke:#4f46e5
+    style WI_27 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_28 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_29 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_32 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_66 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_01 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_02 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_03 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
@@ -232,5 +232,5 @@ graph LR
 | Variables & Call Stack | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f472b6'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f472b6"/> `#f472b6` | 🔵 Active |
 | Console & Status Bar | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%232dd4bf'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#2dd4bf"/> `#2dd4bf` | 💎 Stabilized |
 | Electron Desktop Mode | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%2394a3b8'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#94a3b8"/> `#94a3b8` | 💎 Stabilized |
-| Low-Level Inspection | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%236366f1'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#6366f1"/> `#6366f1` | 🔵 Active |
+| Low-Level Inspection | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%236366f1'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#6366f1"/> `#6366f1` | 💎 Stabilized |
 | General | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f1f5f9'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f1f5f9"/> `#f1f5f9` | 💎 Stabilized |
