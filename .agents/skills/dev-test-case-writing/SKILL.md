@@ -145,6 +145,7 @@ it('should cancel long-running Observable on component destroy', async () => {
 
 | Pattern | Why Forbidden |
 | :--- | :--- |
+| `npx vitest` or direct binary test execution | Bypasses Angular TestBed infrastructure; causes `initTestEnvironment` errors. You MUST use the `npm run test` pattern. |
 | Shared mutable state between `it()` blocks | Causes order-dependent flakiness |
 | `expect` outside `it()` | Silently passes on runner errors |
 | Manual `subscribe()` without teardown in tests | Memory leak; may bleed into subsequent tests |
