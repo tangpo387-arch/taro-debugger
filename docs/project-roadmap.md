@@ -80,6 +80,7 @@ graph LR
     WI_42["WI-42 Command Serialization: Frame Switch Cancel-and-Replace"]
     WI_69["WI-69 UI Layout: Thread & Breakpoint Panels"]
     WI_70["WI-70 Data Binding: Thread List Integration"]
+    WI_73["WI-73 UI Library: Extract @taro/ui-inspection"]
     WI_11 --> WI_19
     WI_05 --> WI_20
     WI_39 --> WI_38
@@ -143,8 +144,10 @@ graph LR
     WI_55 --> WI_30
     WI_56 --> WI_30
     WI_17 --> WI_42
+    WI_73 --> WI_42
     WI_62 --> WI_69
     WI_41 --> WI_69
+    WI_73 --> WI_69
     WI_69 --> WI_70
 
     style WI_19 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
@@ -218,6 +221,7 @@ graph LR
     style WI_42 fill:#f472b6,stroke:#db2777
     style WI_69 fill:#f472b6,stroke:#db2777
     style WI_70 fill:#f472b6,stroke:#db2777
+    style WI_73 fill:#f472b6,stroke:#db2777
 ```
 
 ## Feature Groups

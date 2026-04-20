@@ -111,7 +111,8 @@
         "size": "S",
         "milestone": "v1.0",
         "dependencies": [
-          "WI-17"
+          "WI-17",
+          "WI-73"
         ]
       },
       "description": "Implement switchMap-based cancel-and-replace for call stack frame selection in DebuggerComponent per command-serialization.md R-CS3",
@@ -136,17 +137,17 @@
         "milestone": "v1.0",
         "dependencies": [
           "WI-62",
-          "WI-41"
+          "WI-41",
+          "WI-73"
         ]
       },
       "description": "Revamp the DebuggerComponent layout to support dedicated sections for Threads (right) and Breakpoints (left). Reference: [ui-layout-inspection-panels.md](docs/ui-layout-inspection-panels.md)",
       "details": [
         "Refactor sidenav-left to use panel-section structure for File Explorer",
-        "Add panel-section for Breakpoints below File Explorer in sidenav-left",
-        "Add panel-section for Threads at the top of sidenav-right",
+        "Create Breakpoints component in @taro/ui-inspection and add to sidenav-left",
+        "Create Threads component in @taro/ui-inspection and add to top of sidenav-right",
         "Ensure flush dividers and 32px headers per visual-design.md",
-        "[Test] Verify both sidenavs correctly render nested panels with 1px dividers",
-        "[Test] Verify panels collapse/expand cleanly without layout jumping"
+        "[Test] Verify both sidenavs correctly render components from @taro/ui-inspection library with 1px dividers"
       ],
       "timeline": {
         "created": "2026-04-19",
@@ -170,12 +171,35 @@
         "Add threadsSubject and threads$ to DapSessionService",
         "Implement fetchThreads() triggered on 'stopped' event",
         "Expose setCurrentThread(threadId) to trigger stackTrace refresh",
-        "Implement app-threads component using async pipe subscription",
-        "[Test] Verify threads list updates automatically when program stops",
-        "[Test] Verify selecting a thread refreshes the Call Stack below it"
+        "Implement app-threads component inside @taro/ui-inspection using async pipe subscription",
+        "[Test] Verify threads list updates automatically when program stops"
       ],
       "timeline": {
         "created": "2026-04-19",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-73",
+      "title": "UI Library: Extract @taro/ui-inspection",
+      "featureGroup": "Variables & Call Stack",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Move Variables, Call Stack, and their supporting service to a dedicated UI library for better modularity.",
+      "details": [
+        "Initialize @taro/ui-inspection library",
+        "Relocate CallStackComponent and VariablesComponent",
+        "Migrate DapVariablesService to @taro/ui-inspection",
+        "Update DebuggerComponent and related tests",
+        "[Test] Verify library build and frontend integration",
+        "[Doc] docs/ui-inspection-extraction-spec.md"
+      ],
+      "timeline": {
+        "created": "2026-04-20",
         "created_by": "Antigravity-Agent"
       }
     }

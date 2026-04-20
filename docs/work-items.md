@@ -46,11 +46,10 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
 - **Details**:
   - Refactor breakpoint state into a centralized Map in DapSessionService
   - Implement breakpoints$ Observable with per-file grouping
-  - Bind app-breakpoints to centralized state via async pipe
+  - Bind app-breakpoints (within @taro/ui-inspection) to centralized state via async pipe
   - Implement 'Jump to Source' from Breakpoints panel
   - Ensure setBreakpoints responses update centralized state
-  - [Test] Verify breakpoints added in editor appear in the Breakpoints panel immediately
-  - [Test] Verify clicking a breakpoint in the list reveals the line in Monaco
+  - [Test] Verify breakpoints in library component reflect editor state
 - **Dependencies**: WI-69, WI-41
 
 ## Variables & Call Stack
@@ -65,7 +64,7 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - Stale scopes/variables results from prior frame are silently discarded
   - No Session Layer changes required
   - [Test] rapid frame clicks result in only the last frame's scopes being rendered
-- **Dependencies**: WI-17
+- **Dependencies**: WI-17, WI-73
 
 ### WI-69: UI Layout: Thread & Breakpoint Panels
 
@@ -74,12 +73,11 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
 - **Description**: Revamp the DebuggerComponent layout to support dedicated sections for Threads (right) and Breakpoints (left). Reference: [ui-layout-inspection-panels.md](docs/ui-layout-inspection-panels.md)
 - **Details**:
   - Refactor sidenav-left to use panel-section structure for File Explorer
-  - Add panel-section for Breakpoints below File Explorer in sidenav-left
-  - Add panel-section for Threads at the top of sidenav-right
+  - Create Breakpoints component in @taro/ui-inspection and add to sidenav-left
+  - Create Threads component in @taro/ui-inspection and add to top of sidenav-right
   - Ensure flush dividers and 32px headers per visual-design.md
-  - [Test] Verify both sidenavs correctly render nested panels with 1px dividers
-  - [Test] Verify panels collapse/expand cleanly without layout jumping
-- **Dependencies**: WI-62, WI-41
+  - [Test] Verify both sidenavs correctly render components from @taro/ui-inspection library with 1px dividers
+- **Dependencies**: WI-62, WI-41, WI-73
 
 ### WI-70: Data Binding: Thread List Integration
 
@@ -90,7 +88,20 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - Add threadsSubject and threads$ to DapSessionService
   - Implement fetchThreads() triggered on 'stopped' event
   - Expose setCurrentThread(threadId) to trigger stackTrace refresh
-  - Implement app-threads component using async pipe subscription
+  - Implement app-threads component inside @taro/ui-inspection using async pipe subscription
   - [Test] Verify threads list updates automatically when program stops
-  - [Test] Verify selecting a thread refreshes the Call Stack below it
 - **Dependencies**: WI-69
+
+### WI-73: UI Library: Extract @taro/ui-inspection
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Move Variables, Call Stack, and their supporting service to a dedicated UI library for better modularity.
+- **Details**:
+  - Initialize @taro/ui-inspection library
+  - Relocate CallStackComponent and VariablesComponent
+  - Migrate DapVariablesService to @taro/ui-inspection
+  - Update DebuggerComponent and related tests
+  - [Test] Verify library build and frontend integration
+  - [Doc] docs/ui-inspection-extraction-spec.md
+- **Dependencies**: none

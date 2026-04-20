@@ -167,11 +167,10 @@
       "details": [
         "Refactor breakpoint state into a centralized Map in DapSessionService",
         "Implement breakpoints$ Observable with per-file grouping",
-        "Bind app-breakpoints to centralized state via async pipe",
+        "Bind app-breakpoints (within @taro/ui-inspection) to centralized state via async pipe",
         "Implement 'Jump to Source' from Breakpoints panel",
         "Ensure setBreakpoints responses update centralized state",
-        "[Test] Verify breakpoints added in editor appear in the Breakpoints panel immediately",
-        "[Test] Verify clicking a breakpoint in the list reveals the line in Monaco"
+        "[Test] Verify breakpoints in library component reflect editor state"
       ],
       "timeline": {
         "created": "2026-04-19",
