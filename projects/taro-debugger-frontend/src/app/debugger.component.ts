@@ -196,22 +196,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
     // Subscribe to the diagnostic traffic stream and bridge to DapLogService (architecture.md §4.6)
     this.trafficSubscription = this.dapSession.onTraffic$.subscribe((msg) => {
-      let label: string;
-      switch (msg.type) {
-        case 'request':
-          label = `[→ Request] ${msg.command}`;
-          break;
-        case 'response':
-          label = `[← Response] ${msg.command}`;
-          break;
-        case 'event':
-          label = `[← Event] ${msg.event}`;
-          break;
-        default:
-          label = `[← Unknown] ${typeof msg === 'object' ? JSON.stringify(msg).slice(0, 80) : msg}`;
-          break;
-      }
-      this.logService.consoleLog(label, 'info', 'dap', msg);
+      this.logService.appendDapLog(msg);
     });
 
     await this.startSession();

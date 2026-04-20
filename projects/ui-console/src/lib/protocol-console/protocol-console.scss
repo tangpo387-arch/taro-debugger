@@ -1,0 +1,92 @@
+@use '../console-shared.scss';
+
+.console-viewport {
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.console-line {
+  height: auto !important; // Override fixed height for AutoSize strategy
+  min-height: 20px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+
+  &.has-data {
+    cursor: pointer;
+
+    &:hover .log-expand-icon {
+      opacity: 1;
+      color: var(--mat-sys-primary);
+    }
+  }
+
+  .log-line-header {
+    height: auto !important; // Allow content to determine height if wrapped
+    min-height: 20px;
+  }
+}
+
+.dap-type-marker {
+  display: inline-block;
+  min-width: 32px;
+  font-size: 10px;
+  padding: 0 4px;
+  border-radius: 4px;
+  text-align: center;
+  margin-right: 8px;
+  font-weight: var(--weight-bold);
+  line-height: normal;
+
+  &.request {
+    background-color: var(--mat-sys-primary-container);
+    color: var(--mat-sys-on-primary-container);
+  }
+
+  &.response {
+    background-color: var(--mat-sys-tertiary-container);
+    color: var(--mat-sys-on-tertiary-container);
+  }
+
+  &.event {
+    background-color: var(--mat-sys-secondary-container);
+    color: var(--mat-sys-on-secondary-container);
+  }
+}
+
+.log-data-view {
+  margin: 4px 0 4px 40px;
+  padding: 8px;
+  background-color: var(--mat-sys-surface-container);
+  border-radius: 4px;
+  font-size: var(--text-sm);
+  border: 1px solid var(--mat-sys-outline-variant);
+  overflow-x: auto;
+
+  pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+}
+
+.log-expand-icon {
+  font-size: 14px !important;
+  width: 14px !important;
+  height: 14px !important;
+  line-height: 14px !important;
+  vertical-align: middle;
+  margin-left: 6px;
+  color: var(--mat-sys-outline);
+  opacity: 0.5;
+  transition: opacity 0.15s ease, color 0.15s ease;
+  user-select: none;
+}

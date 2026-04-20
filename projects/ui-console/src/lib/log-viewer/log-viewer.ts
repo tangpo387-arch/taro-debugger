@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { DebugConsoleComponent } from '../debug-console/debug-console';
 import { OutputConsoleComponent } from '../output-console/output-console';
+import { ProtocolConsoleComponent } from '../protocol-console/protocol-console';
 
 /**
  * LogViewerComponent
@@ -21,6 +22,7 @@ import { OutputConsoleComponent } from '../output-console/output-console';
     MatTabsModule,
     DebugConsoleComponent,
     OutputConsoleComponent,
+    ProtocolConsoleComponent,
   ],
   templateUrl: './log-viewer.html',
   styleUrls: ['./log-viewer.scss'],
@@ -32,6 +34,9 @@ export class LogViewerComponent {
   @ViewChildren(OutputConsoleComponent)
   private outputConsoles!: QueryList<OutputConsoleComponent>;
 
+  @ViewChildren(ProtocolConsoleComponent)
+  private protocolConsoles!: QueryList<ProtocolConsoleComponent>;
+
   /**
    * Called when the user switches between tabs.
    * Forces child viewports to remeasure and scroll to bottom.
@@ -41,5 +46,6 @@ export class LogViewerComponent {
     // to handle viewport visibility changes.
     this.debugConsoles?.forEach(c => c.scrollToBottom());
     this.outputConsoles?.forEach(c => c.scrollToBottom());
+    this.protocolConsoles?.forEach(c => c.scrollToBottom());
   }
 }

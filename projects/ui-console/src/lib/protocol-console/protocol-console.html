@@ -1,0 +1,29 @@
+<div #scrollContainer class="console-viewport">
+  <div *ngFor="let log of dapLogs$ | async; trackBy: trackByLog"
+       class="console-line"
+       [class.expanded]="isLogExpanded(log)"
+       [class.has-data]="!!log.data"
+       (click)="log.data && toggleLogExpand(log)">
+
+    <div class="log-line-header">
+      <span class="log-timestamp">[{{ log.timestamp | date:'HH:mm:ss.SSS' }}]</span>
+      <span class="log-message dap" [class.log-level-error]="log.level === 'error'">
+        <span class="dap-type-marker" [ngClass]="log.data?.type">
+          {{ log.data?.type === 'event' ? 'EVT' : (log.data?.type?.toUpperCase()?.substring(0, 3) || '???') }}
+        </span>
+        {{ log.message }}
+        @if (log.data) {
+          <mat-icon class="log-expand-icon">
+            {{ isLogExpanded(log) ? 'expand_less' : 'expand_more' }}
+          </mat-icon>
+        }
+      </span>
+    </div>
+
+    @if (isLogExpanded(log) && log.data) {
+      <div class="log-data-view">
+        <pre>{{ log.data | json }}</pre>
+      </div>
+    }
+  </div>
+</div>

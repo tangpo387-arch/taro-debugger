@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { DapConfigService, DapConfig } from './dap-config.service';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 describe('DapConfigService', () => {
   let service: DapConfigService;
@@ -14,10 +14,18 @@ describe('DapConfigService', () => {
     programArgs: '--help'
   };
 
+  // Suppress console.log emitted by setConfig() to keep CI output clean (QCR §7)
+  let consoleLogSpy: ReturnType<typeof vi.spyOn>;
+
   beforeEach(() => {
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     localStorage.clear();
     // Re-initialize service to ensure it starts with fresh localStorage state
     service = new DapConfigService();
+  });
+
+  afterEach(() => {
+    consoleLogSpy.mockRestore();
   });
 
   it('should be created with default config', () => {
@@ -30,59 +38,69 @@ describe('DapConfigService', () => {
   });
 
   it('should set and get config correctly', () => {
+    // Arrange — mockConfig defined at suite level
+
+    // Act
     service.setConfig(mockConfig);
     const config = service.getConfig();
+
+    // Assert
     expect(config).toEqual(mockConfig);
-    // Ensure it returns a copy, not the same reference
+    // Ensure it returns a defensive copy, not the same reference
     expect(config).not.toBe(mockConfig);
   });
 
   it('should persist config to localStorage when setConfig is called', () => {
+    // Arrange — mockConfig defined at suite level
+
+    // Act
     service.setConfig(mockConfig);
+
+    // Assert
     const stored = localStorage.getItem('taro_dap_config');
     expect(stored).toBeTruthy();
     expect(JSON.parse(stored!)).toEqual(mockConfig);
   });
 
   it('should load config from localStorage on initialization', () => {
-    // Manually set item in localStorage before service creation
+    // Arrange
     localStorage.setItem('taro_dap_config', JSON.stringify(mockConfig));
-    
-    // Create new instance which should trigger loadFromStorage()
+
+    // Act — constructor triggers loadFromStorage()
     const newService = new DapConfigService();
+
+    // Assert
     expect(newService.getConfig()).toEqual(mockConfig);
   });
 
   it('should handle invalid JSON in localStorage gracefully', () => {
+    // Arrange
     localStorage.setItem('taro_dap_config', 'invalid-json-string');
-    
-    // Spy on console.error to verify the error is logged
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    
+
+    // Act
     const newService = new DapConfigService();
-    
-    // Should fallback to default values
+
+    // Assert — should fall back to default values and log the parse error
     const config = newService.getConfig();
     expect(config.serverAddress).toBe('localhost:4711');
-    
     expect(consoleSpy).toHaveBeenCalled();
+
     consoleSpy.mockRestore();
   });
 
   it('should merge defaults with partial stored config', () => {
-    // Only store serverAddress and launchMode
-    const partialConfig = {
-      serverAddress: 'custom:1234',
-      launchMode: 'attach'
-    };
+    // Arrange — only persist a subset of fields
+    const partialConfig = { serverAddress: 'custom:1234', launchMode: 'attach' };
     localStorage.setItem('taro_dap_config', JSON.stringify(partialConfig));
-    
+
+    // Act
     const newService = new DapConfigService();
     const config = newService.getConfig();
-    
+
+    // Assert — stored fields override defaults; unspecified fields keep defaults
     expect(config.serverAddress).toBe('custom:1234');
     expect(config.launchMode).toBe('attach');
-    // Other fields should remain defaults
     expect(config.transportType).toBe('websocket');
     expect(config.executablePath).toBe('');
   });

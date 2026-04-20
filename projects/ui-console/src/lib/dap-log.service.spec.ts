@@ -55,16 +55,29 @@ describe('DapLogService', () => {
     expect(logs[0].message).toBe('Direct message');
   });
 
+  it('should append DAP logs', async () => {
+    const msg = { type: 'request', seq: 123, command: 'initialize' };
+    service.appendDapLog(msg);
+    const logs = await firstValueFrom(service.dapLogs$);
+    expect(logs.length).toBe(1);
+    expect(logs[0].message).toBe('[123] initialize');
+    expect(logs[0].category).toBe('dap');
+    expect(logs[0].data).toEqual(msg);
+  });
+
   it('should clear all logs', async () => {
     service.consoleLog('Main', 'info');
     service.appendProgramLog('Program', 'stdout');
+    service.appendDapLog({ type: 'event', event: 'initialized' });
     service.clear();
 
     const consoleLogs = await firstValueFrom(service.consoleLogs$);
     const progLogs = await firstValueFrom(service.programLogs$);
+    const dapLogs = await firstValueFrom(service.dapLogs$);
 
     expect(consoleLogs.length).toBe(0);
     expect(progLogs.length).toBe(0);
+    expect(dapLogs.length).toBe(0);
   });
 
   it('should limit memory size to approx 1MB', async () => {

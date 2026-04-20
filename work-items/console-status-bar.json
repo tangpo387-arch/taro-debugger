@@ -114,7 +114,7 @@
       "title": "DAP Protocol Inspector (3-Tab Support)",
       "featureGroup": "Console & Status Bar",
       "metadata": {
-        "status": "pending",
+        "status": "accepted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": [
@@ -128,11 +128,13 @@
         "Update DebuggerComponent traffic subscription to feed the new stream",
         "Add JSON expansion support for protocol payloads",
         "[Fix] Refactor CDK Virtual Scroll to support variable heights via AutoSizeVirtualScrollStrategy or a custom handler",
-        "[Test] Verify DAP traffic appears in the 3rd tab and the main Debug Console remains clean"
+        "[Test] Verify DAP traffic appears in the 3rd tab and the main Debug Console remains clean",
+        "[Doc] docs/dap-protocol-inspector.md"
       ],
       "timeline": {
         "created": "2026-04-18",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-20"
       }
     }
   ]

@@ -6,12 +6,16 @@ import { LogEntry, LogCategory } from '@taro/dap-core';
 export class DapLogService {
   private readonly consoleLogsSubject = new BehaviorSubject<LogEntry[]>([]);
   private readonly programLogsSubject = new BehaviorSubject<LogEntry[]>([]);
+  private readonly dapLogsSubject = new BehaviorSubject<LogEntry[]>([]);
 
   /** Debugging Console Logs (System/DAP) */
   public readonly consoleLogs$: Observable<LogEntry[]> = this.consoleLogsSubject.asObservable();
 
   /** Program Output Logs (Stdout/Stderr) */
   public readonly programLogs$: Observable<LogEntry[]> = this.programLogsSubject.asObservable();
+
+  /** raw DAP Protocol Traffic (Requests/Responses/Events) */
+  public readonly dapLogs$: Observable<LogEntry[]> = this.dapLogsSubject.asObservable();
 
   private readonly MAX_LOG_MEMORY_SIZE = 1 * 1024 * 1024; // 1MB (approximate)
   private nextLogId = 1;
@@ -86,6 +90,41 @@ export class DapLogService {
   }
 
   /**
+   * Append a raw DAP message to the protocol inspector stream.
+   * @param message Structured DAP message (Request/Response/Event)
+   */
+  public appendDapLog(message: any): void {
+    if (!message) return;
+
+    let summary = '';
+    let level: 'info' | 'error' = 'info';
+
+    if (message.type === 'request') {
+      summary = `[${message.seq}] ${message.command}`;
+    } else if (message.type === 'response') {
+      summary = `[${message.request_seq}] ${message.command}`;
+      if (!message.success) {
+        level = 'error';
+        summary += ` - Failed: ${message.message || 'Unknown error'}`;
+      }
+    } else if (message.type === 'event') {
+      summary = `${message.event}`;
+    }
+
+    const entry: LogEntry = {
+      id: this.nextLogId++,
+      timestamp: new Date(),
+      message: summary,
+      category: 'dap',
+      level,
+      data: message
+    };
+
+    const newLogs = [...this.dapLogsSubject.value, entry];
+    this.dapLogsSubject.next(this.limitMemorySize(newLogs));
+  }
+
+  /**
    * Estimates memory size and trims oldest entries if limit is exceeded.
    */
   private limitMemorySize(logs: LogEntry[]): LogEntry[] {
@@ -108,5 +147,6 @@ export class DapLogService {
   public clear(): void {
     this.consoleLogsSubject.next([]);
     this.programLogsSubject.next([]);
+    this.dapLogsSubject.next([]);
   }
 }

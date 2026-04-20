@@ -19,7 +19,8 @@ describe('LogViewerComponent', () => {
     };
     const mockLogService = {
       consoleLogs$: of([]),
-      programLogs$: of([])
+      programLogs$: of([]),
+      dapLogs$: of([])
     };
     const mockSnackBar = { open: () => {} };
 
