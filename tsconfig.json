@@ -5,7 +5,8 @@
   "compilerOptions": {
     "paths": {
       "@taro/dap-core": ["./projects/dap-core/src/public-api.ts"],
-      "@taro/ui-console": ["./projects/ui-console/src/public-api.ts"]
+      "@taro/ui-console": ["./projects/ui-console/src/public-api.ts"],
+      "@taro/ui-editor": ["./projects/ui-editor/src/public-api.ts"]
     },
     "strict": true,
     "noImplicitOverride": true,
@@ -44,6 +45,12 @@
     },
     {
       "path": "./projects/ui-console/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/ui-editor/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/ui-editor/tsconfig.spec.json"
     }
   ]
 }

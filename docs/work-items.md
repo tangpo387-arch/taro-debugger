@@ -51,19 +51,6 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - [Test] rapid same-file clicks collapse to one request; pending dispatches after in-flight resolves; two files fire independently
 - **Dependencies**: WI-13
 
-### WI-65: Library Extraction: EditorComponent
-
-- **Status**: ⏳ Pending
-- **Size**: M
-- **Description**: Extract the Monaco-based EditorComponent into a dedicated library @taro/ui-editor to improve modularity and build isolation.
-- **Details**:
-  - Create projects/ui-editor library
-  - Relocate editor.component.ts and associated styles/templates to the library
-  - Export component through public-api.ts
-  - Update DebuggerComponent to consume from @taro/ui-editor
-  - [Test] Verify app builds and editor functions (breakpoints/highlights) identically
-- **Dependencies**: WI-62
-
 ### WI-71: Data Binding: Global Breakpoint Synchronization
 
 - **Status**: ⏳ Pending

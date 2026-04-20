@@ -22,7 +22,7 @@ import { MatTreeModule, MatTree } from '@angular/material/tree';
 import { DapSessionService } from '@taro/dap-core';
 import { DapConfigService } from '@taro/dap-core';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { LAYOUT_COMPACT_MQ } from './layout.config';
+import { LAYOUT_COMPACT_MQ } from '@taro/ui-editor';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { FileNode } from './file-tree.service';

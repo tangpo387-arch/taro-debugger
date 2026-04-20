@@ -128,7 +128,7 @@
       "title": "Library Extraction: EditorComponent",
       "featureGroup": "Editor Features",
       "metadata": {
-        "status": "pending",
+        "status": "accepted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": [
@@ -141,11 +141,13 @@
         "Relocate editor.component.ts and associated styles/templates to the library",
         "Export component through public-api.ts",
         "Update DebuggerComponent to consume from @taro/ui-editor",
-        "[Test] Verify app builds and editor functions (breakpoints/highlights) identically"
+        "[Test] Verify app builds and editor functions (breakpoints/highlights) identically",
+        "[Doc] docs/editor-library-extraction.md"
       ],
       "timeline": {
         "created": "2026-04-18",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-20"
       }
     },
     {

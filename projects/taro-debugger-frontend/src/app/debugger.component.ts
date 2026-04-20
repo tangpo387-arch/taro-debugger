@@ -16,7 +16,7 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
 
-import { EditorComponent, BreakpointChangeEvent } from './editor.component';
+import { EditorComponent, BreakpointChangeEvent } from '@taro/ui-editor';
 import { FileExplorerComponent } from './file-explorer.component';
 import { VariablesComponent } from './variables.component';
 import { LogViewerComponent } from '@taro/ui-console';
