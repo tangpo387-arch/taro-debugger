@@ -22,6 +22,7 @@ description: "Core system architecture, UI layout rules, and component hierarchi
    - **Bottom**: Status Bar and Console (`app-log-viewer`).
 4. **Transport Fail-Fast Policy**: If the WebSocket layer detects an invalid DAP packet header, the entire message bus is permanently terminated to prevent misaligned streams.
 5. **Source Content Memory Handling**: Source string contents (`source` requests) are cached in memory via LRU (20MB limit). Persistence to `localStorage` across sessions is prohibited.
+6. **Cross-Platform Path Handling**: C/C++ source code paths may use `/` (Unix) or `\` (Windows). You MUST ensure `DapFileTreeService` and `EditorComponent` (and related path-resolution logic) parse and normalize both formats correctly to prevent tree-mismatches.
 
 ## Detailed Source Documents
 

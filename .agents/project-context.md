@@ -25,10 +25,10 @@ This document is purely an index and terminology outline. You are STRICTLY FORBI
 
 <context>
 
-| Project | Type | Path | Responsibility |
+| Project / Term | Type | Path | Architectural Responsibility |
 | :--- | :--- | :--- | :--- |
-| `taro-debugger-frontend` | Application | `projects/taro-debugger-frontend` | Angular host application (UI, Routing). |
-| `@taro/dap-core` | Library | `projects/dap-core` | Framework-agnostic DAP client logic and types. |
+| **Host Application** | Application | `projects/taro-debugger-frontend` | `taro-debugger-frontend`. The Angular shell responsible for UI layout, routing, and Electron IPC coordination. |
+| **DAP-Core** | Library | `projects/dap-core` | `@taro/dap-core`. Framework-agnostic library containing protocol serialization, types, and core client logic. |
 
 </context>
 
@@ -48,22 +48,14 @@ This document is purely an index and terminology outline. You are STRICTLY FORBI
 
 <context>
 
-| Term | Definition / Role in DAP |
+| Term | Definition / Role in Project |
 | :--- | :--- |
-| **Variables Reference** | A numeric ID used to lazy-load the member contents of complex objects or Scopes. |
-| **Source Reference** | An ID used when the source code is not from a physical path but is virtual content provided by the DA. |
+| **Execution State** | The session lifecycle (Inactive, Launching, Running, Paused) managed by `DapSessionService`. |
+| **Standalone Unit** | The mandatory Angular component pattern (Angular 21+); strictly forbidden from using `NgModule`. |
 
 </context>
 
-## 3. Behavioral Constraints
-
-<constraints>
-
-* **Path Handling**: C/C++ source code paths may use `/` (Unix) or `\` (Windows). You MUST ensure `DapFileTreeService` and `EditorComponent` parse both formats correctly.
-
-</constraints>
-
-## 4. Agent Navigation
+## 3. Agent Navigation
 
 <workflow>
 
@@ -96,7 +88,7 @@ Locate documents based on task:
 
 </workflow>
 
-## 5. Build, Dev & Test Commands
+## 4. Build, Dev & Test Commands
 
 <workflow>
 
@@ -106,24 +98,19 @@ Locate documents based on task:
 | **Build Library** | `ng build <library>` | Compiles the `<library>` library. |
 | **Dev Server** | `npm start` | Launches a local development server with hot reload. |
 | **Run All Tests** | `npm run test -- --watch=false` | Executes all Vitest unit tests in single-run mode. |
+| **Test Watch Mode** | `npm run test` | Starts the Vitest runner in interactive watch mode. |
 | **Test Single File** | `npm run test -- <project> --include=**/<file.spec.ts> --watch=false` | Executes tests for a specific file. |
-| **Watch Mode** | `npm run test` | Starts the Vitest runner in interactive watch mode. |
 | **Doc Linting** | `npm run lint:docs` | Verifies documentation against quality standards. |
 
 </workflow>
 
-<critical-instruction>
-
-All testing commands use Vitest. If executing testing commands, you MUST use the `--` separator to pass arguments through npm to the underlying test runner.
-Before implementing any test, you MUST load the **Skill: `[DEV:TEST] Test Case Writing`**.
-
-</critical-instruction>
-
-## 6. Agent Context Sources & Knowledge Acquisition
+## 5. Agent Context Sources & Knowledge Acquisition
 
 <critical-instruction>
 
 * **Architectural Guidance**: You are STRICTLY FORBIDDEN from pre-reading `docs/architecture.md` or `docs/system-specification.md`. For architectural, layout, or component boundary questions, you MUST load **Skill: `[DEV:ARCH] System Architecture`**.
 * **Locating Files**: You MUST use `docs/file-map.md` as an index ONLY to locate specific features or source files.
+* **Testing Protocol Enforcement**: Executing test binaries directly (e.g. `npx vitest`) is an ARCHITECTURAL VIOLATION. You MUST use the project's standard `npm run test` commands defined in the table above.
+Before implementing any test, you MUST load the **Skill: `[DEV:TEST] Test Case Writing`**.
 
 </critical-instruction>

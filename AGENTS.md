@@ -99,7 +99,6 @@ audience: AI model performing role selection for each user request
 4. **Response Packaging**: Every response MUST start with the bolded name of the chosen agent (e.g., **Agent: Product_Architect**) to confirm the context of the reply.
 5. **Deadlock Escalation**: If two or more agents hold mutually exclusive, unresolvable positions, execution MUST stop immediately. Present both positions clearly to the USER and wait for their directive before proceeding.
 6. **Strict CLI Tool Arguments**: You are STRICTLY FORBIDDEN from guessing arguments for CLI tools. You MUST refer to the relevant documentation or skill manifest and use the EXACT, case-sensitive arguments listed. NEVER use capitalized, generic, or assumed values.
-7. **Testing Protocol Enforcement**: Executing test binaries directly (e.g. `npx vitest`) is an architectural violation. You MUST use the project's standard `npm run test` commands as defined in `.agents/project-context.md`.
 
 </critical-instruction>
 ```
