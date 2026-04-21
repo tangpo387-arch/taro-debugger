@@ -18,17 +18,15 @@ import { MatTabsModule } from '@angular/material/tabs';
 
 import { EditorComponent, BreakpointChangeEvent } from '@taro/ui-editor';
 import { FileExplorerComponent } from './file-explorer.component';
-import { VariablesComponent } from './variables.component';
+import { VariablesComponent, CallStackComponent, DapVariablesService } from '@taro/ui-inspection';
 import { LogViewerComponent } from '@taro/ui-console';
 import { ErrorDialog, ErrorDialogData } from './error-dialog/error-dialog';
 import { DapConfigService, DapConfig } from '@taro/dap-core';
 import { DapSessionService, ExecutionState, VerifiedBreakpoint } from '@taro/dap-core';
-import { DapVariablesService } from './dap-variables.service';
 import { DapEvent, DapStackFrame } from '@taro/dap-core';
 import { FileNode } from './file-tree.service';
 import { DapLogService } from '@taro/ui-console';
 import { DebugControlGroupComponent } from './debug-control-group.component';
-import { CallStackComponent } from './call-stack.component';
 import { AssemblyViewComponent, DapAssemblyService } from '@taro/ui-assembly';
 import { KeyboardShortcutService, ActionID } from './keyboard-shortcut.service';
 import { DapFileTreeService } from './dap-file-tree.service';

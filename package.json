@@ -6,9 +6,10 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build taro-debugger-frontend",
+    "build": "ng build",
     "build:dap-core": "ng build dap-core",
     "build:ui-console": "ng build ui-console",
+    "build:ui-inspection": "ng build ui-inspection",
     "watch": "ng build --watch --configuration development taro-debugger-frontend",
     "test": "ng test taro-debugger-frontend --watch=false && ng test ui-console --watch=false && ng test ui-editor --watch=false && ng test dap-core --watch=false",
     "postinstall": "node scripts/postinstall.js",

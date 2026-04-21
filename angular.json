@@ -182,6 +182,32 @@
           }
         }
       }
+    },
+    "ui-inspection": {
+      "projectType": "library",
+      "root": "projects/ui-inspection",
+      "sourceRoot": "projects/ui-inspection/src",
+      "prefix": "taro",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/ui-inspection/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/ui-inspection/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/ui-inspection/tsconfig.spec.json"
+          }
+        }
+      }
     }
   }
 }

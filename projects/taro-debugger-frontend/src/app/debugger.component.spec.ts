@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { DebuggerComponent } from './debugger.component';
 import { DapSessionService } from '@taro/dap-core';
 import { DapConfigService } from '@taro/dap-core';
-import { DapVariablesService } from './dap-variables.service';
+import { DapVariablesService } from '@taro/ui-inspection';
 import { DapLogService } from '@taro/ui-console';
 import { DapAssemblyService } from '@taro/ui-assembly';
 import { NGX_MONACO_EDITOR_CONFIG } from 'ngx-monaco-editor-v2';

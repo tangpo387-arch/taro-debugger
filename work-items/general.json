@@ -427,6 +427,29 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-20"
       }
+    },
+    {
+      "id": "WI-74",
+      "title": "Extract @taro/ui-shared Utility Library",
+      "featureGroup": "General",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.1",
+        "dependencies": []
+      },
+      "description": "Consolidate duplicated UI components, SCSS tokens, and shared Angular utilities into a unified internal library.",
+      "details": [
+        "Identify common UI patterns (toolbars, status bars, icons)",
+        "Extract shared SCSS variables and mixins",
+        "Standardize shared Angular pipes and directives",
+        "[Doc] Define library-level visual consistency guidelines",
+        "[Test] Verify component reusability across at least 2 libraries"
+      ],
+      "timeline": {
+        "created": "2026-04-21",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }
