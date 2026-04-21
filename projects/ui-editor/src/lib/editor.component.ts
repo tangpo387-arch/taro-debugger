@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import { debounceTime, groupBy, mergeMap, distinctUntilChanged } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
@@ -96,6 +96,7 @@ export class EditorComponent implements OnChanges, OnDestroy {
   private readonly updateQueue$ = new Subject<void>();
   private lastRestoredFilename: string | null = null;
   private lastProcessedRevealTrigger: number = 0;
+  private readonly breakpointMutation$ = new Subject<BreakpointChangeEvent>();
 
   // ── Dependencies ────────────────────────────────────────────────────
 
@@ -149,6 +150,18 @@ export class EditorComponent implements OnChanges, OnDestroy {
           this.editorInstance.updateOptions({ fontSize: newSize });
         }
       });
+
+    // Per-file breakpoint mutation debounce (R-CS4)
+    this.breakpointMutation$.pipe(
+      groupBy(mutation => mutation.file),
+      mergeMap(group$ => group$.pipe(
+        debounceTime(150),
+        distinctUntilChanged((prev, curr) => JSON.stringify(prev.lines) === JSON.stringify(curr.lines))
+      )),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(event => {
+      this.breakpointsChange.emit(event);
+    });
   }
 
   public ngOnChanges(changes: SimpleChanges): void {
@@ -293,8 +306,8 @@ export class EditorComponent implements OnChanges, OnDestroy {
 
     this.updateBreakpointDecorations();
 
-    // Notify parent so it can sync with the DAP adapter (WI-13)
-    this.breakpointsChange.emit({
+    // Notify parent with debounce (WI-41 / R-CS4)
+    this.breakpointMutation$.next({
       file: this.filename,
       lines: Array.from(fileBps)
     });

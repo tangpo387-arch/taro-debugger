@@ -8,6 +8,10 @@ related:
   - session-layer.md
   - ui-layer.md
   - ../../.agents/skills/dap-implementation/SKILL.md
+tech_stack:
+  angular: 21
+  rxjs: 7.8
+  dap: 1.64
 ---
 
 # Command Serialization
@@ -30,6 +34,21 @@ interleaved DAP messages reaching the Debug Adapter (DA) before it has transitio
 | **R-CS3** | Call stack frame switch | Cancel-and-replace — latest selection wins; prior in-flight chain is discarded |
 | **R-CS4** | Breakpoint gutter click (`setBreakpoints`) | Debounce (150 ms) + per-file last-write-wins; distinct files are independent |
 | **R-CS5** | Stop / Disconnect button (`disconnect` / `terminate`) | One-shot guard — calls after first dispatch are no-ops until `reset()` |
+
+### 1.1 Layer Responsibilities
+
+Serialization is jointly enforced by the UI and Session layers to ensure both visual responsiveness and protocol integrity:
+
+- **UI Layer (`DebuggerComponent`, `EditorComponent`)**: Responsible for **Jitter Filtering**. It prevents redundant DAP requests through event debouncing and immediate button state updates (disabling clicking), ensuring that human interaction noise stays at the edge.
+- **Session Layer (`DapSessionService`)**: Responsible for **Protocol Safety**. It enforces strict single-execution for control commands and serialized state synchronization for breakpoints. This prevents race conditions and state divergence if multiple components attempt to interact with the Debug Adapter simultaneously.
+
+### 1.2 Architecture Constraints
+
+The following fundamental constraints govern all command serialization patterns in this system:
+
+1. **Isolation**: Guards for different command types (e.g., execution control vs. evaluate) are fully independent and must never block one another.
+2. **Eventual Consistency**: Breakpoint updates must eventually synchronize with the user's latest intent, even if intermediate states are discarded or collapsed.
+3. **Transport Integrity**: Method guards must stop data from being piped to a transport that is transitioning to a closed state (one-shot guard).
 
 ---
 
@@ -203,6 +222,17 @@ All signals are **fully independent**. No two guards share state or block each o
   - As soon as the in-flight response arrives (success or error), the pending update is dispatched immediately.
 - `setBreakpoints` requests for **different files** are fully independent and may execute in parallel.
 - Rationale: DAP's `setBreakpoints` transmits the **complete breakpoint list per file** on every call. Out-of-order responses for the same file would leave the DA's breakpoint state inconsistent with the UI's intended state.
+
+### Design Rationale: Layer Responsibility
+
+The implementation of R-CS4 is intentionally distributed across both layers to solve two distinct problems:
+
+1. **UI Layer (`EditorComponent`) — Human Noise Filtering**:
+    - **Debouncing**: Gutter clicks are inherently "jittery." Grouping by file and debouncing ensures we only synchronize the user's final intent, significantly reducing redundant protocol traffic.
+    - **Responsiveness**: The UI can update local decorations (markers) immediately without waiting for the 150 ms window, while the expensive server sync happens asynchronously.
+2. **Session Layer (`DapSessionService`) — Protocol Safety**:
+    - **Serialization**: While the UI delays the *start* of a request, the Session Layer ensures that once a request is dispatched, any subsequent updates for that file wait for the first to complete.
+    - **Integrity**: This prevents race conditions where a fast second request might be overwritten by a slow first request's confirmation, maintaining the "latest-write-wins" guarantee.
 
 ### Enforcement
 

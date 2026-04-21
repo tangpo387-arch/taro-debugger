@@ -78,7 +78,7 @@
       "title": "Command Serialization: setBreakpoints Debounce + Per-File Serialization",
       "featureGroup": "Editor Features",
       "metadata": {
-        "status": "pending",
+        "status": "accepted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": [
@@ -92,11 +92,13 @@
         "While in-flight: store latest breakpoint list as pending (queue depth 1)",
         "On response: dispatch pending immediately if non-empty",
         "Distinct files proceed in parallel — no cross-file blocking",
-        "[Test] rapid same-file clicks collapse to one request; pending dispatches after in-flight resolves; two files fire independently"
+        "[Test] rapid same-file clicks collapse to one request; pending dispatches after in-flight resolves; two files fire independently",
+        "[Doc] docs/wi-41-breakpoint-serialization.md"
       ],
       "timeline": {
         "created": "2026-04-15",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-21"
       }
     },
     {

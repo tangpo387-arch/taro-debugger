@@ -32,6 +32,9 @@ export interface VerifiedBreakpoint {
 /** Execution State */
 export type ExecutionState = 'idle' | 'starting' | 'running' | 'stopped' | 'terminated' | 'error';
 
+/** Internal state for tracking per-file setBreakpoints serialization */
+type BreakpointFileState = { inFlight: boolean; pending: number[] | undefined };
+
 @Injectable()
 export class DapSessionService {
   private readonly configService = inject(DapConfigService);
@@ -40,6 +43,7 @@ export class DapSessionService {
   private seq = 1;
   private readonly pendingRequests = new Map<number, { resolve: (response: DapResponse) => void; reject: (error: any) => void }>();
   private messageSubscription?: Subscription;
+  private readonly breakpointFileState = new Map<string, BreakpointFileState>();
 
 
   public capabilities: any = {};
@@ -363,25 +367,62 @@ export class DapSessionService {
   /**
    * Synchronize breakpoints for a single source file with the DAP adapter.
    * Per the DAP spec, this replaces all breakpoints for the given source.
+   * Implements R-CS4: Per-file serialization and last-write-wins for pending updates.
+   * 
    * @param sourcePath Absolute path to the source file
    * @param lines 1-based line numbers of all desired breakpoints in this file
    * @returns Array of verified breakpoint results from the adapter
    */
   async setBreakpoints(sourcePath: string, lines: number[]): Promise<VerifiedBreakpoint[]> {
-    const breakpointArgs = lines.map(line => ({ line }));
-    const response = await this.sendRequest('setBreakpoints', {
-      source: { path: sourcePath },
-      breakpoints: breakpointArgs,
-      // Provide the deprecated lines field as well for older adapters
-      lines: lines
-    });
-    const rawBreakpoints: any[] = response.body?.breakpoints || [];
-    return rawBreakpoints.map((bp: any) => ({
-      line: bp.line ?? 0,
-      verified: bp.verified ?? false,
-      id: bp.id,
-      message: bp.message
-    }));
+    const state = this.breakpointFileState.get(sourcePath) ?? { inFlight: false, pending: undefined };
+
+    // If a request for this file is already in progress, store the latest lines
+    // in the pending slot (last-write-wins) and exit early.
+    if (state.inFlight) {
+      state.pending = lines;
+      this.breakpointFileState.set(sourcePath, state);
+      // Return empty array to signify no new verification data yet for THIS specific call.
+      // The pending request will eventually fire and update the UI via separate mechanisms
+      // (either the recursive call's return value processed elsewhere or DAP 'breakpoint' events).
+      return [];
+    }
+
+    state.inFlight = true;
+    state.pending = undefined;
+    this.breakpointFileState.set(sourcePath, state);
+
+    try {
+      const breakpointArgs = lines.map(line => ({ line }));
+      const response = await this.sendRequest('setBreakpoints', {
+        source: { path: sourcePath },
+        breakpoints: breakpointArgs,
+        // Provide the deprecated lines field as well for older adapters
+        lines: lines
+      });
+      const rawBreakpoints: any[] = response.body?.breakpoints || [];
+      return rawBreakpoints.map((bp: any) => ({
+        line: bp.line ?? 0,
+        verified: bp.verified ?? false,
+        id: bp.id,
+        message: bp.message
+      }));
+    } finally {
+      const currentState = this.breakpointFileState.get(sourcePath);
+      if (currentState) {
+        currentState.inFlight = false;
+        const nextLines = currentState.pending;
+        currentState.pending = undefined;
+        this.breakpointFileState.set(sourcePath, currentState);
+
+        // If a mutation occurred while in-flight, dispatch the latest pending state now.
+        if (nextLines !== undefined) {
+          // We fire this and ignore the return value here, as the UI orchestration
+          // for the "eventual" result should be handled via DAP 'breakpoint' events
+          // or we could emit a synthetic local event if needed. (R-CS4)
+          void this.setBreakpoints(sourcePath, nextLines);
+        }
+      }
+    }
   }
 
   /**

@@ -219,4 +219,62 @@ describe('EditorComponent', () => {
       expect(mockEditor.revealLineInCenter).toHaveBeenCalledWith(42);
     });
   });
+
+  describe('breakpointsChange Debounce (R-CS4)', () => {
+    beforeEach(() => {
+      // Mock editor instance needed for decoration update triggered by toggleBreakpoint
+      (component as any).editorInstance = {
+        deltaDecorations: vi.fn().mockReturnValue([])
+      };
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('should debounce multiple rapid clicks on the same file', () => {
+      const emitSpy = vi.spyOn(component.breakpointsChange, 'emit');
+      component.filename = 'test.cpp';
+
+      // Act: Simulate 3 rapid toggles
+      component.toggleBreakpoint(10);
+      component.toggleBreakpoint(20);
+      component.toggleBreakpoint(30);
+
+      // Assert: No emission should have occurred yet due to 150ms debounce
+      expect(emitSpy).not.toHaveBeenCalled();
+
+      // Advance time by 149ms
+      vi.advanceTimersByTime(149);
+      expect(emitSpy).not.toHaveBeenCalled();
+
+      // Advance to 150ms
+      vi.advanceTimersByTime(1);
+      expect(emitSpy).toHaveBeenCalledTimes(1);
+      expect(emitSpy).toHaveBeenCalledWith(expect.objectContaining({
+        file: 'test.cpp',
+        lines: expect.arrayContaining([10, 20, 30])
+      }));
+    });
+
+    it('should NOT debounce clicks across different files (independent groups)', () => {
+      const emitSpy = vi.spyOn(component.breakpointsChange, 'emit');
+
+      // Act: Click on file A
+      component.filename = 'fileA.cpp';
+      component.toggleBreakpoint(10);
+
+      // Act: Switch to file B and click
+      component.filename = 'fileB.cpp';
+      component.toggleBreakpoint(20);
+
+      // Assert: Both streams should emit their results after the debounce window
+      vi.advanceTimersByTime(150);
+      
+      expect(emitSpy).toHaveBeenCalledTimes(2);
+      expect(emitSpy).toHaveBeenCalledWith(expect.objectContaining({ file: 'fileA.cpp', lines: [10] }));
+      expect(emitSpy).toHaveBeenCalledWith(expect.objectContaining({ file: 'fileB.cpp', lines: [20] }));
+    });
+  });
 });

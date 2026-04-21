@@ -2,9 +2,9 @@
 title: DapSessionService — Unit Spec Plan
 scope: unit-test
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
-target-file: projects/taro-debugger-frontend/projects/taro-debugger-frontend/src/app/dap-session.service.ts
-related-wi: ~
-last_updated: 2026-04-13
+target-file: projects/dap-core/src/lib/session/dap-session.service.ts
+related-wi: [WI-41]
+last_updated: 2026-04-21
 ---
 
 # DapSessionService — Unit Spec Plan
@@ -34,6 +34,12 @@ Fully isolated tests for `DapSessionService`. Focuses on DAP session lifecycle, 
   * Verify that `cancelRequest` sends a cancel command when capabilities support it.
   * Verify that `cancelRequest` does NOT send a cancel command if capabilities do not support it.
   * Verify that `evaluate` times out after 30 seconds and rejects with an EvaluateCancelledError.
+
+* **setBreakpoints Serialization (R-CS4)**
+  * Verify that subsequent calls for the same file while in-flight are stored as pending.
+  * Verify that pending updates are automatically dispatched when the in-flight request completes.
+  * Verify that calls for different files execute in parallel.
+  * Verify that the pending slot uses last-write-wins (collapses multiple updates into one).
 
 * **Disconnect/Terminate One-Shot Guard (R-CS5)**
   * Verify that `disconnect()` returns immediately without sending a DAP request if the execution state is already `terminated`, `idle`, or `error`.

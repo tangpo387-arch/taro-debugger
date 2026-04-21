@@ -24,20 +24,6 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
 
 ## Editor Features
 
-### WI-41: Command Serialization: setBreakpoints Debounce + Per-File Serialization
-
-- **Status**: ⏳ Pending
-- **Size**: M
-- **Description**: Implement per-file debounce and last-write-wins serialization for setBreakpoints per command-serialization.md R-CS4
-- **Details**:
-  - Add debounceTime(150) on per-file breakpoint mutation stream in EditorComponent
-  - Add setBreakpoints(path, lines) to DapSessionService with BreakpointFileState Map guard
-  - While in-flight: store latest breakpoint list as pending (queue depth 1)
-  - On response: dispatch pending immediately if non-empty
-  - Distinct files proceed in parallel — no cross-file blocking
-  - [Test] rapid same-file clicks collapse to one request; pending dispatches after in-flight resolves; two files fire independently
-- **Dependencies**: WI-13
-
 ### WI-71: Data Binding: Global Breakpoint Synchronization
 
 - **Status**: ⏳ Pending

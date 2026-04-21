@@ -2,9 +2,9 @@
 title: EditorComponent — Unit Spec Plan
 scope: unit-test
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
-target-file: projects/taro-debugger-frontend/projects/taro-debugger-frontend/src/app/editor.component.ts
-related-wi: [WI-49]
-last_updated: 2026-04-18
+target-file: projects/ui-editor/src/lib/editor.component.ts
+related-wi: [WI-49, WI-41]
+last_updated: 2026-04-21
 ---
 
 # EditorComponent — Unit Spec Plan
@@ -19,6 +19,9 @@ Isolated unit tests for the `EditorComponent`, covering Monaco instance initiali
 
 * **Breakpoint Interaction**
   * `toggleBreakpointAtCurrentPosition()`: Should identify the current line from Monaco cursor and toggle the breakpoint.
+  * **Breakpoint Debounce (R-CS4)**:
+    * Verify that rapid toggles on the same file within 150ms result in only a single `breakpointsChange` emission.
+    * Verify that clicks on different files are debounced independently by grouping.
 
 * **View State Persistence (WI-49)**
   * **R-EVS1**: Should save the Monaco view state using the previous filename in `ngOnChanges`.

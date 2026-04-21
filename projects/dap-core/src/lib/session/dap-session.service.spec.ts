@@ -344,4 +344,90 @@ describe('DapSessionService', () => {
       expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({ command: 'disconnect' }));
     });
   });
+
+  describe('setBreakpoints Serialization (R-CS4)', () => {
+    it('should send first setBreakpoints request immediately', async () => {
+      (service as any).transport = mockTransport;
+      const file = '/src/main.cpp';
+      const p1 = service.setBreakpoints(file, [10, 20]);
+
+      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+        command: 'setBreakpoints',
+        arguments: expect.objectContaining({ source: { path: file }, breakpoints: [{ line: 10 }, { line: 20 }] })
+      }));
+    });
+
+    it('should queue second call for same file and fire after first completes', async () => {
+      (service as any).transport = mockTransport;
+      const file = '/src/main.cpp';
+
+      // 1. First call
+      const p1 = service.setBreakpoints(file, [10]);
+      expect(mockTransport.sendRequest).toHaveBeenCalledTimes(1);
+
+      // 2. Second call while first is in flight
+      const p2 = service.setBreakpoints(file, [20]);
+      // Should return empty array immediately and NOT send request yet
+      const res2 = await p2;
+      expect(res2).toEqual([]);
+      expect(mockTransport.sendRequest).toHaveBeenCalledTimes(1);
+
+      // 3. Complete first call
+      (service as any).handleIncomingMessage({
+        type: 'response', request_seq: 1, command: 'setBreakpoints', success: true, body: { breakpoints: [{ line: 10, verified: true }] }
+      });
+      const res1 = await p1;
+      expect(res1[0].line).toBe(10);
+
+      // 4. Verification that second call fired automatically after first resolved
+      // Since it's a recursive call triggered in finally, it sends a new request (seq 2).
+      expect(mockTransport.sendRequest).toHaveBeenCalledTimes(2);
+      expect(mockTransport.sendRequest).toHaveBeenLastCalledWith(expect.objectContaining({
+        command: 'setBreakpoints',
+        arguments: expect.objectContaining({ breakpoints: [{ line: 20 }] })
+      }));
+    });
+
+    it('should allow parallel calls for different files', async () => {
+      (service as any).transport = mockTransport;
+      const file1 = '/src/a.cpp';
+      const file2 = '/src/b.cpp';
+
+      service.setBreakpoints(file1, [1]);
+      service.setBreakpoints(file2, [2]);
+
+      expect(mockTransport.sendRequest).toHaveBeenCalledTimes(2);
+      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+        arguments: expect.objectContaining({ source: { path: file1 } })
+      }));
+      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+        arguments: expect.objectContaining({ source: { path: file2 } })
+      }));
+    });
+
+    it('should implement last-write-wins for multiple pending requests', async () => {
+      (service as any).transport = mockTransport;
+      const file = '/src/main.cpp';
+
+      service.setBreakpoints(file, [10]); // req 1
+      service.setBreakpoints(file, [20]); // queues 20
+      service.setBreakpoints(file, [30]); // overwrites 20 with 30
+      
+      expect(mockTransport.sendRequest).toHaveBeenCalledTimes(1);
+
+      // Complete first call (seq 1)
+      (service as any).handleIncomingMessage({
+        type: 'response', request_seq: 1, command: 'setBreakpoints', success: true
+      });
+      
+      // Wait for tick (recursive microtask)
+      await Promise.resolve();
+
+      // Should have sent req for [30], skipping [20]
+      expect(mockTransport.sendRequest).toHaveBeenCalledTimes(2);
+      expect(mockTransport.sendRequest).toHaveBeenLastCalledWith(expect.objectContaining({
+        arguments: expect.objectContaining({ breakpoints: [{ line: 30 }] })
+      }));
+    });
+  });
 });
