@@ -52,19 +52,6 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - [Test] rapid frame clicks result in only the last frame's scopes being rendered
 - **Dependencies**: WI-17, WI-73
 
-### WI-69: UI Layout: Thread & Breakpoint Panels
-
-- **Status**: ⏳ Pending
-- **Size**: M
-- **Description**: Revamp the DebuggerComponent layout to support dedicated sections for Threads (right) and Breakpoints (left). Reference: [ui-layout-inspection-panels.md](docs/ui-layout-inspection-panels.md)
-- **Details**:
-  - Refactor sidenav-left to use panel-section structure for File Explorer
-  - Create Breakpoints component in @taro/ui-inspection and add to sidenav-left
-  - Create Threads component in @taro/ui-inspection and add to top of sidenav-right
-  - Ensure flush dividers and 32px headers per visual-design.md
-  - [Test] Verify both sidenavs correctly render components from @taro/ui-inspection library with 1px dividers
-- **Dependencies**: WI-62, WI-41, WI-73
-
 ### WI-70: Data Binding: Thread List Integration
 
 - **Status**: ⏳ Pending

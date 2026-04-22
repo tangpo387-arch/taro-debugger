@@ -38,34 +38,71 @@
   <!-- Core layout container: Sidenavs and main content area -->
   <mat-sidenav-container class="debugger-container" autosize>
 
-    <!-- 2. Left sidenav: File Explorer -->
-    <mat-sidenav mode="side" [opened]="leftVisible" position="start" class="sidenav-left" [style.width.px]="leftWidth">
+    <!-- 2. Left sidenav: File Explorer + Threads -->
+    <mat-sidenav #leftSidenav mode="side" [opened]="leftVisible" position="start" class="sidenav-left" [style.width.px]="leftWidth">
       <!-- Left Resize Handle -->
       <div class="resize-handle resize-handle-left" (mousedown)="onResizeStart($event, 'left')"></div>
-      <!-- Minimize button lives outside FileExplorerComponent (it controls the sidenav, not the tree) -->
-      <app-file-explorer [activeFilePath]="activeFilePath" [reloadTrigger]="fileTreeReloadTrigger"
-        [revealTrigger]="fileRevealTrigger" (fileSelected)="onFileSelected($event)"></app-file-explorer>
+
+      <!-- Files Panel -->
+      <app-inspection-panel
+        label="Files"
+        [(expanded)]="leftFilesExpanded"
+        [resizable]="leftFilesExpanded && leftThreadsExpanded"
+        (resizeDrag)="onLeftPanelResizeDrag($event, 'files')"
+        [style.flex]="leftFilesExpanded ? '1 1 ' + leftFilesHeight + 'px' : '0 0 32px'">
+        <app-file-explorer
+          [activeFilePath]="activeFilePath"
+          [reloadTrigger]="fileTreeReloadTrigger"
+          [revealTrigger]="fileRevealTrigger"
+          (fileSelected)="onFileSelected($event)">
+        </app-file-explorer>
+      </app-inspection-panel>
+
+      <!-- Threads Panel -->
+      <app-inspection-panel
+        label="Threads"
+        [(expanded)]="leftThreadsExpanded"
+        [style.flex]="leftThreadsExpanded ? '1 1 ' + leftThreadsHeight + 'px' : '0 0 32px'">
+        <app-threads></app-threads>
+      </app-inspection-panel>
     </mat-sidenav>
 
-    <!-- 3. Right sidenav: Variables and Call Stack -->
-    <mat-sidenav mode="side" opened position="end" class="sidenav-right" [style.width.px]="rightWidth">
+    <!-- 3. Right sidenav: Breakpoints, Variables, Call Stack -->
+    <mat-sidenav #rightSidenav mode="side" opened position="end" class="sidenav-right" [style.width.px]="rightWidth">
       <!-- Right Resize Handle -->
       <div class="resize-handle resize-handle-right" (mousedown)="onResizeStart($event, 'right')"></div>
-      <!-- Variables View Section -->
-      <div class="panel-section variables-section">
-        <h3 class="panel-title">Variables</h3>
-        <app-variables></app-variables>
-      </div>
 
-      <!-- Call Stack Section -->
-      <div class="panel-section">
-        <h3 class="panel-title">Call Stack</h3>
-        <app-call-stack 
-          [stackFrames]="stackFrames" 
-          [activeFrameId]="activeFrameId" 
+      <!-- Breakpoints Panel -->
+      <app-inspection-panel
+        label="Breakpoints"
+        [(expanded)]="rightBreakpointsExpanded"
+        [resizable]="rightBreakpointsExpanded && (rightVariablesExpanded || rightCallStackExpanded)"
+        (resizeDrag)="onRightPanelResizeDrag($event, 'breakpoints')"
+        [style.flex]="rightBreakpointsExpanded ? '1 1 ' + rightBreakpointsHeight + 'px' : '0 0 32px'">
+        <app-breakpoints></app-breakpoints>
+      </app-inspection-panel>
+
+      <!-- Variables Panel -->
+      <app-inspection-panel
+        label="Variables"
+        [(expanded)]="rightVariablesExpanded"
+        [resizable]="rightVariablesExpanded && rightCallStackExpanded"
+        (resizeDrag)="onRightPanelResizeDrag($event, 'variables')"
+        [style.flex]="rightVariablesExpanded ? '1 1 ' + rightVariablesHeight + 'px' : '0 0 32px'">
+        <app-variables></app-variables>
+      </app-inspection-panel>
+
+      <!-- Call Stack Panel -->
+      <app-inspection-panel
+        label="Call Stack"
+        [(expanded)]="rightCallStackExpanded"
+        [style.flex]="rightCallStackExpanded ? '1 1 ' + rightCallStackHeight + 'px' : '0 0 32px'">
+        <app-call-stack
+          [stackFrames]="stackFrames"
+          [activeFrameId]="activeFrameId"
           (frameSelected)="onFrameClick($event)">
         </app-call-stack>
-      </div>
+      </app-inspection-panel>
     </mat-sidenav>
 
     <!-- 4. Center: Core Editor and Consoles -->

@@ -141,14 +141,13 @@
 .sidenav-left {
   min-width: 150px;
   max-width: 80vw;
-  /* Content layout: resize-handle + minimize-row + file-explorer component */
+  /* Multi-panel: flex column hosts InspectionPanelComponents */
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  /* FileExplorerComponent manages its own internal padding */
 
   /* Material does not expose a CSS variable for .mat-drawer-inner-container
-     Disable internal scroll to allow app-file-explorer to manage its own scrollbar. */
+     Must be flex column for InspectionPanelComponent flex distribution to work. */
   :host & ::ng-deep .mat-drawer-inner-container {
     overflow: hidden !important;
     display: flex;
@@ -164,7 +163,7 @@
   overflow: hidden;
 
   /* Material does not expose a CSS variable for .mat-drawer-inner-container
-     Must be flex column to allow .panel-section to expand with flex: 1 */
+     Must be flex column to allow InspectionPanelComponent to expand with flex: 1 */
   :host & ::ng-deep .mat-drawer-inner-container {
     overflow: hidden !important;
     display: flex;
@@ -172,46 +171,9 @@
   }
 }
 
-/* Right panel section styles */
-.panel-section {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-}
-
-.variables-section {
-  /* Material 3 Section Separation: Flush headers replace whitespace grouping.
-     Section height management is handled by individual components (§9.3). */
-  margin-bottom: 0;
-  padding-bottom: 0;
-  flex: 1; // Ensure variables section expands to share space with call stack
-}
-
-.panel-title {
-  display: flex;
-  align-items: center;
-  height: 32px; // Fixed height per §9.4
-  font-weight: var(--weight-medium);
-  /* Panel titles use medium, not bold (§9.1) */
-  font-size: var(--text-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--mat-sys-on-surface-variant);
-  background-color: var(--mat-sys-surface-container-high);
-  margin: 0;
-  flex-shrink: 0;
-  /* Separator + spacing below title per §9.5 */
-  border-top: none;
-  border-bottom: 1px solid var(--mat-sys-outline-variant);
-  padding: 0 var(--sys-density-panel-padding);
-  box-sizing: border-box;
-}
-
-.placeholder-content {
-  padding: var(--sys-density-panel-padding);
-  font-size: var(--text-sm);
-  color: var(--mat-sys-on-surface-variant);
+/* Divider between vertically stacked inspection panels */
+app-inspection-panel + app-inspection-panel {
+  border-top: 1px solid var(--mat-sys-outline-variant);
 }
 
 

@@ -1,0 +1,20 @@
+<!-- Panel header: always visible, toggle on click -->
+<div class="panel-header" (click)="toggle()" [attr.aria-expanded]="expanded" role="button" tabindex="0"
+     (keydown.enter)="toggle()" (keydown.space)="toggle(); $event.preventDefault()">
+  <mat-icon class="chevron-icon" [class.expanded]="expanded" aria-hidden="true">chevron_right</mat-icon>
+  <span class="panel-label">{{ label }}</span>
+</div>
+
+<!-- Panel content: hidden when collapsed -->
+@if (expanded) {
+  <div class="panel-content">
+    <ng-content />
+
+    <!-- Resize handle: only shown when resizable=true and panel is expanded -->
+    @if (resizable) {
+      <div class="resize-handle-bottom"
+           (mousedown)="onResizeHandleMousedown($event)"
+           title="Drag to resize"></div>
+    }
+  </div>
+}

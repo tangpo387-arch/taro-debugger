@@ -28,3 +28,7 @@ Fully isolated tests for `DebuggerComponent`. Focuses on session lifecycle hooks
 
 * **Command Serialization (R-CS1)**
   * Verify that all control buttons are actively disabled if the `commandInFlight$` signal is true for the session, regardless of the `executionState`.
+
+* **Panel Layout — WI-69**
+  * Verify that the component initializes with the correct default expand state for all 5 inspection panels (left: Files=true, Threads=true; right: Breakpoints=true, Variables=true, CallStack=true).
+  * Verify that the component initializes with exactly 2 left panel states and 3 right panel states, matching the Flush IDE layout contract.

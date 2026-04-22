@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, ViewChild, DestroyRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, ViewChild, DestroyRef, ElementRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -18,7 +18,14 @@ import { MatTabsModule } from '@angular/material/tabs';
 
 import { EditorComponent, BreakpointChangeEvent } from '@taro/ui-editor';
 import { FileExplorerComponent } from './file-explorer.component';
-import { VariablesComponent, CallStackComponent, DapVariablesService } from '@taro/ui-inspection';
+import {
+  VariablesComponent,
+  CallStackComponent,
+  DapVariablesService,
+  InspectionPanelComponent,
+  ThreadsComponent,
+  BreakpointsComponent,
+} from '@taro/ui-inspection';
 import { LogViewerComponent } from '@taro/ui-console';
 import { ErrorDialog, ErrorDialogData } from './error-dialog/error-dialog';
 import { DapConfigService, DapConfig } from '@taro/dap-core';
@@ -52,7 +59,10 @@ import { DapFileTreeService } from './dap-file-tree.service';
     LogViewerComponent,
     DebugControlGroupComponent,
     CallStackComponent,
-    AssemblyViewComponent
+    AssemblyViewComponent,
+    InspectionPanelComponent,
+    ThreadsComponent,
+    BreakpointsComponent,
   ],
   providers: [
     DapSessionService,
@@ -81,6 +91,12 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
   /** Access the editor component for programmatic breakpoint updates */
   @ViewChild(EditorComponent) private editorComponent?: EditorComponent;
+
+  /** ViewChild references for sidenavs — used by vertical panel resize logic to compute bounding rects.
+   *  Queried via template ref vars #leftSidenav / #rightSidenav on the mat-sidenav elements.
+   */
+  @ViewChild('leftSidenav', { read: ElementRef }) private leftSidenavRef?: ElementRef<HTMLElement>;
+  @ViewChild('rightSidenav', { read: ElementRef }) private rightSidenavRef?: ElementRef<HTMLElement>;
 
   /** Bind DAP connection status */
   public readonly connectionStatus$: Observable<boolean> = this.dapSession.connectionStatus$;
@@ -150,7 +166,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public activeLineFilePath: string | null = null;
   public activeInstructionPointer: string | null = null;
 
-  /** Resizing state and dimensions */
+  /** Sidenav widths, console height, and left visibility */
   public leftWidth: number = 250;
   public rightWidth: number = 300;
   public consoleHeight: number = 250;
@@ -158,9 +174,29 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   /** Current active tab in the main content area (0: Source, 1: Disassembly) */
   public activeTabIndex: number = 0;
 
-  private isResizingLeft = false;
-  private isResizingRight = false;
-  private isResizingBottom = false;
+  // ── Left sidenav panel expand/collapse & heights ──────────────────────────
+  /** Whether the Files panel (left sidenav) is expanded. */
+  public leftFilesExpanded: boolean = true;
+  /** Whether the Threads panel (left sidenav) is expanded. */
+  public leftThreadsExpanded: boolean = true;
+  /** Pixel height budget for the Files panel when expanded (flex-basis). */
+  public leftFilesHeight: number = 200;
+  /** Pixel height budget for the Threads panel when expanded (flex-basis). */
+  public leftThreadsHeight: number = 100;
+
+  // ── Right sidenav panel expand/collapse & heights ─────────────────────────
+  /** Whether the Breakpoints panel (right sidenav) is expanded. */
+  public rightBreakpointsExpanded: boolean = true;
+  /** Whether the Variables panel (right sidenav) is expanded. */
+  public rightVariablesExpanded: boolean = true;
+  /** Whether the Call Stack panel (right sidenav) is expanded. */
+  public rightCallStackExpanded: boolean = true;
+  /** Pixel height budget for the Breakpoints panel when expanded (flex-basis). */
+  public rightBreakpointsHeight: number = 100;
+  /** Pixel height budget for the Variables panel when expanded (flex-basis). */
+  public rightVariablesHeight: number = 200;
+  /** Pixel height budget for the Call Stack panel when expanded (flex-basis). */
+  public rightCallStackHeight: number = 150;
 
   private readonly STORAGE_KEY = 'taro-debugger-layout-sizes';
 
@@ -222,6 +258,12 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         if (sizes.leftVisible !== undefined) {
           this.leftVisible = !!sizes.leftVisible;
         }
+        // Restore panel heights
+        if (sizes.leftFilesHeight) this.leftFilesHeight = sizes.leftFilesHeight;
+        if (sizes.leftThreadsHeight) this.leftThreadsHeight = sizes.leftThreadsHeight;
+        if (sizes.rightBreakpointsHeight) this.rightBreakpointsHeight = sizes.rightBreakpointsHeight;
+        if (sizes.rightVariablesHeight) this.rightVariablesHeight = sizes.rightVariablesHeight;
+        if (sizes.rightCallStackHeight) this.rightCallStackHeight = sizes.rightCallStackHeight;
       } catch (e) {
         console.warn('Failed to parse persisted layout sizes', e);
       }
@@ -233,7 +275,12 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       left: this.leftWidth,
       right: this.rightWidth,
       bottom: this.consoleHeight,
-      leftVisible: this.leftVisible
+      leftVisible: this.leftVisible,
+      leftFilesHeight: this.leftFilesHeight,
+      leftThreadsHeight: this.leftThreadsHeight,
+      rightBreakpointsHeight: this.rightBreakpointsHeight,
+      rightVariablesHeight: this.rightVariablesHeight,
+      rightCallStackHeight: this.rightCallStackHeight,
     };
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
   }
@@ -274,6 +321,51 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public toggleLeftSidenav(): void {
     this.leftVisible = !this.leftVisible;
     this.savePersistedSizes();
+  }
+
+  /**
+   * Handles vertical resize drag within the left sidenav panels.
+   * The dragged clientY is used to redistribute height between the Files and Threads panels.
+   * @param clientY - Raw mouse Y coordinate from the drag event.
+   * @param panel - Which panel's bottom border is being dragged ('files').
+   */
+  public onLeftPanelResizeDrag(clientY: number, panel: 'files'): void {
+    const MIN = 80;
+    // Resolve the sidenav DOM element via @ViewChild reference (avoids fragile querySelector).
+    const sidenavEl = this.leftSidenavRef?.nativeElement;
+    if (!sidenavEl) return;
+    const rect = sidenavEl.getBoundingClientRect();
+    const relativeY = Math.max(MIN, Math.min(rect.height - MIN, clientY - rect.top));
+    if (panel === 'files') {
+      this.leftFilesHeight = relativeY;
+      this.leftThreadsHeight = rect.height - relativeY;
+    }
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Handles vertical resize drag within the right sidenav panels.
+   * @param clientY - Raw mouse Y coordinate from the drag event.
+   * @param panel - Which panel's bottom border is being dragged ('breakpoints' | 'variables').
+   */
+  public onRightPanelResizeDrag(clientY: number, panel: 'breakpoints' | 'variables'): void {
+    const MIN = 80;
+    // Resolve the sidenav DOM element via @ViewChild reference (avoids fragile querySelector).
+    const sidenavEl = this.rightSidenavRef?.nativeElement;
+    if (!sidenavEl) return;
+    const rect = sidenavEl.getBoundingClientRect();
+    const relativeY = Math.max(MIN, Math.min(rect.height - MIN * 2, clientY - rect.top));
+    if (panel === 'breakpoints') {
+      this.rightBreakpointsHeight = relativeY;
+    } else if (panel === 'variables') {
+      // Variables drag: split remaining height between variables and call stack
+      const breakpointsH = this.rightBreakpointsExpanded ? this.rightBreakpointsHeight : 32;
+      const remaining = rect.height - breakpointsH;
+      const variablesH = Math.max(MIN, Math.min(remaining - MIN, relativeY - rect.top - breakpointsH));
+      this.rightVariablesHeight = variablesH;
+      this.rightCallStackHeight = Math.max(MIN, remaining - variablesH);
+    }
+    this.cdr.detectChanges();
   }
 
 
