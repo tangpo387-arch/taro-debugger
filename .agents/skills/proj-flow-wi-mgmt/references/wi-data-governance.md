@@ -7,8 +7,9 @@ audience: Agent Role Play
 # Work Item Data Governance & Schema
 
 > **Work Item (WI)**: The formal, atomic, and trackable unit of execution within the project. It serves as the primary artifact for planning, dependency resolution, and quality control across all project phases.
-
-This document defines the technical structure and behavioral logic of the data-driven Work Item management system.
+>
+> [!IMPORTANT]
+> **Exclusion Boundary**: This file strictly documents the SSOT data schema and raw script capabilities. It does **not** cover Agent CLI operating procedures, step-by-step Work Item handoff flows, or QA rules. See `docs/project-management.md` for workflow rules.
 
 ---
 

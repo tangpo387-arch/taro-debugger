@@ -120,7 +120,8 @@
         "Refactor frame-click handler in DebuggerComponent (or call stack component) to use switchMap",
         "Stale scopes/variables results from prior frame are silently discarded",
         "No Session Layer changes required",
-        "[Test] rapid frame clicks result in only the last frame's scopes being rendered"
+        "[Test] rapid frame clicks result in only the last frame's scopes being rendered",
+        "[Doc] docs/wi-42-frame-switch-spec.md"
       ],
       "timeline": {
         "created": "2026-04-15",

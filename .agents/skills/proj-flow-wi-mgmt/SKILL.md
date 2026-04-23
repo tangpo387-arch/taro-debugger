@@ -16,7 +16,7 @@ description: Managing the creation, progression, and archival of Work Items (WI)
 ## 0. Context Management & Efficiency
 
 > [!CAUTION]
-> **Context Protection Rule**: Do NOT read `references/wi-data-governance.md` for routine CLI operations (add, edit, update).
+> **Context Protection Rule**: You are STRICTLY FORBIDDEN from reading `references/wi-data-governance.md` for routine CLI operations (add, edit, update).
 > You MUST only load the governance reference if your task involves:
 > 1. Modifying the underlying JSON schema.
 > 2. Debugging or extending the logic within the `scripts/` directory.
@@ -149,7 +149,7 @@ After any `add` or `edit`, verify that the item appears correctly in `docs/work-
 
 **Owner**: `Product_Architect`, `Lead_Engineer`, `Quality_Control_Reviewer`
 
-Implementation status is updated via the `update-wi.js` script. **Do not** edit Markdown files manually.
+Implementation status is updated via the `update-wi.js` script. You are STRICTLY FORBIDDEN from editing Markdown files manually.
 
 | Action | Command | Result | Owner |
 | :--- | :--- | :--- | :--- |
@@ -176,15 +176,12 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
 
 ---
 
-## 6. Specification Handoff Protocol (Product_Architect → Lead_Engineer)
+## 6. End-to-End Work Item Handoff Flow
 
-**Goal**: Transfer a fully scoped Work Item from `Product_Architect` to `Lead_Engineer` for implementation.
+> [!NOTE]
+> The authoritative sequence logic and Phase definitions are stored in `docs/project-management.md`. The steps below strictly define the **CLI operational constraints** for Agents executing these phases.
 
-**Prerequisites**:
-- WI status is `Proposed`.
-- All dependency WIs (`deps`) are `✅ Accepted`.
-
-### 6.1 Product_Architect Steps (Scoping & Promotion)
+### 6.1 Phase 1: Scoping & Promotion (Product_Architect)
 
 **Goal**: Transition a WI from `Proposed` to `Pending`.
 
@@ -201,14 +198,25 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
    - Initialize a spec document using `node scripts/doc-guard.js init-spec <WI-ID> feature [Filename]`. Reference [resources/doc-guard-guidelines.md](resources/doc-guard-guidelines.md) for template details.
    - Complete the generated template under `docs/` (name based on kebab-case).
    - Update related project documents to reflect the new design.
-   - <critical_instruction>**Link the Spec**: You MUST append the spec document link to the WI details (e.g., `|[Doc] docs/feature-spec.md`). Use `manage-wi.js show <WI-ID>` to read existing details, then `manage-wi.js edit <WI-ID> --details "<original>|[Doc] docs/feature-spec.md"`. You are STRICTLY FORBIDDEN from moving to the Promotion step without verifying the `[Doc]` link is present in the Work Item's `details`.</critical_instruction>
 
-4. **Promotion**: Transition the status from `Proposed` to `Pending` via `update-wi.js`. This authorizes development to begin.
+<critical_instruction>
+
+**Link the Spec**: You MUST append the spec document link to the WI details (e.g., `|[Doc] docs/feature-spec.md`). Use `manage-wi.js show <WI-ID>` to read existing details, then `manage-wi.js edit <WI-ID> --details "<original>|[Doc] docs/feature-spec.md"`. You are STRICTLY FORBIDDEN from moving to the Promotion step without verifying the `[Doc]` link is present in the Work Item's `details`.
+
+</critical_instruction>
+
+1. **Promotion**: You are STRICTLY FORBIDDEN from executing `node scripts/update-wi.js WI-## pending` autonomously. You MUST explicitly propose the transition and await formal USER confirmation before execution.
 
 **Verification**:
 - WI status is updated to `Pending` and appears in `work-items.md`.
 
-### 6.3 Handoff Verdict Protocol (Lead_Engineer → Quality_Control_Reviewer)
+### 6.2 Phase 2: Implementation & Submission (Lead_Engineer)
+
+**Goal**: Execute `node scripts/update-wi.js WI-## done` to submit the Review Package to the QCR.
+
+**Condition**: A valid `docs/reviews/{WI-ID}.review-package.md` MUST exist before executing this script.
+
+### 6.3 Phase 3: Quality Control Review (Quality_Control_Reviewer)
 
 **Prerequisites**:
 - WI status is `done`.
@@ -216,9 +224,10 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
 
 **Steps**:
 1. `Quality_Control_Reviewer` follows the review protocol in `Skill: [PROJ:PROT] Review Package`.
-2. Issue `APPROVED` or `REJECTED` verdict.
-3. If `APPROVED`, transition status to `accepted`.
-4. If `REJECTED`, transition status to `rework` and provide findings in the review package.
+2. Formulate an APPROVED verdict, or note precise, actionable findings for a REJECTED verdict.
+3. You are STRICTLY FORBIDDEN from executing `node scripts/update-wi.js {WI-ID} <accepted|rework>` autonomously.
+4. You MUST propose the corresponding status transition to the USER and await explicit confirmation.
+5. Execute the transition script ONLY after receiving approval.
 
 **Verification**:
 - Verify status in `project-roadmap.md` reflects the verdict.
@@ -271,7 +280,7 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
 **Definition of "Trivial Changes"**: Pure maintenance operations that do not involve logic changes (e.g., typo fixes, comment optimization, IDE setting adjustments, bug fixes, small enhancements), for which the WI flow may be bypassed.
 
 > [!IMPORTANT]
-> **User Authorization**: Lead_Engineer executes trivial changes **ONLY** after receiving explicit authorization **OR** a direct hint/instruction from the **USER** in the conversation. Unauthorized autonomous bypass of the WI flow is strictly forbidden.
+> **User Authorization**: You are STRICTLY FORBIDDEN from bypassing the standard WI flow for trivial changes without explicit authorization or a direct hint/instruction from the **USER**.
 
 1. **WI Exemption**: If a change meets the definition above and is authorized/hinted by the USER, it does not require a dedicated Work Item.
 2. **Review Requirement**: Any code or documentation change MUST still be reviewed by the `Quality_Control_Reviewer`.

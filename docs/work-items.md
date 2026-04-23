@@ -50,6 +50,7 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - Stale scopes/variables results from prior frame are silently discarded
   - No Session Layer changes required
   - [Test] rapid frame clicks result in only the last frame's scopes being rendered
+  - [Doc] docs/wi-42-frame-switch-spec.md
 - **Dependencies**: WI-17, WI-73
 
 ### WI-70: Data Binding: Thread List Integration
