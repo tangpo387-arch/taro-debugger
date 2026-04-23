@@ -23,6 +23,8 @@ export interface VerifiedBreakpoint {
   line: number;
   /** Whether the adapter confirmed this breakpoint as verified */
   verified: boolean;
+  /** Whether the breakpoint is currently enabled in the UI */
+  enabled: boolean;
   /** Optional adapter-assigned breakpoint ID */
   id?: number;
   /** Optional message from the adapter (e.g., reason for unverified state) */
@@ -44,6 +46,14 @@ export class DapSessionService {
   private readonly pendingRequests = new Map<number, { resolve: (response: DapResponse) => void; reject: (error: any) => void }>();
   private messageSubscription?: Subscription;
   private readonly breakpointFileState = new Map<string, BreakpointFileState>();
+  /** 
+   * Centralized SSOT for verified breakpoints across all files. 
+   * Keyed by absolute file path. 
+   */
+  private readonly breakpointsMap = new Map<string, VerifiedBreakpoint[]>();
+  /** Reactive stream of the current breakpoint state. */
+  private readonly breakpointsSubject = new BehaviorSubject<Map<string, VerifiedBreakpoint[]>>(new Map(this.breakpointsMap));
+  public readonly breakpoints$ = this.breakpointsSubject.asObservable();
 
 
   public capabilities: any = {};
@@ -240,6 +250,10 @@ export class DapSessionService {
     this.connectionStatusSubject.next(false);
     this.executionStateSubject.next('idle');
     this.commandInFlightSubject.next(false);
+
+    // Clear breakpoint state on session reset
+    this.breakpointsMap.clear();
+    this.breakpointsSubject.next(new Map());
   }
 
 
@@ -381,9 +395,6 @@ export class DapSessionService {
     if (state.inFlight) {
       state.pending = lines;
       this.breakpointFileState.set(sourcePath, state);
-      // Return empty array to signify no new verification data yet for THIS specific call.
-      // The pending request will eventually fire and update the UI via separate mechanisms
-      // (either the recursive call's return value processed elsewhere or DAP 'breakpoint' events).
       return [];
     }
 
@@ -392,20 +403,50 @@ export class DapSessionService {
     this.breakpointFileState.set(sourcePath, state);
 
     try {
-      const breakpointArgs = lines.map(line => ({ line }));
+      // Only send enabled breakpoints to the DAP adapter
+      const existingBps = this.breakpointsMap.get(sourcePath) || [];
+      const enabledLines = lines.filter(line => {
+        const existing = existingBps.find(b => b.line === line);
+        return existing ? existing.enabled : true;
+      });
+
+      const breakpointArgs = enabledLines.map(line => ({ line }));
       const response = await this.sendRequest('setBreakpoints', {
         source: { path: sourcePath },
         breakpoints: breakpointArgs,
-        // Provide the deprecated lines field as well for older adapters
-        lines: lines
+        lines: enabledLines
       });
+
       const rawBreakpoints: any[] = response.body?.breakpoints || [];
-      return rawBreakpoints.map((bp: any) => ({
-        line: bp.line ?? 0,
-        verified: bp.verified ?? false,
-        id: bp.id,
-        message: bp.message
+      const verified = rawBreakpoints.map((bp: any, index: number) => {
+        const requestedLine = enabledLines[index];
+        // If the adapter relocated the breakpoint, we still want to keep the 'enabled' 
+        // status from the requested line.
+        const existing = existingBps.find(b => b.line === requestedLine);
+        return {
+          line: bp.line ?? requestedLine,
+          verified: bp.verified ?? false,
+          enabled: existing ? existing.enabled : true,
+          id: bp.id,
+          message: bp.message
+        };
+      });
+
+      // Also include the "disabled" breakpoints that were requested but not sent to DAP
+      const disabledLines = lines.filter(line => !enabledLines.includes(line));
+      const disabledBps: VerifiedBreakpoint[] = disabledLines.map(line => ({
+        line,
+        verified: false,
+        enabled: false
       }));
+
+      const finalBps = [...verified, ...disabledBps].sort((a, b) => a.line - b.line);
+
+      // Update SSOT
+      this.breakpointsMap.set(sourcePath, finalBps);
+      this.breakpointsSubject.next(new Map(this.breakpointsMap));
+
+      return finalBps;
     } finally {
       const currentState = this.breakpointFileState.get(sourcePath);
       if (currentState) {
@@ -414,15 +455,40 @@ export class DapSessionService {
         currentState.pending = undefined;
         this.breakpointFileState.set(sourcePath, currentState);
 
-        // If a mutation occurred while in-flight, dispatch the latest pending state now.
         if (nextLines !== undefined) {
-          // We fire this and ignore the return value here, as the UI orchestration
-          // for the "eventual" result should be handled via DAP 'breakpoint' events
-          // or we could emit a synthetic local event if needed. (R-CS4)
           void this.setBreakpoints(sourcePath, nextLines);
         }
       }
     }
+  }
+
+  /**
+   * Toggles the enabled state of a specific breakpoint.
+   */
+  async toggleBreakpointEnabled(sourcePath: string, line: number): Promise<void> {
+    const bps = this.breakpointsMap.get(sourcePath) || [];
+    const index = bps.findIndex(b => b.line === line);
+    if (index !== -1) {
+      bps[index].enabled = !bps[index].enabled;
+      this.breakpointsMap.set(sourcePath, [...bps]);
+      this.breakpointsSubject.next(new Map(this.breakpointsMap));
+      
+      // Re-sync with DAP server (only send enabled ones)
+      const allLines = bps.map(b => b.line);
+      await this.setBreakpoints(sourcePath, allLines);
+    }
+  }
+
+  /**
+   * Removes a specific breakpoint.
+   */
+  async removeBreakpoint(sourcePath: string, line: number): Promise<void> {
+    const bps = this.breakpointsMap.get(sourcePath) || [];
+    const filtered = bps.filter(b => b.line !== line);
+    
+    // Re-sync with DAP server (will update SSOT via setBreakpoints call)
+    const allLines = filtered.map(b => b.line);
+    await this.setBreakpoints(sourcePath, allLines);
   }
 
   /**
@@ -706,6 +772,46 @@ export class DapSessionService {
         this.executionStateSubject.next('terminated');
         this.commandInFlightSubject.next(false);
         break;
+
+      case 'breakpoint': {
+        const bp = event.body?.breakpoint;
+        if (bp && bp.source?.path && bp.line !== undefined) {
+          const filePath = bp.source.path;
+          const currentBps = this.breakpointsMap.get(filePath) || [];
+          
+          // The DAP 'breakpoint' event is typically used to update a single breakpoint's status.
+          // Since we don't have a reliable ID mapping in the frontend yet for all adapters,
+          // we look for a breakpoint at the same line or with the same adapter ID.
+          let found = false;
+          const updatedBps = currentBps.map(existingBp => {
+            if ((bp.id !== undefined && existingBp.id === bp.id) || existingBp.line === bp.line) {
+              found = true;
+              return {
+                line: bp.line,
+                verified: bp.verified ?? false,
+                enabled: existingBp.enabled, // Preserve local enabled state
+                id: bp.id,
+                message: bp.message
+              };
+            }
+            return existingBp;
+          });
+
+          if (!found) {
+            updatedBps.push({
+              line: bp.line,
+              verified: bp.verified ?? false,
+              enabled: true, // Default to enabled for new server-initiated breakpoints
+              id: bp.id,
+              message: bp.message
+            });
+          }
+
+          this.breakpointsMap.set(filePath, updatedBps);
+          this.breakpointsSubject.next(new Map(this.breakpointsMap));
+        }
+        break;
+      }
     }
 
     // Forward processed event to external subscribers (Components, etc.)

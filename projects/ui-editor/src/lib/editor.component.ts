@@ -90,7 +90,7 @@ export class EditorComponent implements OnChanges, OnDestroy {
   private activeLineDecorationIds: string[] = [];
   private readonly breakpoints: Map<string, Set<number>> = new Map();
   /** Verified breakpoints per file (line numbers confirmed by the DAP adapter) */
-  private readonly verifiedBreakpoints: Map<string, Set<number>> = new Map();
+  private readonly verifiedBreakpoints: Map<string, Map<number, { verified: boolean; enabled: boolean }>> = new Map();
   /** Stores Monaco view state (cursor, scroll, selection) per absolute file path */
   private readonly viewStates = new Map<string, any>();
   private readonly updateQueue$ = new Subject<void>();
@@ -199,22 +199,23 @@ export class EditorComponent implements OnChanges, OnDestroy {
    * @returns A copy of the verified line numbers, or an empty array if none
    */
   public getVerifiedLines(file: string): number[] {
-    const verifiedSet = this.verifiedBreakpoints.get(file);
-    return verifiedSet ? Array.from(verifiedSet) : [];
+    const verifiedMap = this.verifiedBreakpoints.get(file);
+    return verifiedMap ? Array.from(verifiedMap.keys()) : [];
   }
 
   /**
    * Updates the verified breakpoint set for a given file and refreshes decorations.
    * Called by the parent component after receiving a `setBreakpoints` response.
    * @param file Absolute file path
-   * @param verifiedLines 1-based line numbers that the DAP adapter confirmed as verified
+   * @param bps VerifiedBreakpoint array from the DAP session
    */
-  public setVerifiedBreakpoints(file: string, verifiedLines: number[]): void {
-    if (verifiedLines.length === 0) {
-      // Remove the entry entirely to avoid accumulating empty Sets over a long session
+  public setVerifiedBreakpoints(file: string, bps: any[]): void {
+    if (bps.length === 0) {
       this.verifiedBreakpoints.delete(file);
     } else {
-      this.verifiedBreakpoints.set(file, new Set(verifiedLines));
+      const lineMap = new Map<number, { verified: boolean; enabled: boolean }>();
+      bps.forEach(bp => lineMap.set(bp.line, { verified: bp.verified, enabled: bp.enabled }));
+      this.verifiedBreakpoints.set(file, lineMap);
     }
     // Only refresh decorations if this file is currently open
     if (this.filename === file) {
@@ -344,16 +345,25 @@ export class EditorComponent implements OnChanges, OnDestroy {
 
     if (this.filename) {
       const fileBps = this.breakpoints.get(this.filename);
-      const verifiedSet = this.verifiedBreakpoints.get(this.filename);
+      const verifiedMap = this.verifiedBreakpoints.get(this.filename);
       if (fileBps) {
         fileBps.forEach((line) => {
-          const isVerified = verifiedSet ? verifiedSet.has(line) : false;
+          const status = verifiedMap?.get(line);
+          const isVerified = status ? status.verified : false;
+          const isEnabled = status ? status.enabled : true;
+
+          let glyphClass = 'breakpoint-glyph';
+          if (!isEnabled) {
+            glyphClass = 'breakpoint-glyph-disabled';
+          } else if (!isVerified) {
+            glyphClass = 'breakpoint-glyph-unverified';
+          }
+
           decorations.push({
             range: new monaco.Range(line, 1, line, 1),
             options: {
               isWholeLine: false,
-              // Use different CSS class depending on verification state
-              glyphMarginClassName: isVerified ? 'breakpoint-glyph' : 'breakpoint-glyph-unverified'
+              glyphMarginClassName: glyphClass
             }
           });
         });

@@ -232,6 +232,15 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       this.logService.appendDapLog(msg);
     });
 
+    // Subscribe to centralized breakpoint state to keep the editor updated (WI-71)
+    this.dapSession.breakpoints$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((map: Map<string, VerifiedBreakpoint[]>) => {
+      if (this.editorComponent) {
+        map.forEach((bps: VerifiedBreakpoint[], path: string) => {
+          this.editorComponent!.setVerifiedBreakpoints(path, bps);
+        });
+      }
+    });
+
     await this.startSession();
 
     // Initialize global keyboard shortcuts (F5-F11)
@@ -513,32 +522,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
           }
         }
         break;
-      case 'breakpoint': {
-        // Server-side breakpoint notification: the adapter is informing us of a state change
-        // (e.g., breakpoint verified after lazy symbol load, or relocated to a valid line).
-        // We must NOT re-send setBreakpoints here — read the event body directly instead.
-        const bp = event.body?.breakpoint;
-        if (bp && bp.source?.path && bp.line && this.editorComponent) {
-          const filePath: string = bp.source.path;
-          // Read the CURRENT verified set for this file so we can update only the affected line.
-          // We cannot use the local `breakpoints` Map here — that contains all toggled lines,
-          // not just verified ones — passing it to setVerifiedBreakpoints would incorrectly
-          // mark unverified (gray) breakpoints as verified (red).
-          const currentVerified = new Set(this.editorComponent.getVerifiedLines(filePath));
-
-          // Remove the old line in case the adapter relocated this breakpoint,
-          // then add the new line if the adapter confirmed it as verified.
-          // Note: DAP spec does not provide originalLine on the breakpoint event,
-          // so we remove by bp.line (the adapter's canonical line for this BP).
-          currentVerified.delete(bp.line);
-          if (bp.verified) {
-            currentVerified.add(bp.line);
-          }
-
-          this.editorComponent.setVerifiedBreakpoints(filePath, Array.from(currentVerified));
-        }
-        break;
-      }
 
       // ── DAP Server Error Handling (§7.2) ────────────────────────
 
@@ -691,21 +674,37 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     }
 
     try {
-      const verified: VerifiedBreakpoint[] = await this.dapSession.setBreakpoints(filePath, lines);
-      const verifiedLines = verified
-        .filter(bp => bp.verified)
-        .map(bp => bp.line);
-
-      this.editorComponent.setVerifiedBreakpoints(filePath, verifiedLines);
+      // DapSessionService.setBreakpoints now updates the SSOT internally.
+      // The global subscription in ngOnInit will handle updating the editor.
+      await this.dapSession.setBreakpoints(filePath, lines);
 
       this.logService.consoleLog(
-        `Breakpoints synced: ${verifiedLines.length}/${lines.length} verified in ${filePath}`,
+        `Sync requested for ${lines.length} breakpoints in ${filePath}`,
         'info',
         'system'
       );
     } catch (e: any) {
       // Handled globally by synthetic DAP events
     }
+  }
+
+  /**
+   * Handles breakpoint selection in the sidebar panel.
+   * Forces the editor to reveal the target file and line.
+   */
+  public async onBreakpointReveal(event: { path: string, line: number }): Promise<void> {
+    // 1. Open the file if not already active
+    if (this.activeFilePath !== event.path) {
+      // onFileSelected handles state updates and source fetching
+      await this.onFileSelected({ path: event.path } as any);
+    }
+
+    // 2. Set the active line and trigger the reveal snap
+    this.activeLine = event.line;
+    this.activeLineFilePath = event.path;
+    this.fileRevealTrigger++;
+
+    this.cdr.detectChanges();
   }
 
   /** Resume execution */

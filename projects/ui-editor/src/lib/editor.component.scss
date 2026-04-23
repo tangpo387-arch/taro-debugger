@@ -78,6 +78,29 @@
     }
   }
 
+  /* Disabled breakpoint: kept in UI but not sent to DAP server */
+  .breakpoint-glyph-disabled {
+    border: 2px solid var(--mat-sys-outline) !important;
+    background: transparent !important;
+    width: 10px !important; /* Slightly smaller to account for border */
+    height: 10px !important;
+    border-radius: 50%;
+    margin-left: 4px;
+    cursor: pointer;
+    opacity: 0.6;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 10%;
+      width: 80%;
+      height: 2px;
+      background: var(--mat-sys-outline);
+      transform: translateY(-50%);
+    }
+  }
+
   /* ── Monaco Scrollbar Native Alignment (§9.4) ── */
   .monaco-editor {
     .monaco-scrollable-element {

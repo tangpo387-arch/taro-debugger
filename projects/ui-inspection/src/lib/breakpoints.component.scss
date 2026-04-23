@@ -1,0 +1,203 @@
+@use '@angular/material' as mat;
+
+:host {
+  display: block;
+  height: 100%;
+  background: var(--mat-sys-surface-container-low);
+}
+
+.breakpoints-container {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.file-group {
+  margin-bottom: 4px;
+}
+
+.file-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--mat-sys-surface-container);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+  .file-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .file-name {
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--mat-sys-on-surface);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.breakpoint-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+  &:hover {
+    background: var(--mat-sys-surface-container-high);
+
+    .action-btn {
+      opacity: 1;
+    }
+  }
+
+  &.disabled {
+    .breakpoint-icon, .breakpoint-label-group, .location-badge {
+      opacity: 0.5;
+    }
+  }
+}
+
+.breakpoint-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.breakpoint-checkbox {
+  transform: scale(0.8);
+  margin-left: -4px;
+}
+
+.breakpoint-icon {
+  font-size: 12px;
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  
+  &.verified {
+    color: var(--mat-sys-error);
+  }
+
+  &.unverified {
+    color: var(--mat-sys-outline);
+  }
+}
+
+.breakpoint-label-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  .breakpoint-filename {
+    font-size: var(--text-sm);
+    color: var(--mat-sys-on-surface);
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .breakpoint-path {
+    font-size: 10px;
+    color: var(--mat-sys-on-surface-variant);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    direction: rtl;
+    text-align: left;
+  }
+}
+
+.breakpoint-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.location-badge {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  background: var(--mat-sys-surface-container-highest);
+  color: var(--mat-sys-on-surface-variant);
+  padding: 2px 6px;
+  border-radius: 4px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  flex-shrink: 0;
+
+  // Align Material ripple/state-layer with the square shape
+  ::ng-deep .mat-mdc-button-state-layer,
+  ::ng-deep .mat-mdc-button-persistent-ripple {
+    border-radius: 4px !important;
+  }
+
+  mat-icon {
+    font-family: 'Material Icons' !important;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    line-height: 1 !important;
+  }
+
+  &:hover {
+    color: var(--mat-sys-error);
+  }
+}
+
+.placeholder-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  color: var(--mat-sys-on-surface-variant);
+  opacity: 0.6;
+
+  .placeholder-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    margin-bottom: 12px;
+  }
+
+  .placeholder-text {
+    font-size: var(--text-sm);
+  }
+}
+
+/* Material Checkbox Customization for Density */
+::ng-deep .breakpoint-checkbox {
+  .mdc-checkbox {
+    padding: 4px;
+  }
+}

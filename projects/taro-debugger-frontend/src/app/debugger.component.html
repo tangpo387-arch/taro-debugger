@@ -79,7 +79,7 @@
         [resizable]="rightBreakpointsExpanded && (rightVariablesExpanded || rightCallStackExpanded)"
         (resizeDrag)="onRightPanelResizeDrag($event, 'breakpoints')"
         [style.flex]="rightBreakpointsExpanded ? '1 1 ' + rightBreakpointsHeight + 'px' : '0 0 32px'">
-        <app-breakpoints></app-breakpoints>
+        <app-breakpoints (requestReveal)="onBreakpointReveal($event)"></app-breakpoints>
       </app-inspection-panel>
 
       <!-- Variables Panel -->

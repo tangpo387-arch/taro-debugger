@@ -52,24 +52,31 @@ public readonly breakpoints$ = new BehaviorSubject<Map<string, Breakpoint[]>>(th
    - User interaction calls `DapSessionService.setCurrentThread(id)`.
    - This method updates a local `activeThreadId$` and triggers a `stackTrace` request for the selected thread.
 
-### 2. Breakpoint Synchronization
+### 2. Breakpoint Synchronization (High-Fidelity)
 
-1. **SSOT Storage**: `DapSessionService` maintains a `breakpointsMap: Map<string, Breakpoint[]>` where the key is the absolute file path.
-2. **Mutation Flow**:
-   - `EditorComponent` emits line changes via `onBreakpointsChange`.
-   - `DebuggerComponent` proxies this to `DapSessionService.setBreakpoints(path, lines)`.
-   - `DapSessionService` executes the DAP `setBreakpoints` request.
-3. **Consistency**:
-   - On `setBreakpoints` response, the local `breakpointsMap` is updated with the adapter-verified breakpoints (which may have shifted lines).
-   - This ensures the `app-breakpoints` panel always displays the "Verified" state.
+1. **SSOT Storage**: `DapSessionService` maintains a `breakpointsMap: Map<string, VerifiedBreakpoint[]>` where the key is the absolute file path.
+2. **Data Model Extension**:
+   - `VerifiedBreakpoint` now includes an `enabled: boolean` property (default: `true`).
+   - The SSOT broadcasts updates to all subscribers via `breakpoints$`.
+3. **UI Implementation (`BreakpointsComponent`)**:
+   - **Checkbox Integration**: A `mat-checkbox` for each item allows the user to toggle the `enabled` state.
+   - **Location Badges**: Render a badge containing `line[:column]` with `surface-container-high` background and rounded corners.
+   - **Inline Actions**:
+     - `Remove` (Icon: `close`): Dispatches a removal request for that specific breakpoint.
+     - `Edit` (Icon: `edit`): (Placeholder) Opens a dialog for condition editing.
+   - **Visual Feedback**:
+     - **Verified**: Solid red circle.
+     - **Unverified**: Hollow red circle.
+     - **Disabled**: Grayed out label and icon.
 4. **Inter-panel Navigation**:
-   - `app-breakpoints` dispatches `requestReveal(path, line)` on click.
-   - `DebuggerComponent` handles this by triggering the `fileRevealTrigger` observable, which both the File Explorer and Editor subscribe to.
+   - Clicking the label dispatches `requestReveal(path, line)`.
+   - `DebuggerComponent` handles this by triggering the `fileRevealTrigger`.
 
 ## Acceptance Criteria
 
 - [ ] **Thread Refresh**: The thread list updates automatically every time the debugger stops.
 - [ ] **Context Switching**: Selecting a thread in the sidebar correctly updates the Call Stack and Variables view without a full page refresh.
-- [ ] **Breakpoint SSOT**: Adding or removing a breakpoint in the Monaco editor gutter results in an immediate update in the Breakpoints sidebar.
-- [ ] **Verification Feedback**: Breakpoints in the sidebar show a "verified" status (e.g., solid red vs hollow circle) based on the DAP response.
-- [ ] **Navigation**: Clicking a breakpoint in the sidebar successfully opens the correct file and scrolls the line into view.
+- [ ] **High-Fidelity Sidebar**: The Breakpoints panel displays checkboxes, file names, relative paths, and location badges (`line:column`).
+- [ ] **Enable/Disable Sync**: Toggling the checkbox in the sidebar updates the SSOT; the Editor gutter decoration reflects the disabled state (e.g., lower opacity or different color).
+- [ ] **Inline Removal**: Clicking the 'X' button in a breakpoint row immediately removes it from both the sidebar and the editor gutter.
+- [ ] **Navigation**: Clicking a breakpoint row successfully opens the correct file and scrolls the line into view.

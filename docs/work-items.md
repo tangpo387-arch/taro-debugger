@@ -22,22 +22,6 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - Handle process termination and resource cleanup
 - **Dependencies**: none
 
-## Editor Features
-
-### WI-71: Data Binding: Global Breakpoint Synchronization
-
-- **Status**: ⏳ Pending
-- **Size**: M
-- **Description**: Centralize breakpoint state in DapSessionService and synchronize with the Breakpoints Panel and Editor. Reference: [inspection-panels-data-binding.md](docs/inspection-panels-data-binding.md)
-- **Details**:
-  - Refactor breakpoint state into a centralized Map in DapSessionService
-  - Implement breakpoints$ Observable with per-file grouping
-  - Bind app-breakpoints (within @taro/ui-inspection) to centralized state via async pipe
-  - Implement 'Jump to Source' from Breakpoints panel
-  - Ensure setBreakpoints responses update centralized state
-  - [Test] Verify breakpoints in library component reflect editor state
-- **Dependencies**: WI-69, WI-41
-
 ## Variables & Call Stack
 
 ### WI-42: Command Serialization: Frame Switch Cancel-and-Replace

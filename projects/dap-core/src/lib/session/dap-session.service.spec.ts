@@ -429,5 +429,97 @@ describe('DapSessionService', () => {
         arguments: expect.objectContaining({ breakpoints: [{ line: 30 }] })
       }));
     });
+
+    it('should only send enabled breakpoints to the DAP adapter', async () => {
+      (service as any).transport = mockTransport;
+      const file = '/src/main.cpp';
+
+      // Mock transport to respond to setBreakpoints
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        if (req.command === 'setBreakpoints') {
+          (service as any).handleIncomingMessage({
+            type: 'response', request_seq: req.seq, command: 'setBreakpoints', success: true,
+            body: { breakpoints: req.arguments.breakpoints.map((b: any) => ({ ...b, verified: true })) }
+          });
+        }
+      });
+
+      // 1. Manually set a disabled breakpoint in the map
+      (service as any).breakpointsMap.set(file, [
+        { line: 10, verified: true, enabled: true },
+        { line: 20, verified: true, enabled: false }
+      ]);
+
+      // 2. Sync breakpoints (both 10 and 20 are requested by UI)
+      await service.setBreakpoints(file, [10, 20]);
+
+      // 3. Verify only line 10 (enabled) was sent to DAP
+      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+        command: 'setBreakpoints',
+        arguments: expect.objectContaining({
+          breakpoints: [{ line: 10 }]
+        })
+      }));
+    });
+
+    it('should toggle enabled state and re-sync with DAP', async () => {
+      (service as any).transport = mockTransport;
+      const file = '/src/main.cpp';
+
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        if (req.command === 'setBreakpoints') {
+          (service as any).handleIncomingMessage({
+            type: 'response', request_seq: req.seq, command: 'setBreakpoints', success: true,
+            body: { breakpoints: [] }
+          });
+        }
+      });
+
+      (service as any).breakpointsMap.set(file, [
+        { line: 10, verified: true, enabled: true }
+      ]);
+
+      // Act: Toggle off
+      await service.toggleBreakpointEnabled(file, 10);
+
+      // Assert: Map updated and DAP sync triggered with EMPTY list for this file (as line 10 is now disabled)
+      const bps = (service as any).breakpointsMap.get(file);
+      expect(bps[0].enabled).toBe(false);
+      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+        command: 'setBreakpoints',
+        arguments: expect.objectContaining({ breakpoints: [] })
+      }));
+    });
+
+    it('should remove breakpoint and re-sync with DAP', async () => {
+      (service as any).transport = mockTransport;
+      const file = '/src/main.cpp';
+
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        if (req.command === 'setBreakpoints') {
+          (service as any).handleIncomingMessage({
+            type: 'response', request_seq: req.seq, command: 'setBreakpoints', success: true,
+            body: { breakpoints: req.arguments.breakpoints.map((b: any) => ({ ...b, verified: true })) }
+          });
+        }
+      });
+
+      (service as any).breakpointsMap.set(file, [
+        { line: 10, verified: true, enabled: true },
+        { line: 20, verified: true, enabled: true }
+      ]);
+
+      // Act: Remove line 10
+      await service.removeBreakpoint(file, 10);
+
+      // Assert: Line 10 removed from map, and DAP sync triggered with only line 20
+      const bps = (service as any).breakpointsMap.get(file);
+      expect(bps.length).toBe(1);
+      expect(bps[0].line).toBe(20);
+      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+        command: 'setBreakpoints',
+        arguments: expect.objectContaining({ breakpoints: [{ line: 20 }] })
+      }));
+    });
   });
 });

@@ -154,10 +154,10 @@
     },
     {
       "id": "WI-71",
-      "title": "Data Binding: Global Breakpoint Synchronization",
+      "title": "Breakpoints Panel: Interactive Management UI",
       "featureGroup": "Editor Features",
       "metadata": {
-        "status": "pending",
+        "status": "accepted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": [
@@ -165,18 +165,21 @@
           "WI-41"
         ]
       },
-      "description": "Centralize breakpoint state in DapSessionService and synchronize with the Breakpoints Panel and Editor. Reference: [inspection-panels-data-binding.md](docs/inspection-panels-data-binding.md)",
+      "description": "Implement a professional-grade Breakpoints panel with interactive checkboxes, location badges (line:column), and inline action buttons (Remove/Edit), synchronized via a centralized DapSessionService SSOT.",
       "details": [
-        "Refactor breakpoint state into a centralized Map in DapSessionService",
-        "Implement breakpoints$ Observable with per-file grouping",
-        "Bind app-breakpoints (within @taro/ui-inspection) to centralized state via async pipe",
+        "Implement high-fidelity BreakpointsComponent with Material Checkboxes and Location Badges",
+        "Add support for 'Enabled/Disabled' state in breakpoints$ SSOT",
+        "Add inline action buttons (Remove) to the breakpoint list items",
+        "Implement per-item metadata rendering (Filename, Relative Path, Line:Column truncation logic)",
+        "Refactor breakpoint state into a centralized Map in DapSessionService (SSOT)",
         "Implement 'Jump to Source' from Breakpoints panel",
-        "Ensure setBreakpoints responses update centralized state",
-        "[Test] Verify breakpoints in library component reflect editor state"
+        "[Test] Verify checkbox toggle, deletion, and reactive synchronization",
+        "[Doc] docs/inspection-panels-data-binding.md"
       ],
       "timeline": {
         "created": "2026-04-19",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-24"
       }
     }
   ]
