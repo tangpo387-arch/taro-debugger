@@ -2,7 +2,8 @@ import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, ViewChild, Des
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Subscription, Observable, firstValueFrom } from 'rxjs';
+import { Subscription, Observable, firstValueFrom, Subject, from, of, forkJoin } from 'rxjs';
+import { switchMap, tap, catchError } from 'rxjs/operators';
 
 // Angular Material
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -108,6 +109,9 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   private stateSubscription?: Subscription;
   /** Subscription for the diagnostic DAP traffic stream (architecture.md §4.6) */
   private trafficSubscription?: Subscription;
+
+  /** Subject for serializing frame selection requests (WI-42) */
+  private readonly frameSelected$ = new Subject<DapStackFrame>();
 
   /** Current DAP full configuration for HTML template binding */
   public currentConfig: DapConfig = {
@@ -248,6 +252,61 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
     // Load persisted sizes
     this.loadPersistedSizes();
+
+    // Initialize frame selection serialization stream (WI-42)
+    this.initFrameSelectionStream();
+  }
+
+  /**
+   * Initializes the RxJS stream for serializing frame selection requests.
+   * Uses switchMap to ensure that if a new frame is selected before the previous
+   * requests (source, disassembly, scopes) complete, the previous ones are discarded.
+   */
+  private initFrameSelectionStream(): void {
+    this.frameSelected$.pipe(
+      takeUntilDestroyed(this.destroyRef),
+      switchMap((frame: DapStackFrame) => {
+        const tasks: Observable<any>[] = [];
+
+        // 1. Load Source Code
+        if (frame.source?.path) {
+          tasks.push(
+            this.fileTreeService.readFile(frame.source.path, frame.source.sourceReference).pipe(
+              tap(code => {
+                this.currentCode = code;
+                this.cdr.detectChanges();
+              }),
+              catchError(e => {
+                this.currentCode = `// Error loading file: ${e.message}`;
+                this.cdr.detectChanges();
+                return of(null);
+              })
+            )
+          );
+        }
+
+        // 2. Load Disassembly
+        if (frame.instructionPointerReference) {
+          tasks.push(
+            from(this.assemblyService.fetchInstructions(frame.instructionPointerReference)).pipe(
+              catchError(e => {
+                this.logService.consoleLog(`Disassembly failed: ${e.message}`, 'error', 'system');
+                return of(null);
+              })
+            )
+          );
+        }
+
+        // 3. Load Scopes (Variable Inspector)
+        tasks.push(
+          from(this.variablesService.fetchScopes(frame.id)).pipe(
+            catchError(() => of(null))
+          )
+        );
+
+        return forkJoin(tasks);
+      })
+    ).subscribe();
   }
 
   private loadPersistedSizes(): void {
@@ -589,14 +648,17 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Trigger load file and line number when Frame is clicked */
-  public async onFrameClick(frame: DapStackFrame): Promise<void> {
+  /**
+   * Triggered when a frame is clicked in the Call Stack panel.
+   * Performs immediate synchronous UI updates and then triggers the serialized async flow.
+   */
+  public onFrameClick(frame: DapStackFrame): void {
+    // ── Synchronous UI State Updates ─────────────────────────────────────────
     this.activeFrameId = frame.id;
     this.activeLine = frame.line;
     this.activeLineFilePath = frame.source?.path || null;
     this.activeInstructionPointer = frame.instructionPointerReference || null;
 
-    // Load associated file
     if (frame.source && frame.source.path) {
       this.activeFilePath = frame.source.path;
       this.fileRevealTrigger++; // Always trigger a UX reveal on explicit navigation
@@ -605,18 +667,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       // Focus Source tab only if we're already there, or if there's no IP to show in Disassembly
       if (this.activeTabIndex === 0 || !frame.instructionPointerReference) {
         this.activeTabIndex = 0;
-      }
-      
-      this.cdr.detectChanges();
-
-      try {
-        // Pass sourceReference so virtual sources (ref > 0) are keyed correctly in the cache.
-        const code = await firstValueFrom(
-          this.fileTreeService.readFile(frame.source.path, frame.source.sourceReference)
-        );
-        this.currentCode = code;
-      } catch (e: any) {
-        this.currentCode = `// Error loading file: ${e.message}`;
       }
     } else {
       this.activeFilePath = null;
@@ -632,19 +682,8 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       }
     }
 
-    // Pre-fetch disassembly for any frame that carries an instruction pointer,
-    // regardless of whether it also has a source file. This ensures the data
-    // is ready when the user switches to the Disassembly tab.
-    if (frame.instructionPointerReference) {
-      this.assemblyService.fetchInstructions(frame.instructionPointerReference).catch((e: Error) => {
-        this.logService.consoleLog(`Disassembly failed: ${e.message}`, 'error', 'system');
-      });
-    }
-
-    // Trigger scope cache update for the newly selected frame
-    this.variablesService.fetchScopes(frame.id).catch(e => {
-      // Handled globally by synthetic DAP events
-    });
+    // ── Trigger Asynchronous Flow (Serialized via switchMap) ─────────────────
+    this.frameSelected$.next(frame);
 
     this.cdr.detectChanges();
   }

@@ -139,6 +139,31 @@ describe('DapVariablesService', () => {
       await service.getVariables(101);
       expect(mockDapSession.variables).toHaveBeenCalledTimes(2);
     });
+    it('should ignore stale responses (anti-race guard)', async () => {
+      // Setup: first call is slow, second call is fast
+      let firstCallResolved = false;
+      mockDapSession.scopes.mockImplementation(async (id: number) => {
+        if (id === 1) {
+          await new Promise(resolve => setTimeout(resolve, 50));
+          firstCallResolved = true;
+          return makeScopesResponse([{ name: 'Stale', variablesReference: 99, expensive: false }]);
+        } else {
+          return makeScopesResponse([{ name: 'Fresh', variablesReference: 100, expensive: false }]);
+        }
+      });
+
+      // Trigger first call (slow)
+      const p1 = service.fetchScopes(1);
+      // Trigger second call (fast) immediately
+      const p2 = service.fetchScopes(2);
+
+      await Promise.all([p1, p2]);
+
+      const scopes = await firstValueFrom(service.scopes$);
+      // Result should be from frame 2, and frame 1's response should have been ignored
+      expect(scopes[0].name).toBe('Fresh');
+      expect(firstCallResolved).toBe(true);
+    });
   });
 
   // ── getVariables ──────────────────────────────────────────────────────────

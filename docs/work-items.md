@@ -24,28 +24,16 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
 
 ## Variables & Call Stack
 
-### WI-42: Command Serialization: Frame Switch Cancel-and-Replace
-
-- **Status**: ⏳ Pending
-- **Size**: S
-- **Description**: Implement switchMap-based cancel-and-replace for call stack frame selection in DebuggerComponent per command-serialization.md R-CS3
-- **Details**:
-  - Refactor frame-click handler in DebuggerComponent (or call stack component) to use switchMap
-  - Stale scopes/variables results from prior frame are silently discarded
-  - No Session Layer changes required
-  - [Test] rapid frame clicks result in only the last frame's scopes being rendered
-  - [Doc] docs/wi-42-frame-switch-spec.md
-- **Dependencies**: WI-17, WI-73
-
 ### WI-70: Data Binding: Thread List Integration
 
 - **Status**: ⏳ Pending
 - **Size**: M
-- **Description**: Implement reactive data flow for thread enumeration and selection using DapSessionService as SSOT. Reference: [inspection-panels-data-binding.md](docs/inspection-panels-data-binding.md)
+- **Description**: Implement reactive data flow for thread enumeration and selection using DapSessionService as SSOT.
 - **Details**:
   - Add threadsSubject and threads$ to DapSessionService
   - Implement fetchThreads() triggered on 'stopped' event
   - Expose setCurrentThread(threadId) to trigger stackTrace refresh
   - Implement app-threads component inside @taro/ui-inspection using async pipe subscription
   - [Test] Verify threads list updates automatically when program stops
+  - [Doc] docs/inspection-panels-data-binding.md
 - **Dependencies**: WI-69

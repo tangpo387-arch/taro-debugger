@@ -107,7 +107,7 @@
       "title": "Command Serialization: Frame Switch Cancel-and-Replace",
       "featureGroup": "Variables & Call Stack",
       "metadata": {
-        "status": "pending",
+        "status": "accepted",
         "size": "S",
         "milestone": "v1.0",
         "dependencies": [
@@ -115,17 +115,18 @@
           "WI-73"
         ]
       },
-      "description": "Implement switchMap-based cancel-and-replace for call stack frame selection in DebuggerComponent per command-serialization.md R-CS3",
+      "description": "Implement switchMap-based cancel-and-replace for call stack frame selection across DebuggerComponent and DapVariablesService per R-CS3",
       "details": [
-        "Refactor frame-click handler in DebuggerComponent (or call stack component) to use switchMap",
-        "Stale scopes/variables results from prior frame are silently discarded",
+        "Refactor DebuggerComponent.onFrameClick to use a frameSelected$ Subject and switchMap",
+        "Refactor DapVariablesService to guard against stale fetchScopes promises",
         "No Session Layer changes required",
-        "[Test] rapid frame clicks result in only the last frame's scopes being rendered",
-        "[Doc] docs/wi-42-frame-switch-spec.md"
+        "[Test] rapid frame clicks result in only the last frame's source, disassembly, and scopes being rendered",
+        "[Doc] docs/frame-switch-serialization-spec.md"
       ],
       "timeline": {
         "created": "2026-04-15",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-24"
       }
     },
     {
@@ -170,13 +171,14 @@
           "WI-69"
         ]
       },
-      "description": "Implement reactive data flow for thread enumeration and selection using DapSessionService as SSOT. Reference: [inspection-panels-data-binding.md](docs/inspection-panels-data-binding.md)",
+      "description": "Implement reactive data flow for thread enumeration and selection using DapSessionService as SSOT.",
       "details": [
         "Add threadsSubject and threads$ to DapSessionService",
         "Implement fetchThreads() triggered on 'stopped' event",
         "Expose setCurrentThread(threadId) to trigger stackTrace refresh",
         "Implement app-threads component inside @taro/ui-inspection using async pipe subscription",
-        "[Test] Verify threads list updates automatically when program stops"
+        "[Test] Verify threads list updates automatically when program stops",
+        "[Doc] docs/inspection-panels-data-binding.md"
       ],
       "timeline": {
         "created": "2026-04-19",

@@ -44,8 +44,11 @@ export class DapVariablesService implements OnDestroy {
     });
   }
 
+  private lastRequestedFrameId: number | null = null;
+
   /**
    * Request scopes for a given stack frame ID from the DAP Server.
+   * Implements anti-race guard (WI-42) to ensure stale responses are discarded.
    */
   public async fetchScopes(frameId: number): Promise<void> {
     if (frameId < 0) {
@@ -54,17 +57,26 @@ export class DapVariablesService implements OnDestroy {
       return;
     }
 
+    this.lastRequestedFrameId = frameId;
     this.variablesCache.clear();
 
     try {
       const response = await this.dapSession.scopes(frameId);
+
+      // Anti-race guard: only update if this is still the last requested frame
+      if (this.lastRequestedFrameId !== frameId) {
+        return;
+      }
+
       if (response.success && response.body?.scopes) {
         this.scopesSubject.next(response.body.scopes);
       } else {
         this.scopesSubject.next([]);
       }
     } catch (e) {
-      this.scopesSubject.next([]);
+      if (this.lastRequestedFrameId === frameId) {
+        this.scopesSubject.next([]);
+      }
       throw e;
     }
   }
