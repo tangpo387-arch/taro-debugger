@@ -65,7 +65,6 @@ graph LR
     WI_63["WI-63 System-wide ID Flattening and Script Hardening"]
     WI_64["WI-64 Monorepo: Comprehensive Documentation Audit"]
     WI_72["WI-72 Refactor doc-guard.js"]
-    WI_74["WI-74 Extract @taro/ui-shared Utility Library"]
     WI_27["WI-27 Integration of Tabbed Layout and Navigation"]
     WI_28["WI-28 DapAssemblyService and Disassemble Request"]
     WI_29["WI-29 AssemblyViewComponent and Instruction Rendering"]
@@ -74,6 +73,11 @@ graph LR
     WI_01["WI-01 Extend `GdbConfigService` Configuration Model"]
     WI_02["WI-02 Setup Form Field Completion"]
     WI_03["WI-03 Setup Form Validation"]
+    WI_75["WI-75 Refactor: Extract @taro/ui-shared Foundation"]
+    WI_74["WI-74 Standardization of UI Patterns"]
+    WI_76["WI-76 Design Tokens & Dark Mode Support"]
+    WI_77["WI-77 Generic Dialog & Notification Framework"]
+    WI_78["WI-78 A11y Audit & Interaction Hardening"]
     WI_17["WI-17 Call Stack Panel"]
     WI_55["WI-55 Variables Data State Management"]
     WI_56["WI-56 Variables Tree UI Component"]
@@ -138,6 +142,10 @@ graph LR
     WI_62 --> WI_66
     WI_01 --> WI_02
     WI_02 --> WI_03
+    WI_75 --> WI_74
+    WI_75 --> WI_76
+    WI_75 --> WI_77
+    WI_75 --> WI_78
     WI_11 --> WI_17
     WI_11 --> WI_55
     WI_17 --> WI_55
@@ -190,24 +198,23 @@ graph LR
     style WI_16 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_33 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_34 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_35 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_36 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_37 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_44 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_45 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_46 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_47 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_48 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_50 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_51 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_52 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_35 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_36 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_37 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_44 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_45 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_46 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_47 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_48 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_50 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_51 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_52 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_54 fill:none,stroke-dasharray:5
-    style WI_57 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_58 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_63 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_64 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_72 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_74 fill:#f1f5f9,stroke:#64748b
+    style WI_57 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_58 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_63 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_64 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_72 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_27 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_28 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_29 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
@@ -216,6 +223,11 @@ graph LR
     style WI_01 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_02 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_03 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_75 fill:#cbd5e1,stroke:#475569
+    style WI_74 fill:#cbd5e1,stroke:#475569
+    style WI_76 fill:#cbd5e1,stroke:#475569
+    style WI_77 fill:#cbd5e1,stroke:#475569
+    style WI_78 fill:#cbd5e1,stroke:#475569
     style WI_17 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_55 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_56 fill:#f472b6,stroke:#000,stroke-width:2.5px
@@ -239,4 +251,5 @@ graph LR
 | Console & Status Bar | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%232dd4bf'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#2dd4bf"/> `#2dd4bf` | 💎 Stabilized |
 | Electron Desktop Mode | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%2394a3b8'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#94a3b8"/> `#94a3b8` | 💎 Stabilized |
 | Low-Level Inspection | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%236366f1'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#6366f1"/> `#6366f1` | 💎 Stabilized |
-| General | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f1f5f9'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f1f5f9"/> `#f1f5f9` | 🔵 Active |
+| General | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f1f5f9'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f1f5f9"/> `#f1f5f9` | 💎 Stabilized |
+| UI System Design | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23cbd5e1'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#cbd5e1"/> `#cbd5e1` | 🔵 Active |

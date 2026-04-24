@@ -1,0 +1,135 @@
+{
+  "groupDefinition": {
+    "name": "UI System Design",
+    "color": {
+      "fill": "#cbd5e1",
+      "stroke": "#475569"
+    },
+    "description": "Centralized foundation for reusable UI components, layout tokens, and generic utility services."
+  },
+  "items": [
+    {
+      "id": "WI-75",
+      "title": "Refactor: Extract @taro/ui-shared Foundation",
+      "featureGroup": "UI System Design",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Centralize reusable UI components, layout tokens, and generic services into a dedicated foundation library to flatten the dependency graph and optimize the build process.",
+      "details": [
+        "Initialize @taro/ui-shared library in projects/ui-shared",
+        "Move layout.config.ts (Responsive Row Height tokens) from ui-editor to ui-shared",
+        "Move InspectionPanelComponent (collapsible/resizable logic) from ui-inspection to ui-shared",
+        "Move ErrorDialog and generic dialog services from the main application to ui-shared",
+        "Update ui-inspection, ui-editor, ui-assembly, and ui-console to depend on ui-shared",
+        "Simplify .vscode/tasks.json build sequences by leveraging the flattened dependency graph",
+        "[Test] Verify all UI libraries compile independently against ui-shared",
+        "[Doc] docs/ui-shared-architecture-spec.md"
+      ],
+      "timeline": {
+        "created": "2026-04-24",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-74",
+      "title": "Standardization of UI Patterns",
+      "featureGroup": "UI System Design",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.1",
+        "dependencies": [
+          "WI-75"
+        ]
+      },
+      "description": "Consolidate duplicated UI components, SCSS tokens, and shared Angular utilities into a unified internal library.",
+      "details": [
+        "Identify common UI patterns (toolbars, status bars, icons)",
+        "Extract shared SCSS variables and mixins",
+        "Standardize shared Angular pipes and directives",
+        "[Doc] Define library-level visual consistency guidelines",
+        "[Test] Verify component reusability across at least 2 libraries"
+      ],
+      "timeline": {
+        "created": "2026-04-21",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-76",
+      "title": "Design Tokens & Dark Mode Support",
+      "featureGroup": "UI System Design",
+      "metadata": {
+        "status": "proposed",
+        "size": "M",
+        "milestone": "v1.1",
+        "dependencies": [
+          "WI-75"
+        ]
+      },
+      "description": "Implement a centralized CSS Variable system to support seamless switching between Light and Dark themes.",
+      "details": [
+        "Define semantic color tokens (surface, primary, accent, error)",
+        "Implement theme-switching logic in the main application",
+        "Standardize transition durations and easings for UI elements",
+        "[Test] Verify all components adapt correctly to dark theme toggle"
+      ],
+      "timeline": {
+        "created": "2026-04-24",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-77",
+      "title": "Generic Dialog & Notification Framework",
+      "featureGroup": "UI System Design",
+      "metadata": {
+        "status": "proposed",
+        "size": "M",
+        "milestone": "v1.1",
+        "dependencies": [
+          "WI-75"
+        ]
+      },
+      "description": "Create a unified DialogService and Notification system shared across all libraries.",
+      "details": [
+        "Implement a generic DialogService wrapper around MatDialog",
+        "Standardize styling for confirmation modals and input prompts",
+        "Implement a centralized notification bus for non-intrusive feedback",
+        "[Test] Verify dialog consistency between Editor and Console modules"
+      ],
+      "timeline": {
+        "created": "2026-04-24",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-78",
+      "title": "A11y Audit & Interaction Hardening",
+      "featureGroup": "UI System Design",
+      "metadata": {
+        "status": "proposed",
+        "size": "S",
+        "milestone": "v1.1",
+        "dependencies": [
+          "WI-75"
+        ]
+      },
+      "description": "Conduct a full accessibility audit and harden keyboard interactions for the foundation library.",
+      "details": [
+        "Perform WCAG 2.1 AA audit on all shared components",
+        "Standardize keyboard shortcut overlays and focus-trap logic",
+        "Implement screen-reader friendly labels for interactive icons",
+        "[Test] Pass accessibility scan with 0 critical violations"
+      ],
+      "timeline": {
+        "created": "2026-04-24",
+        "created_by": "Antigravity-Agent"
+      }
+    }
+  ]
+}

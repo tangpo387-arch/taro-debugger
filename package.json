@@ -6,7 +6,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "npm run build:dap-core && npm run build:ui-editor && npm run build:ui-inspection && npm run build:ui-console && npm run build:ui-assembly && ng build taro-debugger-frontend",
+    "build": "npm run build:libs && ng build taro-debugger-frontend",
+    "build:libs": "npm run build:dap-core && npm run build:ui-editor && npm run build:ui-console && npm run build:ui-assembly && npm run build:ui-inspection",
     "build:dap-core": "ng build dap-core",
     "build:ui-console": "ng build ui-console",
     "build:ui-inspection": "ng build ui-inspection",

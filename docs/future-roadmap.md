@@ -18,7 +18,7 @@ audience: [Product_Architect, Lead_Engineer, Human Engineer]
   - Ensure disconnect() cycle cleans up stale RxJS subscriptions
   - Modify startSession() initialization sequence to accept and merge this cached _restart data
 
-### WI-74: Extract @taro/ui-shared Utility Library (Status: pending)
+### WI-74: Standardization of UI Patterns (Status: pending)
 
 - **Description**: Consolidate duplicated UI components, SCSS tokens, and shared Angular utilities into a unified internal library.
 - **Details**:
@@ -27,6 +27,33 @@ audience: [Product_Architect, Lead_Engineer, Human Engineer]
   - Standardize shared Angular pipes and directives
   - [Doc] Define library-level visual consistency guidelines
   - [Test] Verify component reusability across at least 2 libraries
+
+### WI-76: Design Tokens & Dark Mode Support (Status: proposed)
+
+- **Description**: Implement a centralized CSS Variable system to support seamless switching between Light and Dark themes.
+- **Details**:
+  - Define semantic color tokens (surface, primary, accent, error)
+  - Implement theme-switching logic in the main application
+  - Standardize transition durations and easings for UI elements
+  - [Test] Verify all components adapt correctly to dark theme toggle
+
+### WI-77: Generic Dialog & Notification Framework (Status: proposed)
+
+- **Description**: Create a unified DialogService and Notification system shared across all libraries.
+- **Details**:
+  - Implement a generic DialogService wrapper around MatDialog
+  - Standardize styling for confirmation modals and input prompts
+  - Implement a centralized notification bus for non-intrusive feedback
+  - [Test] Verify dialog consistency between Editor and Console modules
+
+### WI-78: A11y Audit & Interaction Hardening (Status: proposed)
+
+- **Description**: Conduct a full accessibility audit and harden keyboard interactions for the foundation library.
+- **Details**:
+  - Perform WCAG 2.1 AA audit on all shared components
+  - Standardize keyboard shortcut overlays and focus-trap logic
+  - Implement screen-reader friendly labels for interactive icons
+  - [Test] Pass accessibility scan with 0 critical violations
 
 ### WI-30: Local Variable Modification (Status: proposed)
 

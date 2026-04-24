@@ -22,6 +22,24 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - Handle process termination and resource cleanup
 - **Dependencies**: none
 
+## UI System Design
+
+### WI-75: Refactor: Extract @taro/ui-shared Foundation
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Centralize reusable UI components, layout tokens, and generic services into a dedicated foundation library to flatten the dependency graph and optimize the build process.
+- **Details**:
+  - Initialize @taro/ui-shared library in projects/ui-shared
+  - Move layout.config.ts (Responsive Row Height tokens) from ui-editor to ui-shared
+  - Move InspectionPanelComponent (collapsible/resizable logic) from ui-inspection to ui-shared
+  - Move ErrorDialog and generic dialog services from the main application to ui-shared
+  - Update ui-inspection, ui-editor, ui-assembly, and ui-console to depend on ui-shared
+  - Simplify .vscode/tasks.json build sequences by leveraging the flattened dependency graph
+  - [Test] Verify all UI libraries compile independently against ui-shared
+  - [Doc] docs/ui-shared-architecture-spec.md
+- **Dependencies**: none
+
 ## Variables & Call Stack
 
 ### WI-70: Data Binding: Thread List Integration
