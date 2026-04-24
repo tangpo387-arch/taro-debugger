@@ -98,6 +98,21 @@ How the 6 canonical work item types relate to their parent Feature Group:
 > [!NOTE]
 > The canonical Feature Group registry—including names, colors, and descriptions—is managed via the project's data layer. New groups are established using `node scripts/manage-wi.js add-group <Name> <FillHex> <StrokeHex> <Desc>`, which initializes a new functional domain. Items within a group can be inspected using `node scripts/manage-wi.js list-group <Name>`.
 
+### 1.4 Work Item Record Completeness
+
+Every Work Item MUST contain the following structured fields to be considered complete and ready for development:
+
+- **`id`**: A numeric identifier assigned by the system (e.g., `WI-12`).
+- **`title`**: A concise, outcome-oriented capability definition. It must conceptually align with one of the six canonical types.
+- **`description`**: A single, high-level goal statement defining the functional deliverable.
+- **`details[]`**: A list of specific tasks.
+  - MUST include at least one `[Test]` entry describing a verifiable test scenario.
+  - MUST include a `[Doc]` entry (e.g., `[Doc] docs/feature-spec.md`) if the item size is `M` or above, or if it triggers the Complexity Gate.
+- **`size`**: T-shirt size (`S`, `M`, `L`).
+- **`deps`**: A list of dependency Work Item IDs that must be `✅ Accepted` before this one can start.
+
+> For the strict underlying JSON schema, refer to the data governance specs in the `work-item-management` skill.
+
 ---
 
 ## 2. Work Item Lifecycle
@@ -192,6 +207,7 @@ sequenceDiagram
     LE->>LE: Produce Review Package
     LE->>SYS: Execute update-wi.js done
     
+    QCR->>SYS: show WI-ID (Check state is done)
     QCR->>QCR: Run baseline checks (lint:docs)
     QCR->>QCR: Read Review Package & load Skills
     QCR->>QCR: Verify AC, Edge Cases, & Tests
@@ -219,7 +235,7 @@ sequenceDiagram
 
 **Steps**:
 1. **Creation**: User and PA define the idea and create a `Proposed` record using `manage-wi.js add`.
-2. **Review**: Verify WI record completeness: `id`, `title`, `description`, `details[]` (requires ≥1 `[Test]`), `size`, `deps`.
+2. **Review**: Verify WI record completeness according to **[§1.4 Work Item Record Completeness](#14-work-item-record-completeness)**.
 3. **Complexity Gate**: Evaluate if the WI meets Spec criteria. A formal specification document (`docs/*.md`) is **mandatory** if any of the following conditions are met:
    - Introduces a new architectural pattern or design rule.
    - Requires coordinating changes across ≥3 files or layers.
@@ -271,16 +287,17 @@ sequenceDiagram
 - A valid Review Package (`docs/reviews/{WI-ID}.review-package.md`) exists.
 
 **Steps**:
-1. Run: `npm run lint:docs` (baseline document quality check)
-2. Read `docs/reviews/{WI-ID}.review-package.md` (primary input)
-3. Load only the Skills listed in `skills-required` frontmatter.
-4. Verify **§1 Acceptance Criteria** — read only the diff line ranges in **§2**.
-5. Inspect only 🔍-flagged areas in **§3**.
-6. Verify tests in **§4** match the spec-plan entries in **§5**.
-7. Formulate an APPROVED verdict, or note precise, actionable findings for a REJECTED verdict.
-8. Propose the corresponding status transition to the USER (`update-wi.js {WI-ID} <accepted|rework>`).
-9. Await explicit USER confirmation.
-10. Execute the transition script.
+1. Execute `node scripts/manage-wi.js show {WI-ID}` to verify the WI is in the `done` state.
+2. Run: `npm run lint:docs` (baseline document quality check)
+3. Read `docs/reviews/{WI-ID}.review-package.md` (primary input)
+4. Load only the Skills listed in `skills-required` frontmatter.
+5. Verify **§1 Acceptance Criteria** — read only the diff line ranges in **§2**.
+6. Inspect only 🔍-flagged areas in **§3**.
+7. Verify tests in **§4** match the spec-plan entries in **§5**.
+8. Formulate an APPROVED verdict, or note precise, actionable findings for a REJECTED verdict.
+9. Propose the corresponding status transition to the USER (`update-wi.js {WI-ID} <accepted|rework>`).
+10. Await explicit USER confirmation.
+11. Execute the transition script.
 
 > [!NOTE]
 > The full Review Package format is defined in Skill: `review-package` (`docs/reviews/{WI-ID}.review-package.md`).

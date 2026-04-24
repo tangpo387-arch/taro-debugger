@@ -77,6 +77,22 @@ node scripts/manage-wi.js show-group "Network Layer"
 
 **Owner**: `Product_Architect`
 
+### 3.1 Content Standards
+
+Before creating or editing a Work Item, you MUST adhere to the following content definitions:
+
+<constraints>
+
+- **Title**: MUST be concise and outcome-oriented. It MUST represent a distinct capability rather than a developer action. It MUST conceptually align with one of six types: `feature`, `refactor`, `doc update`, `bug`, `chore`, or `test`.
+- **Description**: MUST be a single, high-level goal statement defining the functional deliverable.
+- **Details**: MUST be a list of specific tasks.
+  - You MUST include at least one `[Test]` entry describing a verifiable test scenario.
+  - You MUST include a `[Doc]` entry (e.g., `[Doc] docs/feature-spec.md`) if the item size is `M` or above, or if it triggers the Complexity Gate.
+- **Size**: MUST be `S`, `M`, or `L`.
+- **Dependencies (`deps`)**: MUST list IDs of items that must be `✅ Accepted` before this one can start.
+
+</constraints>
+
 ### Step 1 — Create
 
 Use `manage-wi.js add` to create the task. The script auto-assigns the next ID, validates the group, and syncs all derivative Markdown files.
@@ -93,7 +109,7 @@ node scripts/manage-wi.js add AUTO "Editor Advanced Interaction" "Search UI" "Ad
 
 - **AUTO**: Let the system allocate the numeric ID.
 - **Group**: Must match an existing Feature Group name. Use `show-group` to list available names or `add-group` to create a new one if needed.
-- **Details**: Use `|` to separate multiple sub-tasks. **Must include at least one `[Test]` entry** describing a verifiable test scenario (e.g., `[Test] Confirm X behavior when Y occurs`). If a spec document exists, you MUST include a `[Doc]` entry (e.g., `[Doc] docs/my-spec.md`). See `wi-data-governance.md §2` for the full rule.
+- **Details**: Use `|` to separate multiple sub-tasks (see §3.1 Content Standards for formatting rules).
 - **Deps**: Comma-separated list of dependent IDs (or `none`).
 
 ### Step 2 — Long Content Handling
@@ -187,7 +203,7 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
 
 **Steps**:
 1. **Creation**: User and PA define the idea and create a `Proposed` record using `manage-wi.js add`.
-2. **Review**: Verify WI record completeness: `id`, `title`, `description`, `details[]` (requires ≥1 `[Test]`), `size`, `deps`.
+2. **Review**: Verify WI record completeness against §3.1 Content Standards.
 3. **Complexity Gate**: Evaluate the Complexity Gate. If the WI meets ANY of the following conditions:
    - Introduces a new architectural pattern or design rule.
    - Requires coordinating changes across ≥3 files or layers.
@@ -223,11 +239,12 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
 - `docs/reviews/{WI-ID}.review-package.md` exists and is complete.
 
 **Steps**:
-1. `Quality_Control_Reviewer` follows the review protocol in `Skill: [PROJ:PROT] Review Package`.
-2. Formulate an APPROVED verdict, or note precise, actionable findings for a REJECTED verdict.
-3. You are STRICTLY FORBIDDEN from executing `node scripts/update-wi.js {WI-ID} <accepted|rework>` autonomously.
-4. You MUST propose the corresponding status transition to the USER and await explicit confirmation.
-5. Execute the transition script ONLY after receiving approval.
+1. Execute `node scripts/manage-wi.js show {WI-ID}` to verify the WI is in the `done` state.
+2. `Quality_Control_Reviewer` follows the review protocol in `Skill: [PROJ:PROT] Review Package`.
+3. Formulate an APPROVED verdict, or note precise, actionable findings for a REJECTED verdict.
+4. You are STRICTLY FORBIDDEN from executing `node scripts/update-wi.js {WI-ID} <accepted|rework>` autonomously.
+5. You MUST propose the corresponding status transition to the USER and await explicit confirmation.
+6. Execute the transition script ONLY after receiving approval.
 
 **Verification**:
 - Verify status in `project-roadmap.md` reflects the verdict.
