@@ -109,7 +109,7 @@
       "title": "Optimize File Explorer and Implement Virtual Root",
       "featureGroup": "File Explorer",
       "metadata": {
-        "status": "pending",
+        "status": "accepted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": []
@@ -127,7 +127,8 @@
       ],
       "timeline": {
         "created": "2026-04-25",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-25"
       }
     }
   ]

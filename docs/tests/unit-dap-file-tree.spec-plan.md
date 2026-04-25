@@ -1,21 +1,21 @@
 ---
-title: DapFileTreeService (Source Content LRU Cache) — Unit Spec Plan
+title: DapFileTreeService — Unit Spec Plan
 scope: unit-test
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
-target-file: projects/taro-debugger-frontend/projects/taro-debugger-frontend/src/app/dap-file-tree.service.ts
-related-wi: WI-33, WI-34
-last_updated: 2026-04-13
+target-file: projects/taro-debugger-frontend/src/app/dap-file-tree.service.ts
+related-wi: WI-33, WI-34, WI-82
+last_updated: 2026-04-26
 ---
 
-# DapFileTreeService — Source Content LRU Cache Unit Spec Plan
+# DapFileTreeService — Unit Spec Plan
 
 ## Overview
 
-Fully isolated tests for the memory-based LRU cache embedded in `DapFileTreeService`. Covers cache hits, key prioritisation, in-flight deduplication, eviction, and session-bound invalidation.
+Fully isolated tests for `DapFileTreeService`. Covers source content LRU caching and hierarchical tree construction from DAP `loadedSources` responses, including WI-82 virtual root and external library grouping.
 
 ---
 
-## Test Cases
+## Test Cases (LRU Cache)
 
 * **Cache hit (single request)**
   * Call `readFile('/src/main.cpp')` twice in sequence. Verify `DapSessionService.sendRequest('source', ...)` is called **exactly once**; the second call resolves from cache without a DAP round-trip.
@@ -32,6 +32,29 @@ Fully isolated tests for the memory-based LRU cache embedded in `DapFileTreeServ
 * **LRU ordering (access promotes entry)**
   * Fill cache with entries A, B, C (A inserted first). Access A. Add a new entry D that would trigger eviction. Verify B (now the LRU) is evicted, not A.
 
+---
+
+## Test Cases (Tree Construction - WI-82)
+
+* **Virtual Root named after sourcePath basename**
+  * Mock `loadedSources` with a file inside `rootPath`. Verify the first child of the returned super-root is named after the basename of `rootPath`.
+
+* **Sources inside rootPath are grouped and relative**
+  * Verify `/root/path/src/a.c` appears as `src -> a.c` under the Virtual Root when `rootPath` is `/root/path`.
+
+* **Sources outside rootPath are grouped in 'External Libraries'**
+  * Mock a source `/usr/include/stdio.h` with `rootPath = '/home/user/project'`. Verify it appears under a top-level node named 'External Libraries'.
+
+* **External Libraries uses absolute path tree**
+  * Verify `/usr/include/stdio.h` appears as `usr -> include -> stdio.h` under the 'External Libraries' node.
+
+* **External Libraries node is omitted if empty**
+  * Verify super-root only has one child (the Project root) if all sources are inside `rootPath`.
+
+---
+
+## Lifecycle & Error Path
+
 * **Cache flush on `initialized` event**
   * Populate the cache with several entries. Emit a DAP `initialized` event via `DapSessionService.onEvent()`. Verify the internal cache Map size is **zero** immediately after the event.
 
@@ -40,3 +63,6 @@ Fully isolated tests for the memory-based LRU cache embedded in `DapFileTreeServ
 
 * **No stale data across sessions**
   * Perform a full session lifecycle (connect → populate cache → disconnect → connect). Verify that after the second connect, a `readFile` call for a previously cached path issues a fresh DAP `source` request (cache was fully cleared).
+
+* **`getTree()` error resilience**
+  * Verify `loadedSources` failure is caught and logged.

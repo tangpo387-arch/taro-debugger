@@ -22,24 +22,6 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - Handle process termination and resource cleanup
 - **Dependencies**: none
 
-## File Explorer
-
-### WI-82: Optimize File Explorer and Implement Virtual Root
-
-- **Status**: ⏳ Pending
-- **Size**: M
-- **Description**: Consolidate file explorer headers to save space and implement a virtual root node for improved source tree navigation.
-- **Details**:
-  - Relocate 'Collapse All' button to taro-panel actions slot
-  - Remove redundant internal FileExplorer header
-  - Implement Virtual Root node in the tree using sourcePath basename
-  - Add 'External Libraries' group for sources outside the root
-  - [Test] Verify header button collapses tree
-  - [Test] Verify Virtual Root expands by default
-  - [Test] Verify tooltip displays full absolute path
-  - [Doc] docs/file-explorer-redesign.md
-- **Dependencies**: none
-
 ## UI System Design
 
 ### WI-81: Application Frame & Global Controls Integration

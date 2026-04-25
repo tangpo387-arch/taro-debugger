@@ -1,25 +1,3 @@
-<div class="sidenav-header">
-  <div class="header-title-row">
-    <div class="title-group">
-      <h3>Files</h3>
-      <div class="source-path" [title]="sourcePath">
-        {{ sourcePath || 'Not specified' }}
-      </div>
-    </div>
-    <span class="spacer"></span>
-    <button
-      mat-icon-button
-      (click)="collapseAll()"
-      title="Collapse All Nodes"
-      class="header-action-btn"
-      [disabled]="!fileTreeSupported"
-    >
-      <mat-icon>unfold_less</mat-icon>
-    </button>
-  </div>
-</div>
-
-
 <div class="scroll-container">
 @if (fileTreeSupported) {
 <!-- Dynamic File Tree -->
@@ -38,7 +16,9 @@
     (keydown.enter)="onNodeClick(node); $event.preventDefault()">
     <div class="indent-spacer" matTreeNodePadding [matTreeNodePaddingIndent]="indentSize()"></div>
     <mat-icon class="file-icon">description</mat-icon>
-    <span class="node-text">{{ node.name }}</span>
+    <div class="node-content" [title]="node.path">
+      <span class="node-text">{{ node.name }}</span>
+    </div>
   </mat-tree-node>
 
   <!-- Directory node -->
@@ -56,7 +36,9 @@
       </mat-icon>
     </div>
     <mat-icon class="folder-icon">folder</mat-icon>
-    <span class="node-text">{{ node.name }}</span>
+    <div class="node-content" [title]="node.path">
+      <span class="node-text">{{ node.name }}</span>
+    </div>
   </mat-tree-node>
 </mat-tree>
 } @else {

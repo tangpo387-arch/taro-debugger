@@ -99,15 +99,19 @@ describe('DapFileTreeService', () => {
       }));
 
       // Act
-      const tree = await firstValueFrom(svc.getTree('/'));
+      const tree = await firstValueFrom(svc.getTree('/project'));
 
       // Assert
-      const srcDir = findNode(tree, 'src');
+      expect(tree.name).toBe('Super Root');
+      const projectRoot = tree.children![0];
+      expect(projectRoot.name).toBe('project');
+
+      const srcDir = findNode(projectRoot, 'src');
       expect(srcDir).toBeDefined();
       expect(srcDir!.type).toBe('directory');
       expect(srcDir!.children?.length).toBe(2);
 
-      const includeDir = findNode(tree, 'include');
+      const includeDir = findNode(projectRoot, 'include');
       expect(includeDir).toBeDefined();
       expect(includeDir!.type).toBe('directory');
     });
@@ -122,15 +126,16 @@ describe('DapFileTreeService', () => {
       }));
 
       // Act
-      const tree = await firstValueFrom(svc.getTree(''));
+      const tree = await firstValueFrom(svc.getTree('C:\\project'));
 
       // Assert
-      const cDrive = findNode(tree, 'C:');
-      expect(cDrive).toBeDefined();
-      const projectDir = findNode(cDrive!, 'project');
-      expect(projectDir).toBeDefined();
-      expect(projectDir!.type).toBe('directory');
-      expect(projectDir!.children?.length).toBe(2);
+      expect(tree.name).toBe('Super Root');
+      const projectRoot = tree.children![0];
+      expect(projectRoot.name).toBe('project');
+
+      const mainNode = findNode(projectRoot, 'main.c');
+      expect(mainNode).toBeDefined();
+      expect(mainNode!.type).toBe('file');
     });
 
     it('should preserve sourceReference in FileNode for physical sources', async () => {
@@ -201,6 +206,28 @@ describe('DapFileTreeService', () => {
       const files = allFiles(tree);
       expect(files.length).toBe(1);
       expect(files[0].name).toBe('main.c');
+    });
+
+    it('should group external sources under "External Libraries"', async () => {
+      // Arrange
+      session.sendRequest = vi.fn().mockResolvedValue(makeResponse({
+        sources: [
+          { path: '/project/main.c' },
+          { path: '/usr/include/stdio.h' },
+        ],
+      }));
+
+      // Act
+      const tree = await firstValueFrom(svc.getTree('/project'));
+
+      // Assert
+      expect(tree.children?.length).toBe(2);
+      expect(tree.children![0].name).toBe('project');
+      expect(tree.children![1].name).toBe('External Libraries');
+      
+      const stdio = findNode(tree.children![1], 'stdio.h');
+      expect(stdio).toBeDefined();
+      expect(stdio?.path).toBe('/usr/include/stdio.h');
     });
 
     it('should throw when the loadedSources DAP request fails', async () => {

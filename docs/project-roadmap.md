@@ -208,11 +208,11 @@ graph LR
     style WI_70 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_73 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_79 fill:#f472b6,stroke:#db2777
-    style WI_15 fill:#facc15,stroke:#000,stroke-width:2.5px
-    style WI_16 fill:#facc15,stroke:#000,stroke-width:2.5px
-    style WI_33 fill:#facc15,stroke:#000,stroke-width:2.5px
-    style WI_34 fill:#facc15,stroke:#000,stroke-width:2.5px
-    style WI_82 fill:#facc15,stroke:#ca8a04
+    style WI_15 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_16 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_33 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_34 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_82 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_35 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_36 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_37 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
@@ -255,7 +255,7 @@ graph LR
 | DAP Transport Layer | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%234ade80'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#4ade80"/> `#4ade80` | 🔵 Active |
 | Debug Controls | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f97316'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f97316"/> `#f97316` | 💎 Stabilized |
 | Editor Features | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23a78bfa'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#a78bfa"/> `#a78bfa` | 💎 Stabilized |
-| File Explorer | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23facc15'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#facc15"/> `#facc15` | 🔵 Active |
+| File Explorer | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23facc15'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#facc15"/> `#facc15` | 💎 Stabilized |
 | Execution Context Inspection | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f472b6'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f472b6"/> `#f472b6` | 🔵 Active |
 | Console & Status Bar | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%232dd4bf'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#2dd4bf"/> `#2dd4bf` | 💎 Stabilized |
 | Electron Desktop Mode | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%2394a3b8'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#94a3b8"/> `#94a3b8` | 💎 Stabilized |

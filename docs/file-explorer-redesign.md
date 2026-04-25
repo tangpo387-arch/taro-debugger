@@ -1,71 +1,58 @@
 ---
-title: Optimize File Explorer and Implement Virtual Root
-scope: File Explorer
-audience: [Human Engineer, Agent Role Play]
-related:
-  - work-items.md
+title: File Explorer Redesign (WI-82)
+audience: [Human Engineer, Lead_Engineer]
+last_updated: 2026-04-26
 ---
 
-# Optimize File Explorer and Implement Virtual Root (WI-82)
-
-> [!NOTE]
-> **Source Work Item**: Optimize File Explorer and Implement Virtual Root
-> **Description**: Consolidate file explorer headers to save space and implement a virtual root node for improved source tree navigation.
+# File Explorer Redesign (WI-82)
 
 ## Purpose
 
-The File Explorer currently utilizes a redundant double-header layout, consuming approximately 40px of valuable vertical space. Additionally, the source tree renders absolute paths directly from the system root, leading to deeply nested and repetitive structures (e.g., `test/root/test/...`).
-
-This redesign aims to:
-
-- **Consolidate headers** into the existing `taro-panel` structure to maximize tree visibility.
-- **Implement a Virtual Root** that serves as a clean entry point for the project source code.
-- **Group external sources** (system headers, third-party libs) to prevent cluttering the main project view.
-
-## Scope
-
-- **Frontend Component**: `projects/taro-debugger-frontend/src/app/file-explorer.component.ts` (and `.html`, `.scss`).
-- **Layout Integration**: `projects/taro-debugger-frontend/src/app/debugger.component.html`.
-- **Tree Logic**: `projects/taro-debugger-frontend/src/app/dap-file-tree.service.ts`.
-- **Shared Panel**: `projects/ui-shared/src/lib/panel/panel.component.ts` (usage of `[panel-actions]`).
+Optimize the File Explorer user interface by consolidating headers, implementing virtual root nodes for project context, and grouping external dependencies to improve navigation efficiency in large codebases.
 
 ## Behavior
 
-### 1. Header Consolidation
+### 1. Virtual Roots
 
-- **Removal**: The `div.sidenav-header` in `FileExplorerComponent` is removed.
-- **Relocation**: The "Collapse All" button is moved to the `taro-panel` (Files) in `DebuggerComponent`.
-- **Space Recovery**: The file tree starts immediately below the 32px panel header.
+The File Explorer now presents two primary virtual nodes at the top level:
 
-### 2. Virtual Root Construction
+- **Project Root**: Named after the workspace's `sourcePath` basename. Contains all sources located within the project directory.
+- **External Libraries**: A grouping node for sources located outside the `sourcePath` (e.g., system headers, third-party libraries). This node only appears if external sources are detected.
 
-The `DapFileTreeService.buildTreeFromSources` logic is updated:
-- **Synthetic Root**: Instead of being unwrapped, the root node is displayed as the first item in the tree.
-- **Labeling**:
-  - Name: `basename(sourcePath)` (e.g., `/home/user/project` -> `project`).
-  - Tooltip: Full absolute `sourcePath`.
-  - Icon: `account_tree`.
-- **Path Relativization**:
-  - If a source path is a sub-path of `sourcePath`, it is rendered **relative** to the virtual root.
-  - Redundant parent segments matching the `sourcePath` are stripped.
+### 2. Auto-Expansion
 
-### 3. External Library Grouping
+To reduce clicks, both virtual roots are automatically expanded upon the initial load of the file tree. Subsequent reloads (e.g., due to dynamic library loads) preserve the user's existing expansion state.
 
-- Sources that do **not** fall under the `sourcePath` are grouped under a second virtual root named **"External Libraries"**.
-- This ensures that system headers (e.g., `/usr/include/stdio.h`) do not pollute the main project structure.
+### 3. UI Consolidation
 
-### 4. Tree State Management
+- The internal component header has been removed.
+- The **Collapse All** action has been moved to the `taro-panel` action slot in the primary debugger layout, aligning with other inspection panels (Variables, Breakpoints).
+- Hovering over any node (file or directory) displays a tooltip containing the full absolute path of the resource.
 
-- The **Virtual Root** and **External Libraries** nodes are expanded by default upon the first successful `loadedSources` fetch.
-- Expansion state snapshots (`snapshotExpandedPaths`) must correctly track these virtual nodes to prevent collapse on library reload (`dlopen`).
+## Technical Implementation
 
-## Acceptance Criteria
+### Tree Construction (`DapFileTreeService`)
 
-- [ ] `FileExplorerComponent` has no internal header.
-- [ ] "Collapse All" button is visible in the `taro-panel` header and functional.
-- [ ] The tree starts with a "Project Root" node named after the current `sourcePath` basename.
-- [ ] Files within the project are nested directly under the Project Root (no redundant absolute path segments).
-- [ ] Files outside the project (e.g. `/usr/include`) are grouped under "External Libraries".
-- [ ] [Test] Clicking "Collapse All" in the panel header successfully collapses all nodes in the tree.
-- [ ] [Test] The Virtual Root node is expanded by default when the debugger starts.
-- [ ] [Test] Tooltip on the Virtual Root shows the full absolute path.
+The service now constructs a synthetic "Super Root" whose direct children are the visible virtual roots. Sources are categorized during the `loadedSources` processing:
+
+- Sources matching the `sourcePath` prefix are mapped to a relative path tree under the Project Root.
+- Other sources are mapped using their absolute paths under the "External Libraries" node.
+
+### Component Logic (`FileExplorerComponent`)
+
+- Expansion state is snapshotted and restored using absolute paths as keys.
+- `revealActiveFile` logic ensures that when a user selects a frame in the call stack, the tree expands and scrolls to the corresponding source file, even if it is located deep within the External Libraries group.
+
+## Verification
+
+### Automated Tests
+
+- `file-explorer.component.spec.ts`: Verifies virtual root expansion, tooltip binding, and header button delegation.
+- `dap-file-tree.service.spec.ts`: Verifies tree construction logic, grouping, and alphabetical sorting (preserving Project Root as the first entry).
+
+### Manual Verification
+
+1. Open a project and start debugging.
+2. Verify the tree shows a node named after the project folder.
+3. Verify the "Collapse All" button in the panel header works.
+4. Hover over a file to see its absolute path.

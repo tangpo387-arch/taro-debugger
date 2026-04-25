@@ -149,30 +149,64 @@ export class DapFileTreeService extends FileTreeService {
   }
 
   private buildTreeFromSources(sources: any[], rootPath: string): FileNode {
-    const rootName = rootPath ? (rootPath.split(/[/\\]/).pop() || 'Project') : 'Sources';
-    const root: FileNode = { name: rootName, path: rootPath || '/', type: 'directory', children: [] };
+    const rootName = rootPath ? (rootPath.split(/[/\\]/).pop() || 'Project') : 'Project';
+
+    // The "Super Root" (not visible, but its children are the visible roots)
+    const superRoot: FileNode = { name: 'Super Root', path: '', type: 'directory', children: [] };
+
+    // The Project Root (will be visible if rootPath is provided)
+    const projectRoot: FileNode = {
+      name: rootName,
+      path: rootPath || '/',
+      type: 'directory',
+      children: []
+    };
+
+    // The External Libraries group
+    const externalLibs: FileNode = {
+      name: 'External Libraries',
+      path: 'external-libs-virtual-root',
+      type: 'directory',
+      children: []
+    };
+
+    superRoot.children = [projectRoot];
 
     for (const source of sources) {
       const p = source.path as string;
       const ref = source.sourceReference as number;
-      if (!p && !ref) continue; 
+      if (!p && !ref) continue;
 
+      const isInsideRoot = p && rootPath && p.startsWith(rootPath);
       const displayPath = p || `virtual://${ref}`;
-      const parts = displayPath.split(/[/\\]/).filter(part => part.length > 0);
+
+      let current = isInsideRoot ? projectRoot : externalLibs;
+
+      // For sources inside root, we strip the rootPath prefix to build the tree relative to it.
+      // For sources outside, we build the absolute path tree.
+      let relativePath = displayPath;
+      if (isInsideRoot) {
+        relativePath = p.substring(rootPath.length).replace(/^[/\\]+/, '');
+      }
+
+      const parts = relativePath.split(/[/\\]/).filter(part => part.length > 0);
       if (parts.length === 0 && !ref) continue;
 
-      let currentPath = (p && p.startsWith('/')) ? '' : (p && p.match(/^[a-zA-Z]:/) ? '' : '/');
-      let current = root;
+      let currentPath = isInsideRoot ? rootPath : (p && p.startsWith('/') ? '' : (p && p.match(/^[a-zA-Z]:/) ? '' : '/'));
 
       for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
 
-        if (i === 0 && p && p.startsWith('/')) {
-          currentPath += '/' + part;
-        } else if (i === 0 && p && p.match(/^[a-zA-Z]:/)) {
-          currentPath += part;
-        } else {
+        if (isInsideRoot) {
           currentPath += (currentPath.endsWith('/') || currentPath.endsWith('\\') ? '' : '/') + part;
+        } else {
+          if (i === 0 && p && p.startsWith('/')) {
+            currentPath += '/' + part;
+          } else if (i === 0 && p && p.match(/^[a-zA-Z]:/)) {
+            currentPath += part;
+          } else {
+            currentPath += (currentPath.endsWith('/') || currentPath.endsWith('\\') ? '' : '/') + part;
+          }
         }
 
         const isFile = i === parts.length - 1;
@@ -196,21 +230,26 @@ export class DapFileTreeService extends FileTreeService {
       }
     }
 
-    this.sortTree(root);
-    return root;
-  }
-
-  private sortTree(node: FileNode) {
-    if (node.children) {
-      node.children.sort((a, b) => {
-        if (a.type !== b.type) {
-          return a.type === 'directory' ? -1 : 1;
-        }
-        return a.name.localeCompare(b.name);
-      });
-      for (const child of node.children) {
-        this.sortTree(child);
-      }
+    // Only add External Libraries if it has children
+    if (externalLibs.children && externalLibs.children.length > 0) {
+      superRoot.children.push(externalLibs);
     }
+
+    const sortNodes = (node: FileNode) => {
+      if (node.children && node.children.length > 0) {
+        // Skip sorting for the Super Root to keep Project Root first
+        if (node.name !== 'Super Root') {
+          node.children.sort((a, b) => {
+            if (a.type !== b.type) {
+              return a.type === 'directory' ? -1 : 1;
+            }
+            return a.name.localeCompare(b.name);
+          });
+        }
+        node.children.forEach(sortNodes);
+      }
+    };
+    sortNodes(superRoot);
+    return superRoot;
   }
 }

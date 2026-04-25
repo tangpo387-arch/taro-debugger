@@ -109,11 +109,6 @@ export class FileExplorerComponent implements OnChanges {
   /** Whether the connected DAP adapter supports `loadedSources`. */
   public fileTreeSupported: boolean = true;
 
-  /** Source path string for display in the panel header. */
-  public get sourcePath(): string {
-    return this.dapConfig.getConfig().sourcePath;
-  }
-
   /** Access the mat-tree instance for programmatic collapseAll(). */
   @ViewChild('tree') private tree?: MatTree<FileNode>;
 
@@ -189,12 +184,20 @@ export class FileExplorerComponent implements OnChanges {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (rootNode) => {
-          // Unwrap the synthetic root so the tree shows direct children.
+          // Unwrap the synthetic root so the tree shows direct children (Project Root, etc).
           this.fileDataSource = rootNode.children || [];
           this.cdr.detectChanges();
 
           // Restore previously expanded nodes after the tree re-renders.
           this.restoreExpandedPaths(expandedPaths);
+
+          // If this is the initial load (no expanded paths), expand the top-level virtual roots by default.
+          if (expandedPaths.size === 0 && this.tree) {
+            for (const node of this.fileDataSource) {
+              this.tree.expand(node);
+            }
+          }
+
           this.cdr.detectChanges();
 
           // Ensure the active file is revealed after the new tree is rendered

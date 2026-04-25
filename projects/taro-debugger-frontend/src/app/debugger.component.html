@@ -50,7 +50,19 @@
         [resizable]="leftFilesExpanded && leftThreadsExpanded"
         (resizeDrag)="onLeftPanelResizeDrag($event, 'files')"
         [style.flex]="leftFilesExpanded ? '1 1 ' + leftFilesHeight + 'px' : '0 0 32px'">
-        <app-file-explorer
+        
+        <div panel-actions>
+          <button
+            mat-icon-button
+            (click)="fileExplorer.collapseAll()"
+            title="Collapse All Nodes"
+            class="header-action-btn"
+          >
+            <mat-icon>unfold_less</mat-icon>
+          </button>
+        </div>
+
+        <app-file-explorer #fileExplorer
           [activeFilePath]="activeFilePath"
           [reloadTrigger]="fileTreeReloadTrigger"
           [revealTrigger]="fileRevealTrigger"
