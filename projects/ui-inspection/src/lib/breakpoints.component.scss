@@ -55,7 +55,7 @@
   border-bottom: 1px solid var(--mat-sys-outline-variant);
 
   &:hover {
-    background: var(--mat-sys-surface-container-high);
+    background: var(--mat-sys-surface-container-highest);
 
     .action-btn {
       opacity: 1;
@@ -72,21 +72,33 @@
 .breakpoint-main {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   min-width: 0;
   flex: 1;
 }
 
 .breakpoint-checkbox {
-  transform: scale(0.8);
+  transform: scale(0.7);
+  transform-origin: center center;
   margin-left: -4px;
+  margin-right: -10px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
 }
 
 .breakpoint-icon {
   font-size: 12px;
   width: 12px;
   height: 12px;
+  margin-left: 4px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   
   &.verified {
     color: var(--mat-sys-error);
@@ -174,9 +186,36 @@
 }
 
 
-/* Material Checkbox Customization for Density */
+/* Material Checkbox Customization for Density & Precision Centering */
 ::ng-deep .breakpoint-checkbox {
   .mdc-checkbox {
-    padding: 4px;
+    padding: 0 !important;
+    width: 40px !important;
+    height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  // Force all internal layers to share the exact same center point
+  .mdc-checkbox__native-control,
+  .mdc-checkbox__background,
+  .mdc-checkbox__ripple {
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    position: absolute !important;
+  }
+
+  .mdc-checkbox__native-control {
+    width: 40px !important;
+    height: 40px !important;
+    z-index: 1;
+  }
+
+  .mdc-checkbox__background {
+    // Ensure the visual box is centered
+    position: absolute !important;
   }
 }

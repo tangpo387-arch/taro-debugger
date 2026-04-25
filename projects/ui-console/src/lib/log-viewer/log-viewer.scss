@@ -11,8 +11,8 @@
   flex-direction: column;
 
   :host & ::ng-deep .mat-mdc-tab-header {
-    --mdc-tab-container-height: 32px;
-    height: 32px !important;
+    --mdc-tab-container-height: var(--sys-density-header-height);
+    height: var(--sys-density-header-height) !important;
     box-sizing: border-box !important;
     margin: 0 !important;
     background-color: var(--mat-sys-surface-container-high);
@@ -35,8 +35,8 @@
   }
 
   :host & ::ng-deep .mat-mdc-tab {
-    min-height: 32px !important;
-    height: 32px !important;
+    min-height: var(--sys-density-header-height) !important;
+    height: var(--sys-density-header-height) !important;
     box-sizing: border-box !important;
     padding: 0 16px;
     flex: 0 1 auto !important;

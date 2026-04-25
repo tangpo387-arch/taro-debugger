@@ -378,7 +378,8 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         this.rightWidth = Math.max(200, Math.min(600, windowWidth - e.clientX));
       } else if (direction === 'bottom') {
         const windowHeight = window.innerHeight;
-        const statusBarHeight = 32;
+        // Resolve the status bar height dynamically from CSS tokens
+        const statusBarHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sys-density-header-height')) || 32;
         this.consoleHeight = Math.max(100, Math.min(windowHeight - 150, windowHeight - e.clientY - statusBarHeight));
       }
       this.cdr.detectChanges();
@@ -493,8 +494,9 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     if (panel === 'breakpoints') {
       this.rightBreakpointsHeight = relativeY;
     } else if (panel === 'variables') {
-      // Variables drag: split remaining height between variables and call stack
-      const breakpointsH = this.rightBreakpointsExpanded ? this.rightBreakpointsHeight : 32;
+      // Resolve header height dynamically to ensure correct split during resize
+      const headerH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sys-density-toolbar-height')) || 32;
+      const breakpointsH = this.rightBreakpointsExpanded ? this.rightBreakpointsHeight : headerH;
       const remaining = rect.height - breakpointsH;
       const variablesH = Math.max(MIN, Math.min(remaining - MIN, relativeY - rect.top - breakpointsH));
       this.rightVariablesHeight = variablesH;
@@ -723,11 +725,13 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     // ── Synchronous UI State Updates ─────────────────────────────────────────
     this.activeFrameId = frame.id;
     this.activeLine = frame.line;
-    this.activeLineFilePath = frame.source?.path || null;
+    // Normalize: strip any trailing slash that some DAP adapters (e.g. GDB MI) append to source paths.
+    this.activeLineFilePath = frame.source?.path?.replace(/\/+$/, '') || null;
     this.activeInstructionPointer = frame.instructionPointerReference || null;
 
     if (frame.source && frame.source.path) {
-      this.activeFilePath = frame.source.path;
+      // Normalize: strip trailing slash before storing as the editor filename / breakpoint map key.
+      this.activeFilePath = frame.source.path.replace(/\/+$/, '');
       this.fileRevealTrigger++; // Always trigger a UX reveal on explicit navigation
       this.currentCode = '// Loading source code...';
 
@@ -928,7 +932,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   /** Handle instruction-level stepping requested from the control group */
   public async onStepInstructionTab(action: 'stepi' | 'nexti'): Promise<void> {
     if (this.executionState !== 'stopped') return;
-    
+
     // Switch to Disassembly tab immediately (activeTabIndex = 1)
     this.activeTabIndex = 1;
     this.cdr.detectChanges();
@@ -954,7 +958,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       .subscribe((actionId) => {
         // Log the shortcut action for debug visibility in Console
         this.logService.consoleLog(`Action triggered: ${actionId}`, 'info', 'system');
-        
+
         switch (actionId) {
           case ActionID.DEBUG_CONTINUE: this.onResume(); break;
           case ActionID.DEBUG_PAUSE: this.onPause(); break;

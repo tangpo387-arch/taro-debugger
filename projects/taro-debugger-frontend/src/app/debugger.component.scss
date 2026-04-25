@@ -15,8 +15,8 @@
   width: 100%;
   background-color: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
-  /* Master Boundary: Secures top alignment across all panels without negative margins */
-  border-top: 1px solid var(--mat-sys-outline-variant);
+  /* Boundary is handled by toolbar's border-bottom to avoid double-borders or overlap */
+  border-top: none;
 }
 
 /* --- Top toolbar style --- */
@@ -26,13 +26,21 @@
   background-color: var(--mat-sys-surface);
   border-bottom: 1px solid var(--mat-sys-outline-variant);
 
-  /* Use dynamic density for toolbar and touch targets */
-  min-height: var(--sys-density-toolbar-height);
-  height: var(--sys-density-toolbar-height);
+  .toolbar-right .mat-mdc-icon-button {
+    --mdc-icon-button-state-layer-size: var(--sys-density-header-height);
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: var(--sys-density-header-height) !important;
+    width: var(--sys-density-header-height) !important;
+  }
+  
+  min-height: var(--sys-density-toolbar-height) !important;
+  height: var(--sys-density-toolbar-height) !important;
   padding: 0 var(--sys-density-panel-padding);
 
-  display: flex;
-  align-items: center;
+  display: flex !important;
+  align-items: center !important;
   justify-content: space-between;
 }
 
@@ -60,7 +68,7 @@
 
 .divider-vertical {
   width: 1px;
-  height: 24px;
+  height: 16px; // Sync with internal capsule divider height
   background-color: var(--mat-sys-outline-variant);
   margin: 0 4px;
 }
@@ -69,9 +77,10 @@
    Material does not expose CSS variables for button border-radius.
    Overriding state layers to 4px to align with inner capsule buttons. */
 :host ::ng-deep .top-toolbar button.mat-mdc-icon-button:not(app-debug-control-group *) {
-  --mdc-icon-button-state-layer-size: var(--sys-density-btn-size);
-  width: var(--sys-density-btn-size) !important;
-  height: var(--sys-density-btn-size) !important;
+  // Target height to match DebugControlGroupComponent capsule (btn-size-sm + 4px padding)
+  --mdc-icon-button-state-layer-size: calc(var(--sys-density-btn-size-sm) + 4px);
+  width: calc(var(--sys-density-btn-size-sm) + 4px) !important;
+  height: calc(var(--sys-density-btn-size-sm) + 4px) !important;
   padding: 0 !important;
   border-radius: 4px !important;
   display: inline-flex !important;
@@ -111,17 +120,13 @@
 }
 
 .brand-title {
+  font-size: 1.125rem;
   font-weight: var(--weight-bold);
-  font-size: var(--text-xl);
-  letter-spacing: 0.5px;
-
-  /* Brand Visibility: 
-     1. Visible on WebApp wide screens (>= 800px)
-     2. Hidden on WebApp compact screens (< 800px)
-     3. Always hidden on Desktop (Electron)
-  */
-  display: inline-block;
-  vertical-align: middle;
+  color: var(--mat-sys-primary);
+  height: var(--sys-density-header-height);
+  line-height: var(--sys-density-header-height);
+  cursor: default;
+  user-select: none;
 
   :host-context(.electron-env) & {
     display: none;
@@ -133,12 +138,16 @@
 }
 
 .loaded-file {
-  margin-left: 12px;
+  font-family: var(--font-mono);
   font-size: var(--text-xs);
+  color: var(--mat-sys-on-surface-variant);
+  height: var(--sys-density-header-height);
+  display: flex;
+  align-items: center;
   /* Semi-transparent background */
   background-color: var(--mat-sys-surface-variant);
-  color: var(--mat-sys-on-surface-variant);
-  padding: 4px 8px;
+  
+  padding: 0 8px;
   border-radius: 4px;
 
   /* --- Path Truncation Styles --- */
@@ -245,8 +254,8 @@ app-inspection-panel + app-inspection-panel {
     border-bottom: 1px solid var(--mat-sys-outline-variant);
     background-color: var(--mat-sys-surface-container-high);
     // Eliminate MDC top/bottom default paddings
-    --mdc-tab-container-height: 32px;
-    height: 32px !important;
+    --mdc-tab-container-height: var(--sys-density-header-height);
+    height: var(--sys-density-header-height) !important;
     box-sizing: border-box !important;
     margin: 0 !important;
     // Indicator colors handled via ng-deep selector below
@@ -270,12 +279,12 @@ app-inspection-panel + app-inspection-panel {
   }
 
   // Design: Non-stretching tabs with surface-fusion active state
-  // All tabs are set to 32px height; the active state relies solely on
+  // All tabs are set to var(--sys-density-header-height) height; the active state relies solely on
   // background-color change (surface fusion) and z-index to overlay the
   // header's border-bottom, eliminating the need for negative margins.
   :host & ::ng-deep .mat-mdc-tab {
-    min-height: 32px !important;
-    height: 32px !important;
+    min-height: var(--sys-density-header-height) !important;
+    height: var(--sys-density-header-height) !important;
     padding: 0 16px;
     flex: 0 1 auto !important;
     // Non-stretching per §8 Alignment rule
@@ -385,9 +394,9 @@ app-inspection-panel + app-inspection-panel {
 
 /* Bottom status bar style */
 .status-bar {
-  /* Sync with density system (§8.2) and align with 8px grid (§9.2): 32px Desktop / 24px Panel */
-  min-height: var(--sys-density-variable-row, 28px);
-  height: var(--sys-density-variable-row, 28px);
+  /* Sync with density system (§8.2) and align with 8px grid (§9.2) */
+  min-height: var(--sys-density-header-height);
+  height: var(--sys-density-header-height);
   flex-shrink: 0;
   background-color: var(--mat-sys-surface-container-high);
   border-top: 1px solid var(--mat-sys-outline-variant);

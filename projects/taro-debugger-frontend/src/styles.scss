@@ -2,7 +2,8 @@
 
 :root {
   /* UI Density Scale */
-  --sys-density-toolbar-height: 48px;
+  --sys-density-toolbar-height: 40px;
+  --sys-density-header-height: 32px;
   --sys-density-panel-padding: 16px;
   --sys-density-variable-row: 28px;
   --sys-density-item-gap: 12px;
@@ -57,7 +58,8 @@ body {
 
 @media #{bp.$mq-compact} {
   :root {
-    --sys-density-toolbar-height: 40px;
+    --sys-density-toolbar-height: 32px;
+    --sys-density-header-height: 24px;
     --sys-density-panel-padding: 12px;
     --sys-density-variable-row: 24px;
     --sys-density-item-gap: 8px;

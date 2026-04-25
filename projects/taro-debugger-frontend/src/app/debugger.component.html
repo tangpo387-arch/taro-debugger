@@ -62,7 +62,7 @@
         [(expanded)]="leftFilesExpanded"
         [resizable]="leftFilesExpanded && leftThreadsExpanded"
         (resizeDrag)="onLeftPanelResizeDrag($event, 'files')"
-        [style.flex]="leftFilesExpanded ? '1 1 ' + leftFilesHeight + 'px' : '0 0 32px'">
+        [style.flex]="leftFilesExpanded ? '1 1 ' + leftFilesHeight + 'px' : '0 0 var(--sys-density-toolbar-height)'">
         
         <div panel-actions>
           <button
@@ -87,7 +87,7 @@
       <taro-panel
         label="Threads"
         [(expanded)]="leftThreadsExpanded"
-        [style.flex]="leftThreadsExpanded ? '1 1 ' + leftThreadsHeight + 'px' : '0 0 32px'">
+        [style.flex]="leftThreadsExpanded ? '1 1 ' + leftThreadsHeight + 'px' : '0 0 var(--sys-density-toolbar-height)'">
         <app-threads></app-threads>
       </taro-panel>
     </mat-sidenav>
@@ -103,7 +103,7 @@
         [(expanded)]="rightBreakpointsExpanded"
         [resizable]="rightBreakpointsExpanded && (rightVariablesExpanded || rightCallStackExpanded)"
         (resizeDrag)="onRightPanelResizeDrag($event, 'breakpoints')"
-        [style.flex]="rightBreakpointsExpanded ? '1 1 ' + rightBreakpointsHeight + 'px' : '0 0 32px'">
+        [style.flex]="rightBreakpointsExpanded ? '1 1 ' + rightBreakpointsHeight + 'px' : '0 0 var(--sys-density-toolbar-height)'">
         <app-breakpoints (requestReveal)="onBreakpointReveal($event)"></app-breakpoints>
       </taro-panel>
 
@@ -113,7 +113,7 @@
         [(expanded)]="rightVariablesExpanded"
         [resizable]="rightVariablesExpanded && rightCallStackExpanded"
         (resizeDrag)="onRightPanelResizeDrag($event, 'variables')"
-        [style.flex]="rightVariablesExpanded ? '1 1 ' + rightVariablesHeight + 'px' : '0 0 32px'">
+        [style.flex]="rightVariablesExpanded ? '1 1 ' + rightVariablesHeight + 'px' : '0 0 var(--sys-density-toolbar-height)'">
         <app-variables></app-variables>
       </taro-panel>
 
@@ -121,7 +121,7 @@
       <taro-panel
         label="Call Stack"
         [(expanded)]="rightCallStackExpanded"
-        [style.flex]="rightCallStackExpanded ? '1 1 ' + rightCallStackHeight + 'px' : '0 0 32px'">
+        [style.flex]="rightCallStackExpanded ? '1 1 ' + rightCallStackHeight + 'px' : '0 0 var(--sys-density-toolbar-height)'">
         <app-call-stack
           [stackFrames]="stackFrames"
           [activeFrameId]="activeFrameId"

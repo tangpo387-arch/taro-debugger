@@ -42,7 +42,7 @@ The global `styles.scss` defines root CSS variables representing dynamic spacing
 * `--sys-density-btn-size-sm` / `--sys-density-btn-icon-size-sm` (Compact sizes for inner control capsules)
 * `--text-base` *(overridden per density mode)*
 
-The base `:root` values assume a comfortable layout constraint. Under `@media (max-width: 800px)`, these tokens are redefined to significantly compress physical dimensions, maximizing information density for confined screen real estate. Notably, button dimensions (`--sys-density-btn-size` and `-sm`) dynamically shrink to prevent layout overflow when parent container heights contract (e.g. `28px` buttons shrinking to `20px` to continuously fit inside a `24px` row).
+The base `:root` values assume a comfortable layout constraint. Under `@media (max-width: 800px)`, these tokens are redefined to significantly compress physical dimensions, maximizing information density for confined screen real estate. Notably, header heights (`--sys-density-toolbar-height`) and button dimensions (`--sys-density-btn-size` and `-sm`) dynamically shrink in tandem to maintain a unified horizontal "Header Strip" aesthetic across the entire application.
 
 **TypeScript Synchronization & Integration**
 Select Angular CDK / Material components require TypeScript-level synchronization rather than pure CSS, particularly due to internal math and viewport estimations. Instead of checking the OS/Environment, components must use the Angular CDK `BreakpointObserver` matching the same `800px` threshold:
@@ -84,7 +84,7 @@ The UI adheres to an **8px base grid** as its canonical spacing modulus.
 | :--- | :--- | :--- |
 | Base grid modulus | `8px` | All spacing values must be multiples of 4px or 8px |
 | Panel internal padding | `12px` | Maps to `--sys-density-panel-padding`. Applied at content level. Container padding must be restricted to top-only (`padding-top`) to anchor content; lateral bounds must remain 0 to permit edge-to-edge separators. |
-| Panel header bar height | `32px` (Desktop/Panel) | Fixed. Do NOT bind to `--sys-density-toolbar-height` (which is reserved exclusively for the top-level `mat-toolbar`). |
+| Panel header bar height | `32px` (Wide) / `24px` (Compact) | **Unified Header Standard**: Must remain identical to `--sys-density-toolbar-height` to create a continuous horizontal control strip across the top of the application. |
 | Editor side margins | `0px` | The editor area must be flush with sidebars to maximize readability (§8.5) |
 | File tree node indent | `16px` per level | Fixes readability regression for deep paths |
 
@@ -225,7 +225,7 @@ To achieve a professional "Flush IDE" aesthetic, all `mat-tab-group` instances �
 | **Alignment** | `justify-content: flex-start` on `.mat-mdc-tab-labels` | VS Code / IntelliJ standard. Prevents tabs from stretching to fill the full header width. |
 | **Sizing** | `flex: 0 1 auto !important` on `.mat-mdc-tab` | Tab width is content-determined. Set a `min-width` appropriate for the context (editor: `100px`, console: `80px`). |
 | **Indicator Removal** | `display: none` on `.mat-mdc-tab-indicator`, `.mdc-tab-indicator`, `.mdc-tab-indicator__content` | Disables the default Material bottom ink-bar. Set `--mat-tab-header-active-indicator-color: transparent` (no `!important`) as a secondary guard. |
-| **Vertical Grid** | Header: `height: 32px; box-sizing: border-box`. Tabs: `height: 32px; box-sizing: border-box` | All heights are identical at 32px. Active state uses `z-index: 1` only — **no `margin-top: -1px`** (§5.1 Negative Margin Prohibition). |
+| **Vertical Grid** | Header: `height: 32px; box-sizing: border-box`. Tabs: `height: 32px; box-sizing: border-box` | All heights are identical at 32px (Wide) / 24px (Compact), synced with `--sys-density-toolbar-height`. Active state uses `z-index: 1` only — **no `margin-top: -1px`** (§5.1 Negative Margin Prohibition). |
 | **Typography** | `text-transform: uppercase; letter-spacing: 0.8px; font-size: var(--text-sm); font-weight: var(--weight-medium)` | Matches the `.panel-title` weight to maintain a unified header strip across all panels. |
 | **Tab Dividers** | `border-right: 1px solid var(--mat-sys-outline-variant)` on each tab | Provides visual separation between tabs without the need for the ink-bar. |
 | **Hover State** | `background-color: var(--mat-sys-surface-container-highest)` on `:hover:not(.mdc-tab--active)` | Consistent with the tree-node and variable-row hover patterns. |

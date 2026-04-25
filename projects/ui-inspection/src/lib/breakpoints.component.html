@@ -9,17 +9,17 @@
              (click)="onBreakpointClick(group.filePath, bp.line)">
           
           <div class="breakpoint-main">
-            <mat-checkbox [checked]="bp.enabled"
-                          (change)="toggleEnabled($event, group.filePath, bp.line)"
-                          (click)="$event.stopPropagation()"
-                          class="breakpoint-checkbox">
-            </mat-checkbox>
-
             <mat-icon class="breakpoint-icon" 
                       [class.verified]="bp.verified" 
                       [class.unverified]="!bp.verified">
               {{ bp.verified ? (bp.enabled ? 'lens' : 'panorama_fish_eye') : 'panorama_fish_eye' }}
             </mat-icon>
+
+            <mat-checkbox [checked]="bp.enabled"
+                          (change)="toggleEnabled($event, group.filePath, bp.line)"
+                          (click)="$event.stopPropagation()"
+                          class="breakpoint-checkbox">
+            </mat-checkbox>
 
             <div class="breakpoint-label-group">
               <span class="breakpoint-filename">{{ group.fileName }}</span>

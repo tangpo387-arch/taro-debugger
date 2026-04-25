@@ -10,7 +10,7 @@
 .panel-header {
   display: flex;
   align-items: center;
-  height: 32px;
+  height: var(--sys-density-header-height);
   flex-shrink: 0;
   cursor: pointer;
   user-select: none;
