@@ -60,9 +60,10 @@
   </mat-tree-node>
 </mat-tree>
 } @else {
-<div class="unsupported-message">
-  <mat-icon class="unsupported-icon">info</mat-icon>
-  DAP Server does not support loadedSources requests<br />File tree cannot be displayed
-</div>
+  <taro-empty-state 
+    message="File tree cannot be displayed" 
+    icon="info"
+    description="DAP Server does not support loadedSources requests.">
+  </taro-empty-state>
 }
 </div>

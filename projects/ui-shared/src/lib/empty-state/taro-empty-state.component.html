@@ -1,0 +1,9 @@
+<div class="empty-state-container" [class.centered]="centered">
+  @if (icon) {
+    <mat-icon class="empty-state-icon">{{ icon }}</mat-icon>
+  }
+  <div class="empty-state-message">{{ message }}</div>
+  @if (description) {
+    <div class="empty-state-description">{{ description }}</div>
+  }
+</div>

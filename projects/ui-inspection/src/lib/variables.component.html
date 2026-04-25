@@ -38,5 +38,9 @@
     </div>
   </cdk-virtual-scroll-viewport>
 } @else {
-  <div class="placeholder-content">No variables available</div>
+  <taro-empty-state 
+    message="No variables available" 
+    icon="inventory_2"
+    description="Try pausing execution to inspect local variables.">
+  </taro-empty-state>
 }

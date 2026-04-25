@@ -42,23 +42,6 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
 
 ## UI System Design
 
-### WI-80: Standardize Empty States
-
-- **Status**: ⏳ Pending
-- **Size**: M
-- **Description**: Unify the visual pattern for empty data states across all functional panels using a reusable TaroEmptyStateComponent
-- **Details**:
-  - Create TaroEmptyStateComponent in @taro/ui-shared
-  - Integrate into VariablesComponent
-  - Integrate into ThreadsComponent
-  - Integrate into BreakpointsComponent
-  - Integrate into CallStackComponent
-  - Integrate into FileExplorerComponent
-  - [Test] Verify centered alignment and icon/text visibility in all 5 panels
-  - [Doc] docs/empty-state-standardization.md
-  - [Doc] Update architecture/visual-design.md with Empty State usage rules for future components
-- **Dependencies**: none
-
 ### WI-81: Application Frame & Global Controls Integration
 
 - **Status**: ⏳ Pending

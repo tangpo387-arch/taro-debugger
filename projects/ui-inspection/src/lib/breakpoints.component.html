@@ -42,9 +42,9 @@
   </div>
 
   <ng-template #empty>
-    <div class="placeholder-content">
-      <mat-icon class="placeholder-icon">visibility_off</mat-icon>
-      <div class="placeholder-text">No breakpoints set</div>
-    </div>
+    <taro-empty-state 
+      message="No breakpoints set" 
+      icon="visibility_off">
+    </taro-empty-state>
   </ng-template>
 </div>

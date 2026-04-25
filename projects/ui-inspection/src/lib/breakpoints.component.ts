@@ -6,6 +6,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCheckboxModule, MatCheckboxChange } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { DapSessionService, VerifiedBreakpoint } from '@taro/dap-core';
+import { TaroEmptyStateComponent } from '@taro/ui-shared';
 import { map } from 'rxjs/operators';
 
 interface GroupedBreakpoint {
@@ -27,7 +28,8 @@ interface GroupedBreakpoint {
     MatIconModule,
     MatTooltipModule,
     MatCheckboxModule,
-    MatButtonModule
+    MatButtonModule,
+    TaroEmptyStateComponent
   ],
   templateUrl: './breakpoints.component.html',
   styleUrls: ['./breakpoints.component.scss'],

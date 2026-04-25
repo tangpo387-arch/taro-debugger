@@ -192,25 +192,3 @@
   color: var(--mat-sys-primary);
   flex-shrink: 0;
 }
-
-/* ── Unsupported Fallback ───────────────────────────────────────────────────── */
-
-.unsupported-message {
-  padding: 16px;
-  color: var(--mat-sys-on-surface-variant);
-  font-size: var(--text-base);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  flex-direction: column;
-  opacity: 0.8;
-  margin-top: 32px;
-}
-
-.unsupported-icon {
-  margin-bottom: 8px;
-  font-size: var(--text-2xl);
-  width: 24px;
-  height: 24px;
-}

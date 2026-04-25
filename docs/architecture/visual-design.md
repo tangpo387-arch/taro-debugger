@@ -238,3 +238,22 @@ The **active tab** must visually "fuse" with its content area by matching the co
 | :--- | :--- | :--- |
 | **Main Editor** (Source / Disassembly) | `var(--mat-sys-surface)` | Monaco Editor / Assembly View background |
 | **Console / Output** | `var(--mat-sys-surface-container-low)` | `.console-viewport` background |
+
+### 6.6 Empty States
+
+To maintain visual consistency when no data is available, all functional panels MUST use the `TaroEmptyStateComponent` instead of custom placeholder text or icons.
+
+| Property | Rule | Rationale |
+| :--- | :--- | :--- |
+| **Component** | `TaroEmptyStateComponent` (@taro/ui-shared) | SSOT for empty state presentation |
+| **Centering** | `centered="true"` (Default) | Ensures the status message is the focal point of the empty container |
+| **Icon Size** | `32px` (Standardized in component SCSS) | Provides consistent visual weight across panels |
+| **Color** | `var(--mat-sys-on-surface-variant)` at `0.5` opacity | De-emphasizes the empty state relative to active data |
+
+**Integration Mapping Standards:**
+
+* **Variables**: `inventory_2` icon + description for pausing.
+* **Breakpoints**: `visibility_off` icon.
+* **Threads**: `format_list_bulleted` icon.
+* **Call Stack**: `reorder` icon.
+* **File Explorer**: `info` icon + description for unsupported server.

@@ -5,3 +5,4 @@
 export * from './lib/layout.config';
 export * from './lib/panel/panel.component';
 export * from './lib/dialogs/error-dialog/error-dialog';
+export * from './lib/empty-state/taro-empty-state.component';

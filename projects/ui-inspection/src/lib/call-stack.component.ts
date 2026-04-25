@@ -2,11 +2,12 @@ import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from 
 import { CommonModule } from '@angular/common';
 import { MatListModule } from '@angular/material/list';
 import { DapStackFrame } from '@taro/dap-core';
+import { TaroEmptyStateComponent } from '@taro/ui-shared';
 
 @Component({
   selector: 'app-call-stack',
   standalone: true,
-  imports: [CommonModule, MatListModule],
+  imports: [CommonModule, MatListModule, TaroEmptyStateComponent],
   templateUrl: './call-stack.component.html',
   styleUrls: ['./call-stack.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -8,7 +8,7 @@ import { Subscription } from 'rxjs';
 
 import { DapVariablesService, DapScope } from './dap-variables.service';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { LAYOUT_COMPACT_MQ } from '@taro/ui-shared';
+import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent } from '@taro/ui-shared';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 
@@ -48,6 +48,7 @@ const INDENT_PX = 20;
     MatIconModule,
     MatButtonModule,
     ScrollingModule,
+    TaroEmptyStateComponent,
   ],
   templateUrl: './variables.component.html',
   styleUrls: ['./variables.component.scss']

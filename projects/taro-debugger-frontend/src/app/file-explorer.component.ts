@@ -22,7 +22,7 @@ import { MatTreeModule, MatTree } from '@angular/material/tree';
 import { DapSessionService } from '@taro/dap-core';
 import { DapConfigService } from '@taro/dap-core';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { LAYOUT_COMPACT_MQ } from '@taro/ui-shared';
+import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent } from '@taro/ui-shared';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { FileNode } from './file-tree.service';
@@ -38,6 +38,7 @@ import { DapFileTreeService } from './dap-file-tree.service';
     MatButtonModule,
     MatIconModule,
     MatTreeModule,
+    TaroEmptyStateComponent,
   ],
   templateUrl: './file-explorer.component.html',
   styleUrls: ['./file-explorer.component.scss'],

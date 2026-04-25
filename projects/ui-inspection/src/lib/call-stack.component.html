@@ -11,5 +11,8 @@
   }
 </mat-action-list>
 } @else {
-<div class="placeholder-content">No call stack information available</div>
+  <taro-empty-state 
+    message="No call stack information available" 
+    icon="reorder">
+  </taro-empty-state>
 }

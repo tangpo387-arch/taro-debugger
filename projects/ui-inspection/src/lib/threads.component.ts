@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DapSessionService } from '@taro/dap-core';
+import { TaroEmptyStateComponent } from '@taro/ui-shared';
 
 /**
  * ThreadsComponent — Data binding via DapSessionService (WI-70)
@@ -10,11 +11,14 @@ import { DapSessionService } from '@taro/dap-core';
 @Component({
   selector: 'app-threads',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatTooltipModule],
+  imports: [CommonModule, MatIconModule, MatTooltipModule, TaroEmptyStateComponent],
   template: `
     <div class="threads-container">
       <ng-container *ngIf="dapSession.threads$ | async as threads">
-        <div *ngIf="threads.length === 0" class="placeholder-content">No active threads</div>
+        <taro-empty-state *ngIf="threads.length === 0" 
+          message="No active threads" 
+          icon="format_list_bulleted">
+        </taro-empty-state>
         <ul *ngIf="threads.length > 0" class="thread-list">
           <li *ngFor="let thread of threads" 
               [class.active]="thread.id === (dapSession.activeThreadId$ | async)"
@@ -32,11 +36,6 @@ import { DapSessionService } from '@taro/dap-core';
     </div>
   `,
   styles: [`
-    .placeholder-content {
-      padding: var(--sys-density-panel-padding);
-      font-size: var(--text-sm);
-      color: var(--mat-sys-on-surface-variant);
-    }
     .thread-list {
       list-style: none;
       padding: 0;
