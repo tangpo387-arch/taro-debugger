@@ -174,6 +174,7 @@ Implementation status is updated via the `update-wi.js` script. You are STRICTLY
 | **Approve** | `node scripts/update-wi.js WI-## accepted` | Moves to ✅ Accepted | `Quality_Control_Reviewer` |
 | **Reject** | `node scripts/update-wi.js WI-## rework` | Moves to 🛠️ Rework | `Quality_Control_Reviewer` |
 | **Abort** | `node scripts/update-wi.js WI-## abort` | Moves to ❌ Aborted | All Agents |
+| **Propose** | `node scripts/update-wi.js WI-## proposed` | Moves to 💡 Proposed | `Product_Architect` |
 
 The script automatically handles timestamps for `accepted` and `aborted` statuses and refreshes all derivative views.
 

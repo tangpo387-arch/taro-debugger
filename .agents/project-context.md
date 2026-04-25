@@ -102,6 +102,16 @@ Locate documents based on task:
 | **Test Single File** | `npm run test -- <project> --include=**/<file.spec.ts> --watch=false` | Executes tests for a specific file. |
 | **Doc Linting** | `npm run lint:docs` | Verifies documentation against quality standards. |
 
+### Utility & Management Scripts
+
+| Operation | Command | Constraints |
+| :--- | :--- | :--- |
+| **Update WI Status** | `node scripts/update-wi.js <WI-ID> <status>` | `<status>` MUST be: `pending`, `done`, `accepted`, `rework`, `abort`, or `proposed`. |
+| **Inspect WI** | `node scripts/manage-wi.js show <WI-ID> [field]` | `[field]` is optional (e.g., `details`, `status`, `deps`). |
+| **Add WI** | `node scripts/manage-wi.js add AUTO <Group> <Title> ...` | Arguments are positional. Use `AUTO` for automatic ID allocation. |
+| **Edit WI** | `node scripts/manage-wi.js edit <WI-ID> --<field> <value>` | Supported flags: `--title`, `--desc`, `--details`, `--deps`, `--size`, `--milestone`. |
+| **Group Management** | `node scripts/manage-wi.js <add-group\|show-group\|list-group>` | Use `show-group` to verify existing Feature Group names before adding WIs. |
+
 </workflow>
 
 ## 5. Agent Context Sources & Knowledge Acquisition
