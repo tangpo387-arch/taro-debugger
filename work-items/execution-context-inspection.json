@@ -210,6 +210,32 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-21"
       }
+    },
+    {
+      "id": "WI-79",
+      "title": "Non-Stop Mode UI Integration",
+      "featureGroup": "Execution Context Inspection",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.1",
+        "dependencies": [
+          "WI-70"
+        ]
+      },
+      "description": "Implement per-thread execution state tracking and UI controls for DAP Non-Stop mode.",
+      "details": [
+        "Handle 'continued' events to update per-thread state",
+        "Extend threads$ stream with status metadata (running/stopped)",
+        "Add Pause/Continue buttons to individual thread list items",
+        "Ensure global execution buttons reflect active thread state in non-stop mode",
+        "[Test] Verify thread list updates status icon when 'continued' event is received",
+        "[Doc] docs/non-stop-mode-ui.md"
+      ],
+      "timeline": {
+        "created": "2026-04-25",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }

@@ -26,6 +26,17 @@ audience: [Product_Architect, Lead_Engineer, Human Engineer]
   - Update app-variables tree component UI to support inline editing
   - Ensure updated values correctly sync back
 
+### WI-79: Non-Stop Mode UI Integration (Status: pending)
+
+- **Description**: Implement per-thread execution state tracking and UI controls for DAP Non-Stop mode.
+- **Details**:
+  - Handle 'continued' events to update per-thread state
+  - Extend threads$ stream with status metadata (running/stopped)
+  - Add Pause/Continue buttons to individual thread list items
+  - Ensure global execution buttons reflect active thread state in non-stop mode
+  - [Test] Verify thread list updates status icon when 'continued' event is received
+  - [Doc] docs/non-stop-mode-ui.md
+
 ### WI-74: Standardization of UI Patterns (Status: pending)
 
 - **Description**: Consolidate duplicated UI components, SCSS tokens, and shared Angular utilities into a unified internal library.

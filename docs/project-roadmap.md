@@ -52,6 +52,7 @@ graph LR
     WI_69["WI-69 UI Layout: Thread & Breakpoint Panels"]
     WI_70["WI-70 Data Binding: Thread List Integration"]
     WI_73["WI-73 UI Library: Extract @taro/ui-inspection"]
+    WI_79["WI-79 Non-Stop Mode UI Integration"]
     WI_15["WI-15 File Tree Service Abstraction (`FileTreeService`)"]
     WI_16["WI-16 Left Sidenav File Tree UI"]
     WI_33["WI-33 Implement Source Content LRU Cache"]
@@ -133,6 +134,7 @@ graph LR
     WI_41 --> WI_69
     WI_73 --> WI_69
     WI_69 --> WI_70
+    WI_70 --> WI_79
     WI_15 --> WI_16
     WI_15 --> WI_33
     WI_33 --> WI_34
@@ -202,6 +204,7 @@ graph LR
     style WI_69 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_70 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_73 fill:#f472b6,stroke:#000,stroke-width:2.5px
+    style WI_79 fill:#f472b6,stroke:#db2777
     style WI_15 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_16 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_33 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
