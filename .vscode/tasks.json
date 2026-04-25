@@ -3,8 +3,9 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "watch:dap-core",
       "type": "npm",
-      "script": "start",
+      "script": "watch:dap-core",
       "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",
@@ -12,30 +13,147 @@
         "background": {
           "activeOnStart": true,
           "beginsPattern": {
-            "regexp": "Changes detected"
+            "regexp": "Building Angular Package|Changes detected"
           },
           "endsPattern": {
-            "regexp": "bundle generation (complete|failed)"
+            "regexp": "Compilation complete|bundle generation (complete|failed)"
           }
         }
       }
     },
     {
+      "label": "watch:ui-shared",
       "type": "npm",
-      "script": "test",
+      "script": "watch:ui-shared",
       "isBackground": true,
+      "dependsOn": "watch:dap-core",
       "problemMatcher": {
         "owner": "typescript",
         "pattern": "$tsc",
         "background": {
           "activeOnStart": true,
           "beginsPattern": {
-            "regexp": "Changes detected"
+            "regexp": "Building Angular Package|Changes detected"
           },
           "endsPattern": {
-            "regexp": "bundle generation (complete|failed)"
+            "regexp": "Compilation complete|bundle generation (complete|failed)"
           }
         }
+      }
+    },
+    {
+      "label": "watch:ui-inspection",
+      "type": "npm",
+      "script": "watch:ui-inspection",
+      "isBackground": true,
+      "dependsOn": "watch:ui-shared",
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "Building Angular Package|Changes detected"
+          },
+          "endsPattern": {
+            "regexp": "Compilation complete|bundle generation (complete|failed)"
+          }
+        }
+      }
+    },
+    {
+      "label": "watch:ui-editor",
+      "type": "npm",
+      "script": "watch:ui-editor",
+      "isBackground": true,
+      "dependsOn": "watch:ui-shared",
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "Building Angular Package|Changes detected"
+          },
+          "endsPattern": {
+            "regexp": "Compilation complete|bundle generation (complete|failed)"
+          }
+        }
+      }
+    },
+    {
+      "label": "watch:ui-console",
+      "type": "npm",
+      "script": "watch:ui-console",
+      "isBackground": true,
+      "dependsOn": "watch:ui-shared",
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "Building Angular Package|Changes detected"
+          },
+          "endsPattern": {
+            "regexp": "Compilation complete|bundle generation (complete|failed)"
+          }
+        }
+      }
+    },
+    {
+      "label": "watch:ui-assembly",
+      "type": "npm",
+      "script": "watch:ui-assembly",
+      "isBackground": true,
+      "dependsOn": "watch:ui-shared",
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "Building Angular Package|Changes detected"
+          },
+          "endsPattern": {
+            "regexp": "Compilation complete|bundle generation (complete|failed)"
+          }
+        }
+      }
+    },
+    {
+      "label": "serve:taro-debugger-frontend",
+      "type": "npm",
+      "script": "start",
+      "isBackground": true,
+      "dependsOn": [
+        "watch:ui-inspection",
+        "watch:ui-editor",
+        "watch:ui-console",
+        "watch:ui-assembly"
+      ],
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "Building Angular Package|Changes detected"
+          },
+          "endsPattern": {
+            "regexp": "Compilation complete|bundle generation (complete|failed)"
+          }
+        }
+      }
+    },
+    {
+      "label": "Cascading Serve",
+      "dependsOn": [
+        "serve:taro-debugger-frontend"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
       }
     }
   ]

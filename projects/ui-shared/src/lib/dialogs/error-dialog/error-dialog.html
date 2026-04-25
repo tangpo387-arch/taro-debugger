@@ -1,0 +1,13 @@
+<h2 mat-dialog-title>
+  <mat-icon color="warn">error</mat-icon>
+  {{ data.title || 'Error' }}
+</h2>
+
+<mat-dialog-content>
+  <p>{{ data.message }}</p>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onGoBack()">GO BACK</button>
+  <button mat-flat-button color="primary" (click)="onRetry()">RETRY</button>
+</mat-dialog-actions>

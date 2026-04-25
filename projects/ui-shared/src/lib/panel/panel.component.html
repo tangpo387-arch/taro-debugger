@@ -3,6 +3,9 @@
      (keydown.enter)="toggle()" (keydown.space)="toggle(); $event.preventDefault()">
   <mat-icon class="chevron-icon" [class.expanded]="expanded" aria-hidden="true">chevron_right</mat-icon>
   <span class="panel-label">{{ label }}</span>
+  <div class="panel-actions" (click)="$event.stopPropagation()">
+    <ng-content select="[panel-actions]" />
+  </div>
 </div>
 
 <!-- Panel content: hidden when collapsed -->

@@ -23,12 +23,11 @@ import {
   VariablesComponent,
   CallStackComponent,
   DapVariablesService,
-  InspectionPanelComponent,
   ThreadsComponent,
   BreakpointsComponent,
 } from '@taro/ui-inspection';
+import { PanelComponent, ErrorDialog, ErrorDialogData } from '@taro/ui-shared';
 import { LogViewerComponent } from '@taro/ui-console';
-import { ErrorDialog, ErrorDialogData } from './error-dialog/error-dialog';
 import { DapConfigService, DapConfig } from '@taro/dap-core';
 import { DapSessionService, ExecutionState, VerifiedBreakpoint } from '@taro/dap-core';
 import { DapEvent, DapStackFrame } from '@taro/dap-core';
@@ -61,7 +60,7 @@ import { DapFileTreeService } from './dap-file-tree.service';
     DebugControlGroupComponent,
     CallStackComponent,
     AssemblyViewComponent,
-    InspectionPanelComponent,
+    PanelComponent,
     ThreadsComponent,
     BreakpointsComponent,
   ],

@@ -18,6 +18,14 @@ related:
 - Manage **layout state**: sidebar widths, visibility, console height (including persistence to localStorage)
 - **Must not directly operate** Transport or manage session state
 
+## 2. UI Shared Foundation (@taro/ui-shared)
+
+The UI layer leverages a centralized foundation library to ensure visual consistency and flatten the dependency graph.
+
+- **Design Tokens**: Centralized HSL-based color palettes and responsive layout tokens (e.g., `LAYOUT_COMPACT_MQ`).
+- **Generic Components**: Reusable UI patterns like `PanelComponent` (collapsible/resizable containers) and `ErrorDialog`.
+- **Modularity Benefit**: Functional libraries like `ui-inspection` can depend on the shared foundation without pulling in the heavy `ui-editor` (Monaco) library.
+
 ## 2. Responsibility Separation Reference
 
 | Responsibility | Layer | Description |
@@ -38,12 +46,18 @@ related:
 graph TD
     subgraph Layout ["DebuggerComponent Layout"]
         TB["Top Toolbar<br/>Brand title / Debug control buttons / Reset button"]
-        LS["Left Sidenav<br/>File Explorer (app-file-explorer)<br/>Toggle show/hide"]
+        LS["Left Sidenav<br/>(taro-panel)"]
         MC["Main Content<br/>Monaco Editor (app-editor)"]
-        RS["Right Sidenav<br/>Variables (app-variables)<br/>Call Stack (app-call-stack)"]
-        LV["Console Area<br/>(app-log-viewer)<br/>Dual-tab: Console + Program Console<br/>+ Evaluate input"]
+        RS["Right Sidenav<br/>(taro-panel)"]
+        LV["Console Area<br/>(taro-log-viewer)<br/>Dual-tab: Console + Program Console<br/>+ Evaluate input"]
         SB["Status Bar<br/>Connection status / Execution state"]
     end
+
+    LS -- Contains --> FE["File Explorer (app-file-explorer)"]
+    LS -- Contains --> TH["Threads (app-threads)"]
+    RS -- Contains --> VB["Variables (app-variables)"]
+    RS -- Contains --> CS["Call Stack (app-call-stack)"]
+    RS -- Contains --> BP["Breakpoints (app-breakpoints)"]
 
     TB --> LS
     TB --> MC

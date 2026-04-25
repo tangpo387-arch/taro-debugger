@@ -8,7 +8,7 @@
     "@angular/cdk": "^21.2.1",
     "rxjs": "~7.8.0",
     "@taro/dap-core": "0.0.1",
-    "@taro/ui-editor": "0.0.1"
+    "@taro/ui-shared": "0.0.1"
   },
   "dependencies": {
     "tslib": "^2.3.0"

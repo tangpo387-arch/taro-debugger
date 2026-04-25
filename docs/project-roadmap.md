@@ -231,7 +231,7 @@ graph LR
     style WI_01 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_02 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_03 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_75 fill:#cbd5e1,stroke:#475569
+    style WI_75 fill:#cbd5e1,stroke:#000,stroke-width:2.5px
     style WI_74 fill:#cbd5e1,stroke:#475569
     style WI_76 fill:#cbd5e1,stroke:#475569
     style WI_77 fill:#cbd5e1,stroke:#475569

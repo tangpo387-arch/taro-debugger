@@ -38,11 +38,13 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | `projects/taro-debugger-frontend/src/app/debugger.component.ts` | Main debug view: toolbar, three-panel layout, event subscriptions, file source loading, execution context tracking | **API:** `onEvent()`, `fileRevealTrigger`<br>**RxJS:** `executionState$`, `connectionStatus$` | `debugger.component.html`, `debugger.component.scss` |
 | `projects/taro-debugger-frontend/src/app/debug-control-group.component.ts` | Debug control toolbar: step/continue/stepi/nexti buttons; dynamically adjusts button weight based on active view (Source vs. Disassembly) | `@Input() executionState`, `@Input() activeView`, `@Output() stepAction` | `debug-control-group.component.html`, `debug-control-group.component.scss` |
 | `projects/taro-debugger-frontend/src/app/file-explorer.component.ts` | Left sidenav file explorer: fetches `loadedSources` tree, highlights active file, performs automated 'reveal' and `scrollIntoView` for execution context | `@Input() activeFilePath`, `@Input() reloadTrigger`, `@Input() revealTrigger`, `@Output() fileSelected` | `file-explorer.component.html`, `file-explorer.component.scss` |
-| `projects/taro-debugger-frontend/src/app/editor.component.ts` | Monaco Editor wrapper: source display, line highlight, breakpoint glyph margin | `openFile()`, `highlightLine()`, `clearHighlight()` | `editor.component.html`, `editor.component.scss` |
-| `projects/taro-debugger-frontend/src/app/assembly-view.component.ts` | Disassembly panel: renders DAP instruction list via virtual scroll, sticky function header, GDB-style offset column, active-line highlight | `@Input() frameId`, subscribes `instructions$`, `isLoading$`; `scrollToActiveInstruction()` | `assembly-view.component.html`, `assembly-view.component.scss` |
-| `projects/taro-debugger-frontend/src/app/log-viewer.component.ts` | Bottom panel log viewer: console/program streams, auto-scroll, expression evaluation | subscribes `consoleLogs$`, `programLogs$`; `evaluateCommand()` | `log-viewer.component.html`, `log-viewer.component.scss` |
-| `projects/taro-debugger-frontend/src/app/variables.component.ts` | Right sidebar variables view: tree display for DAP scopes and local variables | subscribes `scopes$`; `toggleNode()` | `variables.component.html`, `variables.component.scss` |
-| `projects/taro-debugger-frontend/src/app/call-stack.component.ts` | Right sidebar Call Stack view: displays DAP stack frames and highlights active frame | `@Input() stackFrames`, `@Input() activeFrameId`, `@Output() frameSelected` | `call-stack.component.html`, `call-stack.component.scss` |
+| `projects/ui-editor/src/lib/editor.component.ts` | Monaco Editor wrapper: source display, line highlight, breakpoint glyph margin | `openFile()`, `highlightLine()`, `clearHighlight()` | `editor.component.html`, `editor.component.scss` |
+| `projects/ui-assembly/src/lib/assembly-view.component.ts` | Disassembly panel: renders DAP instruction list via virtual scroll, sticky function header, GDB-style offset column, active-line highlight | `@Input() frameId`, subscribes `instructions$`, `isLoading$`; `scrollToActiveInstruction()` | `assembly-view.component.html`, `assembly-view.component.scss` |
+| `projects/ui-console/src/lib/log-viewer/log-viewer.ts` | Bottom panel log viewer: console/program streams, auto-scroll, expression evaluation | subscribes `consoleLogs$`, `programLogs$`; `evaluateCommand()` | `log-viewer.html`, `log-viewer.scss` |
+| `projects/ui-inspection/src/lib/variables.component.ts` | Right sidebar variables view: tree display for DAP scopes and local variables | subscribes `scopes$`; `toggleNode()` | `variables.component.html`, `variables.component.scss` |
+| `projects/ui-inspection/src/lib/call-stack.component.ts` | Right sidebar Call Stack view: displays DAP stack frames and highlights active frame | `@Input() stackFrames`, `@Input() activeFrameId`, `@Output() frameSelected` | `call-stack.component.html`, `call-stack.component.scss` |
+| `projects/ui-inspection/src/lib/threads.component.ts` | Left sidenav threads view: displays DAP threads and allows selecting active thread | subscribes `threads$`, `activeThreadId$` | `threads.component.html`, `threads.component.scss` |
+| `projects/ui-inspection/src/lib/breakpoints.component.ts` | Right sidebar breakpoints view: displays and manages user breakpoints | subscribes `breakpoints$` | `breakpoints.component.html`, `breakpoints.component.scss` |
 
 > **Note on Dialogs:** Subdirectories like `error-dialog/` contain a cohesive set of files (e.g. `error-dialog.ts`, `error-dialog.html`, `error-dialog.css`) implementing a generic dialog service.
 
@@ -61,8 +63,8 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | `projects/dap-core/src/lib/session/dap-session.service.ts` | DAP session lifecycle, state machine, request/response pairing, event processing | `startSession()`, `disconnect()`, `reset()`, `executionState$`, `connectionStatus$`, `onEvent()`, `sendRequest()` |
 | `projects/dap-core/src/lib/session/dap-config.service.ts` | Configuration persistence (localStorage), SSOT for DAP connection parameters | `setConfig()`, `getConfig()` |
 | `projects/taro-debugger-frontend/src/app/dap-file-tree.service.ts` | File tree construction from `loadedSources`, source file reading via `source` request | `getTree()`, `readFile()` |
-| `projects/taro-debugger-frontend/src/app/dap-variables.service.ts` | Derived state management for DAP scopes and variables, caching variable references | `fetchScopes()`, `getVariables()`, `scopes$` |
-| `projects/taro-debugger-frontend/src/app/dap-assembly.service.ts` | Assembly data retrieval via DAP `disassemble` request; component-scoped lifecycle | `fetchInstructions()`, `clear()`, `instructions$`, `isLoading$` |
+| `projects/ui-inspection/src/lib/dap-variables.service.ts` | Derived state management for DAP scopes and variables, caching variable references | `fetchScopes()`, `getVariables()`, `scopes$` |
+| `projects/ui-assembly/src/lib/dap-assembly.service.ts` | Assembly data retrieval via DAP `disassemble` request; component-scoped lifecycle | `fetchInstructions()`, `clear()`, `instructions$`, `isLoading$` |
 
 ## Transport Layer (Services)
 
@@ -74,31 +76,82 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | `projects/dap-core/src/lib/transport/transport-factory.service.ts` | Factory service creating Transport instances based on `TransportType` | `createTransport(type, address)` |
 | `projects/dap-core/src/lib/transport/electron-api.token.ts` | Injection Token for the Electron contextBridge API. | `ELECTRON_API` |
 
+## UI Shared Foundation (@taro/ui-shared)
+
+| File | Responsibility | Key Exports |
+| --- | --- | --- |
+| `projects/ui-shared/src/lib/panel/panel.component.ts` | Generic collapsible/resizable panel container | `PanelComponent` (selector: `taro-panel`) |
+| `projects/ui-shared/src/lib/dialogs/error-dialog/error-dialog.ts` | Reusable error/retry dialog | `ErrorDialog`, `ErrorDialogData` |
+| `projects/ui-shared/src/lib/layout.config.ts` | Shared layout dimension tokens (breakpoints, MQ) | `LAYOUT_COMPACT_MQ` |
+
 ## Shared / Cross-Cutting
 
 | File | Responsibility | Key Exports |
 | --- | --- | --- |
 | `projects/dap-core/src/lib/dap.types.ts` | DAP protocol type definitions | `DapRequest`, `DapResponse`, `DapEvent`, `DapMessage`, `DapStackFrame`, `LogEntry`, `LogCategory`, `DisassembleArguments`, `DapDisassembledInstruction`, `SteppingGranularity`, `StepArguments` |
-| `projects/taro-debugger-frontend/src/app/layout.config.ts` | Static layout dimension constants (panel widths, breakpoints) | — |
 | `projects/taro-debugger-frontend/src/app/file-tree.service.ts` | Abstract file tree interface (implemented by `DapFileTreeService`) | `FileTreeService`, `FileNode` |
-| `projects/taro-debugger-frontend/src/app/dap-log.service.ts` | Dual console log stream management. Written to by `DebuggerComponent`; consumed by `LogViewerComponent`. Classified as Shared: no Session-layer service injects it after this refactor. | `consoleLogs$`, `programLogs$`, `consoleLog()`, `appendProgramLog()`, `clear()` |
+| `projects/ui-console/src/lib/dap-log.service.ts` | Dual console log stream management. Written to by `DebuggerComponent`; consumed by `LogViewerComponent`. | `consoleLogs$`, `programLogs$`, `consoleLog()`, `appendProgramLog()`, `clear()` |
 | `projects/taro-debugger-frontend/src/app/keyboard-shortcut.service.ts` | Keyboard shortcut management and Action ID mapping. | `onAction$`, `ActionID` |
 | `projects/dap-core/src/lib/dap-core.provider.ts` | Library provider for easier integration into Angular standalone apps. | `provideDapCore()` |
 
 ## Layer Dependency Rules
 
-```text
-UI Layer (Components)
-  │  Can inject: Session Layer services
-  │  Cannot inject: Transport Layer services
-  ▼
-Session Layer (Services)
-  │  Can inject: Transport Layer services (via factory)
-  │  Cannot inject: UI components, MatSnackBar, Router
-  ▼
-Transport Layer (Services)
-  │  No Angular DI dependencies on upper layers
-  ▼
-Shared (Types & Interfaces)
-     Used by all layers
+```mermaid
+graph TD
+    subgraph UI ["<b>UI Layer (Functional)</b>"]
+        App["taro-debugger-frontend"]
+        FuncLibs["@taro/ui-inspection<br/>@taro/ui-assembly<br/>@taro/ui-editor<br/>@taro/ui-console"]
+    end
+
+    subgraph Foundation ["<b>UI Shared Foundation</b>"]
+        Shared["@taro/ui-shared<br/>(PanelComponent, ErrorDialog, Tokens)"]
+    end
+
+    subgraph Session ["<b>Session Layer</b>"]
+        DapSession["@taro/dap-core<br/>(DapSessionService)"]
+    end
+
+    subgraph Transport ["<b>Transport Layer</b>"]
+        DapTransport["@taro/dap-core<br/>(DapTransportService)"]
+    end
+
+    subgraph Types ["<b>Shared Types</b>"]
+        DapTypes["@taro/dap-core<br/>(DapTypes)"]
+    end
+
+    App --> FuncLibs
+    App --> Shared
+    FuncLibs --> Shared
+    
+    UI --> Session
+    Foundation --> Session
+    Session --> Transport
+    
+    %% Shared Types used by all
+    UI -.-> Types
+    Foundation -.-> Types
+    Session -.-> Types
+    Transport -.-> Types
+
+    style UI fill:#f9f9f9,stroke:#333
+    style Foundation fill:#f0f4c3,stroke:#827717
+    style Session fill:#e1f5fe,stroke:#01579b
+    style Transport fill:#e1f5fe,stroke:#01579b
+    style Types fill:#fff,stroke:#ccc,stroke-dasharray: 5 5
 ```
+
+> [Diagram: Architectural layer and library dependency rules. The application (App) depends on functional UI libraries and the shared foundation. Functional libraries depend on the shared foundation. All UI layers depend on the Session Layer, which depends on the Transport Layer. Everything depends on the Shared Types.]
+
+### Dependency Injection (DI) Constraints
+
+To ensure **Session Isolation** and **Layer Separation**, the project enforces strict DI boundaries. Session-scoped services (e.g., `DapSessionService`, `DapVariablesService`) are provided exclusively at the `DebuggerComponent` level.
+
+- **Inheritance & Lifetime**: Functional UI components (from libraries like `@taro/ui-inspection`) are child components of `DebuggerComponent`. They inherit the active session instance from the parent injector, ensuring that all panels (Variables, Call Stack, Assembly) share the same state and are destroyed simultaneously when the session ends.
+- **SSOT Enforcement**: Direct injection of the **Transport Layer** into the UI is prohibited to prevent UI components from bypassing the session state machine. All protocol communication must be mediated by the **Session Layer**.
+
+| Layer | Can Inject | Cannot Inject | Rationale |
+| :--- | :--- | :--- | :--- |
+| **UI Layer** | Session Layer, UI Shared | Transport Layer | Prevents SSOT violations by forcing protocol mediation through the state machine. |
+| **UI Shared** | Session Layer (Global) | Functional UI, Transport | Generic foundation components must not depend on specific functional features. |
+| **Session Layer** | Transport Layer (Factory) | UI Components, Snack-Bar | Ensures core logic is DOM-agnostic and reusable across different UI hosts. |
+| **Transport Layer** | — | Any Upper Layer | Low-level binary I/O must remain isolated from business and view logic. |

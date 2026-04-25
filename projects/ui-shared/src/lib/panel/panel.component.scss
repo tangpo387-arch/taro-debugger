@@ -1,12 +1,8 @@
 // ── Host Layout ────────────────────────────────────────────────────────
-// The host element itself participates in the parent flex column.
-// - Expanded:  flex: 1 1 0 → grows to fill available sidenav space.
-// - Collapsed: flex: 0 0 32px → shows only the fixed 32px header.
-// This is controlled by the parent via [style.flex] binding on the host.
 :host {
   display: flex;
   flex-direction: column;
-  min-height: 0; // Required for flex shrink to function correctly
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -14,16 +10,15 @@
 .panel-header {
   display: flex;
   align-items: center;
-  height: 32px; // Fixed per §4 Spacing & Grid Rules
+  height: 32px;
   flex-shrink: 0;
   cursor: pointer;
   user-select: none;
   background-color: var(--mat-sys-surface-container-high);
   border-bottom: 1px solid var(--mat-sys-outline-variant);
-  padding: 0 var(--sys-density-panel-padding);
+  padding: 0 var(--sys-density-panel-padding, 8px);
   box-sizing: border-box;
 
-  // Keyboard focus indicator (accessibility)
   &:focus-visible {
     outline: 2px solid var(--mat-sys-primary);
     outline-offset: -2px;
@@ -40,7 +35,6 @@
   height: 18px;
   color: var(--mat-sys-on-surface-variant);
   margin-right: 6px;
-  // Rotate 90° when expanded (chevron_right → pointing down)
   transition: transform 0.15s ease;
   transform: rotate(0deg);
 
@@ -50,12 +44,17 @@
 }
 
 .panel-label {
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
+  font-size: var(--text-sm, 12px);
+  font-weight: var(--weight-medium, 500);
   text-transform: uppercase;
   letter-spacing: 0.8px;
   color: var(--mat-sys-on-surface-variant);
   flex: 1;
+}
+
+.panel-actions {
+  display: flex;
+  align-items: center;
 }
 
 // ── Panel Content Area ─────────────────────────────────────────────────
@@ -65,7 +64,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  position: relative; // Required for absolute-positioned resize handle
+  position: relative;
 }
 
 // ── Bottom Resize Handle ───────────────────────────────────────────────

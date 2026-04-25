@@ -12,24 +12,23 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
 /**
- * InspectionPanelComponent — reusable collapsible panel header for the @taro/ui-inspection library.
+ * PanelComponent — reusable collapsible panel header.
  *
  * Layout contract:
  *   - When expanded: flex: 1 1 0, min-height: 0 → fills available space.
  *   - When collapsed: flex: 0 0 32px → shows only the 32px header bar.
  *   - A 4px drag handle at the bottom border fires resize events when two panels
- *     are both expanded. The parent container (DebuggerComponent) is responsible
- *     for applying the resulting pixel heights.
+ *     are both expanded. The host is responsible for applying the resulting pixel heights.
  */
 @Component({
-  selector: 'app-inspection-panel',
+  selector: 'taro-panel',
   standalone: true,
   imports: [CommonModule, MatIconModule, MatButtonModule],
-  templateUrl: './inspection-panel.component.html',
-  styleUrls: ['./inspection-panel.component.scss'],
+  templateUrl: './panel.component.html',
+  styleUrls: ['./panel.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class InspectionPanelComponent {
+export class PanelComponent {
   private readonly zone = inject(NgZone);
 
   /** Panel label shown in the 32px header. Should be UPPERCASE. */

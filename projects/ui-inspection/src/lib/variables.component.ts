@@ -8,7 +8,7 @@ import { Subscription } from 'rxjs';
 
 import { DapVariablesService, DapScope } from './dap-variables.service';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { LAYOUT_COMPACT_MQ } from '@taro/ui-editor';
+import { LAYOUT_COMPACT_MQ } from '@taro/ui-shared';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 

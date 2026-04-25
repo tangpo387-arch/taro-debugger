@@ -44,7 +44,7 @@
       <div class="resize-handle resize-handle-left" (mousedown)="onResizeStart($event, 'left')"></div>
 
       <!-- Files Panel -->
-      <app-inspection-panel
+      <taro-panel
         label="Files"
         [(expanded)]="leftFilesExpanded"
         [resizable]="leftFilesExpanded && leftThreadsExpanded"
@@ -56,15 +56,15 @@
           [revealTrigger]="fileRevealTrigger"
           (fileSelected)="onFileSelected($event)">
         </app-file-explorer>
-      </app-inspection-panel>
+      </taro-panel>
 
       <!-- Threads Panel -->
-      <app-inspection-panel
+      <taro-panel
         label="Threads"
         [(expanded)]="leftThreadsExpanded"
         [style.flex]="leftThreadsExpanded ? '1 1 ' + leftThreadsHeight + 'px' : '0 0 32px'">
         <app-threads></app-threads>
-      </app-inspection-panel>
+      </taro-panel>
     </mat-sidenav>
 
     <!-- 3. Right sidenav: Breakpoints, Variables, Call Stack -->
@@ -73,27 +73,27 @@
       <div class="resize-handle resize-handle-right" (mousedown)="onResizeStart($event, 'right')"></div>
 
       <!-- Breakpoints Panel -->
-      <app-inspection-panel
+      <taro-panel
         label="Breakpoints"
         [(expanded)]="rightBreakpointsExpanded"
         [resizable]="rightBreakpointsExpanded && (rightVariablesExpanded || rightCallStackExpanded)"
         (resizeDrag)="onRightPanelResizeDrag($event, 'breakpoints')"
         [style.flex]="rightBreakpointsExpanded ? '1 1 ' + rightBreakpointsHeight + 'px' : '0 0 32px'">
         <app-breakpoints (requestReveal)="onBreakpointReveal($event)"></app-breakpoints>
-      </app-inspection-panel>
+      </taro-panel>
 
       <!-- Variables Panel -->
-      <app-inspection-panel
+      <taro-panel
         label="Variables"
         [(expanded)]="rightVariablesExpanded"
         [resizable]="rightVariablesExpanded && rightCallStackExpanded"
         (resizeDrag)="onRightPanelResizeDrag($event, 'variables')"
         [style.flex]="rightVariablesExpanded ? '1 1 ' + rightVariablesHeight + 'px' : '0 0 32px'">
         <app-variables></app-variables>
-      </app-inspection-panel>
+      </taro-panel>
 
       <!-- Call Stack Panel -->
-      <app-inspection-panel
+      <taro-panel
         label="Call Stack"
         [(expanded)]="rightCallStackExpanded"
         [style.flex]="rightCallStackExpanded ? '1 1 ' + rightCallStackHeight + 'px' : '0 0 32px'">
@@ -102,7 +102,7 @@
           [activeFrameId]="activeFrameId"
           (frameSelected)="onFrameClick($event)">
         </app-call-stack>
-      </app-inspection-panel>
+      </taro-panel>
     </mat-sidenav>
 
     <!-- 4. Center: Core Editor and Consoles -->

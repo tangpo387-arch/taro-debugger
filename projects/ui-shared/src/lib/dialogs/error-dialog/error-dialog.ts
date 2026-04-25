@@ -10,7 +10,7 @@ export interface ErrorDialogData {
 }
 
 @Component({
-  selector: 'app-error-dialog',
+  selector: 'taro-error-dialog',
   standalone: true,
   imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule],
   templateUrl: './error-dialog.html',

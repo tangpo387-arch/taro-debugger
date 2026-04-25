@@ -22,29 +22,32 @@ graph TD
         UI["<b>UI Layer</b><br/>DebuggerComponent (Angular)<br/>Pure UI logic: log, snackbar, binding"]
     end
 
-    subgraph Lib ["<b>@taro/dap-core Library</b>"]
-        Session["<b>Session Layer</b><br/>DapSessionService<br/>DAP session management, state machine, event handling"]
-        Transport["<b>Transport Layer</b><br/>DapTransportService (abstract)<br/>Low-level connection, binary parsing, message I/O"]
+    subgraph Libs ["<b>Internal Libraries</b>"]
+        direction TB
+        Shared["<b>UI Shared Layer</b><br/>@taro/ui-shared<br/>Generic components, tokens, dialogs"]
+        Session["<b>Session Layer</b><br/>DapSessionService<br/>DAP session management, state machine"]
+        Transport["<b>Transport Layer</b><br/>DapTransportService (abstract)<br/>Low-level connection, binary parsing"]
     end
 
+    UI --> Shared
     UI --> Session
+    Shared --> Session
     Session --> Transport
 
-    subgraph Implementations ["Transport Implementations (in Lib)"]
+    subgraph Implementations ["Transport Implementations"]
         direction LR
-        WSS["WebSocketTransportService<br/>"]
-        IPC["IpcTransportService<br/>"]
-        STS["(Future) SerialTransportService"]
+        WSS["WebSocketTransportService"]
+        IPC["IpcTransportService"]
     end
 
     Transport --> WSS
     Transport --> IPC
-    Transport -.-> STS
 
     style UI fill:#f9f9f9,stroke:#333,stroke-width:2px
+    style Shared fill:#f0f4c3,stroke:#827717,stroke-width:2px
     style Session fill:#e1f5fe,stroke:#01579b,stroke-width:2px
     style Transport fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    style Lib fill:#f0f4c3,stroke:#827717,stroke-width:2px,stroke-dasharray: 5 5
+    style Libs fill:#fff,stroke:#ccc,stroke-dasharray: 5 5
 ```
 
 **Design Principle**: Each layer depends only on the abstract interface of the layer below it. Cross-layer access or direct coupling to concrete implementations is prohibited.
@@ -59,7 +62,8 @@ The architectural documentation has been modularized. Please see the specific su
 | :--- | :--- | :--- |
 | **Transport Layer** | [architecture/transport-layer.md](architecture/transport-layer.md) | Low-level connection management, binary stream parsing, and extension interface. |
 | **Session Layer** | [architecture/session-layer.md](architecture/session-layer.md) | Execution State Machine, configuration flows, request pairing, and transport lifecycle. |
-| **UI Layer** | [architecture/ui-layer.md](architecture/ui-layer.md) | Dependency Injection constraints, UI rendering, logging architecture, and variable display caching. |
+| **UI Shared** | [ui-shared-architecture-spec.md](ui-shared-architecture-spec.md) | Centralized UI foundation (PanelComponent, ErrorDialog, Layout tokens). |
+| **UI Layer** | [architecture/ui-layer.md](architecture/ui-layer.md) | Dependency Injection constraints, UI rendering, logging architecture, and functional feature groups. |
 | **Visual Design** | [architecture/visual-design.md](architecture/visual-design.md) | Design Tokens, typography, density scaling, and strict layout spacing rules. |
 | **Error Handling** | [architecture/error-handling.md](architecture/error-handling.md) | Synthetic Event handling (`_transportError`, `_dapError`), failure detection, and recovery sequences. |
 | **Command Serialization** | [architecture/command-serialization.md](architecture/command-serialization.md) | Sync/cancel contract for control buttons, evaluate command, and call stack frame switch. |

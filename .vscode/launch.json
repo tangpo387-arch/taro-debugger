@@ -6,7 +6,7 @@
       "name": "ng serve",
       "type": "chrome",
       "request": "launch",
-      "preLaunchTask": "npm: start",
+      "preLaunchTask": "Cascading Serve",
       "url": "http://localhost:4200/"
     },
     {

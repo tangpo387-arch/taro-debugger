@@ -8,7 +8,7 @@ import { map, Subscription } from 'rxjs';
 
 import { DapAssemblyService, TaroDisassembledInstruction } from './dap-assembly.service';
 import { DapDisassembledInstruction } from '@taro/dap-core';
-import { LAYOUT_COMPACT_MQ } from '@taro/ui-editor';
+import { LAYOUT_COMPACT_MQ } from '@taro/ui-shared';
 
 @Component({
   selector: 'app-assembly-view',

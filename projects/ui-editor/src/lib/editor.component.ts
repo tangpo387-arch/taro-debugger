@@ -18,7 +18,7 @@ import { FormsModule } from '@angular/forms';
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { DapConfigService } from '@taro/dap-core';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { LAYOUT_COMPACT_MQ } from './layout.config';
+import { LAYOUT_COMPACT_MQ } from '@taro/ui-shared';
 /** Payload emitted when breakpoints change in the editor */
 export interface BreakpointChangeEvent {
   /** Absolute path of the source file whose breakpoints changed */
