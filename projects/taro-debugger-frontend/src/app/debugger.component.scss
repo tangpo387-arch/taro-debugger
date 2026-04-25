@@ -23,13 +23,46 @@
 .top-toolbar {
   flex-shrink: 0;
   z-index: 10;
-  background-color: var(--mat-sys-surface-container-low);
-  /* Border delegated to debugger-container */
+  background-color: var(--mat-sys-surface);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
 
   /* Use dynamic density for toolbar and touch targets */
   min-height: var(--sys-density-toolbar-height);
   height: var(--sys-density-toolbar-height);
   padding: 0 var(--sys-density-panel-padding);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  min-width: 0; // Allow shrinking
+}
+
+.toolbar-left {
+  flex: 1;
+  justify-content: flex-start;
+}
+
+.toolbar-center {
+  flex: 0 0 auto;
+}
+
+.toolbar-right {
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.divider-vertical {
+  width: 1px;
+  height: 24px;
+  background-color: var(--mat-sys-outline-variant);
+  margin: 0 4px;
 }
 
 /* Material Overrides for Toolbar Buttons
@@ -64,6 +97,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  &.active-toggle {
+    background-color: var(--mat-sys-secondary-container) !important;
+    color: var(--mat-sys-on-secondary-container) !important;
   }
 }
 

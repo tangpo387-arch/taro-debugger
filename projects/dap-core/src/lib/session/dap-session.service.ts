@@ -309,8 +309,13 @@ export class DapSessionService {
     }
     this.commandInFlightSubject.next(true);
     try {
-      // Note: threadId is currently hardcoded to 1, let DAP server decide (usually the stopped thread)
-      return await this.sendRequest('continue', { threadId: 1 });
+      const response = await this.sendRequest('continue', { threadId: 1 });
+      if (response.success) {
+        this.executionStateSubject.next('running');
+        this.stoppedThreadIdSubject.next(null);
+        this.stopReasonSubject.next(null);
+      }
+      return response;
     } finally {
       this.commandInFlightSubject.next(false);
     }
@@ -325,7 +330,13 @@ export class DapSessionService {
     }
     this.commandInFlightSubject.next(true);
     try {
-      return await this.sendRequest('next', { threadId: 1 });
+      const response = await this.sendRequest('next', { threadId: 1 });
+      if (response.success) {
+        this.executionStateSubject.next('running');
+        this.stoppedThreadIdSubject.next(null);
+        this.stopReasonSubject.next(null);
+      }
+      return response;
     } finally {
       this.commandInFlightSubject.next(false);
     }
@@ -340,7 +351,13 @@ export class DapSessionService {
     }
     this.commandInFlightSubject.next(true);
     try {
-      return await this.sendRequest('stepIn', { threadId: 1 });
+      const response = await this.sendRequest('stepIn', { threadId: 1 });
+      if (response.success) {
+        this.executionStateSubject.next('running');
+        this.stoppedThreadIdSubject.next(null);
+        this.stopReasonSubject.next(null);
+      }
+      return response;
     } finally {
       this.commandInFlightSubject.next(false);
     }
@@ -355,7 +372,13 @@ export class DapSessionService {
     }
     this.commandInFlightSubject.next(true);
     try {
-      return await this.sendRequest('stepOut', { threadId: 1 });
+      const response = await this.sendRequest('stepOut', { threadId: 1 });
+      if (response.success) {
+        this.executionStateSubject.next('running');
+        this.stoppedThreadIdSubject.next(null);
+        this.stopReasonSubject.next(null);
+      }
+      return response;
     } finally {
       this.commandInFlightSubject.next(false);
     }

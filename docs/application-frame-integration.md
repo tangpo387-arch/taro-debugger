@@ -33,8 +33,8 @@ A standard native menu hierarchy is implemented to offload secondary operations.
 | :--- | :--- | :--- |
 | **File** | New Debug Session, Close Session, Exit | `Ctrl+W` |
 | **Edit** | Undo, Redo, Cut, Copy, Paste, Select All | Standard |
-| **View** | Toggle Explorer, Toggle Inspection, Toggle Console, Reset Layout | `Ctrl+B`, `Ctrl+Shift+I`, `Ctrl+` ` |
-| **Debug** | Continue, Pause, Step Over, Step Into, Step Out, Restart, Stop | `F5`, `F6`, `F10`, `F11`, `Shift+F11`, `Shift+F5` |
+| **View** | Toggle Explorer, Toggle Inspection, Toggle Console, Reset Layout | `Ctrl+B`, `Ctrl+Alt+B`, `Ctrl+` ` |
+| **Debug** | Continue, Pause, Step Over, Step Into, Step Out, Restart, Stop | `F5`, `F6`, `F10`, `F11`, `Shift+F11`, `Cmd+Shift+F5`, `Shift+F5` |
 | **Help** | Documentation, About Taro | — |
 
 **Platform Specifics:**
@@ -50,32 +50,37 @@ The primary interaction hub, styled as a sharp, flush surface.
 - **Border**: `border-bottom: 1px solid var(--mat-sys-outline-variant)`
 - **Height**: `--sys-density-toolbar-height` (40px/48px)
 
-#### A. Sidebar Toggle (Left)
+#### A. Session Identity (Left)
 
-Icon button (`menu` or `menu_open`) to toggle the Left Sidenav.
+Displays the currently loaded executable path.
+- **Bidi Protection**: MUST include LRM (`\u200E`) and `&lrm;` for Unix paths.
 
 #### B. Debug Execution Controls (Center)
 
 The execution controls are horizontally centered in the toolbar. This section integrates a status indicator into the existing `DebugControlGroupComponent`.
 
 - **Status LED**: 6px dot at the far left providing high-frequency session feedback.
-  - **Tooltip**: MUST implement a dynamic `[title]` attribute reflecting the current text-based state (e.g., `"Paused"`, `"Running"`).
+  - **Tooltip**: Dynamic `[title]` reflecting current state.
   - `Running`: `var(--mat-sys-tertiary)`, 2s pulse.
   - `Paused`: `var(--mat-sys-secondary)`, static.
   - `Idle/Error`: `var(--mat-sys-outline)` / `var(--mat-sys-error)`, static/fast-pulse.
 
-#### C. Layout & Session Controls (Right)
+#### C. Layout Controls (Right)
 
-- **Panel Toggles**: Icons for Right Sidenav and Bottom Console visibility. Active state shows `primary` highlight.
-- **Close Session**: Disconnects the session and returns to `/setup`. (Visible in Web mode only; Electron users use the native menu).
+All panel visibility toggles are grouped here. 
+- **Visibility**: These buttons MUST be hidden in **Electron mode** as they are redundant with the native menu.
+- **Explorer Toggle**: Icon `menu`. Toggles the left sidebar.
+- **Inspection Toggle**: Icon `vertical_split`. Toggles the right sidebar.
+- **Console Toggle**: Icon `terminal`. Toggles the bottom console.
 
 ## Acceptance Criteria
 
 - [ ] Electron native menu is implemented and correctly calls `ActionID` events in the frontend.
 - [ ] Top toolbar background and borders match the "Flush IDE" visual standard.
 - [ ] Debug Execution Controls (buttons + LED) are horizontally centered.
+- [ ] **All layout toggle buttons (Explorer, Inspection, Console) are grouped in the right section.**
+- [ ] **All layout toggle buttons are hidden in Electron mode.**
+- [ ] **Toggle buttons and Native Menu items reflect the current panel visibility state (checked/active).**
+- [ ] **Inspection toggle shortcut is updated to `Ctrl+Alt+B` (Secondary Sidebar pattern).**
 - [ ] Status LED pulse animation is only active when `executionState` is `running` or `starting`.
-- [ ] Status LED implements a dynamic tooltip reflecting the current text-based state.
-- [ ] The redundant "State: <state>" label is removed from the bottom status bar to reduce UI clutter.
-- [ ] Close Session button is hidden in Electron mode and visible in Web mode.
-- [ ] Layout toggle buttons on the right correctly reflect the current visibility of the side/bottom panels.
+- [ ] **The redundant execution state text is completely removed from the bottom status bar.**

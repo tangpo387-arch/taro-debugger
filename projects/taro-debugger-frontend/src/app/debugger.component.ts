@@ -201,6 +201,10 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   /** Pixel height budget for the Call Stack panel when expanded (flex-basis). */
   public rightCallStackHeight: number = 150;
 
+  public rightVisible: boolean = true;
+  public consoleVisible: boolean = true;
+  public isElectron: boolean = !!(window as any).electronAPI;
+
   private readonly STORAGE_KEY = 'taro-debugger-layout-sizes';
 
   /**
@@ -325,6 +329,12 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         if (sizes.leftVisible !== undefined) {
           this.leftVisible = !!sizes.leftVisible;
         }
+        if (sizes.rightVisible !== undefined) {
+          this.rightVisible = !!sizes.rightVisible;
+        }
+        if (sizes.consoleVisible !== undefined) {
+          this.consoleVisible = !!sizes.consoleVisible;
+        }
         // Restore panel heights
         if (sizes.leftFilesHeight) this.leftFilesHeight = sizes.leftFilesHeight;
         if (sizes.leftThreadsHeight) this.leftThreadsHeight = sizes.leftThreadsHeight;
@@ -343,6 +353,8 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       right: this.rightWidth,
       bottom: this.consoleHeight,
       leftVisible: this.leftVisible,
+      rightVisible: this.rightVisible,
+      consoleVisible: this.consoleVisible,
       leftFilesHeight: this.leftFilesHeight,
       leftThreadsHeight: this.leftThreadsHeight,
       rightBreakpointsHeight: this.rightBreakpointsHeight,
@@ -388,6 +400,62 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public toggleLeftSidenav(): void {
     this.leftVisible = !this.leftVisible;
     this.savePersistedSizes();
+    this.updateElectronMenu('view.toggleExplorer', this.leftVisible);
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Toggle the visibility of the right sidebar (Breakpoints, Variables, Call Stack)
+   */
+  public toggleRightSidenav(): void {
+    this.rightVisible = !this.rightVisible;
+    this.savePersistedSizes();
+    this.updateElectronMenu('view.toggleInspection', this.rightVisible);
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Toggle the visibility of the bottom console panel
+   */
+  public toggleConsole(): void {
+    this.consoleVisible = !this.consoleVisible;
+    this.savePersistedSizes();
+    this.updateElectronMenu('view.toggleConsole', this.consoleVisible);
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Resets the layout to default sizes and visibility
+   */
+  public resetLayout(): void {
+    this.leftWidth = 250;
+    this.rightWidth = 300;
+    this.consoleHeight = 250;
+    this.leftVisible = true;
+    this.rightVisible = true;
+    this.consoleVisible = true;
+    this.leftFilesHeight = 200;
+    this.leftThreadsHeight = 100;
+    this.rightBreakpointsHeight = 100;
+    this.rightVariablesHeight = 200;
+    this.rightCallStackHeight = 150;
+    this.savePersistedSizes();
+
+    // Sync all menu items
+    this.updateElectronMenu('view.toggleExplorer', true);
+    this.updateElectronMenu('view.toggleInspection', true);
+    this.updateElectronMenu('view.toggleConsole', true);
+
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Sends an IPC message to the main process to update the native menu checkbox state.
+   */
+  private updateElectronMenu(id: string, checked: boolean): void {
+    if (this.isElectron) {
+      (window as any).electronAPI?.send('update-menu-state', { id, checked });
+    }
   }
 
   /**
@@ -897,6 +965,24 @@ export class DebuggerComponent implements OnInit, OnDestroy {
           case ActionID.DEBUG_RESTART: this.onRestart(); break;
           case ActionID.EDITOR_TOGGLE_BREAKPOINT:
             this.editorComponent?.toggleBreakpointAtCurrentPosition();
+            break;
+
+          case ActionID.VIEW_TOGGLE_EXPLORER: this.toggleLeftSidenav(); break;
+          case ActionID.VIEW_TOGGLE_INSPECTION: this.toggleRightSidenav(); break;
+          case ActionID.VIEW_TOGGLE_CONSOLE: this.toggleConsole(); break;
+          case ActionID.VIEW_RESET_LAYOUT: this.resetLayout(); break;
+
+          case ActionID.FILE_NEW_SESSION: this.goBack(); break;
+          case ActionID.FILE_CLOSE_SESSION: this.goBack(); break;
+          case ActionID.FILE_EXIT:
+            if (this.isElectron) {
+              (window as any).electronAPI.send('exit-app');
+            }
+            break;
+
+          case ActionID.HELP_DOCS: window.open('https://github.com/tangpo387-arch/taro-debugger/docs', '_blank'); break;
+          case ActionID.HELP_ABOUT:
+            this.snackBar.open('Taro Debugger v1.0.0-alpha', 'OK', { duration: 3000 });
             break;
         }
       });

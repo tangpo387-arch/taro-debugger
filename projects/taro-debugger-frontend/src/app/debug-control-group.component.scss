@@ -22,6 +22,69 @@
   padding: 2px 4px;
 }
 
+.status-led-container {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--mat-sys-surface-container-highest);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+  margin-right: 4px;
+  flex-shrink: 0;
+  cursor: default;
+  user-select: none;
+  /* Recessed socket effect */
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+  border: 0.5px solid var(--mat-sys-outline-variant);
+}
+
+.status-led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--mat-sys-outline);
+  flex-shrink: 0;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+
+  &.running {
+    background-color: var(--mat-sys-tertiary);
+    /* Active Bloom */
+    box-shadow: 0 0 8px var(--mat-sys-tertiary);
+    animation: led-pulse-running 2s infinite;
+  }
+
+  &.starting {
+    background-color: var(--mat-sys-tertiary);
+    box-shadow: 0 0 6px var(--mat-sys-tertiary);
+    animation: led-pulse-running 0.8s infinite;
+  }
+
+  &.stopped {
+    background-color: var(--mat-sys-secondary);
+    opacity: 0.8;
+  }
+
+  &.error {
+    background-color: var(--mat-sys-error);
+    box-shadow: 0 0 8px var(--mat-sys-error);
+    animation: led-pulse-error 0.5s infinite;
+  }
+}
+
+@keyframes led-pulse-running {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes led-pulse-error {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
 .control-segment {
   display: flex;
   flex-direction: row;

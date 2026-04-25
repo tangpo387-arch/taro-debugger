@@ -2,37 +2,50 @@
 <div class="app-layout">
 
   <!-- 1. Top toolbar and navigation -->
-  <mat-toolbar color="primary" class="top-toolbar">
-    <button mat-icon-button (click)="toggleLeftSidenav()" title="Toggle File Explorer" class="sidebar-toggle-btn">
-      <mat-icon>{{ leftVisible ? 'menu_open' : 'menu' }}</mat-icon>
-    </button>
-    <span class="brand-title">Taro</span>
-    <!-- 
-      Show current loaded executable path from configuration.
-      CRITICAL: DO NOT REMOVE \u200E (LRM) or &lrm;. These invisible characters 
-      prevent the Unicode Bidi algorithm from misplacing leading '/' characters 
-      due to 'direction: rtl' in SCSS. Removing them will break path rendering.
-    -->
-    <span class="loaded-file" [title]="'\u200E' + (currentConfig.executablePath || 'No file loaded')">
-      &lrm;{{ currentConfig.executablePath || 'No file loaded' }}
-    </span>
+  <mat-toolbar class="top-toolbar">
+    <div class="toolbar-section toolbar-left">
+      @if (!isElectron) {
+        <span class="brand-title">Taro</span>
+        <div class="divider-vertical"></div>
+      }
+      <!-- 
+        Show current loaded executable path from configuration.
+        CRITICAL: DO NOT REMOVE \u200E (LRM) or &lrm;. These invisible characters 
+        prevent the Unicode Bidi algorithm from misplacing leading '/' characters 
+        due to 'direction: rtl' in SCSS. Removing them will break path rendering.
+      -->
+      <span class="loaded-file" [title]="'\u200E' + (currentConfig.executablePath || 'No file loaded')">
+        &lrm;{{ currentConfig.executablePath || 'No file loaded' }}
+      </span>
+    </div>
 
-    <span class="spacer"></span>
+    <div class="toolbar-section toolbar-center">
+      <!-- Debug control buttons -->
+      <app-debug-control-group 
+        [activeTabIndex]="activeTabIndex"
+        (restart)="onRestart()" 
+        (stop)="onStop()"
+        (stepInstructionTab)="onStepInstructionTab($event)">
+      </app-debug-control-group>
+    </div>
 
-    <!-- Debug control buttons -->
-    <app-debug-control-group 
-      [activeTabIndex]="activeTabIndex"
-      (restart)="onRestart()" 
-      (stop)="onStop()"
-      (stepInstructionTab)="onStepInstructionTab($event)">
-    </app-debug-control-group>
-
-    <span class="spacer"></span>
-
-    <!-- Back to setup settings button -->
-    <button mat-icon-button (click)="goBack()" title="End Session (Return to Setup)">
-      <mat-icon>logout</mat-icon>
-    </button>
+    <div class="toolbar-section toolbar-right">
+      @if (!isElectron) {
+        <button mat-icon-button (click)="toggleLeftSidenav()" [title]="(leftVisible ? 'Hide' : 'Show') + ' File Explorer'" [class.active-toggle]="leftVisible">
+          <mat-icon>menu</mat-icon>
+        </button>
+        <button mat-icon-button (click)="toggleRightSidenav()" [title]="(rightVisible ? 'Hide' : 'Show') + ' Inspection Panels'" [class.active-toggle]="rightVisible">
+          <mat-icon>vertical_split</mat-icon>
+        </button>
+        <button mat-icon-button (click)="toggleConsole()" [title]="(consoleVisible ? 'Hide' : 'Show') + ' Console'" [class.active-toggle]="consoleVisible">
+          <mat-icon>terminal</mat-icon>
+        </button>
+        <div class="divider-vertical"></div>
+        <button mat-icon-button (click)="goBack()" title="End Session (Return to Setup)">
+          <mat-icon>logout</mat-icon>
+        </button>
+      }
+    </div>
   </mat-toolbar>
 
   <!-- Core layout container: Sidenavs and main content area -->
@@ -80,7 +93,7 @@
     </mat-sidenav>
 
     <!-- 3. Right sidenav: Breakpoints, Variables, Call Stack -->
-    <mat-sidenav #rightSidenav mode="side" opened position="end" class="sidenav-right" [style.width.px]="rightWidth">
+    <mat-sidenav #rightSidenav mode="side" [opened]="rightVisible" position="end" class="sidenav-right" [style.width.px]="rightWidth">
       <!-- Right Resize Handle -->
       <div class="resize-handle resize-handle-right" (mousedown)="onResizeStart($event, 'right')"></div>
 
@@ -136,11 +149,13 @@
       </div>
 
       <!-- Bottom Consoles Area — rendered by LogViewerComponent -->
-      <div class="consoles-container" [style.height.px]="consoleHeight">
-        <!-- Bottom Resize Handle -->
-        <div class="resize-handle resize-handle-bottom" (mousedown)="onResizeStart($event, 'bottom')"></div>
-        <taro-log-viewer></taro-log-viewer>
-      </div>
+      @if (consoleVisible) {
+        <div class="consoles-container" [style.height.px]="consoleHeight">
+          <!-- Bottom Resize Handle -->
+          <div class="resize-handle resize-handle-bottom" (mousedown)="onResizeStart($event, 'bottom')"></div>
+          <taro-log-viewer></taro-log-viewer>
+        </div>
+      }
 
       <!-- Bottom Status Bar -->
       <footer class="status-bar">
@@ -155,9 +170,6 @@
           }
         </div>
         <span class="spacer"></span>
-        <div class="execution-state">
-          State: {{ executionState | titlecase }}
-        </div>
       </footer>
 
     </mat-sidenav-content>

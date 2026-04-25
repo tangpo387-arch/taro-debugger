@@ -182,6 +182,24 @@ describe('DapSessionService', () => {
       (service as any).handleIncomingTransportComplete();
       expect((service as any).executionStateSubject.value).toBe('error');
     });
+
+    it('should optimistically transition to running upon successful continue request', async () => {
+      (service as any).transport = mockTransport;
+      (service as any).executionStateSubject.next('stopped');
+      
+      const promise = service.continue();
+      
+      // Simulate successful response (request_seq 1)
+      (service as any).handleIncomingMessage({
+        type: 'response',
+        request_seq: 1,
+        success: true,
+        command: 'continue'
+      });
+      
+      await promise;
+      expect((service as any).executionStateSubject.value).toBe('running');
+    });
   });
 
   describe('Command Serialization (R-CS1)', () => {

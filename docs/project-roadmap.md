@@ -244,7 +244,7 @@ graph LR
     style WI_77 fill:#cbd5e1,stroke:#475569
     style WI_78 fill:#cbd5e1,stroke:#475569
     style WI_80 fill:#cbd5e1,stroke:#000,stroke-width:2.5px
-    style WI_81 fill:#cbd5e1,stroke:#475569
+    style WI_81 fill:#cbd5e1,stroke:#000,stroke-width:2.5px
 ```
 
 ## Feature Groups

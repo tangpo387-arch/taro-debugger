@@ -9,7 +9,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
    * Fire-and-forget IPC message sending to the main process.
    */
   send: (channel: string, data: unknown): void => {
-    const validChannels = ['dap-request'];
+    const validChannels = ['dap-request', 'exit-app', 'update-menu-state'];
     if (validChannels.includes(channel)) {
       ipcRenderer.send(channel, data);
     }
@@ -19,7 +19,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
    * Universal listener for messages coming from the main process.
    */
   on: (channel: string, func: (...args: unknown[]) => void): (() => void) => {
-    const validChannels = ['dap-message', 'dap-error', 'dap-closed'];
+    const validChannels = ['dap-message', 'dap-error', 'dap-closed', 'menu-action'];
     if (validChannels.includes(channel)) {
       // Deliberately strip event as it includes sender
       const subscription = (_event: unknown, ...args: unknown[]) => func(...args);

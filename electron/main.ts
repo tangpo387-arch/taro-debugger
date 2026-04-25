@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, MenuItemConstructorOptions } from 'electron';
 import * as path from 'path';
 
 let mainWindow: BrowserWindow | null = null;
@@ -37,6 +37,193 @@ function createWindow() {
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
+
+  createMenu();
+}
+
+function createMenu() {
+  const isMac = process.platform === 'darwin';
+
+  const template: MenuItemConstructorOptions[] = [
+    // { role: 'appMenu' }
+    ...(isMac ? [{
+      label: app.name,
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        { role: 'services' },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideOthers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' }
+      ]
+    }] as MenuItemConstructorOptions[] : []),
+    // { role: 'fileMenu' }
+    {
+      label: 'File',
+      submenu: [
+        {
+          label: 'New Debug Session',
+          click: () => mainWindow?.webContents.send('menu-action', 'file.newSession')
+        },
+        {
+          label: 'Close Session',
+          accelerator: 'CmdOrCtrl+W',
+          click: () => mainWindow?.webContents.send('menu-action', 'file.closeSession')
+        },
+        { type: 'separator' },
+        isMac ? { role: 'close' } : { role: 'quit' }
+      ]
+    },
+    // { role: 'editMenu' }
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        ...(isMac ? [
+          { role: 'delete' },
+          { role: 'selectAll' },
+          { type: 'separator' },
+          {
+            label: 'Speech',
+            submenu: [
+              { role: 'startSpeaking' },
+              { role: 'stopSpeaking' }
+            ]
+          }
+        ] : [
+          { role: 'delete' },
+          { type: 'separator' },
+          { role: 'selectAll' }
+        ])
+      ] as MenuItemConstructorOptions[]
+    },
+    // { role: 'viewMenu' }
+    {
+      label: 'View',
+      submenu: [
+        {
+          id: 'view.toggleExplorer',
+          label: 'Toggle Explorer',
+          type: 'checkbox',
+          checked: true,
+          accelerator: 'CmdOrCtrl+B',
+          click: (menuItem) => mainWindow?.webContents.send('menu-action', 'view.toggleExplorer', menuItem.checked)
+        },
+        {
+          id: 'view.toggleInspection',
+          label: 'Toggle Inspection',
+          type: 'checkbox',
+          checked: true,
+          accelerator: 'CmdOrCtrl+Alt+B',
+          click: (menuItem) => mainWindow?.webContents.send('menu-action', 'view.toggleInspection', menuItem.checked)
+        },
+        {
+          id: 'view.toggleConsole',
+          label: 'Toggle Console',
+          type: 'checkbox',
+          checked: true,
+          accelerator: 'CmdOrCtrl+`',
+          click: (menuItem) => mainWindow?.webContents.send('menu-action', 'view.toggleConsole', menuItem.checked)
+        },
+        {
+          label: 'Reset Layout',
+          click: () => mainWindow?.webContents.send('menu-action', 'view.resetLayout')
+        },
+        { type: 'separator' },
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
+    },
+    {
+      label: 'Debug',
+      submenu: [
+        {
+          label: 'Continue',
+          accelerator: 'F5',
+          click: () => mainWindow?.webContents.send('menu-action', 'debug.continue')
+        },
+        {
+          label: 'Pause',
+          accelerator: 'F6',
+          click: () => mainWindow?.webContents.send('menu-action', 'debug.pause')
+        },
+        { type: 'separator' },
+        {
+          label: 'Step Over',
+          accelerator: 'F10',
+          click: () => mainWindow?.webContents.send('menu-action', 'debug.stepOver')
+        },
+        {
+          label: 'Step Into',
+          accelerator: 'F11',
+          click: () => mainWindow?.webContents.send('menu-action', 'debug.stepInto')
+        },
+        {
+          label: 'Step Out',
+          accelerator: 'Shift+F11',
+          click: () => mainWindow?.webContents.send('menu-action', 'debug.stepOut')
+        },
+        { type: 'separator' },
+        {
+          label: 'Restart',
+          accelerator: 'CmdOrCtrl+Shift+F5',
+          click: () => mainWindow?.webContents.send('menu-action', 'debug.restart')
+        },
+        {
+          label: 'Stop',
+          accelerator: 'Shift+F5',
+          click: () => mainWindow?.webContents.send('menu-action', 'debug.stop')
+        }
+      ]
+    },
+    // { role: 'windowMenu' }
+    {
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' },
+        { role: 'zoom' },
+        ...(isMac ? [
+          { type: 'separator' },
+          { role: 'front' },
+          { type: 'separator' },
+          { role: 'window' }
+        ] : [
+          { role: 'close' }
+        ])
+      ] as MenuItemConstructorOptions[]
+    },
+    {
+      role: 'help',
+      submenu: [
+        {
+          label: 'Documentation',
+          click: () => mainWindow?.webContents.send('menu-action', 'help.docs')
+        },
+        {
+          label: 'About Taro',
+          click: () => mainWindow?.webContents.send('menu-action', 'help.about')
+        }
+      ]
+    }
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
 }
 
 // ── Lifecycle Events ──────────────────────────────────────────────
@@ -178,5 +365,17 @@ ipcMain.on('dap-request', (event, request) => {
   if (dapWs && dapWs.readyState === 1) { // OPEN
     const blob = new Blob([header, payloadBytes], { type: 'application/json' });
     dapWs.send(blob);
+  }
+});
+
+ipcMain.on('exit-app', () => {
+  app.quit();
+});
+
+ipcMain.on('update-menu-state', (_event, { id, checked }) => {
+  const menu = Menu.getApplicationMenu();
+  const item = menu?.getMenuItemById(id);
+  if (item) {
+    item.checked = checked;
   }
 });

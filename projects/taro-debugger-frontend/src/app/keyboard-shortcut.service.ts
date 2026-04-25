@@ -14,6 +14,21 @@ export enum ActionID {
   DEBUG_RESTART = 'debug.restart',
   DEBUG_STOP = 'debug.stop',
   EDITOR_TOGGLE_BREAKPOINT = 'editor.toggleBreakpoint',
+
+  // View Toggles
+  VIEW_TOGGLE_EXPLORER = 'view.toggleExplorer',
+  VIEW_TOGGLE_INSPECTION = 'view.toggleInspection',
+  VIEW_TOGGLE_CONSOLE = 'view.toggleConsole',
+  VIEW_RESET_LAYOUT = 'view.resetLayout',
+
+  // File Operations
+  FILE_NEW_SESSION = 'file.newSession',
+  FILE_CLOSE_SESSION = 'file.closeSession',
+  FILE_EXIT = 'file.exit',
+
+  // Help
+  HELP_DOCS = 'help.docs',
+  HELP_ABOUT = 'help.about',
 }
 
 /**
@@ -32,6 +47,21 @@ export class KeyboardShortcutService {
 
   constructor() {
     this.initGlobalListener();
+    this.initElectronListener();
+  }
+
+  /**
+   * Listens for menu actions sent from the Electron main process.
+   */
+  private initElectronListener(): void {
+    const electron = (window as any).electronAPI;
+    if (electron?.on) {
+      electron.on('menu-action', (actionId: ActionID) => {
+        this.ngZone.run(() => {
+          this.actionSubject.next(actionId);
+        });
+      });
+    }
   }
 
   /**
@@ -87,6 +117,17 @@ export class KeyboardShortcutService {
       if (isShift) return ActionID.DEBUG_STEP_OUT;
       return ActionID.DEBUG_STEP_INTO;
     }
+
+    // View Toggles
+    const isPureCtrlOrMeta = (isCtrl || isMeta) && !isShift && !event.altKey;
+    const isCtrlAltOrMetaAlt = (isCtrl || isMeta) && event.altKey && !isShift;
+
+    if (isCtrlAltOrMetaAlt && key.toLowerCase() === 'b') return ActionID.VIEW_TOGGLE_INSPECTION;
+    if (isPureCtrlOrMeta && key.toLowerCase() === 'b') return ActionID.VIEW_TOGGLE_EXPLORER;
+    if ((isCtrl || isMeta) && key === '`') return ActionID.VIEW_TOGGLE_CONSOLE;
+
+    // File Operations
+    if ((isCtrl || isMeta) && key.toLowerCase() === 'w') return ActionID.FILE_CLOSE_SESSION;
 
     return null;
   }

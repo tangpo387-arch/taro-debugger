@@ -1,4 +1,16 @@
 <div class="control-group-container">
+  <!-- Status LED indicator -->
+  <div class="status-led-container" [title]="(executionState$ | async) | titlecase">
+    <span class="status-led" 
+          [class.running]="isRunning$ | async" 
+          [class.starting]="isStarting$ | async"
+          [class.stopped]="isStopped$ | async"
+          [class.error]="isError$ | async">
+    </span>
+  </div>
+
+  <div class="divider"></div>
+
   <!-- Group 1: Execution Control (Play/Pause) -->
   <div class="control-segment group-execution">
     @if (isRunning$ | async) {

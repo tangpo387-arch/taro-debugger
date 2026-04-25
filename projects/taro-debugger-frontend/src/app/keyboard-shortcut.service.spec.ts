@@ -127,6 +127,55 @@ describe('KeyboardShortcutService', () => {
       // Assert
       expect(await actionPromise).toBe(ActionID.DEBUG_STEP_OUT);
     });
+
+    /** Layout Toggles: Ensure B-related shortcuts map correctly. */
+    it('should map Ctrl+B to VIEW_TOGGLE_EXPLORER', async () => {
+      // Arrange
+      const event = new KeyboardEvent('keydown', { key: 'b', ctrlKey: true });
+      const actionPromise = firstValueFrom(service.onAction$);
+
+      // Act
+      window.dispatchEvent(event);
+
+      // Assert
+      expect(await actionPromise).toBe(ActionID.VIEW_TOGGLE_EXPLORER);
+    });
+
+    it('should map Ctrl+Alt+B to VIEW_TOGGLE_INSPECTION', async () => {
+      // Arrange
+      const event = new KeyboardEvent('keydown', { key: 'b', ctrlKey: true, altKey: true });
+      const actionPromise = firstValueFrom(service.onAction$);
+
+      // Act
+      window.dispatchEvent(event);
+
+      // Assert
+      expect(await actionPromise).toBe(ActionID.VIEW_TOGGLE_INSPECTION);
+    });
+
+    it('should map Meta+B to VIEW_TOGGLE_EXPLORER (macOS)', async () => {
+      // Arrange
+      const event = new KeyboardEvent('keydown', { key: 'b', metaKey: true });
+      const actionPromise = firstValueFrom(service.onAction$);
+
+      // Act
+      window.dispatchEvent(event);
+
+      // Assert
+      expect(await actionPromise).toBe(ActionID.VIEW_TOGGLE_EXPLORER);
+    });
+
+    it('should map Meta+Alt+B to VIEW_TOGGLE_INSPECTION (macOS)', async () => {
+      // Arrange
+      const event = new KeyboardEvent('keydown', { key: 'b', metaKey: true, altKey: true });
+      const actionPromise = firstValueFrom(service.onAction$);
+
+      // Act
+      window.dispatchEvent(event);
+
+      // Assert
+      expect(await actionPromise).toBe(ActionID.VIEW_TOGGLE_INSPECTION);
+    });
   });
 
   describe('NG Zone Optimization', () => {

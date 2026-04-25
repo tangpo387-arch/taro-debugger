@@ -46,3 +46,6 @@ Fully isolated tests for `DapSessionService`. Focuses on DAP session lifecycle, 
   * Verify that a second call to `disconnect()` while the first is in-flight returns immediately.
   * Verify that `terminate()` returns immediately without sending a DAP request if the execution state is already `terminated`, `idle`, or `error`.
   * Verify that `terminate()` transitions the state to `terminated` (or `idle` via fallback) to block subsequent calls.
+
+* **Optimistic Execution State Transitions**
+  * Verify that control commands (`continue`, `next`, `stepIn`, `stepOut`) transition the execution state to `running` immediately upon a successful DAP response, even if no redundant `continued` event is received.
