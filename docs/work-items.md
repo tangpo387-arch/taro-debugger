@@ -21,3 +21,55 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - Bidirectional data forwarding: WebSocket → DAP `stdin`; DAP `stdout` → WebSocket back to frontend
   - Handle process termination and resource cleanup
 - **Dependencies**: none
+
+## File Explorer
+
+### WI-82: Optimize File Explorer and Implement Virtual Root
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Consolidate file explorer headers to save space and implement a virtual root node for improved source tree navigation.
+- **Details**:
+  - Relocate 'Collapse All' button to taro-panel actions slot
+  - Remove redundant internal FileExplorer header
+  - Implement Virtual Root node in the tree using sourcePath basename
+  - Add 'External Libraries' group for sources outside the root
+  - [Test] Verify header button collapses tree
+  - [Test] Verify Virtual Root expands by default
+  - [Test] Verify tooltip displays full absolute path
+  - [Doc] docs/file-explorer-redesign.md
+- **Dependencies**: none
+
+## UI System Design
+
+### WI-80: Standardize Empty States
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Unify the visual pattern for empty data states across all functional panels using a reusable TaroEmptyStateComponent
+- **Details**:
+  - Create TaroEmptyStateComponent in @taro/ui-shared
+  - Integrate into VariablesComponent
+  - Integrate into ThreadsComponent
+  - Integrate into BreakpointsComponent
+  - Integrate into CallStackComponent
+  - Integrate into FileExplorerComponent
+  - [Test] Verify centered alignment and icon/text visibility in all 5 panels
+  - [Doc] docs/empty-state-standardization.md
+  - [Doc] Update architecture/visual-design.md with Empty State usage rules for future components
+- **Dependencies**: none
+
+### WI-81: Application Frame & Global Controls Integration
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Implement a unified Electron native menu bar and a refined Angular top control bar following Flush IDE aesthetics.
+- **Details**:
+  - Implement Electron native menu template (Roles, ActionID mapping)
+  - Update DebuggerComponent top toolbar (Center execution controls)
+  - Integrate Status LED into DebugControlGroupComponent (M3 tokens, Tooltip)
+  - Implement platform-specific visibility for 'Close Session' button
+  - Remove redundant 'State' label from bottom status bar
+  - [Test] Verify menu shortcuts and footer state removal
+  - |[Doc] docs/application-frame-integration.md
+- **Dependencies**: none

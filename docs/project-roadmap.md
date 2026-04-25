@@ -57,6 +57,7 @@ graph LR
     WI_16["WI-16 Left Sidenav File Tree UI"]
     WI_33["WI-33 Implement Source Content LRU Cache"]
     WI_34["WI-34 Manage Source Cache Lifecycle and Verification"]
+    WI_82["WI-82 Optimize File Explorer and Implement Virtual Root"]
     WI_35["WI-35 Migrate Work-Item Data Files to Group-Definition Schema"]
     WI_36["WI-36 Update Scripts for Group-Definition Schema"]
     WI_37["WI-37 Update Documentation for Group-Definition Schema"]
@@ -87,6 +88,8 @@ graph LR
     WI_76["WI-76 Design Tokens & Dark Mode Support"]
     WI_77["WI-77 Generic Dialog & Notification Framework"]
     WI_78["WI-78 A11y Audit & Interaction Hardening"]
+    WI_80["WI-80 Standardize Empty States"]
+    WI_81["WI-81 Application Frame & Global Controls Integration"]
     WI_11 --> WI_19
     WI_05 --> WI_20
     WI_39 --> WI_38
@@ -205,10 +208,11 @@ graph LR
     style WI_70 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_73 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_79 fill:#f472b6,stroke:#db2777
-    style WI_15 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_16 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_33 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_34 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_15 fill:#facc15,stroke:#000,stroke-width:2.5px
+    style WI_16 fill:#facc15,stroke:#000,stroke-width:2.5px
+    style WI_33 fill:#facc15,stroke:#000,stroke-width:2.5px
+    style WI_34 fill:#facc15,stroke:#000,stroke-width:2.5px
+    style WI_82 fill:#facc15,stroke:#ca8a04
     style WI_35 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_36 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_37 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
@@ -239,6 +243,8 @@ graph LR
     style WI_76 fill:#cbd5e1,stroke:#475569
     style WI_77 fill:#cbd5e1,stroke:#475569
     style WI_78 fill:#cbd5e1,stroke:#475569
+    style WI_80 fill:#cbd5e1,stroke:#475569
+    style WI_81 fill:#cbd5e1,stroke:#475569
 ```
 
 ## Feature Groups
@@ -249,7 +255,7 @@ graph LR
 | DAP Transport Layer | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%234ade80'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#4ade80"/> `#4ade80` | 🔵 Active |
 | Debug Controls | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f97316'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f97316"/> `#f97316` | 💎 Stabilized |
 | Editor Features | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23a78bfa'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#a78bfa"/> `#a78bfa` | 💎 Stabilized |
-| File Explorer | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23facc15'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#facc15"/> `#facc15` | 💎 Stabilized |
+| File Explorer | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23facc15'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#facc15"/> `#facc15` | 🔵 Active |
 | Execution Context Inspection | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f472b6'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f472b6"/> `#f472b6` | 🔵 Active |
 | Console & Status Bar | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%232dd4bf'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#2dd4bf"/> `#2dd4bf` | 💎 Stabilized |
 | Electron Desktop Mode | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%2394a3b8'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#94a3b8"/> `#94a3b8` | 💎 Stabilized |

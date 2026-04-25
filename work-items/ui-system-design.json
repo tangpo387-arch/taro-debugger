@@ -131,6 +131,58 @@
         "created": "2026-04-24",
         "created_by": "Antigravity-Agent"
       }
+    },
+    {
+      "id": "WI-80",
+      "title": "Standardize Empty States",
+      "featureGroup": "UI System Design",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Unify the visual pattern for empty data states across all functional panels using a reusable TaroEmptyStateComponent",
+      "details": [
+        "Create TaroEmptyStateComponent in @taro/ui-shared",
+        "Integrate into VariablesComponent",
+        "Integrate into ThreadsComponent",
+        "Integrate into BreakpointsComponent",
+        "Integrate into CallStackComponent",
+        "Integrate into FileExplorerComponent",
+        "[Test] Verify centered alignment and icon/text visibility in all 5 panels",
+        "[Doc] docs/empty-state-standardization.md",
+        "[Doc] Update architecture/visual-design.md with Empty State usage rules for future components"
+      ],
+      "timeline": {
+        "created": "2026-04-25",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-81",
+      "title": "Application Frame & Global Controls Integration",
+      "featureGroup": "UI System Design",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Implement a unified Electron native menu bar and a refined Angular top control bar following Flush IDE aesthetics.",
+      "details": [
+        "Implement Electron native menu template (Roles, ActionID mapping)",
+        "Update DebuggerComponent top toolbar (Center execution controls)",
+        "Integrate Status LED into DebugControlGroupComponent (M3 tokens, Tooltip)",
+        "Implement platform-specific visibility for 'Close Session' button",
+        "Remove redundant 'State' label from bottom status bar",
+        "[Test] Verify menu shortcuts and footer state removal",
+        "|[Doc] docs/application-frame-integration.md"
+      ],
+      "timeline": {
+        "created": "2026-04-25",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }

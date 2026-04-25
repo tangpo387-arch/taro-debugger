@@ -103,6 +103,32 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-14"
       }
+    },
+    {
+      "id": "WI-82",
+      "title": "Optimize File Explorer and Implement Virtual Root",
+      "featureGroup": "File Explorer",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Consolidate file explorer headers to save space and implement a virtual root node for improved source tree navigation.",
+      "details": [
+        "Relocate 'Collapse All' button to taro-panel actions slot",
+        "Remove redundant internal FileExplorer header",
+        "Implement Virtual Root node in the tree using sourcePath basename",
+        "Add 'External Libraries' group for sources outside the root",
+        "[Test] Verify header button collapses tree",
+        "[Test] Verify Virtual Root expands by default",
+        "[Test] Verify tooltip displays full absolute path",
+        "[Doc] docs/file-explorer-redesign.md"
+      ],
+      "timeline": {
+        "created": "2026-04-25",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }
