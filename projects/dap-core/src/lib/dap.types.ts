@@ -24,6 +24,11 @@ export interface DapEvent extends DapMessage {
   body?: any;
 }
 
+export interface DapThread {
+  id: number;
+  name: string;
+}
+
 /** 
  * Log Categories used to classify output messages:
  * - 'console': Standard Debugger console messages.

@@ -55,6 +55,17 @@ export class DapSessionService {
   private readonly breakpointsSubject = new BehaviorSubject<Map<string, VerifiedBreakpoint[]>>(new Map(this.breakpointsMap));
   public readonly breakpoints$ = this.breakpointsSubject.asObservable();
 
+  private readonly threadsSubject = new BehaviorSubject<import('../dap.types').DapThread[]>([]);
+  public readonly threads$ = this.threadsSubject.asObservable();
+
+  private readonly activeThreadIdSubject = new BehaviorSubject<number | null>(null);
+  public readonly activeThreadId$ = this.activeThreadIdSubject.asObservable();
+
+  private readonly stoppedThreadIdSubject = new BehaviorSubject<number | null>(null);
+  public readonly stoppedThreadId$ = this.stoppedThreadIdSubject.asObservable();
+
+  private readonly stopReasonSubject = new BehaviorSubject<string | null>(null);
+  public readonly stopReason$ = this.stopReasonSubject.asObservable();
 
   public capabilities: any = {};
   private transport?: DapTransportService;
@@ -250,6 +261,10 @@ export class DapSessionService {
     this.connectionStatusSubject.next(false);
     this.executionStateSubject.next('idle');
     this.commandInFlightSubject.next(false);
+    this.threadsSubject.next([]);
+    this.activeThreadIdSubject.next(null);
+    this.stoppedThreadIdSubject.next(null);
+    this.stopReasonSubject.next(null);
 
     // Clear breakpoint state on session reset
     this.breakpointsMap.clear();
@@ -514,6 +529,43 @@ export class DapSessionService {
   }
 
   /**
+   * Fetch threads and update the subjects. Called internally on 'stopped'.
+   */
+  async fetchThreads(): Promise<void> {
+    try {
+      const response = await this.threads();
+      if (response.success && response.body?.threads) {
+        this.threadsSubject.next(response.body.threads);
+        const currentActive = this.activeThreadIdSubject.value;
+        const threadsList = response.body.threads;
+        if (threadsList.length > 0 && (currentActive === null || !threadsList.some((t: any) => t.id === currentActive))) {
+          this.activeThreadIdSubject.next(threadsList[0].id);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to fetch threads', err);
+      this.threadsSubject.next([]);
+    }
+  }
+
+  /**
+   * Set the current active thread and trigger a stackTrace refresh
+   */
+  setCurrentThread(threadId: number): void {
+    if (this.activeThreadIdSubject.value === threadId) {
+      return;
+    }
+    this.activeThreadIdSubject.next(threadId);
+    // Emitting a synthetic stopped event to trigger debugger.component.ts to reload the call stack
+    this.eventSubject.next({
+      seq: 0,
+      type: 'event',
+      event: 'stopped',
+      body: { threadId }
+    });
+  }
+
+  /**
    * Get stack trace of a specific thread
    * @param threadId Thread ID
    */
@@ -760,17 +812,28 @@ export class DapSessionService {
       case 'stopped':
         this.executionStateSubject.next('stopped');
         this.commandInFlightSubject.next(false);
+        const stoppedThreadId = event.body?.threadId;
+        if (stoppedThreadId !== undefined) {
+          this.activeThreadIdSubject.next(stoppedThreadId);
+          this.stoppedThreadIdSubject.next(stoppedThreadId);
+        }
+        this.stopReasonSubject.next(event.body?.description || event.body?.reason || 'paused');
+        void this.fetchThreads();
         break;
 
       case 'continued':
         this.executionStateSubject.next('running');
         this.commandInFlightSubject.next(false);
+        this.stoppedThreadIdSubject.next(null);
+        this.stopReasonSubject.next(null);
         break;
 
       case 'terminated':
       case 'exited':
         this.executionStateSubject.next('terminated');
         this.commandInFlightSubject.next(false);
+        this.stoppedThreadIdSubject.next(null);
+        this.stopReasonSubject.next(null);
         break;
 
       case 'breakpoint': {
