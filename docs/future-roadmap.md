@@ -18,6 +18,14 @@ audience: [Product_Architect, Lead_Engineer, Human Engineer]
   - Ensure disconnect() cycle cleans up stale RxJS subscriptions
   - Modify startSession() initialization sequence to accept and merge this cached _restart data
 
+### WI-30: Local Variable Modification (Status: proposed)
+
+- **Description**: Allow users to modify the values of local variables during a stopped debug session.
+- **Details**:
+  - Implement a setVariable DAP request within DapSessionService
+  - Update app-variables tree component UI to support inline editing
+  - Ensure updated values correctly sync back
+
 ### WI-74: Standardization of UI Patterns (Status: pending)
 
 - **Description**: Consolidate duplicated UI components, SCSS tokens, and shared Angular utilities into a unified internal library.
@@ -54,11 +62,3 @@ audience: [Product_Architect, Lead_Engineer, Human Engineer]
   - Standardize keyboard shortcut overlays and focus-trap logic
   - Implement screen-reader friendly labels for interactive icons
   - [Test] Pass accessibility scan with 0 critical violations
-
-### WI-30: Local Variable Modification (Status: proposed)
-
-- **Description**: Allow users to modify the values of local variables during a stopped debug session.
-- **Details**:
-  - Implement a setVariable DAP request within DapSessionService
-  - Update app-variables tree component UI to support inline editing
-  - Ensure updated values correctly sync back

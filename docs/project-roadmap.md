@@ -2,7 +2,7 @@
 title: Project Roadmap & Dependency Map
 scope: milestones, dependencies, architecture-tracking
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer, Human Engineer]
-last_updated: 2026-04-24
+last_updated: 2026-04-25
 ---
 
 # Project Roadmap & Dependency Map
@@ -44,6 +44,14 @@ graph LR
     WI_26["WI-26 Setup Page Separation"]
     WI_24["WI-24 Electron IPC Transport Layer (`IpcTransportService`)"]
     WI_25["WI-25 Electron Local File System Access"]
+    WI_17["WI-17 Call Stack Panel"]
+    WI_55["WI-55 Variables Data State Management"]
+    WI_56["WI-56 Variables Tree UI Component"]
+    WI_30["WI-30 Local Variable Modification"]
+    WI_42["WI-42 Command Serialization: Frame Switch Cancel-and-Replace"]
+    WI_69["WI-69 UI Layout: Thread & Breakpoint Panels"]
+    WI_70["WI-70 Data Binding: Thread List Integration"]
+    WI_73["WI-73 UI Library: Extract @taro/ui-inspection"]
     WI_15["WI-15 File Tree Service Abstraction (`FileTreeService`)"]
     WI_16["WI-16 Left Sidenav File Tree UI"]
     WI_33["WI-33 Implement Source Content LRU Cache"]
@@ -78,14 +86,6 @@ graph LR
     WI_76["WI-76 Design Tokens & Dark Mode Support"]
     WI_77["WI-77 Generic Dialog & Notification Framework"]
     WI_78["WI-78 A11y Audit & Interaction Hardening"]
-    WI_17["WI-17 Call Stack Panel"]
-    WI_55["WI-55 Variables Data State Management"]
-    WI_56["WI-56 Variables Tree UI Component"]
-    WI_30["WI-30 Local Variable Modification"]
-    WI_42["WI-42 Command Serialization: Frame Switch Cancel-and-Replace"]
-    WI_69["WI-69 UI Layout: Thread & Breakpoint Panels"]
-    WI_70["WI-70 Data Binding: Thread List Integration"]
-    WI_73["WI-73 UI Library: Extract @taro/ui-inspection"]
     WI_11 --> WI_19
     WI_05 --> WI_20
     WI_39 --> WI_38
@@ -121,6 +121,18 @@ graph LR
     WI_26 --> WI_24
     WI_15 --> WI_25
     WI_23 --> WI_25
+    WI_11 --> WI_17
+    WI_11 --> WI_55
+    WI_17 --> WI_55
+    WI_55 --> WI_56
+    WI_55 --> WI_30
+    WI_56 --> WI_30
+    WI_17 --> WI_42
+    WI_73 --> WI_42
+    WI_62 --> WI_69
+    WI_41 --> WI_69
+    WI_73 --> WI_69
+    WI_69 --> WI_70
     WI_15 --> WI_16
     WI_15 --> WI_33
     WI_33 --> WI_34
@@ -146,18 +158,6 @@ graph LR
     WI_75 --> WI_76
     WI_75 --> WI_77
     WI_75 --> WI_78
-    WI_11 --> WI_17
-    WI_11 --> WI_55
-    WI_17 --> WI_55
-    WI_55 --> WI_56
-    WI_55 --> WI_30
-    WI_56 --> WI_30
-    WI_17 --> WI_42
-    WI_73 --> WI_42
-    WI_62 --> WI_69
-    WI_41 --> WI_69
-    WI_73 --> WI_69
-    WI_69 --> WI_70
 
     style WI_19 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_20 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
@@ -194,6 +194,14 @@ graph LR
     style WI_26 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_24 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_25 fill:none,stroke-dasharray:5
+    style WI_17 fill:#f472b6,stroke:#000,stroke-width:2.5px
+    style WI_55 fill:#f472b6,stroke:#000,stroke-width:2.5px
+    style WI_56 fill:#f472b6,stroke:#000,stroke-width:2.5px
+    style WI_30 fill:#f472b6,stroke:#db2777
+    style WI_42 fill:#f472b6,stroke:#000,stroke-width:2.5px
+    style WI_69 fill:#f472b6,stroke:#000,stroke-width:2.5px
+    style WI_70 fill:#f472b6,stroke:#db2777
+    style WI_73 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_15 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_16 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_33 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
@@ -228,14 +236,6 @@ graph LR
     style WI_76 fill:#cbd5e1,stroke:#475569
     style WI_77 fill:#cbd5e1,stroke:#475569
     style WI_78 fill:#cbd5e1,stroke:#475569
-    style WI_17 fill:#f472b6,stroke:#000,stroke-width:2.5px
-    style WI_55 fill:#f472b6,stroke:#000,stroke-width:2.5px
-    style WI_56 fill:#f472b6,stroke:#000,stroke-width:2.5px
-    style WI_30 fill:#f472b6,stroke:#db2777
-    style WI_42 fill:#f472b6,stroke:#000,stroke-width:2.5px
-    style WI_69 fill:#f472b6,stroke:#000,stroke-width:2.5px
-    style WI_70 fill:#f472b6,stroke:#db2777
-    style WI_73 fill:#f472b6,stroke:#000,stroke-width:2.5px
 ```
 
 ## Feature Groups
@@ -247,7 +247,7 @@ graph LR
 | Debug Controls | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f97316'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f97316"/> `#f97316` | 💎 Stabilized |
 | Editor Features | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23a78bfa'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#a78bfa"/> `#a78bfa` | 💎 Stabilized |
 | File Explorer | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23facc15'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#facc15"/> `#facc15` | 💎 Stabilized |
-| Variables & Call Stack | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f472b6'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f472b6"/> `#f472b6` | 🔵 Active |
+| Execution Context Inspection | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f472b6'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f472b6"/> `#f472b6` | 🔵 Active |
 | Console & Status Bar | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%232dd4bf'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#2dd4bf"/> `#2dd4bf` | 💎 Stabilized |
 | Electron Desktop Mode | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%2394a3b8'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#94a3b8"/> `#94a3b8` | 💎 Stabilized |
 | Low-Level Inspection | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%236366f1'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#6366f1"/> `#6366f1` | 💎 Stabilized |

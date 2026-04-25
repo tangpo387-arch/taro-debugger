@@ -22,6 +22,22 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - Handle process termination and resource cleanup
 - **Dependencies**: none
 
+## Execution Context Inspection
+
+### WI-70: Data Binding: Thread List Integration
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Implement reactive data flow for thread enumeration and selection using DapSessionService as SSOT.
+- **Details**:
+  - Add threadsSubject and threads$ to DapSessionService
+  - Implement fetchThreads() triggered on 'stopped' event
+  - Expose setCurrentThread(threadId) to trigger stackTrace refresh
+  - Implement app-threads component inside @taro/ui-inspection using async pipe subscription
+  - [Test] Verify threads list updates automatically when program stops
+  - [Doc] docs/inspection-panels-data-binding.md
+- **Dependencies**: WI-69
+
 ## UI System Design
 
 ### WI-75: Refactor: Extract @taro/ui-shared Foundation
@@ -39,19 +55,3 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - [Test] Verify all UI libraries compile independently against ui-shared
   - [Doc] docs/ui-shared-architecture-spec.md
 - **Dependencies**: none
-
-## Variables & Call Stack
-
-### WI-70: Data Binding: Thread List Integration
-
-- **Status**: ⏳ Pending
-- **Size**: M
-- **Description**: Implement reactive data flow for thread enumeration and selection using DapSessionService as SSOT.
-- **Details**:
-  - Add threadsSubject and threads$ to DapSessionService
-  - Implement fetchThreads() triggered on 'stopped' event
-  - Expose setCurrentThread(threadId) to trigger stackTrace refresh
-  - Implement app-threads component inside @taro/ui-inspection using async pipe subscription
-  - [Test] Verify threads list updates automatically when program stops
-  - [Doc] docs/inspection-panels-data-binding.md
-- **Dependencies**: WI-69

@@ -1,17 +1,17 @@
 {
   "groupDefinition": {
-    "name": "Variables & Call Stack",
+    "name": "Execution Context Inspection",
     "color": {
       "fill": "#f472b6",
       "stroke": "#db2777"
     },
-    "description": "Interactive inspection of execution context, stack frames, and data structures."
+    "description": "Interactive inspection of runtime threads, stack frames, variable scopes, and breakpoint states."
   },
   "items": [
     {
       "id": "WI-17",
       "title": "Call Stack Panel",
-      "featureGroup": "Variables & Call Stack",
+      "featureGroup": "Execution Context Inspection",
       "metadata": {
         "status": "accepted",
         "size": "M",
@@ -33,7 +33,7 @@
     {
       "id": "WI-55",
       "title": "Variables Data State Management",
-      "featureGroup": "Variables & Call Stack",
+      "featureGroup": "Execution Context Inspection",
       "metadata": {
         "status": "accepted",
         "size": "M",
@@ -57,7 +57,7 @@
     {
       "id": "WI-56",
       "title": "Variables Tree UI Component",
-      "featureGroup": "Variables & Call Stack",
+      "featureGroup": "Execution Context Inspection",
       "metadata": {
         "status": "accepted",
         "size": "M",
@@ -81,7 +81,7 @@
     {
       "id": "WI-30",
       "title": "Local Variable Modification",
-      "featureGroup": "Variables & Call Stack",
+      "featureGroup": "Execution Context Inspection",
       "metadata": {
         "status": "proposed",
         "size": "M",
@@ -105,7 +105,7 @@
     {
       "id": "WI-42",
       "title": "Command Serialization: Frame Switch Cancel-and-Replace",
-      "featureGroup": "Variables & Call Stack",
+      "featureGroup": "Execution Context Inspection",
       "metadata": {
         "status": "accepted",
         "size": "S",
@@ -132,7 +132,7 @@
     {
       "id": "WI-69",
       "title": "UI Layout: Thread & Breakpoint Panels",
-      "featureGroup": "Variables & Call Stack",
+      "featureGroup": "Execution Context Inspection",
       "metadata": {
         "status": "accepted",
         "size": "M",
@@ -162,7 +162,7 @@
     {
       "id": "WI-70",
       "title": "Data Binding: Thread List Integration",
-      "featureGroup": "Variables & Call Stack",
+      "featureGroup": "Execution Context Inspection",
       "metadata": {
         "status": "pending",
         "size": "M",
@@ -188,7 +188,7 @@
     {
       "id": "WI-73",
       "title": "UI Library: Extract @taro/ui-inspection",
-      "featureGroup": "Variables & Call Stack",
+      "featureGroup": "Execution Context Inspection",
       "metadata": {
         "status": "accepted",
         "size": "M",
