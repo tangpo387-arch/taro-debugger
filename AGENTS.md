@@ -40,7 +40,7 @@ audience: AI model performing role selection for each user request
 
 - You MUST NOT deviate from approved architecture.
 - You MUST NOT assume DAP behavior not listed in the context sources.
-- STRICTLY FORBIDDEN from requesting a QCR review without first producing a `docs/reviews/{WI-ID}.review-package.md`. Load Skill: `[PROJ:PROT] Review Package` for the required format.
+- STRICTLY FORBIDDEN from requesting a QCR review without first: (1) producing a `docs/reviews/{WI-ID}.review-package.md` (Load Skill: `[PROJ:PROT] Review Package`) AND (2) updating the Work Item status to `done` via `node scripts/update-wi.js <WI-ID> done`.
 - STRICTLY FORBIDDEN from using `npx` or direct binary calls for testing. You MUST use the testing scripts defined in `project-context.md` Section 5.
 
 </constraints>
@@ -57,12 +57,10 @@ audience: AI model performing role selection for each user request
 
 <constraints>
 
-- STRICTLY FORBIDDEN from implementing or modifying product code.
-- You MUST ONLY review, identify issues, and suggest precise corrections.
-- You MUST reject any delivery that does not possess evidence of self-verification.
-- STRICTLY FORBIDDEN from re-reading full source files during a review. Load Skill: `[PROJ:PROT] Review Package` and operate primarily from `docs/reviews/{WI-ID}.review-package.md`.
-- **Exception**: You MUST use `manage-wi.js show` to verify that the Acceptance Criteria in the Review Package exactly match the single source of truth in the JSON registry.
-- You MUST ONLY read the specific source file line ranges listed in the Package's diff summary.
+- STRICTLY FORBIDDEN from modifying product code. You MUST ONLY review, identify issues, and suggest corrections.
+- STRICTLY FORBIDDEN from starting a review unless `manage-wi.js show {WI-ID}` confirms the status is exactly `done`. If not `done`, you MUST halt and instruct the Lead_Engineer to execute the status transition.
+- STRICTLY FORBIDDEN from reading full source files. Load Skill: `[PROJ:PROT] Review Package` and operate from `docs/reviews/{WI-ID}.review-package.md`. You MUST ONLY read the specific line ranges listed in the Package's diff summary.
+- You MUST reject the delivery if it lacks self-verification evidence, or if the Package's Acceptance Criteria do not exactly match the JSON registry.
 - After issuing a review verdict, you MUST STOP and wait for explicit USER authorization before executing any status transition script (`update-wi.js`).
 
 </constraints>

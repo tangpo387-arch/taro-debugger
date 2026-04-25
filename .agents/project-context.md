@@ -99,7 +99,7 @@ Locate documents based on task:
 | **Dev Server** | `npm start` | Launches a local development server with hot reload. |
 | **Run All Tests** | `npm run test -- --watch=false` | Executes all Vitest unit tests in single-run mode. |
 | **Test Watch Mode** | `npm run test` | Starts the Vitest runner in interactive watch mode. |
-| **Test Single File** | `npm run test -- <project> --include=**/<file.spec.ts> --watch=false` | Executes tests for a specific file. |
+| **Test Single File** | `npm run test:file -- <project> --include=**/<file.spec.ts> --watch=false` | Executes tests for a specific file. |
 | **Doc Linting** | `npm run lint:docs` | Verifies documentation against quality standards. |
 
 ### Utility & Management Scripts

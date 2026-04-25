@@ -22,6 +22,7 @@
     "watch:ui-assembly": "ng build ui-assembly --watch",
     "watch": "ng build --watch --configuration development taro-debugger-frontend",
     "test": "ng test dap-core --watch=false && ng test ui-shared --watch=false && ng test ui-editor --watch=false && ng test ui-inspection --watch=false && ng test ui-console --watch=false && ng test ui-assembly --watch=false && ng test taro-debugger-frontend --watch=false",
+    "test:file": "ng test",
     "postinstall": "node scripts/postinstall.js",
     "electron:build": "tsc -p tsconfig.electron.json",
     "electron:run": "electron . --no-sandbox",

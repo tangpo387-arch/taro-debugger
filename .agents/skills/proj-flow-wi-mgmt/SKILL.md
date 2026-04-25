@@ -240,7 +240,7 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
 - `docs/reviews/{WI-ID}.review-package.md` exists and is complete.
 
 **Steps**:
-1. Execute `node scripts/manage-wi.js show {WI-ID}` to verify the WI is in the `done` state.
+1. **Execute `node scripts/manage-wi.js show {WI-ID}` to verify the WI is in the `done` state.**
 2. `Quality_Control_Reviewer` follows the review protocol in `Skill: [PROJ:PROT] Review Package`.
 3. Formulate an APPROVED verdict, or note precise, actionable findings for a REJECTED verdict.
 4. You are STRICTLY FORBIDDEN from executing `node scripts/update-wi.js {WI-ID} <accepted|rework>` autonomously.
