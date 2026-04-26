@@ -169,7 +169,7 @@ describe('DapSessionService', () => {
       expect((service as any).executionStateSubject.value).toBe('running');
 
       (service as any).handleTransportEvent({ type: 'event', event: 'terminated', seq: 3 });
-      expect((service as any).executionStateSubject.value).toBe('terminated');
+      expect((service as any).executionStateSubject.value).toBe('idle');
     });
 
     it('should transition to error on transport error', () => {
@@ -177,18 +177,18 @@ describe('DapSessionService', () => {
       expect((service as any).executionStateSubject.value).toBe('error');
     });
 
-    it('should transition to error on transport completion if not idle or terminated', () => {
+    it('should transition to error on transport completion if not idle', () => {
       (service as any).executionStateSubject.next('running');
       (service as any).handleIncomingTransportComplete();
       expect((service as any).executionStateSubject.value).toBe('error');
     });
 
-    it('should NOT transition to error on transport completion if already terminated', () => {
-      // When a debuggee exits naturally, the DAP server closes the connection.
-      // This is expected behavior — the state must remain 'terminated', not 'error'.
-      (service as any).executionStateSubject.next('terminated');
+    it('should stay in idle on transport completion if already idle', () => {
+      // When a debuggee exits naturally, handleTransportEvent calls reset() which sets state to idle.
+      // Subsequent transport completion (socket close) should not change this.
+      (service as any).executionStateSubject.next('idle');
       (service as any).handleIncomingTransportComplete();
-      expect((service as any).executionStateSubject.value).toBe('terminated');
+      expect((service as any).executionStateSubject.value).toBe('idle');
     });
 
     it('should optimistically transition to running upon successful continue request', async () => {
@@ -299,15 +299,6 @@ describe('DapSessionService', () => {
   });
 
   describe('Disconnect/Terminate One-Shot (R-CS5)', () => {
-    it('should return immediately without sending a DAP request if state is already terminated', async () => {
-      (service as any).transport = mockTransport;
-      (service as any).executionStateSubject.next('terminated');
-
-      await service.disconnect();
-
-      expect(mockTransport.sendRequest).not.toHaveBeenCalled();
-    });
-
     it('should return immediately without sending a DAP request if state is already idle', async () => {
       (service as any).transport = mockTransport;
       (service as any).executionStateSubject.next('idle');
@@ -316,6 +307,7 @@ describe('DapSessionService', () => {
 
       expect(mockTransport.sendRequest).not.toHaveBeenCalled();
     });
+
 
     it('should prevent double-call to disconnect from sending multiple requests', async () => {
       (service as any).transport = mockTransport;
@@ -604,11 +596,7 @@ describe('DapSessionService', () => {
         await promise;
       });
 
-      it('should return early if state is terminated/idle', async () => {
-        (service as any).executionStateSubject.next('terminated');
-        await service.stop();
-        expect(mockTransport.sendRequest).not.toHaveBeenCalled();
-
+      it('should return early if state is idle', async () => {
         (service as any).executionStateSubject.next('idle');
         await service.stop();
         expect(mockTransport.sendRequest).not.toHaveBeenCalled();
@@ -638,15 +626,6 @@ describe('DapSessionService', () => {
 
       it('should NOT allow restart from idle state (Run is preferred)', async () => {
         (service as any).executionStateSubject.next('idle');
-        const startSessionSpy = vi.spyOn(service, 'startSession').mockResolvedValue({} as any);
-        
-        await service.restart();
-        
-        expect(startSessionSpy).not.toHaveBeenCalled();
-      });
-
-      it('should NOT allow restart from terminated state (Run is preferred)', async () => {
-        (service as any).executionStateSubject.next('terminated');
         const startSessionSpy = vi.spyOn(service, 'startSession').mockResolvedValue({} as any);
         
         await service.restart();

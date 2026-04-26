@@ -41,7 +41,6 @@ export class DebugControlGroupComponent {
   public readonly isStopped$ = this.executionState$.pipe(map(state => state === 'stopped'));
   public readonly isRunning$ = this.executionState$.pipe(map(state => state === 'running'));
   public readonly isIdle$ = this.executionState$.pipe(map(state => state === 'idle'));
-  public readonly isTerminated$ = this.executionState$.pipe(map(state => state === 'terminated'));
   public readonly isStarting$ = this.executionState$.pipe(map(state => state === 'starting'));
   public readonly isError$ = this.executionState$.pipe(map(state => state === 'error'));
 
@@ -52,7 +51,7 @@ export class DebugControlGroupComponent {
 
   public onResume(): void {
     const state = this.dapSession.executionState;
-    if (state === 'idle' || state === 'terminated') {
+    if (state === 'idle') {
       this.run.emit();
     } else {
       this.dapSession.continue().catch(() => {});

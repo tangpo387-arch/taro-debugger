@@ -19,8 +19,8 @@
       </button>
     } @else {
       <button mat-icon-button (click)="onResume()" 
-              [disabled]="(!(isStopped$ | async) && !(isIdle$ | async) && !(isTerminated$ | async)) || (commandInFlight$ | async)" 
-              [title]="((isIdle$ | async) || (isTerminated$ | async)) ? 'Run' : 'Continue (F5)'">
+              [disabled]="(!(isStopped$ | async) && !(isIdle$ | async)) || (commandInFlight$ | async)" 
+              [title]="(isIdle$ | async) ? 'Run' : 'Continue (F5)'">
         <mat-icon>play_arrow</mat-icon>
       </button>
     }
@@ -59,7 +59,7 @@
   <!-- Group 3: Restart -->
   <div class="control-segment group-restart">
     <button mat-icon-button (click)="onRestart()" 
-            [disabled]="(isStarting$ | async) || (isIdle$ | async) || (isTerminated$ | async) || (commandInFlight$ | async)" 
+            [disabled]="(isStarting$ | async) || (isIdle$ | async) || (commandInFlight$ | async)" 
             [title]="(isError$ | async) ? 'Reconnect' : 'Restart (Ctrl+Shift+F5)'">
       <mat-icon>{{ (isError$ | async) ? 'sync' : 'replay' }}</mat-icon>
     </button>

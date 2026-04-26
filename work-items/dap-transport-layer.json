@@ -361,6 +361,32 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-26"
       }
+    },
+    {
+      "id": "WI-87",
+      "title": "Merge terminated and idle execution states",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Simplify the ExecutionState machine by merging 'terminated' into 'idle' to improve session cleanup reliability.",
+      "details": [
+        "Refactor ExecutionState type to remove 'terminated'",
+        "Update DapSessionService to call reset() on terminated/exited events",
+        "Implement private isDisconnecting flag in DapSessionService",
+        "Remove redundant isTerminated$ checks from UI components",
+        "Update session-layer.md architecture diagram",
+        "[Test] Verify transport is closed and data is cleared after program exit",
+        "[Doc] docs/proposals/merge-execution-states.md"
+      ],
+      "timeline": {
+        "created": "2026-04-26",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-26"
+      }
     }
   ]
 }

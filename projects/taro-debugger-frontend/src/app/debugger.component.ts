@@ -801,7 +801,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
     const executionState = this.executionState;
     // Only send the DAP request when the session is active (not idle/starting/error)
-    const activeStates: ExecutionState[] = ['running', 'stopped', 'terminated'];
+    const activeStates: ExecutionState[] = ['running', 'stopped'];
     if (!activeStates.includes(executionState)) {
       // Session not ready — breakpoints are queued locally, no DAP sync yet
       return;

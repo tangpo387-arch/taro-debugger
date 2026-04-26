@@ -32,7 +32,7 @@ export interface VerifiedBreakpoint {
 }
 
 /** Execution State */
-export type ExecutionState = 'idle' | 'starting' | 'running' | 'stopped' | 'terminated' | 'error';
+export type ExecutionState = 'idle' | 'starting' | 'running' | 'stopped' | 'error';
 
 /** Internal state for tracking per-file setBreakpoints serialization */
 type BreakpointFileState = { inFlight: boolean; pending: number[] | undefined };
@@ -88,6 +88,9 @@ export class DapSessionService {
 
   /** Current debug execution state */
   private executionStateSubject = new BehaviorSubject<ExecutionState>('idle');
+
+  /** Private guard to block concurrent disconnect calls during async handshake */
+  private isDisconnecting = false;
 
   /** Emits true while any execution-control command is in-flight */
   private commandInFlightSubject = new BehaviorSubject<boolean>(false);
@@ -221,12 +224,11 @@ export class DapSessionService {
    */
   public async disconnect(options: { terminateDebuggee?: boolean, restart?: boolean } = {}): Promise<void> {
     const state = this.executionStateSubject.value;
-    if (state === 'terminated' || state === 'idle' || state === 'error') {
+    if (state === 'idle' || state === 'error' || this.isDisconnecting) {
       return;
     }
 
-    // Transition to terminated immediately to block concurrent calls
-    this.executionStateSubject.next('terminated');
+    this.isDisconnecting = true;
 
     try {
       if (this.transport) {
@@ -239,6 +241,7 @@ export class DapSessionService {
     } catch (e) {
       console.warn('Failed to send disconnect request cleanly', e);
     } finally {
+      this.isDisconnecting = false;
       this.reset();
     }
   }
@@ -281,7 +284,7 @@ export class DapSessionService {
    */
   public async stop(): Promise<void> {
     const state = this.executionStateSubject.value;
-    if (state === 'terminated' || state === 'idle' || state === 'error') {
+    if (state === 'idle' || state === 'error') {
       return;
     }
 
@@ -307,7 +310,7 @@ export class DapSessionService {
    */
   public async restart(): Promise<void> {
     const state = this.executionStateSubject.value;
-    if (state === 'starting' || state === 'idle' || state === 'terminated') {
+    if (state === 'starting' || state === 'idle') {
       return;
     }
 
@@ -835,7 +838,7 @@ export class DapSessionService {
   }
 
   private handleIncomingTransportComplete(): void {
-    if (this.executionStateSubject.value !== 'idle' && this.executionStateSubject.value !== 'terminated') {
+    if (this.executionStateSubject.value !== 'idle') {
       // Emit synthetic event for UI-layer notification before transitioning state
       this.eventSubject.next({
         seq: 0,
@@ -898,10 +901,7 @@ export class DapSessionService {
 
       case 'terminated':
       case 'exited':
-        this.executionStateSubject.next('terminated');
-        this.commandInFlightSubject.next(false);
-        this.stoppedThreadIdSubject.next(null);
-        this.stopReasonSubject.next(null);
+        this.reset();
         break;
 
       case 'breakpoint': {
