@@ -30,7 +30,7 @@ describe('WI-81: Application Frame & Global Controls Integration', () => {
         onAction$: new Subject<ActionID>(),
         initElectronListener: vi.fn()
       };
-
+ 
       mockDapSession = {
         connectionStatus$: EMPTY,
         executionState$: new BehaviorSubject('idle').asObservable(),
@@ -39,16 +39,17 @@ describe('WI-81: Application Frame & Global Controls Integration', () => {
         breakpoints$: EMPTY,
         disconnect: vi.fn(),
         startSession: vi.fn().mockResolvedValue({}),
-        resyncAllBreakpoints: vi.fn().mockResolvedValue({})
+        resyncAllBreakpoints: vi.fn().mockResolvedValue({}),
+        capabilities: { supportsCancelRequest: true }
       };
-
+ 
       mockDialog = {
         open: vi.fn().mockReturnValue({
           afterClosed: () => of(true),
           close: vi.fn()
         })
       };
-
+ 
       TestBed.configureTestingModule({
         imports: [MatDialogModule],
         providers: [
@@ -56,9 +57,9 @@ describe('WI-81: Application Frame & Global Controls Integration', () => {
           { provide: KeyboardShortcutService, useValue: mockShortcutService },
           { provide: DapSessionService, useValue: mockDapSession },
           { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
-          { provide: DapLogService, useValue: { consoleLog: vi.fn(), appendDapLog: vi.fn() } },
+          { provide: DapLogService, useValue: { consoleLog: vi.fn(), appendDapLog: vi.fn(), consoleLogs$: EMPTY, programLogs$: EMPTY, dapLogs$: EMPTY } },
           { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
-          { provide: DapAssemblyService, useValue: { clear: vi.fn(), instructions$: EMPTY } },
+          { provide: DapAssemblyService, useValue: { clear: vi.fn(), instructions$: EMPTY, isLoading$: EMPTY } },
           { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
           { provide: Router, useValue: { navigate: vi.fn() } },
           { provide: MatSnackBar, useValue: { open: vi.fn() } },
@@ -66,6 +67,18 @@ describe('WI-81: Application Frame & Global Controls Integration', () => {
           { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } },
           { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
         ]
+      }).compileComponents();
+ 
+      TestBed.overrideComponent(DebuggerComponent, {
+        set: {
+          providers: [
+            { provide: DapSessionService, useValue: mockDapSession },
+            { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
+            { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
+            { provide: DapLogService, useValue: { consoleLog: vi.fn(), appendDapLog: vi.fn(), consoleLogs$: EMPTY, programLogs$: EMPTY, dapLogs$: EMPTY } },
+            { provide: DapAssemblyService, useValue: { clear: vi.fn(), instructions$: EMPTY, isLoading$: EMPTY } },
+          ]
+        }
       });
 
       // Reset global electronAPI before each test
