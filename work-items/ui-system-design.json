@@ -185,6 +185,29 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-25"
       }
+    },
+    {
+      "id": "WI-85",
+      "title": "Consolidate Debug Panels to Left Sidenav",
+      "featureGroup": "UI System Design",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.1",
+        "dependencies": []
+      },
+      "description": "Refactor the global layout to move all right sidenav panels (Variables, Call Stack, Breakpoints) into a tabbed Left Sidenav, eliminating the right sidenav to optimize UX and horizontal space.",
+      "details": [
+        "1. Remove right mat-sidenav from DebuggerComponent.",
+        "2. Add mat-tab-group to the left sidenav (Explorer / Debug).",
+        "3. Wrap existing components (Files, Threads, Variables, Call Stack, Breakpoints) in mat-expansion-panels within their respective tabs.",
+        "[Test] Verify all components render correctly inside expansion panels and state is preserved on tab switch.",
+        "[Doc] docs/consolidate-left-sidenav.md"
+      ],
+      "timeline": {
+        "created": "2026-04-26",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }

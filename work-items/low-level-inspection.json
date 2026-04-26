@@ -142,6 +142,32 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-20"
       }
+    },
+    {
+      "id": "WI-84",
+      "title": "Implement Memory View (Hex Dump)",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "pending",
+        "size": "L",
+        "milestone": "v1.1",
+        "dependencies": [
+          "WI-85"
+        ]
+      },
+      "description": "Add a low-level memory inspection interface to the center tab group.",
+      "details": [
+        "1. Update dap.types.ts with readMemory/writeMemory schemas.",
+        "2. Implement DapMemoryService.",
+        "3. Create MemoryViewComponent.",
+        "4. Integrate into DebuggerComponent tabs and Variables context menu.",
+        "[Test] Verify memory data matches hex dump after 'readMemory' success.",
+        "[Doc] docs/architecture/ui-components/memory-view-spec.md"
+      ],
+      "timeline": {
+        "created": "2026-04-26",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }

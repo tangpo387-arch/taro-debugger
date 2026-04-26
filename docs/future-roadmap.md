@@ -37,6 +37,17 @@ audience: [Product_Architect, Lead_Engineer, Human Engineer]
   - [Test] Verify thread list updates status icon when 'continued' event is received
   - [Doc] docs/non-stop-mode-ui.md
 
+### WI-84: Implement Memory View (Hex Dump) (Status: pending)
+
+- **Description**: Add a low-level memory inspection interface to the center tab group.
+- **Details**:
+  - 1. Update dap.types.ts with readMemory/writeMemory schemas.
+  - 2. Implement DapMemoryService.
+  - 3. Create MemoryViewComponent.
+  - 4. Integrate into DebuggerComponent tabs and Variables context menu.
+  - [Test] Verify memory data matches hex dump after 'readMemory' success.
+  - [Doc] docs/architecture/ui-components/memory-view-spec.md
+
 ### WI-74: Standardization of UI Patterns (Status: pending)
 
 - **Description**: Consolidate duplicated UI components, SCSS tokens, and shared Angular utilities into a unified internal library.
@@ -73,3 +84,13 @@ audience: [Product_Architect, Lead_Engineer, Human Engineer]
   - Standardize keyboard shortcut overlays and focus-trap logic
   - Implement screen-reader friendly labels for interactive icons
   - [Test] Pass accessibility scan with 0 critical violations
+
+### WI-85: Consolidate Debug Panels to Left Sidenav (Status: pending)
+
+- **Description**: Refactor the global layout to move all right sidenav panels (Variables, Call Stack, Breakpoints) into a tabbed Left Sidenav, eliminating the right sidenav to optimize UX and horizontal space.
+- **Details**:
+  - 1. Remove right mat-sidenav from DebuggerComponent.
+  - 2. Add mat-tab-group to the left sidenav (Explorer / Debug).
+  - 3. Wrap existing components (Files, Threads, Variables, Call Stack, Breakpoints) in mat-expansion-panels within their respective tabs.
+  - [Test] Verify all components render correctly inside expansion panels and state is preserved on tab switch.
+  - [Doc] docs/consolidate-left-sidenav.md

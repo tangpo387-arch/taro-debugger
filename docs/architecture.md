@@ -78,6 +78,7 @@ Granular specifications for complex UI components and specific DAP feature imple
 | Feature / Component | Documentation Document | Description |
 | :--- | :--- | :--- |
 | **Assembly View** | [architecture/ui-components/assembly-view-spec.md](architecture/ui-components/assembly-view-spec.md) | Low-level instruction inspection, address-to-source mapping, and tabbed editor integration. |
+| **Memory View** | [architecture/ui-components/memory-view-spec.md](architecture/ui-components/memory-view-spec.md) | Raw memory inspection (Hex Dump), address resolution from pointers, and inline editing. |
 | **Keyboard Shortcuts** | [architecture/ui-components/keyboard-shortcuts-spec.md](architecture/ui-components/keyboard-shortcuts-spec.md) | VS Code compatible Action ID mapping, global event performance optimization, and focus guard design. |
 
 ---
