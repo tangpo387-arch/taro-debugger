@@ -1,9 +1,11 @@
 @use '@angular/material' as mat;
 
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
   height: 100%;
   background: var(--mat-sys-surface-container-low);
+  position: relative; // Anchor for absolute-positioned taro-empty-state
 }
 
 .breakpoints-container {

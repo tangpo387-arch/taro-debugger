@@ -227,6 +227,14 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     // Subscribe to execution state changes
     this.stateSubscription = this.dapSession.executionState$.subscribe(state => {
       this.executionState = state;
+      
+      // R_SM5 compliance: Auto-clear execution-specific state whenever the process
+      // transitions out of the 'stopped' context (e.g., to 'running' or 'error').
+      // This ensures the Call Stack panel matches the Variables panel behavior.
+      if (state === 'running' || state === 'error') {
+        this.clearExecutionState();
+      }
+      
       this.cdr.detectChanges();
     });
 
@@ -466,15 +474,16 @@ export class DebuggerComponent implements OnInit, OnDestroy {
    * @param panel - Which panel's bottom border is being dragged ('files').
    */
   public onLeftPanelResizeDrag(clientY: number, panel: 'files'): void {
-    const MIN = 80;
-    // Resolve the sidenav DOM element via @ViewChild reference (avoids fragile querySelector).
+    const MIN = 72;
     const sidenavEl = this.leftSidenavRef?.nativeElement;
     if (!sidenavEl) return;
     const rect = sidenavEl.getBoundingClientRect();
-    const relativeY = Math.max(MIN, Math.min(rect.height - MIN, clientY - rect.top));
+    const clientOffset = clientY - rect.top;
+
     if (panel === 'files') {
-      this.leftFilesHeight = relativeY;
-      this.leftThreadsHeight = rect.height - relativeY;
+      // Files handle: between top (MIN) and space for Threads (rect.height - MIN)
+      this.leftFilesHeight = Math.max(MIN, Math.min(rect.height - MIN, clientOffset));
+      this.leftThreadsHeight = rect.height - this.leftFilesHeight;
     }
     this.cdr.detectChanges();
   }
@@ -485,20 +494,22 @@ export class DebuggerComponent implements OnInit, OnDestroy {
    * @param panel - Which panel's bottom border is being dragged ('breakpoints' | 'variables').
    */
   public onRightPanelResizeDrag(clientY: number, panel: 'breakpoints' | 'variables'): void {
-    const MIN = 80;
-    // Resolve the sidenav DOM element via @ViewChild reference (avoids fragile querySelector).
+    const MIN = 72;
     const sidenavEl = this.rightSidenavRef?.nativeElement;
     if (!sidenavEl) return;
     const rect = sidenavEl.getBoundingClientRect();
-    const relativeY = Math.max(MIN, Math.min(rect.height - MIN * 2, clientY - rect.top));
+    const clientOffset = clientY - rect.top;
+
     if (panel === 'breakpoints') {
-      this.rightBreakpointsHeight = relativeY;
+      // Breakpoints handle: between top (MIN) and space for Variables+CallStack (rect.height - MIN*2)
+      this.rightBreakpointsHeight = Math.max(MIN, Math.min(rect.height - MIN * 2, clientOffset));
     } else if (panel === 'variables') {
-      // Resolve header height dynamically to ensure correct split during resize
-      const headerH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sys-density-toolbar-height')) || 32;
+      const headerH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sys-density-header-height')) || 32;
       const breakpointsH = this.rightBreakpointsExpanded ? this.rightBreakpointsHeight : headerH;
       const remaining = rect.height - breakpointsH;
-      const variablesH = Math.max(MIN, Math.min(remaining - MIN, relativeY - rect.top - breakpointsH));
+      // Variables handle: between bottom of Breakpoints+MIN and bottom of sidenav-MIN
+      // The relativeY here is offset from Breakpoints bottom
+      const variablesH = Math.max(MIN, Math.min(remaining - MIN, clientOffset - breakpointsH));
       this.rightVariablesHeight = variablesH;
       this.rightCallStackHeight = Math.max(MIN, remaining - variablesH);
     }
@@ -698,6 +709,13 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
       if (targetThreadId) {
         const stackRes = await this.dapSession.stackTrace(targetThreadId);
+        
+        // Race condition guard: If the process resumed while the request was in flight,
+        // discard the results to prevent stale data from appearing in the UI.
+        if (this.executionState !== 'stopped') {
+          return;
+        }
+
         this.stackFrames = stackRes.body?.stackFrames || [];
 
         // Render the stack panel immediately before loading source + scopes.

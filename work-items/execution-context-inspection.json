@@ -236,6 +236,28 @@
         "created": "2026-04-25",
         "created_by": "Antigravity-Agent"
       }
+    },
+    {
+      "id": "WI-83",
+      "title": "Fix Call Stack persistence during execution",
+      "featureGroup": "Execution Context Inspection",
+      "metadata": {
+        "status": "accepted",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Ensure Call Stack panel is cleared when the process is running, matching Variables panel behavior.",
+      "details": [
+        "Clear stackFrames in DebuggerComponent when state transitions to running",
+        "Update CallStackComponent empty state to match Variables panel style",
+        "[Test] Verify Call Stack clears immediately when 'Continue' is clicked"
+      ],
+      "timeline": {
+        "created": "2026-04-26",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-26"
+      }
     }
   ]
 }

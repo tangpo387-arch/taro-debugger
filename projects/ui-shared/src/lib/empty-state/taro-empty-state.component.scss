@@ -1,23 +1,36 @@
+:host {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+}
+
 .empty-state-container {
   display: flex;
   flex-direction: column;
-  padding: 48px 24px;
+  padding: 8px var(--sys-density-panel-padding, 12px);
   box-sizing: border-box;
   width: 100%;
+  height: 100%;
+  overflow: hidden;
 
   &.centered {
     align-items: center;
-    justify-content: center;
-    height: 100%;
+
+    /* Safe Vertical Centering: Preferred top-alignment on overflow */
+    & > :first-child { margin-top: auto; }
+    & > :last-child { margin-bottom: auto; }
   }
 
   .empty-state-icon {
-    height: 32px;
-    width: 32px;
-    font-size: 32px;
+    height: 18px;
+    width: 18px;
+    font-size: 18px;
     color: var(--mat-sys-on-surface-variant);
     opacity: 0.5;
-    margin-bottom: 12px;
+    margin-bottom: 4px;
+    flex-shrink: 0;
   }
 
   .empty-state-message {
@@ -25,13 +38,21 @@
     color: var(--mat-sys-on-surface-variant);
     font-weight: var(--weight-medium);
     text-align: center;
+    line-height: 1.2;
+    flex-shrink: 0;
   }
 
   .empty-state-description {
     font-size: var(--text-sm);
     color: var(--mat-sys-outline);
-    margin-top: 4px;
+    margin-top: 2px;
     text-align: center;
     max-width: 280px;
+    line-height: 1.2;
+    flex-shrink: 0;
+    /* Prevent cutting: allow ellipsis if still too tall */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }

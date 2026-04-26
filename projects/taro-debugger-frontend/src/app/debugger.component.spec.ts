@@ -338,3 +338,87 @@ describe('DebuggerComponent — Panel Layout (WI-69)', () => {
     expect(component.rightCallStackHeight).toBeGreaterThan(0);
   });
 });
+
+/**
+ * Unit tests for DebuggerComponent — State Cleanup (R_SM5 / WI-83)
+ */
+describe('DebuggerComponent — State Cleanup (WI-83)', () => {
+  let component: DebuggerComponent;
+  let executionStateSubject: BehaviorSubject<string>;
+
+  beforeEach(() => {
+    executionStateSubject = new BehaviorSubject<string>('stopped');
+
+    const mockDapSession = {
+      connectionStatus$: EMPTY,
+      executionState$: executionStateSubject.asObservable(),
+      onEvent: () => EMPTY,
+      onTraffic$: EMPTY,
+      breakpoints$: EMPTY,
+      startSession: vi.fn().mockResolvedValue({}),
+      disconnect: vi.fn(),
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        DebuggerComponent,
+        { provide: DapSessionService, useValue: mockDapSession },
+        { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
+        { provide: DapLogService, useValue: { consoleLog: vi.fn() } },
+        { provide: DapAssemblyService, useValue: { clear: vi.fn() } },
+        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
+        { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
+        { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } },
+        { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
+      ]
+    });
+    component = TestBed.inject(DebuggerComponent);
+    
+    // Trigger ngOnInit to subscribe to executionState$
+    component.ngOnInit();
+  });
+
+  it('should clear stackFrames when executionState transitions to running', () => {
+    // Arrange
+    component.stackFrames = [{ id: 1, name: 'main', line: 10, column: 1 } as any];
+    expect(component.stackFrames.length).toBe(1);
+
+    // Act
+    executionStateSubject.next('running');
+
+    // Assert
+    expect(component.stackFrames.length).toBe(0);
+  });
+
+  it('should clear stackFrames when executionState transitions to error', () => {
+    // Arrange
+    component.stackFrames = [{ id: 1, name: 'main', line: 10, column: 1 } as any];
+    expect(component.stackFrames.length).toBe(1);
+
+    // Act
+    executionStateSubject.next('error');
+
+    // Assert
+    expect(component.stackFrames.length).toBe(0);
+  });
+
+  it('should discard stackFrames if executionState is no longer stopped after stackTrace returns (Race Guard)', async () => {
+    // Arrange
+    const stackRes = { body: { stackFrames: [{ id: 1, name: 'stale' } as any] } };
+    (component as any).dapSession.stackTrace = vi.fn().mockImplementation(async () => {
+      // Simulate state change while request is in flight
+      component.executionState = 'running';
+      return stackRes;
+    });
+    
+    component.stackFrames = [];
+    component.executionState = 'stopped';
+
+    // Act
+    await (component as any).loadCallStack(1);
+
+    // Assert
+    expect(component.stackFrames.length).toBe(0);
+  });
+});
