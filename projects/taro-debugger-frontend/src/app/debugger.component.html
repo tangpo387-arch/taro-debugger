@@ -24,6 +24,7 @@
       <app-debug-control-group 
         [activeTabIndex]="activeTabIndex"
         (restart)="onRestart()" 
+        (run)="onRun()"
         (stop)="onStop()"
         (stepInstructionTab)="onStepInstructionTab($event)">
       </app-debug-control-group>

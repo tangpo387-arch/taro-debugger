@@ -98,13 +98,18 @@ export class DapSessionService {
     return this.executionStateSubject.asObservable();
   }
 
-  constructor() {}
+  /** Current execution state value (R-CS5) */
+  public get executionState(): ExecutionState {
+    return this.executionStateSubject.value;
+  }
+
+  public constructor() { }
 
 
   /**
    * Get connection status Observable (false until transport is established)
    */
-  get connectionStatus$(): Observable<boolean> {
+  public get connectionStatus$(): Observable<boolean> {
     return this.connectionStatusSubject.asObservable();
   }
 
@@ -117,7 +122,7 @@ export class DapSessionService {
    * 3. Wait for initialized event (configurationDone is handled internally)
    * 4. Send launch/attach request (response returns after configurationDone)
    */
-  async startSession(): Promise<DapResponse> {
+  public async startSession(): Promise<DapResponse> {
     const config = this.configService.getConfig();
     if (config.transportType === 'websocket' && !config.serverAddress) {
       throw new Error('Server address is empty');
@@ -211,8 +216,10 @@ export class DapSessionService {
 
   /**
    * Disconnect the session calmly.
+   * @param options.terminateDebuggee - Whether the debuggee should be terminated (default: true)
+   * @param options.restart - Whether this disconnect is part of a restart flow (default: false)
    */
-  async disconnect(): Promise<void> {
+  public async disconnect(options: { terminateDebuggee?: boolean, restart?: boolean } = {}): Promise<void> {
     const state = this.executionStateSubject.value;
     if (state === 'terminated' || state === 'idle' || state === 'error') {
       return;
@@ -225,8 +232,8 @@ export class DapSessionService {
       if (this.transport) {
         // Send disconnect request to DAP Server
         await this.sendRequest('disconnect', {
-          restart: false,
-          terminateDebuggee: true
+          restart: options.restart ?? false,
+          terminateDebuggee: options.terminateDebuggee ?? true
         });
       }
     } catch (e) {
@@ -240,7 +247,7 @@ export class DapSessionService {
    * Reset session completely to idle, without sending a DAP request.
    * Clears resources directly (e.g., used to return from error to idle safely).
    */
-  reset(): void {
+  public reset(): void {
     // Stop receiving messages
     if (this.messageSubscription) {
       this.messageSubscription.unsubscribe();
@@ -261,49 +268,72 @@ export class DapSessionService {
     this.connectionStatusSubject.next(false);
     this.executionStateSubject.next('idle');
     this.commandInFlightSubject.next(false);
-    this.threadsSubject.next([]);
-    this.activeThreadIdSubject.next(null);
-    this.stoppedThreadIdSubject.next(null);
-    this.stopReasonSubject.next(null);
-
-    // Clear breakpoint state on session reset
-    this.breakpointsMap.clear();
-    this.breakpointsSubject.next(new Map());
+    this.clearSessionData();
   }
 
 
   /**
-   * Terminate the debuggee.
-   * If the adapter supports the terminate request, it is sent.
-   * Otherwise, it falls back to a disconnect request with terminateDebuggee.
+   * Public API for stopping the debug session.
+   *
+   * Hierarchical strategy (R-CS5):
+   * 1. If the adapter supports 'terminate', send 'terminate' request.
+   * 2. Otherwise, fall back to 'disconnect' with 'terminateDebuggee: true'.
    */
-  async terminate(): Promise<void> {
+  public async stop(): Promise<void> {
     const state = this.executionStateSubject.value;
     if (state === 'terminated' || state === 'idle' || state === 'error') {
       return;
     }
 
     if (this.capabilities?.supportsTerminateRequest) {
-      // Transition to terminated immediately to block concurrent calls
-      this.executionStateSubject.next('terminated');
       try {
         await this.sendRequest('terminate');
         return;
       } catch (e) {
         console.warn('Terminate request failed, falling back to disconnect', e);
-        // Reset state so that disconnect() can proceed (it has its own guard)
-        this.executionStateSubject.next('running');
       }
     }
 
     // Fallback: Disconnect with termination
-    await this.disconnect();
+    await this.disconnect({ terminateDebuggee: true });
+  }
+
+  /**
+   * Public API for restarting the debug session.
+   *
+   * Hierarchical strategy (R-CS5):
+   * 1. If the adapter supports 'restart', send 'restart' request.
+   * 2. Otherwise, perform a "Soft Restart": disconnect followed by startSession.
+   */
+  public async restart(): Promise<void> {
+    const state = this.executionStateSubject.value;
+    if (state === 'starting' || state === 'idle' || state === 'terminated') {
+      return;
+    }
+
+    if (this.capabilities?.supportsRestartRequest) {
+      try {
+        await this.sendRequest('restart');
+        return;
+      } catch (e) {
+        console.warn('Restart request failed, falling back to soft restart', e);
+      }
+    }
+
+    // Soft Restart Fallback
+    if (state === 'running' || state === 'stopped') {
+      // Session is active: cleanly terminate the debuggee, then reconnect.
+      await this.stop();
+      await this.disconnect({ restart: true });
+    }
+    // For terminated/idle: disconnect() would be a no-op, so go straight to startSession.
+    await this.startSession();
   }
 
   /**
    * Continue execution
    */
-  async continue(): Promise<DapResponse> {
+  public async continue(): Promise<DapResponse> {
     if (this.commandInFlightSubject.value) {
       return Promise.resolve({ seq: 0, type: 'response', command: 'continue', success: true, request_seq: 0 });
     }
@@ -324,7 +354,7 @@ export class DapSessionService {
   /**
    * Step Over (Next)
    */
-  async next(): Promise<DapResponse> {
+  public async next(): Promise<DapResponse> {
     if (this.commandInFlightSubject.value) {
       return Promise.resolve({ seq: 0, type: 'response', command: 'next', success: true, request_seq: 0 });
     }
@@ -345,7 +375,7 @@ export class DapSessionService {
   /**
    * Step Into
    */
-  async stepIn(): Promise<DapResponse> {
+  public async stepIn(): Promise<DapResponse> {
     if (this.commandInFlightSubject.value) {
       return Promise.resolve({ seq: 0, type: 'response', command: 'stepIn', success: true, request_seq: 0 });
     }
@@ -366,7 +396,7 @@ export class DapSessionService {
   /**
    * Step Out
    */
-  async stepOut(): Promise<DapResponse> {
+  public async stepOut(): Promise<DapResponse> {
     if (this.commandInFlightSubject.value) {
       return Promise.resolve({ seq: 0, type: 'response', command: 'stepOut', success: true, request_seq: 0 });
     }
@@ -387,7 +417,7 @@ export class DapSessionService {
   /**
    * Step Over at Instruction Level (Nexti)
    */
-  async nextInstruction(): Promise<DapResponse> {
+  public async nextInstruction(): Promise<DapResponse> {
     if (this.commandInFlightSubject.value) {
       return Promise.resolve({ seq: 0, type: 'response', command: 'next', success: true, request_seq: 0 });
     }
@@ -403,7 +433,7 @@ export class DapSessionService {
   /**
    * Step Into at Instruction Level (Stepi)
    */
-  async stepInInstruction(): Promise<DapResponse> {
+  public async stepInInstruction(): Promise<DapResponse> {
     if (this.commandInFlightSubject.value) {
       return Promise.resolve({ seq: 0, type: 'response', command: 'stepIn', success: true, request_seq: 0 });
     }
@@ -425,7 +455,7 @@ export class DapSessionService {
    * @param lines 1-based line numbers of all desired breakpoints in this file
    * @returns Array of verified breakpoint results from the adapter
    */
-  async setBreakpoints(sourcePath: string, lines: number[]): Promise<VerifiedBreakpoint[]> {
+  public async setBreakpoints(sourcePath: string, lines: number[]): Promise<VerifiedBreakpoint[]> {
     const state = this.breakpointFileState.get(sourcePath) ?? { inFlight: false, pending: undefined };
 
     // If a request for this file is already in progress, store the latest lines
@@ -503,14 +533,14 @@ export class DapSessionService {
   /**
    * Toggles the enabled state of a specific breakpoint.
    */
-  async toggleBreakpointEnabled(sourcePath: string, line: number): Promise<void> {
+  public async toggleBreakpointEnabled(sourcePath: string, line: number): Promise<void> {
     const bps = this.breakpointsMap.get(sourcePath) || [];
     const index = bps.findIndex(b => b.line === line);
     if (index !== -1) {
       bps[index].enabled = !bps[index].enabled;
       this.breakpointsMap.set(sourcePath, [...bps]);
       this.breakpointsSubject.next(new Map(this.breakpointsMap));
-      
+
       // Re-sync with DAP server (only send enabled ones)
       const allLines = bps.map(b => b.line);
       await this.setBreakpoints(sourcePath, allLines);
@@ -520,10 +550,10 @@ export class DapSessionService {
   /**
    * Removes a specific breakpoint.
    */
-  async removeBreakpoint(sourcePath: string, line: number): Promise<void> {
+  public async removeBreakpoint(sourcePath: string, line: number): Promise<void> {
     const bps = this.breakpointsMap.get(sourcePath) || [];
     const filtered = bps.filter(b => b.line !== line);
-    
+
     // Re-sync with DAP server (will update SSOT via setBreakpoints call)
     const allLines = filtered.map(b => b.line);
     await this.setBreakpoints(sourcePath, allLines);
@@ -532,7 +562,7 @@ export class DapSessionService {
   /**
    * Pause execution
    */
-  async pause(): Promise<DapResponse> {
+  public async pause(): Promise<DapResponse> {
     if (this.commandInFlightSubject.value) {
       return Promise.resolve({ seq: 0, type: 'response', command: 'pause', success: true, request_seq: 0 });
     }
@@ -547,14 +577,14 @@ export class DapSessionService {
   /**
    * Get thread list
    */
-  async threads(): Promise<DapResponse> {
+  public async threads(): Promise<DapResponse> {
     return this.sendRequest('threads');
   }
 
   /**
    * Fetch threads and update the subjects. Called internally on 'stopped'.
    */
-  async fetchThreads(): Promise<void> {
+  public async fetchThreads(): Promise<void> {
     try {
       const response = await this.threads();
       if (response.success && response.body?.threads) {
@@ -574,7 +604,7 @@ export class DapSessionService {
   /**
    * Set the current active thread and trigger a stackTrace refresh
    */
-  setCurrentThread(threadId: number): void {
+  public setCurrentThread(threadId: number): void {
     if (this.activeThreadIdSubject.value === threadId) {
       return;
     }
@@ -592,7 +622,7 @@ export class DapSessionService {
    * Get stack trace of a specific thread
    * @param threadId Thread ID
    */
-  async stackTrace(threadId: number): Promise<DapResponse> {
+  public async stackTrace(threadId: number): Promise<DapResponse> {
     this.ensureStopped();
     return this.sendRequest('stackTrace', { threadId });
   }
@@ -601,7 +631,7 @@ export class DapSessionService {
    * Get scopes for a specific stack frame
    * @param frameId Stack frame ID
    */
-  async scopes(frameId: number): Promise<DapResponse> {
+  public async scopes(frameId: number): Promise<DapResponse> {
     this.ensureStopped();
     return this.sendRequest('scopes', { frameId });
   }
@@ -610,7 +640,7 @@ export class DapSessionService {
    * Get variables for a specific scope
    * @param variablesReference Variables Reference (from scopes response)
    */
-  async variables(variablesReference: number): Promise<DapResponse> {
+  public async variables(variablesReference: number): Promise<DapResponse> {
     this.ensureStopped();
     return this.sendRequest('variables', { variablesReference });
   }
@@ -619,7 +649,7 @@ export class DapSessionService {
    * Disassemble instructions starting from a memory reference.
    * @param args Strongly-typed disassemble arguments
    */
-  async disassemble(args: DisassembleArguments): Promise<DapResponse> {
+  public async disassemble(args: DisassembleArguments): Promise<DapResponse> {
     this.ensureStopped();
     return this.sendRequest('disassemble', args);
   }
@@ -650,7 +680,7 @@ export class DapSessionService {
    */
   public evaluate(expression: string, frameId?: number): Promise<DapResponse> {
     const TIMEOUT_MS = 30_000;
-    
+
     // sendRequest generates the next seq internally right away, but to capture it,
     // we use the current seq value. Keep in mind seq is incremented synchronously.
     const expectedSeq = this.seq;
@@ -679,7 +709,7 @@ export class DapSessionService {
    * @param args DAP command arguments (optional)
    * @param timeoutMs Timeout in milliseconds (default 5000ms)
    */
-  sendRequest(command: string, args?: any, timeoutMs: number = 5000): Promise<DapResponse> {
+  public sendRequest(command: string, args?: any, timeoutMs: number = 5000): Promise<DapResponse> {
     const transport = this.transport;
     if (!transport) {
       return Promise.reject(new Error('Transport not initialized. Call startSession() first.'));
@@ -729,7 +759,7 @@ export class DapSessionService {
   /**
    * Provides the session-level event stream (pre-processed by the Session)
    */
-  onEvent(): Observable<DapEvent> {
+  public onEvent(): Observable<DapEvent> {
     return this.eventSubject.asObservable();
   }
 
@@ -801,10 +831,11 @@ export class DapSessionService {
       handler.reject(err);
       this.pendingRequests.delete(seq);
     }
+    this.clearSessionData();
   }
 
   private handleIncomingTransportComplete(): void {
-    if (this.executionStateSubject.value !== 'idle') {
+    if (this.executionStateSubject.value !== 'idle' && this.executionStateSubject.value !== 'terminated') {
       // Emit synthetic event for UI-layer notification before transitioning state
       this.eventSubject.next({
         seq: 0,
@@ -818,7 +849,21 @@ export class DapSessionService {
         handler.reject(new Error('Connection abruptly closed'));
         this.pendingRequests.delete(seq);
       }
+      this.clearSessionData();
     }
+  }
+
+  /**
+   * Internal helper to clear session-specific Subjects and Maps when the 
+   * connection is lost or reset. Prevents stale data from remaining in the UI.
+   */
+  private clearSessionData(): void {
+    this.threadsSubject.next([]);
+    this.activeThreadIdSubject.next(null);
+    this.stoppedThreadIdSubject.next(null);
+    this.stopReasonSubject.next(null);
+    this.breakpointsMap.clear();
+    this.breakpointsSubject.next(new Map());
   }
 
   /**
@@ -864,7 +909,7 @@ export class DapSessionService {
         if (bp && bp.source?.path && bp.line !== undefined) {
           const filePath = bp.source.path;
           const currentBps = this.breakpointsMap.get(filePath) || [];
-          
+
           // The DAP 'breakpoint' event is typically used to update a single breakpoint's status.
           // Since we don't have a reliable ID mapping in the frontend yet for all adapters,
           // we look for a breakpoint at the same line or with the same adapter ID.

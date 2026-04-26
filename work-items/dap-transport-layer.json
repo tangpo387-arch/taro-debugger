@@ -337,6 +337,30 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-18"
       }
+    },
+    {
+      "id": "WI-86",
+      "title": "Standardize Capability-Aware Stop and Restart Logic",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Implement hierarchical fallback for session termination and native restart support.",
+      "details": [
+        "[DAP] Implement stop() with terminate/disconnect fallback in DapSessionService",
+        "[DAP] Implement restart() with native/soft fallback in DapSessionService",
+        "[UI] Update DebugControlGroup to support Run action from idle state",
+        "[Test] Verify capability-aware fallback logic in session service",
+        "[Doc] docs/architecture/session-layer.md"
+      ],
+      "timeline": {
+        "created": "2026-04-26",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-26"
+      }
     }
   ]
 }

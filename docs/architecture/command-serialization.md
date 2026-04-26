@@ -29,11 +29,11 @@ interleaved DAP messages reaching the Debug Adapter (DA) before it has transitio
 
 | Rule | Interaction Surface | Semantic |
 | :--- | :--- | :--- |
-| **R-CS1** | Control buttons (Continue / Next / Step In / Step Out / Pause / Stop) | Drop — second command while in-flight is silently discarded |
+| **R-CS1** | Control buttons (Run / Continue / Next / Step In / Step Out / Pause / Stop) | Drop — second command while in-flight is silently discarded; Play button is multi-purpose (Run vs Continue) |
 | **R-CS2** | Evaluate command (console input) | Cancel-able — in-flight can be interrupted; auto-timeout at 30 s |
 | **R-CS3** | Call stack frame switch | Cancel-and-replace — latest selection wins; prior in-flight chain is discarded |
 | **R-CS4** | Breakpoint gutter click (`setBreakpoints`) | Debounce (150 ms) + per-file last-write-wins; distinct files are independent |
-| **R-CS5** | Stop / Disconnect button (`disconnect` / `terminate`) | One-shot guard — calls after first dispatch are no-ops until `reset()` |
+| **R-CS5** | Stop / Restart / Disconnect button (`stop` / `restart`) | One-shot guard — calls after first dispatch are no-ops until `reset()`; hierarchical fallback based on capabilities |
 
 ### 1.1 Layer Responsibilities
 
@@ -61,6 +61,13 @@ The following fundamental constraints govern all command serialization patterns 
   - All control buttons enter a **disabled state** immediately on click.
   - Buttons re-enable when the command response is received (resolved or rejected) **or** when the `executionState$` transitions via a DAP `stopped` / `continued` / `terminated` event.
 - Rationale: Sending a second control command before the first state transition is confirmed is a DAP protocol violation.
+- **Run vs. Resume Differentiation**: The "Play" button icon (`play_arrow`) is enabled in `idle`, `terminated`, and `stopped` states, but maps to different semantic actions:
+  - **Run (`onRun`)**: Triggered from `idle` or `terminated`. Calls `startSession()` to establish a fresh transport and handshake.
+  - **Resume (`onResume`)**: Triggered from `stopped`. Calls `continue()` to resume the existing process.
+- **Button Lifecycle**:
+  - All control buttons enter a **disabled state** immediately on click (jitter filtering).
+  - Buttons re-enable when the command response is settled **or** when the `executionState$` transitions via a DAP event.
+- Rationale: Explicitly separating the "Run" intent (session initialization) from the "Resume" intent (execution control) prevent protocol race conditions when attempting to restart a naturally terminated session.
 
 ### Enforcement
 
@@ -276,34 +283,32 @@ public async setBreakpoints(path: string, lines: number[]): Promise<DapResponse>
 
 ---
 
-## 7. R-CS5: disconnect / terminate One-Shot Guard
+## 7. R-CS5: stop / restart Hierarchical Fallback & Guards
 
 ### Behavior
 
-- Once `disconnect()` or `terminate()` is dispatched, all subsequent calls to either method are **no-ops** until `reset()` returns the session to `idle`.
-- The guard is enforced via the existing `ExecutionState` machine — no new signal is introduced.
-- When `executionState` is already `terminated`, `idle`, or `error`, both methods return `Promise.resolve()` immediately without sending any DAP request.
-- Rationale: `disconnect()` natively triggers the teardown of the underlying socket or IPC channel. Because this operation is asynchronous, rapid clicks by a user waiting for a slow Debug Adapter to detach could spawn multiple concurrent `disconnect()` calls. The first call destroys the transport. A second call attempting to pipe data to the now-closed transport causes fatal unhandled Promise rejections and exception noise. Furthermore, a double-dispatch could leave the internal flags and event listeners in a race condition, leading to state machine corruption. By transitioning the `ExecutionState` to `terminated` identically on the first pass (the "one-shot" guard), we instantly shield the rest of the application.
-- The existing `executionState$` transition to `terminated` already causes the Stop button to be hidden or disabled in the UI — this rule adds the complementary **service-level** guard to account for API calls, latency, and shortcut spamming.
+- **Hierarchy Strategy**: Both `stop()` and `restart()` adapt their behavior based on the Debug Adapter's `capabilities` to ensure the most graceful termination possible.
+- **Stop Action**:
+  - Primary: If `supportsTerminateRequest`, send `terminate`.
+  - Fallback: If unsupported or failed, send `disconnect` with `terminateDebuggee: true`.
+- **Restart Action**:
+  - Primary: If `supportsRestartRequest`, send `restart`.
+  - Fallback: "Soft Restart" — execute `stop()` → `disconnect({ restart: true })` → `startSession()`.
+- **One-Shot Guard**:
+  - Once `stop()` or `restart()` is dispatched, all subsequent calls to either are **no-ops** until the session returns to `idle`.
+  - **Terminal Guard**: `restart()` is explicitly blocked (early return) if the current state is `idle` or `terminated`. In these states, the UI directs the user to the "Run" action (`startSession`) instead.
+- **Rationale**:
+  - `disconnect()` triggers transport teardown. Multiple concurrent calls would attempt to write to a closing socket, causing unhandled rejections.
+  - Pre-terminating an active session before a soft restart prevents DAP servers from hanging in an undefined state when a new handshake is initiated.
+  - Restricting `restart()` to active sessions prevents semantic confusion with "Run" and maintains the integrity of the state machine.
 
 ### Enforcement
 
 | Concern | Layer | Mechanism |
 | :--- | :--- | :--- |
-| One-shot guard | **Session** (`DapSessionService`) | Early-exit at top of `disconnect()` and `terminate()` based on `ExecutionState` |
-| UI button suppression | **UI** (`DebuggerComponent`) | Existing `executionState$` binding — no change required |
+| One-shot guard | **Session** (`DapSessionService`) | Early-exit at top of `stop()`, `restart()`, and `disconnect()` |
+| Terminal action filtering | **UI** (`DebugControlGroup`) | `[disabled]` binding blocks Restart button in `idle`/`terminated` |
+| UI button suppression | **UI** (`DebuggerComponent`) | Existing `executionState$` binding |
 
-```typescript
-// Session Layer — one-shot guard (early exit)
-public async disconnect(): Promise<void> {
-  if (this.executionState === 'terminated' ||
-      this.executionState === 'idle' ||
-      this.executionState === 'error') {
-    return; // no-op
-  }
-  // ... existing teardown logic
-}
-```
-
-> [Diagram: Stop button click → executionState guard → if 'terminated'/'idle'/'error': return immediately.
-> Otherwise: dispatch disconnect/terminate, transition state to 'terminated'.]
+> [Diagram: Control button click → check executionState → if terminal (and command is restart): return.
+> Otherwise: dispatch hierarchical command (terminate/restart/disconnect), transition state.]

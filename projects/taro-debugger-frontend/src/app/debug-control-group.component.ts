@@ -22,6 +22,7 @@ import { map } from 'rxjs';
 export class DebugControlGroupComponent {
   @Output() public readonly restart = new EventEmitter<void>();
   @Output() public readonly stop = new EventEmitter<void>();
+  @Output() public readonly run = new EventEmitter<void>();
   @Output() public readonly stepInstructionTab = new EventEmitter<'stepi' | 'nexti'>();
 
   /** 
@@ -39,7 +40,9 @@ export class DebugControlGroupComponent {
   /** Convenience observables for specific button states */
   public readonly isStopped$ = this.executionState$.pipe(map(state => state === 'stopped'));
   public readonly isRunning$ = this.executionState$.pipe(map(state => state === 'running'));
-  public readonly isStarting$ = this.executionState$.pipe(map(state => state === 'starting' || state === 'idle'));
+  public readonly isIdle$ = this.executionState$.pipe(map(state => state === 'idle'));
+  public readonly isTerminated$ = this.executionState$.pipe(map(state => state === 'terminated'));
+  public readonly isStarting$ = this.executionState$.pipe(map(state => state === 'starting'));
   public readonly isError$ = this.executionState$.pipe(map(state => state === 'error'));
 
   /** Emits true when a control command is currently being processed by the session */
@@ -48,7 +51,12 @@ export class DebugControlGroupComponent {
   // ── Execution Handlers ───────────────────────────────────────────────────
 
   public onResume(): void {
-    this.dapSession.continue().catch(() => {});
+    const state = this.dapSession.executionState;
+    if (state === 'idle' || state === 'terminated') {
+      this.run.emit();
+    } else {
+      this.dapSession.continue().catch(() => {});
+    }
   }
 
   public onPause(): void {

@@ -59,7 +59,7 @@ describe('DapSessionService', () => {
     it('should send next request with instruction granularity', async () => {
       (service as any).transport = mockTransport;
       service.nextInstruction();
-      
+
       expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
         command: 'next',
         arguments: { threadId: 1, granularity: 'instruction' }
@@ -69,7 +69,7 @@ describe('DapSessionService', () => {
     it('should send stepIn request with instruction granularity', async () => {
       (service as any).transport = mockTransport;
       service.stepInInstruction();
-      
+
       expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
         command: 'stepIn',
         arguments: { threadId: 1, granularity: 'instruction' }
@@ -94,7 +94,7 @@ describe('DapSessionService', () => {
       (service as any).transport = mockTransport;
 
       const promise = service.sendRequest('testCommand');
-      
+
       // Manually trigger the handler
       (service as any).handleIncomingMessage({
         type: 'response',
@@ -177,18 +177,26 @@ describe('DapSessionService', () => {
       expect((service as any).executionStateSubject.value).toBe('error');
     });
 
-    it('should transition to error on transport completion if not idle', () => {
+    it('should transition to error on transport completion if not idle or terminated', () => {
       (service as any).executionStateSubject.next('running');
       (service as any).handleIncomingTransportComplete();
       expect((service as any).executionStateSubject.value).toBe('error');
     });
 
+    it('should NOT transition to error on transport completion if already terminated', () => {
+      // When a debuggee exits naturally, the DAP server closes the connection.
+      // This is expected behavior — the state must remain 'terminated', not 'error'.
+      (service as any).executionStateSubject.next('terminated');
+      (service as any).handleIncomingTransportComplete();
+      expect((service as any).executionStateSubject.value).toBe('terminated');
+    });
+
     it('should optimistically transition to running upon successful continue request', async () => {
       (service as any).transport = mockTransport;
       (service as any).executionStateSubject.next('stopped');
-      
+
       const promise = service.continue();
-      
+
       // Simulate successful response (request_seq 1)
       (service as any).handleIncomingMessage({
         type: 'response',
@@ -196,7 +204,7 @@ describe('DapSessionService', () => {
         success: true,
         command: 'continue'
       });
-      
+
       await promise;
       expect((service as any).executionStateSubject.value).toBe('running');
     });
@@ -206,42 +214,42 @@ describe('DapSessionService', () => {
     it('should set commandInFlight$ to true during control command execution', async () => {
       (service as any).transport = mockTransport;
       const promise = service.continue();
-      
+
       expect((service as any).commandInFlightSubject.value).toBe(true);
-      
+
       (service as any).handleIncomingMessage({
         type: 'response',
         request_seq: 1,
         success: true,
         command: 'continue'
       });
-      
+
       await promise;
       expect((service as any).commandInFlightSubject.value).toBe(false);
     });
 
     it('should drop second control command call while one is in-flight', async () => {
       (service as any).transport = mockTransport;
-      
+
       // first call
       const promise1 = service.continue();
       expect(mockTransport.sendRequest).toHaveBeenCalledTimes(1);
-      
+
       // second call while in-flight
       const promise2 = service.next();
       expect(mockTransport.sendRequest).toHaveBeenCalledTimes(1); // Still 1
-      
+
       const res2 = await promise2;
       expect(res2.success).toBe(true); // Silently successful but did nothing
       expect(res2.request_seq).toBe(0); // Dummy response
-      
+
       (service as any).handleIncomingMessage({
         type: 'response',
         request_seq: 1,
         success: true,
         command: 'continue'
       });
-      
+
       await promise1;
     });
   });
@@ -253,7 +261,7 @@ describe('DapSessionService', () => {
       service.capabilities = { supportsCancelRequest: true };
 
       const promise = service.cancelRequest(5);
-      
+
       expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
         command: 'cancel',
         arguments: { requestId: 5 }
@@ -266,7 +274,7 @@ describe('DapSessionService', () => {
       service.capabilities = { supportsCancelRequest: false };
 
       const promise = service.cancelRequest(5);
-      
+
       expect(mockTransport.sendRequest).not.toHaveBeenCalledWith(expect.objectContaining({ command: 'cancel' }));
     });
 
@@ -276,12 +284,12 @@ describe('DapSessionService', () => {
       service.capabilities = { supportsCancelRequest: true };
 
       const promise = service.evaluate('slow');
-      
+
       // Fast forward 30 seconds
       vi.advanceTimersByTime(30000);
-      
+
       await expect(promise).rejects.toThrow('Evaluate timed out');
-      
+
       // The seq is 1
       expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
         command: 'cancel',
@@ -327,40 +335,6 @@ describe('DapSessionService', () => {
       expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({ command: 'disconnect' }));
     });
 
-    it('should return immediately in terminate() if already terminated', async () => {
-      (service as any).transport = mockTransport;
-      (service as any).executionStateSubject.next('terminated');
-      service.capabilities = { supportsTerminateRequest: true };
-
-      await service.terminate();
-
-      expect(mockTransport.sendRequest).not.toHaveBeenCalled();
-    });
-
-    it('should fallback to disconnect and still be one-shot if terminate fails', async () => {
-      (service as any).transport = mockTransport;
-      (service as any).executionStateSubject.next('running');
-      service.capabilities = { supportsTerminateRequest: true };
-      
-      // Setup mock to fail terminate but allow disconnect
-      mockTransport.sendRequest.mockImplementation((req: any) => {
-        if (req.command === 'terminate') {
-          (service as any).handleIncomingMessage({
-            type: 'response', request_seq: req.seq, command: 'terminate', success: false, message: 'Failed'
-          });
-        } else if (req.command === 'disconnect') {
-          (service as any).handleIncomingMessage({
-            type: 'response', request_seq: req.seq, command: 'disconnect', success: true
-          });
-        }
-      });
-
-      await service.terminate();
-
-      // Expect terminate request AND disconnect request (fallback)
-      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({ command: 'terminate' }));
-      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({ command: 'disconnect' }));
-    });
   });
 
   describe('setBreakpoints Serialization (R-CS4)', () => {
@@ -430,14 +404,14 @@ describe('DapSessionService', () => {
       service.setBreakpoints(file, [10]); // req 1
       service.setBreakpoints(file, [20]); // queues 20
       service.setBreakpoints(file, [30]); // overwrites 20 with 30
-      
+
       expect(mockTransport.sendRequest).toHaveBeenCalledTimes(1);
 
       // Complete first call (seq 1)
       (service as any).handleIncomingMessage({
         type: 'response', request_seq: 1, command: 'setBreakpoints', success: true
       });
-      
+
       // Wait for tick (recursive microtask)
       await Promise.resolve();
 
@@ -538,6 +512,175 @@ describe('DapSessionService', () => {
         command: 'setBreakpoints',
         arguments: expect.objectContaining({ breakpoints: [{ line: 20 }] })
       }));
+    });
+  });
+
+  describe('Stop and Restart Logic (WI-86)', () => {
+    beforeEach(() => {
+      (service as any).transport = mockTransport;
+      (service as any).executionStateSubject.next('running');
+    });
+
+    describe('stop()', () => {
+      it('should send terminate request if supported', async () => {
+        (service as any).capabilities = { supportsTerminateRequest: true };
+        
+        const promise = service.stop();
+        
+        expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+          command: 'terminate'
+        }));
+
+        (service as any).handleIncomingMessage({
+          type: 'response',
+          request_seq: 1,
+          success: true,
+          command: 'terminate'
+        });
+
+        await promise;
+      });
+
+      it('should fallback to disconnect if terminate is NOT supported', async () => {
+        (service as any).capabilities = { supportsTerminateRequest: false };
+        
+        const promise = service.stop();
+        
+        // Should NOT send terminate
+        expect(mockTransport.sendRequest).not.toHaveBeenCalledWith(expect.objectContaining({
+          command: 'terminate'
+        }));
+
+        // Should send disconnect with terminateDebuggee: true
+        expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+          command: 'disconnect',
+          arguments: expect.objectContaining({ terminateDebuggee: true })
+        }));
+
+        (service as any).handleIncomingMessage({
+          type: 'response',
+          request_seq: 1,
+          success: true,
+          command: 'disconnect'
+        });
+
+        await promise;
+      });
+
+      it('should fallback to disconnect if terminate fails', async () => {
+        (service as any).capabilities = { supportsTerminateRequest: true };
+        
+        const promise = service.stop();
+        
+        expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+          command: 'terminate'
+        }));
+
+        // Simulate failure
+        (service as any).handleIncomingMessage({
+          type: 'response',
+          request_seq: 1,
+          success: false,
+          command: 'terminate',
+          message: 'Failed'
+        });
+
+        // Wait for microtask (catch block)
+        await Promise.resolve();
+
+        // Should then call disconnect
+        expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+          command: 'disconnect',
+          arguments: expect.objectContaining({ terminateDebuggee: true })
+        }));
+
+        (service as any).handleIncomingMessage({
+          type: 'response',
+          request_seq: 2,
+          success: true,
+          command: 'disconnect'
+        });
+
+        await promise;
+      });
+
+      it('should return early if state is terminated/idle', async () => {
+        (service as any).executionStateSubject.next('terminated');
+        await service.stop();
+        expect(mockTransport.sendRequest).not.toHaveBeenCalled();
+
+        (service as any).executionStateSubject.next('idle');
+        await service.stop();
+        expect(mockTransport.sendRequest).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('restart()', () => {
+      it('should send restart request if supported', async () => {
+        (service as any).capabilities = { supportsRestartRequest: true };
+        
+        const promise = service.restart();
+        
+        expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+          command: 'restart'
+        }));
+
+        (service as any).handleIncomingMessage({
+          type: 'response',
+          request_seq: 1,
+          success: true,
+          command: 'restart'
+        });
+
+        await promise;
+      });
+
+
+      it('should NOT allow restart from idle state (Run is preferred)', async () => {
+        (service as any).executionStateSubject.next('idle');
+        const startSessionSpy = vi.spyOn(service, 'startSession').mockResolvedValue({} as any);
+        
+        await service.restart();
+        
+        expect(startSessionSpy).not.toHaveBeenCalled();
+      });
+
+      it('should NOT allow restart from terminated state (Run is preferred)', async () => {
+        (service as any).executionStateSubject.next('terminated');
+        const startSessionSpy = vi.spyOn(service, 'startSession').mockResolvedValue({} as any);
+        
+        await service.restart();
+        
+        expect(startSessionSpy).not.toHaveBeenCalled();
+      });
+
+      it('should call stop() before disconnect during soft restart from running state', async () => {
+        (service as any).capabilities = { supportsRestartRequest: false };
+        (service as any).executionStateSubject.next('running');
+        const stopSpy = vi.spyOn(service, 'stop').mockResolvedValue(undefined);
+        const disconnectSpy = vi.spyOn(service as any, 'disconnect').mockResolvedValue(undefined);
+        const startSessionSpy = vi.spyOn(service, 'startSession').mockResolvedValue({} as any);
+
+        await service.restart();
+
+        expect(stopSpy).toHaveBeenCalled();
+        expect(disconnectSpy).toHaveBeenCalledWith(expect.objectContaining({ restart: true }));
+        expect(startSessionSpy).toHaveBeenCalled();
+      });
+
+      it('should call stop() before disconnect during soft restart from stopped state', async () => {
+        (service as any).capabilities = { supportsRestartRequest: false };
+        (service as any).executionStateSubject.next('stopped');
+        const stopSpy = vi.spyOn(service, 'stop').mockResolvedValue(undefined);
+        const disconnectSpy = vi.spyOn(service as any, 'disconnect').mockResolvedValue(undefined);
+        const startSessionSpy = vi.spyOn(service, 'startSession').mockResolvedValue({} as any);
+
+        await service.restart();
+
+        expect(stopSpy).toHaveBeenCalled();
+        expect(disconnectSpy).toHaveBeenCalledWith(expect.objectContaining({ restart: true }));
+        expect(startSessionSpy).toHaveBeenCalled();
+      });
     });
   });
 });

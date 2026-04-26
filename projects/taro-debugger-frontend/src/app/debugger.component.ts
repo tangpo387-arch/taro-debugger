@@ -227,14 +227,20 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     // Subscribe to execution state changes
     this.stateSubscription = this.dapSession.executionState$.subscribe(state => {
       this.executionState = state;
-      
+
       // R_SM5 compliance: Auto-clear execution-specific state whenever the process
       // transitions out of the 'stopped' context (e.g., to 'running' or 'error').
       // This ensures the Call Stack panel matches the Variables panel behavior.
       if (state === 'running' || state === 'error') {
         this.clearExecutionState();
       }
-      
+
+      // Clear open file state on fatal error (disconnect) to ensure clean slate
+      if (state === 'error') {
+        this.currentCode = '';
+        this.activeFilePath = null;
+      }
+
       this.cdr.detectChanges();
     });
 
@@ -709,7 +715,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
       if (targetThreadId) {
         const stackRes = await this.dapSession.stackTrace(targetThreadId);
-        
+
         // Race condition guard: If the process resumed while the request was in flight,
         // discard the results to prevent stale data from appearing in the UI.
         if (this.executionState !== 'stopped') {
@@ -889,28 +895,27 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public async onStop(): Promise<void> {
     try {
       this.logService.consoleLog('Debug session stopped by user', 'info', 'system');
-      await this.dapSession.terminate();
+      await this.dapSession.stop();
     } catch (e: any) {
       // Handled globally by synthetic DAP events
     }
   }
 
-  /** Reset session (Disconnect and restart) */
-  public async onRestart(): Promise<void> {
-    const validStates: ExecutionState[] = ['running', 'stopped', 'terminated', 'error'];
-    if (!validStates.includes(this.executionState)) return;
-
-    // Cache the state BEFORE disconnect overrides it to 'idle'
-    const wasError = this.executionState === 'error';
-
+  /** Start new session (Run) */
+  public async onRun(): Promise<void> {
     try {
-      await this.dapSession.disconnect();
-      this.initialSourcesLoaded = false; // Full session restart — allow initial tree load on next stopped.
-      this.clearExecutionState();
-      this.logService.consoleLog(wasError ? 'Reconnecting to session...' : 'Restarting session...', 'info', 'system');
-      await this.startSession();
+      await this.dapSession.startSession();
     } catch (e: any) {
-      this.logService.consoleLog(`Restart/Reconnect failed: ${e.message}`, 'error', 'system');
+      this.logService.consoleLog(`Run failed: ${e.message}`, 'error', 'system');
+    }
+  }
+
+  /** Reset session (Restart) */
+  public async onRestart(): Promise<void> {
+    try {
+      await this.dapSession.restart();
+    } catch (e: any) {
+      this.logService.consoleLog(`Restart failed: ${e.message}`, 'error', 'system');
     }
   }
 

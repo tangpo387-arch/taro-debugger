@@ -13,6 +13,7 @@ function makeMockDapSession(overrides: any = {}) {
   return {
     sendRequest: vi.fn(),
     onEvent: vi.fn().mockReturnValue(EMPTY),
+    connectionStatus$: of(true),
     capabilities: { supportsLoadedSourcesRequest: true },
     ...overrides,
   };

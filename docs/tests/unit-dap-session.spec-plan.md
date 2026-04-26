@@ -3,8 +3,8 @@ title: DapSessionService — Unit Spec Plan
 scope: unit-test
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 target-file: projects/dap-core/src/lib/session/dap-session.service.ts
-related-wi: [WI-41]
-last_updated: 2026-04-21
+related-wi: [WI-41, WI-86]
+last_updated: 2026-04-26
 ---
 
 # DapSessionService — Unit Spec Plan
@@ -41,11 +41,20 @@ Fully isolated tests for `DapSessionService`. Focuses on DAP session lifecycle, 
   * Verify that calls for different files execute in parallel.
   * Verify that the pending slot uses last-write-wins (collapses multiple updates into one).
 
-* **Disconnect/Terminate One-Shot Guard (R-CS5)**
-  * Verify that `disconnect()` returns immediately without sending a DAP request if the execution state is already `terminated`, `idle`, or `error`.
-  * Verify that a second call to `disconnect()` while the first is in-flight returns immediately.
-  * Verify that `terminate()` returns immediately without sending a DAP request if the execution state is already `terminated`, `idle`, or `error`.
-  * Verify that `terminate()` transitions the state to `terminated` (or `idle` via fallback) to block subsequent calls.
+* **Stop and Restart Logic (R-CS5 / WI-86)**
+  * **Stop Hierarchy**:
+    * Verify that `stop()` sends `terminate` if supported.
+    * Verify that `stop()` falls back to `disconnect` if `terminate` is unsupported or fails.
+    * Verify that `stop()` returns early if already `terminated` or `idle`.
+  * **Restart Hierarchy**:
+    * Verify that `restart()` sends `restart` if supported.
+    * Verify that `restart()` executes "Soft Restart" (stop → disconnect → startSession) if native restart is unsupported.
+    * Verify that `restart()` returns early if state is `idle`, `starting`, or `terminated`.
+    * Verify that Soft Restart from `running`/`stopped` state explicitly calls `stop()` before `disconnect`.
+
+* **Session Lifecycle & Transport Errors**
+  * Verify that transport completion in `terminated` state does NOT trigger an `error` transition.
+  * Verify that unexpected transport completion in `running`/`stopped` states correctly transitions to `error`.
 
 * **Optimistic Execution State Transitions**
   * Verify that control commands (`continue`, `next`, `stepIn`, `stepOut`) transition the execution state to `running` immediately upon a successful DAP response, even if no redundant `continued` event is received.

@@ -62,7 +62,13 @@ This view follows a three-panel IDE architecture using `<mat-sidenav-container>`
 This section uses `<mat-toolbar>` as the system's global control hub.
 
 - **Brand Area**: Dynamically displays the application name or the currently loaded project name.
-- **Debug Control Module**: Uses `mat-button-toggle-group` to integrate core debug command operations (Continue, Step Over, Step Into, Step Out, Pause, Stop).
+- **Debug Control Module**: Uses `mat-button-toggle-group` to integrate core debug command operations:
+  - **Run / Continue**: A multi-purpose "Play" button icon (`play_arrow`).
+    - In `idle` or `terminated` state, it acts as **Run** (triggers `startSession()`).
+    - In `stopped` state, it acts as **Continue** (triggers `continue()`).
+  - **Stop**: Terminates the session. Performs hierarchical fallback: `terminate` request → `disconnect` request with termination flag.
+  - **Restart**: Restarts the active session. Uses native `restart` if supported, otherwise performs a "soft restart" (stop → disconnect → startSession). **Restriction**: Button is disabled in `idle` and `terminated` states.
+  - **Stepping**: Core operations (Step Over, Step Into, Step Out) are enabled only in `stopped` state.
 
 #### 3.2.2 Left Sidenav
 
@@ -242,3 +248,4 @@ The system uses a **Least Recently Used (LRU)** eviction policy to maintain a ba
 - **Cache Storage Restrictions**: `localStorage` is prohibited for source code content storage to avoid size limits and cross-session data staleness. Use memory-first LRU caching only.
 - **WebSocket Resilience**: The transport layer must fail-fast and terminate on any packet format anomaly. Blind JSON parsing without header validation is prohibited.
 - **UI Rendering Limits**: Log entry structured payload rendering must not exceed `200px` in height to prevent breaking virtual scrolling layouts.
+- **Natural Termination Handling**: The transport layer must exempt the `terminated` state from triggering an "unexpected disconnect" error. This ensures a clean UI transition when the DAP server closes the connection after a debuggee finishes execution.

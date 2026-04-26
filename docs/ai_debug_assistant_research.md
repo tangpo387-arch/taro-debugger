@@ -52,11 +52,13 @@ The AI Debug Assistant represents a massive architectural addition. It should be
 
 ### Proposed Milestones
 
-**Phase 1: Foundation (v1.x)**
+#### Phase 1: Foundation (v1.x)
+
 - **WI-XX**: Implement `AiContextService` to passively observe and checkpoint DAP state changes.
 - **WI-XY**: Add "Explain this Variable" and "Explain this Crash" context menus that generate static prompts for external copy-pasting.
 
-**Phase 2: Integration (v2.0)**
+#### Phase 2: Integration (v2.0)
+
 - **WI-XZ**: Implement `AiTransportService` for local/remote LLM connections.
 - **WI-XA**: Build the integrated AI Chat Panel UI within the debugger layout.
 - **WI-XB**: Implement "Session Memory" allowing the LLM to query the history of state checkpoints.
@@ -81,6 +83,62 @@ LLMs have strict token limits. We cannot dump raw DAP JSON payloads directly int
 ### C. Advanced Retrieval (Future)
 
 For long-running sessions, a simple ring buffer will overflow context windows. We would eventually introduce a local **Vector Store (RAG)**. The debugger would embed each `stopped` snapshot, allowing the LLM to execute queries like: *"Find the last time `socket_fd` was > 0."*
+
+## 6. Formal Verification Capabilities
+
+Bridging dynamic debugging (DAP) with formal verification allows the AI Assistant to translate live debugger states into mathematical formal languages. This enables the Assistant to mathematically prove the presence of bugs, verify memory safety, and validate execution paths in C/C++ applications, moving beyond probabilistic text generation.
+
+### Layer Responsibilities
+
+The AI Assistant acts as a Formal Verification Bridge between the DAP state and mathematical solvers:
+
+1. **Extraction Layer**: Pulls live runtime context (Memory, Variables, Registers) from the DAP session (`variablesRequest`, `readMemoryRequest`).
+2. **Translation Layer**: Converts the raw C/C++ state into a formal language (e.g., SMT-LIB, Separation Logic).
+3. **Solver Layer**: Feeds the formal script into a background theorem solver (e.g., Z3).
+4. **Reporting Layer**: Interprets the mathematical proof and surfaces the exact root cause in the UI.
+
+### Translation Contracts
+
+#### Separation Logic (Heap Memory & Pointers)
+
+- **Target Domain**: Memory safety, use-after-free, overlapping buffers.
+- **Translation Contract**: Converts DAP `readMemoryRequest` buffers into Separation Logic assertions. `{ (p ↦ x) * (q ↦ y) }` verifies pointer `p` and `q` exist in strictly disjoint memory regions.
+
+#### SMT-LIB v2 (Satisfiability Modulo Theories)
+
+- **Target Domain**: Reachability, bounds checking, variable constraints.
+- **Translation Contract**: Converts Call Stack and Variables into S-expressions for SMT solvers.
+
+    ```lisp
+    ;; Define state
+    (declare-const array_index Int)
+    (declare-const buffer_capacity Int)
+    (assert (= buffer_capacity 256))
+    
+    ;; Assert paused state
+    (assert (= array_index 300))
+    
+    ;; Define crash condition
+    (assert (>= array_index buffer_capacity))
+    
+    ;; Prove satisfiability
+    (check-sat)
+    ```
+
+#### Linear Temporal Logic (LTL)
+
+- **Target Domain**: Multi-threaded behavior, race conditions, deadlocks.
+- **Translation Contract**: Maps DAP `thread` and `step` events to temporal operators. For example, validating `G (mutex_acquired → F mutex_released)`.
+
+#### Hoare Logic
+
+- **Target Domain**: Function preconditions and postconditions.
+- **Translation Contract**: Evaluates runtime variables against preconditions (`{ x > 0 }`).
+
+### Constraints & Exclusions
+
+- **Execution Time**: Formal verification tasks must run asynchronously and not block the main DAP UI thread.
+- **Exclusions**: This integration does not cover modifying the source code directly; it is solely focused on state proof generation. It does not replace standard step-debugging for users who prefer manual inspection.
 
 ---
 *Please review this research. If the conceptual boundaries and roadmap alignment are acceptable, we can proceed to formally define the Work Items and Feature Group.*

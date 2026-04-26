@@ -1,5 +1,6 @@
 import {
   Component,
+  OnInit,
   OnChanges,
   DestroyRef,
   Input,
@@ -43,7 +44,7 @@ import { DapFileTreeService } from './dap-file-tree.service';
   templateUrl: './file-explorer.component.html',
   styleUrls: ['./file-explorer.component.scss'],
 })
-export class FileExplorerComponent implements OnChanges {
+export class FileExplorerComponent implements OnInit, OnChanges {
   // ── Injected Services ────────────────────────────────────────────────────────
   private readonly dapSession = inject(DapSessionService);
   private readonly dapConfig = inject(DapConfigService);
@@ -109,8 +110,19 @@ export class FileExplorerComponent implements OnChanges {
   /** Whether the connected DAP adapter supports `loadedSources`. */
   public fileTreeSupported: boolean = true;
 
-  /** Access the mat-tree instance for programmatic collapseAll(). */
   @ViewChild('tree') private tree?: MatTree<FileNode>;
+
+  public ngOnInit(): void {
+    // Automatically clear the tree when the connection is lost
+    this.dapSession.connectionStatus$.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(connected => {
+      if (!connected) {
+        this.fileDataSource = [];
+        this.cdr.detectChanges();
+      }
+    });
+  }
 
   /** Tracks the in-flight loadTree() subscription to cancel on re-entrant calls. */
   private loadTreeSub?: Subscription;

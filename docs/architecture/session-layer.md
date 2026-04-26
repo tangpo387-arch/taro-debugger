@@ -29,15 +29,16 @@ stateDiagram-v2
     starting --> running : launch/attach success
     running --> stopped : stopped event
     stopped --> running : continued event / continue()
-    running --> terminated : terminate() / terminated event
-    stopped --> terminated : terminate() / terminated event
-    terminated --> starting : disconnect() + startSession()
+    running --> terminated : stop() / terminated event
+    stopped --> terminated : stop() / terminated event
+    running --> starting : restart()
+    stopped --> starting : restart()
+    terminated --> starting : startSession()
 
-    %% Unexpected disconnect enters error state
+    %% Unexpected disconnect enters error state (terminated is exempt — disconnect is expected)
     starting --> error : unexpected disconnect
     running --> error : unexpected disconnect
     stopped --> error : unexpected disconnect
-    terminated --> error : unexpected disconnect
 
     %% Error state handling
     error --> idle : reset()
@@ -131,8 +132,10 @@ Transport instances are **lazily created** by Session via `TransportFactoryServi
 | `threads() / stackTrace() / scopes() / variables()` | `Promise<DapResponse>` | Thread and variable exploration commands (available in `stopped` state) |
 | `disassemble(args)` | `Promise<DapResponse>` | Retrieve disassembly instructions; available in `stopped` state |
 | `sendRequest()` | `Promise<DapResponse>` | Generic DAP request |
-| `disconnect()` | `Promise<void>` | Disconnect and clean up resources |
-| `terminate()` | `Promise<void>` | Terminate the debug target (falls back to `disconnect` if `supportsTerminateRequest` is false) |
+| `disconnect()` | `Promise<void>` | Disconnect and clean up resources; sends `disconnect` request with `terminateDebuggee: true` fallback. |
+| `terminate()` | `Promise<void>` | **Deprecated**: Use `stop()`. |
+| `stop()` | `Promise<void>` | Terminate the debug target. Hierarchy: `terminate` (if supported) → `disconnect({ terminateDebuggee: true })`. |
+| `restart()` | `Promise<void>` | Restart the debug session. Hierarchy: `restart` (if supported) → Soft restart (`disconnect` + `startSession`). |
 | `reset()` | `void` | Force reset Session to `idle` (cleans up all resources) |
 | `commandInFlight$` | `Observable<boolean>` | Emits `true` while any control command is in-flight. See [command-serialization.md §2](command-serialization.md#2-r-cs1-control-button-serialization). |
 | `cancelRequest(requestId)` | `Promise<void>` | Dispatches a DAP `cancel` request. Pre-condition: `capabilities.supportsCancelRequest`. See [command-serialization.md §3](command-serialization.md#3-r-cs2-evaluate-command). |

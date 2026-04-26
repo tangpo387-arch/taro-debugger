@@ -28,6 +28,7 @@ graph LR
     WI_60["WI-60 Lib: Extract Transport Layer"]
     WI_61["WI-61 Lib: Extract Session Manager"]
     WI_62["WI-62 Lib: Final Integration & Cleanup"]
+    WI_86["WI-86 Standardize Capability-Aware Stop and Restart Logic"]
     WI_10["WI-10 Debug Control Button Functionality"]
     WI_11["WI-11 DAP Event Handling & State Management"]
     WI_39["WI-39 Command Serialization: Control Button In-Flight Guard"]
@@ -187,6 +188,7 @@ graph LR
     style WI_60 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_61 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_62 fill:#4ade80,stroke:#000,stroke-width:2.5px
+    style WI_86 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_10 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_11 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_39 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
