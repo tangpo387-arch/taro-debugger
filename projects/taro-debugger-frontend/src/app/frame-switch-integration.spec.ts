@@ -12,7 +12,7 @@ import { ChangeDetectorRef } from '@angular/core';
 import { of, EMPTY, BehaviorSubject, delay } from 'rxjs';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
-describe('WI-42: Frame Switch Serialization', () => {
+describe('Frame Switch Integration', () => {
   let component: DebuggerComponent;
   let mockDapSession: any;
   let mockVariablesService: any;

@@ -152,6 +152,7 @@ it('should cancel long-running Observable on component destroy', async () => {
 | `setTimeout` / `setInterval` in tests without `vi.useFakeTimers()` | Non-deterministic timing |
 | `console.log` left in committed test code | Pollutes CI output |
 | `Overwrite: true` on an existing `*.spec.ts` without prior audit | High risk of silently dropping existing test cases; git history provides no recoverable diff |
+| `wi-xx*.spec.ts` naming pattern | Pollutes the repository with temporary Work Item IDs. You MUST use descriptive, functional names (e.g., `threads-integration.spec.ts`). |
 
 ---
 

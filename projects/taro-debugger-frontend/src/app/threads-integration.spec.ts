@@ -4,7 +4,7 @@ import { ThreadsComponent } from '@taro/ui-inspection';
 import { BehaviorSubject } from 'rxjs';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
-describe('WI-70: Threads Integration', () => {
+describe('Threads Integration', () => {
   let component: ThreadsComponent;
   let mockDapSession: any;
   let threadsSubject: BehaviorSubject<DapThread[]>;

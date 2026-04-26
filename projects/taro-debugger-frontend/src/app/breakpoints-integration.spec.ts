@@ -16,10 +16,10 @@ import { DapFileTreeService } from './dap-file-tree.service';
 import { NGX_MONACO_EDITOR_CONFIG } from 'ngx-monaco-editor-v2';
 
 /**
- * Integration-style unit tests for WI-71 (Global Breakpoint Synchronization).
+ * Integration-style unit tests for Breakpoint Synchronization.
  * Focuses on the reactive flow between DapSessionService, DebuggerComponent, and EditorComponent.
  */
-describe('WI-71: Breakpoint Synchronization Integration', () => {
+describe('Breakpoint Integration', () => {
   let component: DebuggerComponent;
   let mockDapSession: any;
   let mockEditor: any;
