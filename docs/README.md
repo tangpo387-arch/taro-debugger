@@ -2,46 +2,46 @@
 title: Documentation Index
 scope: index, reading-order, navigation
 audience: [Beginner, Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-14
+last_updated: 2026-04-28
 ---
 
-# DAP Debugger Frontend — Documentation Index
+# Taro Debugger Documentation Index
 
 > [!IMPORTANT]
-> This index is a navigation hub only. It is not authoritative on implementation
-> detail, WI status, or DAP behavior — always follow the link to the referenced
-> document before drawing conclusions.
+> This index is the primary navigation hub. Always refer to the specialized sub-directories for detailed specifications and architecture rules.
 
-## 1. Core Specifications & Design
+## 1. Documentation Taxonomy
 
-* 📄 **[System Specification (system-specification.md)](system-specification.md)**
-  * **Contents**: The project's top-level guiding document. Includes functional and UI layout specifications, Web/Electron dual-deployment mode differences, and the supported DAP request matrix.
-  * **When to read**: When you need to understand the overall system goals, what the UI should look like, or to confirm whether a given DAP feature is within the v1.0 scope.
+The project documentation is organized into functional tiers to separate permanent design rules from historical records.
 
-* 📄 **[System Architecture (architecture.md)](architecture.md)**
-  * **Contents**: Detailed explanation of the "Session / Transport / UI" three-layer architecture, the state machine, and RxJS data flow.
-  * **When to read**: Before writing code, when you need to understand architectural dependencies and determine which layer a given feature belongs to (e.g., never call WebSocket directly from the UI layer).
+| Directory | Purpose |
+| :--- | :--- |
+| `architecture/` | **The Laws**. Permanent design rules, layer responsibilities, and system-level specs. |
+| `project/` | **Governance**. Project management, roadmaps, and documentation standards. |
+| `guides/` | **Knowledge**. Procedural guides, FAQs, and developer resources. |
+| `archive/` | **History & Reviews**. Technical blueprints (`specs/`) and QCR handoff documents (`reviews/`). |
 
-## 2. Engineering & Testing
+## 2. Core Navigation
 
-* 📄 **[Project Roadmap (project-roadmap.md)](project-roadmap.md)**
-  * **Contents**: The full atomic dependency map and strategic visual roadmap of all features, task groups, and implementation milestones.
-  * **When to read**: To understand how different modules depend on each other, determine development order, or visualize project scope and completed feature paths.
+### System Design & Architecture
 
-* 📄 **[Project Management Guide (project-management.md)](project-management.md)**
-  * **Contents**: WI/TI lifecycle process, naming conventions, and feature group definitions.
-  * **When to read**: When creating, progressing, or retiring any work item.
+- 📄 **[System Architecture (architecture.md)](architecture.md)**: The master index for all sub-system architecture documents.
+- 📄 **[System Specification (system-specification.md)](system-specification.md)**: Global functional requirements and DAP feature matrix.
+- 📄 **[Source File Responsibility Map (file-map.md)](file-map.md)**: Quick-reference for locating code by feature area.
 
-* 📄 **[Test Plan (test-plan.md)](test-plan.md)**
-  * **Contents**: Describes the project's test pyramid strategy, including the scope of unit tests, integration tests, and E2E tests, along with coverage requirements.
-  * **When to read**: When you've finished developing a new feature and need to write tests, or when you want to understand the project's CI/CD testing standards.
+### Engineering & Quality
 
-* 📄 **[Work Items (work-items.md)](work-items.md)**
-  * **Contents**: Active backlog of pending and in-progress work items, grouped by Feature Group with a strategic milestone progress view.
-  * **When to read**: When looking for the next ticket to pick up, or to understand the overall project progress.
+- 📄 **[Work Items (work-items.md)](work-items.md)**: Current active backlog and ticket status.
+- 📄 **[Test Plan (test-plan.md)](test-plan.md)**: Test pyramid strategy and coverage standards.
+- 📄 **[Documentation Standards (project/documentation-standards.md)](project/documentation-standards.md)**: Rules for writing and verifying project docs.
 
-## 3. Troubleshooting & Technical Guides
+### Strategic Planning
 
-* 📄 **[DAP Integration FAQ (dap-integration-faq.md)](dap-integration-faq.md)**
-  * **Contents**: Detailed answers and best practices for the most common pitfalls encountered during Debug Adapter Protocol implementation (e.g., duplicate Launch issues, `loadedSources` timing, async `configurationDone` problems).
-  * **When to read**: When encountering unexpected behavior while integrating with a DAP Server, or when dealing with race conditions in session state management.
+- 📄 **[Project Roadmap (project-roadmap.md)](project-roadmap.md)**: Milestone tracking and feature dependency visualization.
+- 📄 **[Future Roadmap (project/future-roadmap.md)](project/future-roadmap.md)**: Post-v1.0 backlog and long-term vision.
+
+## 3. Getting Started
+
+1. **New Developers**: Read the **[System Architecture](architecture.md)** to understand the Three-Layer Pattern (Transport, Session, UI).
+2. **Implementing Features**: Check the **[Work Items](work-items.md)** for your assigned ticket and review the related spec in `docs/architecture/`.
+3. **Submitting Code**: Follow the **[Project Management Guide](project/project-management.md)** to move your WI to `done` and create a Review Package.

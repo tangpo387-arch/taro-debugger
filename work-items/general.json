@@ -275,7 +275,7 @@
         "Integrate init-spec into PA scoping: run script instead of manual MD creation",
         "Integrate verify into LE/QCR protocol: run lint:docs before/at start of review",
         "Update project-management.md and Agent Skills (work-item-management, review-package)",
-        "[Link] docs/doc-guard-protocol-spec.md",
+        "[Link] docs/archive/specs/doc-guard-protocol-spec.md",
         "[Test] Verify agent SOPs correctly enforce mandatory script usage"
       ],
       "timeline": {
@@ -319,7 +319,7 @@
       },
       "description": "Move src contents to projects/taro-debugger-frontend and update angular.json.",
       "details": [
-        "Ref: docs/monorepo-migration-spec.md",
+        "Ref: docs/archive/specs/monorepo-migration-spec.md",
         "Create projects/ folder",
         "Move src/ to projects/taro-debugger-frontend/src/",
         "Update UI-related paths in angular.json",
@@ -345,7 +345,7 @@
       },
       "description": "Update root TS configurations and Electron scripts for the new workspace structure.",
       "details": [
-        "Ref: docs/monorepo-migration-spec.md",
+        "Ref: docs/archive/specs/monorepo-migration-spec.md",
         "Update tsconfig.app.json and tsconfig.spec.json references",
         "Fixed electron-builder search patterns in package.json",
         "[Test] Confirm npm run electron:dev successfully launches desktop mode"

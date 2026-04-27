@@ -16,7 +16,7 @@ description: Defines the mandatory structured handoff document that Lead_Enginee
 
 Load before completing **any** implementation task:
 
-- You MUST produce a `docs/reviews/{WI-ID}.review-package.md` file **before** requesting a QCR review.
+- You MUST produce a `docs/archive/reviews/{WI-ID}.review-package.md` file **before** requesting a QCR review.
 - You MUST run `node scripts/doc-guard.js verify` (or `npm run lint:docs`) and ensure all documents pass before submission.
 - STRICTLY FORBIDDEN from submitting to QCR without a complete Review Package.
 - Do not generate this file until all tests are passing.
@@ -25,7 +25,7 @@ Load before completing **any** implementation task:
 
 Load at the **start** of every review request:
 
-- Begin your review from the Review Package located at `docs/reviews/{WI-ID}.review-package.md`.
+- Begin your review from the Review Package located at `docs/archive/reviews/{WI-ID}.review-package.md`.
 - Do NOT redundantly re-read full source files unless the Package explicitly marks a section as requiring deeper inspection (`🔍 Inspect`).
 - Restrict your `view_file` / `grep_search` calls to only the line ranges listed in the Package's diff summary.
 
@@ -35,9 +35,9 @@ Load at the **start** of every review request:
 
 | Field | Value |
 | :--- | :--- |
-| **Directory** | `docs/reviews/` |
+| **Directory** | `docs/archive/reviews/` |
 | **Filename format** | `{WI-ID}.review-package.md` |
-| **Example** | `docs/reviews/WI-39.review-package.md` |
+| **Example** | `docs/archive/reviews/WI-39.review-package.md` |
 
 ---
 
@@ -114,7 +114,7 @@ When given a `QCR review {WI-ID}` request, the QCR MUST follow this exact sequen
 
 ```text
 Step 1  Run node scripts/doc-guard.js verify (baseline document quality check)
-Step 2  Read docs/reviews/{WI-ID}.review-package.md
+Step 2  Read docs/archive/reviews/{WI-ID}.review-package.md
 Step 3  Load only the Skills listed in `skills-required`
 Step 4  Verify Acceptance Criteria — check only the diff line ranges listed
 Step 5  Verify Edge Cases — inspect only 🔍-flagged areas

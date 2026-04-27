@@ -18,7 +18,7 @@ description: Structure, tone, context, and verification standards for writing or
 
 Load before any of the following tasks:
 
-- Creating or rewriting a `docs/*.md` or `.agents/*.md` file
+- Creating or rewriting a `docs/**/*.md` or `.agents/**/*.md` file
 - Reviewing an existing document for quality or completeness
 - Generating section templates or documentation scaffolds
 

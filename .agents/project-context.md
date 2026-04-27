@@ -77,7 +77,7 @@ Locate documents based on task:
 | Write tests | — | `Lead_Engineer` | Read `../docs/test-plan.md` + Load **Skill: `[DEV:TEST] Test Case Writing`** |
 | What's next to build? | — | `Product_Architect` | Read `../docs/work-items.md` |
 | Manage work item lifecycle | — | `Product_Architect`, `Quality_Control_Reviewer` | Load **Skill: `[PROJ:FLOW] Work Item Management`** |
-| Check v1.0 scope boundary | — | All Agents | Read `../docs/future-roadmap.md` |
+| Check v1.0 scope boundary | — | All Agents | Read `../docs/project/future-roadmap.md` |
 | Understand the state machine | **Session** | `Lead_Engineer` | Load **Skill: `[DEV:STATE] Reactive State Flows`** |
 | Review code for quality | — | `Quality_Control_Reviewer` | Read `rules/code-style-guide.md` + Load applicable skills |
 | Find which file to modify | — | All Agents | Read `../docs/file-map.md` |

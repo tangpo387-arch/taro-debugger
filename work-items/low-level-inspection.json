@@ -135,7 +135,7 @@
         "Ensure virtual-scroll and DAP type dependencies are correctly handled",
         "Update DebuggerComponent to consume from @taro/ui-assembly",
         "[Test] Verify disassembly view renders and highlights correctly",
-        "[Doc] docs/library-extraction-ui-assembly.md"
+        "[Doc] docs/archive/specs/assembly-view-spec.md"
       ],
       "timeline": {
         "created": "2026-04-18",
@@ -162,7 +162,7 @@
         "3. Create MemoryViewComponent.",
         "4. Integrate into DebuggerComponent tabs and Variables context menu.",
         "[Test] Verify memory data matches hex dump after 'readMemory' success.",
-        "[Doc] docs/architecture/ui-components/memory-view-spec.md"
+        "[Doc] docs/archive/specs/memory-view-spec.md"
       ],
       "timeline": {
         "created": "2026-04-26",

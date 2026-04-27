@@ -198,7 +198,7 @@ function cmdInitSpec(args) {
 
   const schema = SCHEMAS[type];
   const filename = customFilename ? (customFilename.endsWith('.md') ? customFilename : `${customFilename}.md`) : `${toKebabCase(wi.title)}.md`;
-  const filePath = path.join(DOCS_DIR, filename);
+  const filePath = path.join(DOCS_DIR, 'archive/specs', filename);
 
   if (fs.existsSync(filePath)) {
     console.error(`Error: File ${filename} already exists.`);
@@ -226,7 +226,7 @@ related:
   });
 
   fs.writeFileSync(filePath, content);
-  console.log(`✅ Successfully initialized ${type} spec: docs/${filename}`);
+  console.log(`✅ Successfully initialized ${type} spec: docs/archive/specs/${filename}`);
 }
 
 // ── Subcommand: verify ───────────────────────────────────────────────

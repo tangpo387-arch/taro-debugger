@@ -121,7 +121,7 @@
         "Refactor DapVariablesService to guard against stale fetchScopes promises",
         "No Session Layer changes required",
         "[Test] rapid frame clicks result in only the last frame's source, disassembly, and scopes being rendered",
-        "[Doc] docs/frame-switch-serialization-spec.md"
+        "[Doc] docs/archive/specs/frame-switch-serialization-spec.md"
       ],
       "timeline": {
         "created": "2026-04-15",
@@ -143,7 +143,7 @@
           "WI-73"
         ]
       },
-      "description": "Revamp the DebuggerComponent layout to support dedicated sections for Threads (right) and Breakpoints (left). Reference: [ui-layout-inspection-panels.md](docs/ui-layout-inspection-panels.md)",
+      "description": "Revamp the DebuggerComponent layout to support dedicated sections for Threads (right) and Breakpoints (left). Reference: [ui-layout-inspection-panels.md](docs/archive/specs/ui-layout-inspection-panels.md)",
       "details": [
         "Refactor sidenav-left to use panel-section structure for File Explorer",
         "Create Breakpoints component in @taro/ui-inspection and add to sidenav-right",
@@ -151,7 +151,7 @@
         "Create InspectionPanelComponent with collapsible header and resize handle",
         "Ensure flush dividers and 32px headers per visual-design.md",
         "[Test] Verify both sidenavs correctly render components from @taro/ui-inspection library with 1px dividers",
-        "[Doc] docs/ui-layout-inspection-panels.md"
+        "[Doc] docs/archive/specs/ui-layout-inspection-panels.md"
       ],
       "timeline": {
         "created": "2026-04-19",
@@ -178,7 +178,7 @@
         "Expose setCurrentThread(threadId) to trigger stackTrace refresh",
         "Implement app-threads component inside @taro/ui-inspection using async pipe subscription",
         "[Test] Verify threads list updates automatically when program stops",
-        "[Doc] docs/inspection-panels-data-binding.md"
+        "[Doc] docs/archive/specs/ui-layout-inspection-panels.md"
       ],
       "timeline": {
         "created": "2026-04-19",
@@ -203,7 +203,7 @@
         "Migrate DapVariablesService to @taro/ui-inspection",
         "Update DebuggerComponent and related tests",
         "[Test] Verify library build and frontend integration",
-        "[Doc] docs/ui-inspection-extraction-spec.md"
+        "[Doc] docs/archive/specs/ui-layout-inspection-panels.md"
       ],
       "timeline": {
         "created": "2026-04-20",
@@ -230,7 +230,7 @@
         "Add Pause/Continue buttons to individual thread list items",
         "Ensure global execution buttons reflect active thread state in non-stop mode",
         "[Test] Verify thread list updates status icon when 'continued' event is received",
-        "[Doc] docs/non-stop-mode-ui.md"
+        "[Doc] docs/archive/specs/non-stop-mode-ui.md"
       ],
       "timeline": {
         "created": "2026-04-25",

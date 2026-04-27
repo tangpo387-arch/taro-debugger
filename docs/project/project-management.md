@@ -107,7 +107,7 @@ Every Work Item MUST contain the following structured fields to be considered co
 - **`description`**: A single, high-level goal statement defining the functional deliverable.
 - **`details[]`**: A list of specific tasks.
   - MUST include at least one `[Test]` entry describing a verifiable test scenario.
-  - MUST include a `[Doc]` entry (e.g., `[Doc] docs/feature-spec.md`) if the item size is `M` or above, or if it triggers the Complexity Gate.
+  - MUST include a `[Doc]` entry (e.g., `[Doc] docs/archive/specs/feature-spec.md`) if the item size is `M` or above, or if it triggers the Complexity Gate.
 - **`size`**: T-shirt size (`S`, `M`, `L`).
 - **`deps`**: A list of dependency Work Item IDs that must be `✅ Accepted` before this one can start.
 
@@ -236,7 +236,7 @@ sequenceDiagram
 **Steps**:
 1. **Creation**: User and PA define the idea and create a `Proposed` record using `manage-wi.js add`.
 2. **Review**: Verify WI record completeness according to **[§1.4 Work Item Record Completeness](#14-work-item-record-completeness)**.
-3. **Complexity Gate**: Evaluate if the WI meets Spec criteria. A formal specification document (`docs/*.md`) is **mandatory** if any of the following conditions are met:
+3. **Complexity Gate**: Evaluate if the WI meets Spec criteria. A formal specification document (`docs/archive/specs/*.md`) is **mandatory** if any of the following conditions are met:
    - Introduces a new architectural pattern or design rule.
    - Requires coordinating changes across ≥3 files or layers.
    - Involves non-obvious protocol constraints (e.g., async sequencing, DAP edge cases).
@@ -260,13 +260,13 @@ sequenceDiagram
 1. Execute `node scripts/manage-wi.js show {WI-ID}` and read `details[]` and `deps`.
 2. Halt execution and notify `Product_Architect` if any dependency WIs are not `✅ Accepted`.
 3. Load all relevant Skills listed in the WI or `project-context.md`.
-4. Read the spec document (`docs/{WI-ID}-spec.md`) in full if linked in the WI details.
+4. Read the spec document (`docs/archive/specs/{WI-ID}-spec.md`) in full if linked in the WI details.
 
 **Submission Steps**:
 1. Implement all items listed in the WI's details.
 2. Run: `npm run test -- --watch=false` (all tests must pass)
 3. Run: `npm run lint:docs` (all documents must pass verification; alias for `node scripts/doc-guard.js verify`)
-4. Produce: `docs/reviews/{WI-ID}.review-package.md`
+4. Produce: `docs/archive/reviews/{WI-ID}.review-package.md`
    - **§1 Acceptance Criteria** (copied verbatim from `manage-wi.js show`)
    - **§2 Diff Summary** (file + line ranges only; no pasted code)
    - **§3 Edge Cases** (🔍 flags for areas requiring deeper QCR inspection)
@@ -284,12 +284,12 @@ sequenceDiagram
 
 **Prerequisites**:
 - WI status is `Done`.
-- A valid Review Package (`docs/reviews/{WI-ID}.review-package.md`) exists.
+- A valid Review Package (`docs/archive/reviews/{WI-ID}.review-package.md`) exists.
 
 **Steps**:
 1. Execute `node scripts/manage-wi.js show {WI-ID}` to verify the WI is in the `done` state.
 2. Run: `npm run lint:docs` (baseline document quality check)
-3. Read `docs/reviews/{WI-ID}.review-package.md` (primary input)
+3. Read `docs/archive/reviews/{WI-ID}.review-package.md` (primary input)
 4. Load only the Skills listed in `skills-required` frontmatter.
 5. Verify **§1 Acceptance Criteria** — read only the diff line ranges in **§2**.
 6. Inspect only 🔍-flagged areas in **§3**.
@@ -300,7 +300,7 @@ sequenceDiagram
 11. Execute the transition script.
 
 > [!NOTE]
-> The full Review Package format is defined in Skill: `review-package` (`docs/reviews/{WI-ID}.review-package.md`).
+> The full Review Package format is defined in Skill: `review-package` (`docs/archive/reviews/{WI-ID}.review-package.md`).
 > [!CAUTION]
 > `Quality_Control_Reviewer` is FORBIDDEN from re-reading full source files. All required context must be sourced from the Review Package and the specific line ranges listed in its §2 Diff Summary.
 

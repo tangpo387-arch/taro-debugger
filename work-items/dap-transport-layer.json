@@ -304,7 +304,7 @@
         "Migrate DapSessionService and DapConfigService to @taro/dap-core",
         "Update dap-core.provider.ts and public-api.ts",
         "Update app imports to use @taro/dap-core",
-        "Link: docs/WI-61-implementation-plan.md",
+        "Link: docs/archive/specs/WI-61-implementation-plan.md",
         "[Test] Verify stepping and state transitions in active debug session"
       ],
       "timeline": {
@@ -380,7 +380,7 @@
         "Remove redundant isTerminated$ checks from UI components",
         "Update session-layer.md architecture diagram",
         "[Test] Verify transport is closed and data is cleared after program exit",
-        "[Doc] docs/proposals/merge-execution-states.md"
+        "[Doc] docs/archive/specs/merge-execution-states.md"
       ],
       "timeline": {
         "created": "2026-04-26",

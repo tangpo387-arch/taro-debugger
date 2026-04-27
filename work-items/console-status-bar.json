@@ -101,7 +101,7 @@
         "Relocate virtual scroll logic and styles to the library",
         "Update DebuggerComponent imports",
         "[Test] Verify both tabs function correctly and auto-scroll behaves as expected",
-        "[Doc] docs/log-viewer-library-extraction.md"
+        "[Doc] docs/archive/specs/log-viewer-library-extraction.md"
       ],
       "timeline": {
         "created": "2026-04-18",
@@ -129,7 +129,7 @@
         "Add JSON expansion support for protocol payloads",
         "[Fix] Refactor CDK Virtual Scroll to support variable heights via AutoSizeVirtualScrollStrategy or a custom handler",
         "[Test] Verify DAP traffic appears in the 3rd tab and the main Debug Console remains clean",
-        "[Doc] docs/dap-protocol-inspector.md"
+        "[Doc] docs/archive/specs/log-viewer-library-extraction.md"
       ],
       "timeline": {
         "created": "2026-04-18",

@@ -123,7 +123,7 @@
         "[Test] Verify header button collapses tree",
         "[Test] Verify Virtual Root expands by default",
         "[Test] Verify tooltip displays full absolute path",
-        "[Doc] docs/file-explorer-redesign.md"
+        "[Doc] docs/archive/specs/file-explorer-redesign.md"
       ],
       "timeline": {
         "created": "2026-04-25",

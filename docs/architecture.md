@@ -62,11 +62,13 @@ The architectural documentation has been modularized. Please see the specific su
 | :--- | :--- | :--- |
 | **Transport Layer** | [architecture/transport-layer.md](architecture/transport-layer.md) | Low-level connection management, binary stream parsing, and extension interface. |
 | **Session Layer** | [architecture/session-layer.md](architecture/session-layer.md) | Execution State Machine, configuration flows, request pairing, and transport lifecycle. |
-| **UI Shared** | [ui-shared-architecture-spec.md](ui-shared-architecture-spec.md) | Centralized UI foundation (PanelComponent, ErrorDialog, Layout tokens). |
-| **UI Layer** | [architecture/ui-layer.md](architecture/ui-layer.md) | Dependency Injection constraints, UI rendering, logging architecture, and functional feature groups. |
+| **Session Logic** | [architecture/core/session-logic.md](architecture/core/session-logic.md) | Advanced thread state, non-stop mode, and frame-switching logic. |
+| **DAP Core Lib** | [architecture/core/dap-core.md](architecture/core/dap-core.md) | Library boundaries, service relocation, and framework-agnostic session management. |
+| **UI Shared** | [architecture/ui-shared.md](architecture/ui-shared.md) | Centralized UI foundation (PanelComponent, ErrorDialog, Layout tokens). |
+| **UI Layer** | [architecture/ui-layer.md](architecture/ui-layer.md) | Dependency Injection constraints, UI rendering, layout structure, and app frame integration. |
 | **Visual Design** | [architecture/visual-design.md](architecture/visual-design.md) | Design Tokens, typography, density scaling, and strict layout spacing rules. |
 | **Error Handling** | [architecture/error-handling.md](architecture/error-handling.md) | Synthetic Event handling (`_transportError`, `_dapError`), failure detection, and recovery sequences. |
-| **Command Serialization** | [architecture/command-serialization.md](architecture/command-serialization.md) | Sync/cancel contract for control buttons, evaluate command, and call stack frame switch. |
+| **Command Serialization** | [architecture/command-serialization.md](architecture/command-serialization.md) | Sync/cancel contract for control buttons, evaluate command, and gutter interaction. |
 | **Monorepo Standards** | [architecture/monorepo-standards.md](architecture/monorepo-standards.md) | Workspace resolution strategy, build-time constraints, and dependency hierarchy rules. |
 
 ---
@@ -77,9 +79,12 @@ Granular specifications for complex UI components and specific DAP feature imple
 
 | Feature / Component | Documentation Document | Description |
 | :--- | :--- | :--- |
-| **Assembly View** | [architecture/ui-components/assembly-view-spec.md](architecture/ui-components/assembly-view-spec.md) | Low-level instruction inspection, address-to-source mapping, and tabbed editor integration. |
-| **Memory View** | [architecture/ui-components/memory-view-spec.md](architecture/ui-components/memory-view-spec.md) | Raw memory inspection (Hex Dump), address resolution from pointers, and inline editing. |
-| **Keyboard Shortcuts** | [architecture/ui-components/keyboard-shortcuts-spec.md](architecture/ui-components/keyboard-shortcuts-spec.md) | VS Code compatible Action ID mapping, global event performance optimization, and focus guard design. |
+| **Editor** | [architecture/ui-components/editor.md](architecture/ui-components/editor.md) | Monaco-based source display, breakpoint gutter interaction, and view state persistence. |
+| **Inspection Panels** | [architecture/ui-components/inspection.md](architecture/ui-components/inspection.md) | Variables, Call Stack, Threads, and Breakpoints consolidated logic and layout. |
+| **File Explorer** | [architecture/ui-components/file-explorer.md](architecture/ui-components/file-explorer.md) | Project categorization, virtual roots, and auto-reveal navigation. |
+| **Assembly View** | [architecture/ui-components/assembly-view.md](architecture/ui-components/assembly-view.md) | Low-level instruction inspection, address-to-source mapping, and tabbed editor integration. |
+| **Keyboard Shortcuts** | [architecture/ui-components/keyboard-shortcuts.md](architecture/ui-components/keyboard-shortcuts.md) | VS Code compatible Action ID mapping, global event performance optimization, and focus guard design. |
+| **Log Viewer** | [architecture/ui-components/log-viewer.md](architecture/ui-components/log-viewer.md) | Multi-tab console orchestrator, program output, and DAP protocol inspector. |
 
 ---
 

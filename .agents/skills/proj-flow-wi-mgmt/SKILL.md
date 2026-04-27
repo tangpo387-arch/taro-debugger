@@ -87,7 +87,7 @@ Before creating or editing a Work Item, you MUST adhere to the following content
 - **Description**: MUST be a single, high-level goal statement defining the functional deliverable.
 - **Details**: MUST be a list of specific tasks.
   - You MUST include at least one `[Test]` entry describing a verifiable test scenario.
-  - You MUST include a `[Doc]` entry (e.g., `[Doc] docs/feature-spec.md`) if the item size is `M` or above, or if it triggers the Complexity Gate.
+  - You MUST include a `[Doc]` entry (e.g., `[Doc] docs/archive/specs/feature-spec.md`) if the item size is `M` or above, or if it triggers the Complexity Gate.
 - **Size**: MUST be `S`, `M`, or `L`.
 - **Dependencies (`deps`)**: MUST list IDs of items that must be `✅ Accepted` before this one can start.
 
@@ -213,12 +213,12 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
 
    **Then you MUST**:
    - Initialize a spec document using `node scripts/doc-guard.js init-spec <WI-ID> feature [Filename]`. Reference [resources/doc-guard-guidelines.md](resources/doc-guard-guidelines.md) for template details.
-   - Complete the generated template under `docs/` (name based on kebab-case).
+   - Complete the generated template under `docs/archive/specs/` (name based on kebab-case).
    - Update related project documents to reflect the new design.
 
 <critical_instruction>
 
-**Link the Spec**: You MUST append the spec document link to the WI details (e.g., `|[Doc] docs/feature-spec.md`). Use `manage-wi.js show <WI-ID>` to read existing details, then `manage-wi.js edit <WI-ID> --details "<original>|[Doc] docs/feature-spec.md"`. You are STRICTLY FORBIDDEN from moving to the Promotion step without verifying the `[Doc]` link is present in the Work Item's `details`.
+**Link the Spec**: You MUST append the spec document link to the WI details (e.g., `|[Doc] docs/archive/specs/feature-spec.md`). Use `manage-wi.js show <WI-ID>` to read existing details, then `manage-wi.js edit <WI-ID> --details "<original>|[Doc] docs/archive/specs/feature-spec.md"`. You are STRICTLY FORBIDDEN from moving to the Promotion step without verifying the `[Doc]` link is present in the Work Item's `details`.
 
 </critical_instruction>
 
@@ -231,13 +231,13 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
 
 **Goal**: Execute `node scripts/update-wi.js WI-## done` to submit the Review Package to the QCR.
 
-**Condition**: A valid `docs/reviews/{WI-ID}.review-package.md` MUST exist before executing this script.
+**Condition**: A valid `docs/archive/reviews/{WI-ID}.review-package.md` MUST exist before executing this script.
 
 ### 6.3 Phase 3: Quality Control Review (Quality_Control_Reviewer)
 
 **Prerequisites**:
 - WI status is `done`.
-- `docs/reviews/{WI-ID}.review-package.md` exists and is complete.
+- `docs/archive/reviews/{WI-ID}.review-package.md` exists and is complete.
 
 **Steps**:
 1. **Execute `node scripts/manage-wi.js show {WI-ID}` to verify the WI is in the `done` state.**

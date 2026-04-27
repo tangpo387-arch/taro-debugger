@@ -93,7 +93,7 @@
         "On response: dispatch pending immediately if non-empty",
         "Distinct files proceed in parallel — no cross-file blocking",
         "[Test] rapid same-file clicks collapse to one request; pending dispatches after in-flight resolves; two files fire independently",
-        "[Doc] docs/wi-41-breakpoint-serialization.md"
+        "[Doc] docs/archive/specs/breakpoint-serialization-spec.md"
       ],
       "timeline": {
         "created": "2026-04-15",
@@ -116,7 +116,7 @@
         "Implement Map-based view state storage in EditorComponent",
         "Use Monaco saveViewState/restoreViewState APIs",
         "Restore state on filename change",
-        "Link to spec: docs/editor-view-state-spec.md",
+        "Link to spec: docs/archive/specs/editor-view-state-spec.md",
         "[Test] Verify cursor and scroll position are restored when switching between files"
       ],
       "timeline": {
@@ -144,7 +144,7 @@
         "Export component through public-api.ts",
         "Update DebuggerComponent to consume from @taro/ui-editor",
         "[Test] Verify app builds and editor functions (breakpoints/highlights) identically",
-        "[Doc] docs/editor-library-extraction.md"
+        "[Doc] docs/archive/specs/editor-view-state-spec.md"
       ],
       "timeline": {
         "created": "2026-04-18",
@@ -174,7 +174,7 @@
         "Refactor breakpoint state into a centralized Map in DapSessionService (SSOT)",
         "Implement 'Jump to Source' from Breakpoints panel",
         "[Test] Verify checkbox toggle, deletion, and reactive synchronization",
-        "[Doc] docs/inspection-panels-data-binding.md"
+        "[Doc] docs/archive/specs/ui-layout-inspection-panels.md"
       ],
       "timeline": {
         "created": "2026-04-19",

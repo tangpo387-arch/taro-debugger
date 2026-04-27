@@ -42,31 +42,61 @@ The UI layer leverages a centralized foundation library to ensure visual consist
 
 ## 3. DebuggerComponent Layout Structure
 
+The system follows a **Flush IDE** aesthetic with a consolidated left-to-right interaction flow. All navigation and inspection panels are hosted in a multi-tabbed Left Sidenav, maximizing horizontal space for code and memory inspection.
+
 ```mermaid
 graph TD
     subgraph Layout ["DebuggerComponent Layout"]
-        TB["Top Toolbar<br/>Brand title / Debug control buttons / Reset button"]
-        LS["Left Sidenav<br/>(taro-panel)"]
-        MC["Main Content<br/>Monaco Editor (app-editor)"]
-        RS["Right Sidenav<br/>(taro-panel)"]
-        LV["Console Area<br/>(taro-log-viewer)<br/>Dual-tab: Console + Program Console<br/>+ Evaluate input"]
-        SB["Status Bar<br/>Connection status / Execution state"]
+        TB["Top Toolbar<br/>Global controls / Status LED / Reset button"]
+        LS["Left Sidenav (mat-tab-group)<br/>Explorer & Debug Tabs"]
+        MC["Main Content (Center)<br/>Editor / Assembly / Memory"]
+        LV["Console Area (Bottom)<br/>Dual-tab: Console + Program Console"]
+        SB["Status Bar<br/>Connection status"]
     end
 
-    LS -- Contains --> FE["File Explorer (app-file-explorer)"]
-    LS -- Contains --> TH["Threads (app-threads)"]
-    RS -- Contains --> VB["Variables (app-variables)"]
-    RS -- Contains --> CS["Call Stack (app-call-stack)"]
-    RS -- Contains --> BP["Breakpoints (app-breakpoints)"]
+    subgraph "Explorer Tab"
+        FE["File Explorer"]
+        TH["Threads"]
+    end
+
+    subgraph "Debug Tab"
+        CS["Call Stack"]
+        VB["Variables"]
+        BP["Breakpoints"]
+    end
+
+    LS -- Tab 1 --> FE
+    LS -- Tab 1 --> TH
+    LS -- Tab 2 --> CS
+    LS -- Tab 2 --> VB
+    LS -- Tab 2 --> BP
 
     TB --> LS
     TB --> MC
-    TB --> RS
     MC --> LV
     MC --> SB
 
     style Layout fill:#f9f9f9,stroke:#333,stroke-dasharray: 5 5
+    style LS fill:#e1f5fe,stroke:#01579b
 ```
+
+### 3.1 Consolidated Sidenav
+
+- **Activity Bar**: The left sidenav uses a `mat-tab-group` to toggle between **Explorer** (File context) and **Debug** (Runtime context).
+- **Expansion Panels**: Individual features (Variables, Call Stack, etc.) are housed in `mat-expansion-panel` elements within a `mat-accordion`, allowing them to share vertical space and be collapsed independently.
+
+### 3.2 Top Toolbar & App Frame
+
+The application provides a unified global control surface that bridges the native desktop environment (Electron) and the internal UI.
+
+| Element | Responsibility | Visual Detail |
+| :--- | :--- | :--- |
+| **Native Menu** | File/Edit/View/Debug actions | Offloaded to Electron in desktop mode. |
+| **Status LED** | High-frequency session feedback | Pulse (Running), Static (Paused), Dim (Idle). |
+| **Debug Controls** | Execution lifecycle (Step, Pause) | Horizontally centered capsule. |
+| **Layout Toggles** | Toggle Left Sidenav / Console | Hidden in Electron mode (redundant with native menu). |
+
+---
 
 ## 4. Component Lifecycle (DebuggerComponent)
 
