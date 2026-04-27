@@ -49,7 +49,7 @@ function update() {
         const views = {
             'backlog': 'docs/work-items.md',
             'roadmap': 'docs/project-roadmap.md',
-            'future': 'docs/future-roadmap.md'
+            'future': 'docs/project/future-roadmap.md'
         };
         Object.entries(views).forEach(([view, path]) => {
             execSync(`node scripts/generate-docs.js ${view} ${path}`, { stdio: 'inherit' });

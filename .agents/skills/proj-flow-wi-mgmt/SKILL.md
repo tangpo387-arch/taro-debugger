@@ -176,6 +176,11 @@ Implementation status is updated via the `update-wi.js` script. You are STRICTLY
 | **Abort** | `node scripts/update-wi.js WI-## abort` | Moves to ❌ Aborted | All Agents |
 | **Propose** | `node scripts/update-wi.js WI-## proposed` | Moves to 💡 Proposed | `Product_Architect` |
 
+> [!CAUTION]
+> **Strict State Transition Constraint**: For ALL major Work Item transitions (`proposed` -> `pending`, `pending` -> `done`, and `done` -> `accepted`/`rework`), you (the AI model) are STRICTLY FORBIDDEN from executing `update-wi.js` autonomously.
+> You MUST NOT proactively ask the user "Should I proceed to the next stage?" or propose a stage change. Instead, when finishing your current tasks, simply ask if the user has any further instructions.
+> ONLY transition the state if the user explicitly commands it (e.g., "proceed to next stage").
+
 The script automatically handles timestamps for `accepted` and `aborted` statuses and refreshes all derivative views.
 
 ---
@@ -222,7 +227,7 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
 
 </critical_instruction>
 
-1. **Promotion**: You are STRICTLY FORBIDDEN from executing `node scripts/update-wi.js WI-## pending` autonomously. You MUST explicitly propose the transition and await formal USER confirmation before execution.
+1. **Promotion**: You are STRICTLY FORBIDDEN from executing `node scripts/update-wi.js WI-## pending` autonomously. Do NOT ask permission to promote the Work Item. Instead, ask the user for further instructions and wait until the user explicitly commands the transition (e.g., "proceed to next stage").
 
 **Verification**:
 - WI status is updated to `Pending` and appears in `work-items.md`.
@@ -231,7 +236,12 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
 
 **Goal**: Execute `node scripts/update-wi.js WI-## done` to submit the Review Package to the QCR.
 
-**Condition**: A valid `docs/archive/reviews/{WI-ID}.review-package.md` MUST exist before executing this script.
+**Prerequisites**:
+- A valid `docs/archive/reviews/{WI-ID}.review-package.md` MUST exist.
+
+**Steps**:
+1. Implement the feature and create the Review Package.
+2. **Submission**: You are STRICTLY FORBIDDEN from executing `node scripts/update-wi.js WI-## done` autonomously. Do NOT ask permission to submit the Work Item. Instead, ask the user for further instructions and wait until the user explicitly commands the transition.
 
 ### 6.3 Phase 3: Quality Control Review (Quality_Control_Reviewer)
 
@@ -244,8 +254,8 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
 2. `Quality_Control_Reviewer` follows the review protocol in `Skill: [PROJ:PROT] Review Package`.
 3. Formulate an APPROVED verdict, or note precise, actionable findings for a REJECTED verdict.
 4. You are STRICTLY FORBIDDEN from executing `node scripts/update-wi.js {WI-ID} <accepted|rework>` autonomously.
-5. You MUST propose the corresponding status transition to the USER and await explicit confirmation.
-6. Execute the transition script ONLY after receiving approval.
+5. Do NOT ask permission to execute the status transition. Simply state your review verdict and ask the user for further instructions.
+6. Execute the transition script ONLY after the user explicitly commands the transition.
 
 **Verification**:
 - Verify status in `project-roadmap.md` reflects the verdict.

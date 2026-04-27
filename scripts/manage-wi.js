@@ -244,7 +244,7 @@ function syncDocs() {
   const views = {
     backlog: 'docs/work-items.md',
     roadmap: 'docs/project-roadmap.md',
-    future: 'docs/future-roadmap.md',
+    future: 'docs/project/future-roadmap.md',
   };
   try {
     Object.entries(views).forEach(([view, outPath]) => {
@@ -339,7 +339,7 @@ Flags:
     title,
     featureGroup: group,
     metadata: {
-      status: 'pending',
+      status: 'proposed',
       size: size || 'M',
       milestone: milestone || 'v1.0',
       dependencies: deps,
