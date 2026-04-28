@@ -1,20 +1,6 @@
-@use 'breakpoints' as bp;
+@use '../../ui-shared/src/lib/styles/tokens' as ui-tokens;
 
 :root {
-  /* UI Density Scale */
-  --sys-density-toolbar-height: 40px;
-  --sys-density-header-height: 32px;
-  --sys-density-panel-padding: 16px;
-  --sys-density-variable-row: 28px;
-  --sys-density-item-gap: 12px;
-  --sys-density-console-height: 20px;
-
-  /* Button Density Scale */
-  --sys-density-btn-size: 40px;
-  --sys-density-btn-icon-size: 24px;
-  --sys-density-btn-size-sm: 28px;
-  --sys-density-btn-icon-size-sm: 20px;
-
   /* Typographic Scale (assuming 1rem = 16px) */
   --text-xs: 0.75rem;
   /* 12px */
@@ -56,20 +42,8 @@ body {
   color: var(--mat-sys-on-surface);
 }
 
-@media #{bp.$mq-compact} {
+@media #{ui-tokens.$mq-compact} {
   :root {
-    --sys-density-toolbar-height: 32px;
-    --sys-density-header-height: 24px;
-    --sys-density-panel-padding: 12px;
-    --sys-density-variable-row: 24px;
-    --sys-density-item-gap: 8px;
-
-    /* Button Density Override */
-    --sys-density-btn-size: 32px;
-    --sys-density-btn-icon-size: 20px;
-    --sys-density-btn-size-sm: 20px;
-    --sys-density-btn-icon-size-sm: 14px;
-
     /* Typography density override (§8.2): scale base font for confined viewports */
     --text-base: 0.75rem;
     /* 12px — tighter than wide-screen 14px */

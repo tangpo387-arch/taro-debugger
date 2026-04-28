@@ -48,16 +48,6 @@ audience: [Product_Architect, Lead_Engineer, Human Engineer]
   - [Test] Verify memory data matches hex dump after 'readMemory' success.
   - [Doc] docs/archive/specs/memory-view-spec.md
 
-### WI-74: Standardization of UI Patterns (Status: pending)
-
-- **Description**: Consolidate duplicated UI components, SCSS tokens, and shared Angular utilities into a unified internal library.
-- **Details**:
-  - Identify common UI patterns (toolbars, status bars, icons)
-  - Extract shared SCSS variables and mixins
-  - Standardize shared Angular pipes and directives
-  - [Doc] Define library-level visual consistency guidelines
-  - [Test] Verify component reusability across at least 2 libraries
-
 ### WI-76: Design Tokens & Dark Mode Support (Status: proposed)
 
 - **Description**: Implement a centralized CSS Variable system to support seamless switching between Light and Dark themes.

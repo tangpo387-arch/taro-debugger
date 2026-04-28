@@ -8,12 +8,12 @@ import { map, Subscription } from 'rxjs';
 
 import { DapAssemblyService, TaroDisassembledInstruction } from './dap-assembly.service';
 import { DapDisassembledInstruction } from '@taro/dap-core';
-import { LAYOUT_COMPACT_MQ } from '@taro/ui-shared';
+import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent } from '@taro/ui-shared';
 
 @Component({
   selector: 'app-assembly-view',
   standalone: true,
-  imports: [CommonModule, ScrollingModule, MatIconModule],
+  imports: [CommonModule, ScrollingModule, MatIconModule, TaroEmptyStateComponent],
   templateUrl: './assembly-view.component.html',
   styleUrls: ['./assembly-view.component.scss']
 })

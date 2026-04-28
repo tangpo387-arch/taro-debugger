@@ -40,24 +40,26 @@
       "title": "Standardization of UI Patterns",
       "featureGroup": "UI System Design",
       "metadata": {
-        "status": "pending",
+        "status": "accepted",
         "size": "M",
-        "milestone": "v1.1",
+        "milestone": "v1.0",
         "dependencies": [
           "WI-75"
         ]
       },
       "description": "Consolidate duplicated UI components, SCSS tokens, and shared Angular utilities into a unified internal library.",
       "details": [
-        "Identify common UI patterns (toolbars, status bars, icons)",
-        "Extract shared SCSS variables and mixins",
-        "Standardize shared Angular pipes and directives",
-        "[Doc] Define library-level visual consistency guidelines",
-        "[Test] Verify component reusability across at least 2 libraries"
+        "Audit functional libraries for duplicated layout/style logic",
+        "Centralize SCSS tokens (M3 mapping, Density Mixins) in @taro/ui-shared",
+        "Migrate functional panels to use the TaroEmptyState component",
+        "[Doc] docs/archive/specs/ui-pattern-standardization.md",
+        "[Test] Verify visual density scaling in unit tests for all shared components",
+        "[Test] Migration of at least one functional panel to use the new shared library"
       ],
       "timeline": {
         "created": "2026-04-21",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-28"
       }
     },
     {

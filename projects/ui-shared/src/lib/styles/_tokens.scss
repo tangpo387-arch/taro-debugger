@@ -1,0 +1,38 @@
+/* Material 3 Color Tokens */
+/* Note: These tokens will be supplied by Angular Material theming at the root level, but we can provide helper variables or mixins here if needed. */
+
+/* Visual Density Mixins & Tokens */
+$bp-compact: 800px;
+$mq-compact: "(max-width: #{$bp-compact})";
+
+:root {
+  /* UI Density Scale */
+  --sys-density-toolbar-height: 40px;
+  --sys-density-header-height: 32px;
+  --sys-density-panel-padding: 16px;
+  --sys-density-variable-row: 28px;
+  --sys-density-item-gap: 12px;
+  --sys-density-console-height: 20px;
+
+  /* Button Density Scale */
+  --sys-density-btn-size: 40px;
+  --sys-density-btn-icon-size: 24px;
+  --sys-density-btn-size-sm: 28px;
+  --sys-density-btn-icon-size-sm: 20px;
+}
+
+@media #{$mq-compact} {
+  :root {
+    --sys-density-toolbar-height: 32px;
+    --sys-density-header-height: 24px;
+    --sys-density-panel-padding: 12px;
+    --sys-density-variable-row: 24px;
+    --sys-density-item-gap: 8px;
+
+    /* Button Density Override */
+    --sys-density-btn-size: 32px;
+    --sys-density-btn-icon-size: 20px;
+    --sys-density-btn-size-sm: 20px;
+    --sys-density-btn-icon-size-sm: 14px;
+  }
+}
