@@ -26,7 +26,7 @@ import {
   ThreadsComponent,
   BreakpointsComponent,
 } from '@taro/ui-inspection';
-import { PanelComponent, ErrorDialog, ErrorDialogData } from '@taro/ui-shared';
+import { PanelComponent, PanelGroupComponent, ErrorDialog, ErrorDialogData } from '@taro/ui-shared';
 import { LogViewerComponent } from '@taro/ui-console';
 import { DapConfigService, DapConfig } from '@taro/dap-core';
 import { DapSessionService, ExecutionState, VerifiedBreakpoint } from '@taro/dap-core';
@@ -60,6 +60,7 @@ import { DapFileTreeService } from './dap-file-tree.service';
     DebugControlGroupComponent,
     CallStackComponent,
     AssemblyViewComponent,
+    PanelGroupComponent,
     PanelComponent,
     ThreadsComponent,
     BreakpointsComponent,
@@ -176,30 +177,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public leftVisible: boolean = true;
   /** Current active tab in the main content area (0: Source, 1: Disassembly) */
   public activeTabIndex: number = 0;
-
-  // ── Left sidenav panel expand/collapse & heights ──────────────────────────
-  /** Whether the Files panel (left sidenav) is expanded. */
-  public leftFilesExpanded: boolean = true;
-  /** Whether the Threads panel (left sidenav) is expanded. */
-  public leftThreadsExpanded: boolean = true;
-  /** Pixel height budget for the Files panel when expanded (flex-basis). */
-  public leftFilesHeight: number = 200;
-  /** Pixel height budget for the Threads panel when expanded (flex-basis). */
-  public leftThreadsHeight: number = 100;
-
-  // ── Right sidenav panel expand/collapse & heights ─────────────────────────
-  /** Whether the Breakpoints panel (right sidenav) is expanded. */
-  public rightBreakpointsExpanded: boolean = true;
-  /** Whether the Variables panel (right sidenav) is expanded. */
-  public rightVariablesExpanded: boolean = true;
-  /** Whether the Call Stack panel (right sidenav) is expanded. */
-  public rightCallStackExpanded: boolean = true;
-  /** Pixel height budget for the Breakpoints panel when expanded (flex-basis). */
-  public rightBreakpointsHeight: number = 100;
-  /** Pixel height budget for the Variables panel when expanded (flex-basis). */
-  public rightVariablesHeight: number = 200;
-  /** Pixel height budget for the Call Stack panel when expanded (flex-basis). */
-  public rightCallStackHeight: number = 150;
 
   public rightVisible: boolean = true;
   public consoleVisible: boolean = true;
@@ -349,12 +326,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         if (sizes.consoleVisible !== undefined) {
           this.consoleVisible = !!sizes.consoleVisible;
         }
-        // Restore panel heights
-        if (sizes.leftFilesHeight) this.leftFilesHeight = sizes.leftFilesHeight;
-        if (sizes.leftThreadsHeight) this.leftThreadsHeight = sizes.leftThreadsHeight;
-        if (sizes.rightBreakpointsHeight) this.rightBreakpointsHeight = sizes.rightBreakpointsHeight;
-        if (sizes.rightVariablesHeight) this.rightVariablesHeight = sizes.rightVariablesHeight;
-        if (sizes.rightCallStackHeight) this.rightCallStackHeight = sizes.rightCallStackHeight;
       } catch (e) {
         console.warn('Failed to parse persisted layout sizes', e);
       }
@@ -369,11 +340,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       leftVisible: this.leftVisible,
       rightVisible: this.rightVisible,
       consoleVisible: this.consoleVisible,
-      leftFilesHeight: this.leftFilesHeight,
-      leftThreadsHeight: this.leftThreadsHeight,
-      rightBreakpointsHeight: this.rightBreakpointsHeight,
-      rightVariablesHeight: this.rightVariablesHeight,
-      rightCallStackHeight: this.rightCallStackHeight,
     };
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
   }
@@ -449,11 +415,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     this.leftVisible = true;
     this.rightVisible = true;
     this.consoleVisible = true;
-    this.leftFilesHeight = 200;
-    this.leftThreadsHeight = 100;
-    this.rightBreakpointsHeight = 100;
-    this.rightVariablesHeight = 200;
-    this.rightCallStackHeight = 150;
     this.savePersistedSizes();
 
     // Sync all menu items
@@ -472,56 +433,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       (window as any).electronAPI?.send('update-menu-state', { id, checked });
     }
   }
-
-  /**
-   * Handles vertical resize drag within the left sidenav panels.
-   * The dragged clientY is used to redistribute height between the Files and Threads panels.
-   * @param clientY - Raw mouse Y coordinate from the drag event.
-   * @param panel - Which panel's bottom border is being dragged ('files').
-   */
-  public onLeftPanelResizeDrag(clientY: number, panel: 'files'): void {
-    const MIN = 72;
-    const sidenavEl = this.leftSidenavRef?.nativeElement;
-    if (!sidenavEl) return;
-    const rect = sidenavEl.getBoundingClientRect();
-    const clientOffset = clientY - rect.top;
-
-    if (panel === 'files') {
-      // Files handle: between top (MIN) and space for Threads (rect.height - MIN)
-      this.leftFilesHeight = Math.max(MIN, Math.min(rect.height - MIN, clientOffset));
-      this.leftThreadsHeight = rect.height - this.leftFilesHeight;
-    }
-    this.cdr.detectChanges();
-  }
-
-  /**
-   * Handles vertical resize drag within the right sidenav panels.
-   * @param clientY - Raw mouse Y coordinate from the drag event.
-   * @param panel - Which panel's bottom border is being dragged ('breakpoints' | 'variables').
-   */
-  public onRightPanelResizeDrag(clientY: number, panel: 'breakpoints' | 'variables'): void {
-    const MIN = 72;
-    const sidenavEl = this.rightSidenavRef?.nativeElement;
-    if (!sidenavEl) return;
-    const rect = sidenavEl.getBoundingClientRect();
-    const clientOffset = clientY - rect.top;
-
-    if (panel === 'breakpoints') {
-      // Breakpoints handle: between top (MIN) and space for Variables+CallStack (rect.height - MIN*2)
-      this.rightBreakpointsHeight = Math.max(MIN, Math.min(rect.height - MIN * 2, clientOffset));
-    } else if (panel === 'variables') {
-      const headerH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sys-density-header-height')) || 32;
-      const breakpointsH = this.rightBreakpointsExpanded ? this.rightBreakpointsHeight : headerH;
-      const remaining = rect.height - breakpointsH;
-      // Variables handle: between bottom of Breakpoints+MIN and bottom of sidenav-MIN
-      // The relativeY here is offset from Breakpoints bottom
-      const variablesH = Math.max(MIN, Math.min(remaining - MIN, clientOffset - breakpointsH));
-      this.rightVariablesHeight = variablesH;
-      this.rightCallStackHeight = Math.max(MIN, remaining - variablesH);
-    }
-    this.cdr.detectChanges();
-  }
-
 
   /**
    * Starts the DAP Session, including error handling and retry dialog

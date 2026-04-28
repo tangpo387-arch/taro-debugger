@@ -35,7 +35,7 @@ audience: [Product_Architect, Lead_Engineer, Human Engineer]
   - Add Pause/Continue buttons to individual thread list items
   - Ensure global execution buttons reflect active thread state in non-stop mode
   - [Test] Verify thread list updates status icon when 'continued' event is received
-  - [Doc] docs/non-stop-mode-ui.md
+  - [Doc] docs/archive/specs/non-stop-mode-ui.md
 
 ### WI-84: Implement Memory View (Hex Dump) (Status: pending)
 
@@ -46,7 +46,7 @@ audience: [Product_Architect, Lead_Engineer, Human Engineer]
   - 3. Create MemoryViewComponent.
   - 4. Integrate into DebuggerComponent tabs and Variables context menu.
   - [Test] Verify memory data matches hex dump after 'readMemory' success.
-  - [Doc] docs/architecture/ui-components/memory-view-spec.md
+  - [Doc] docs/archive/specs/memory-view-spec.md
 
 ### WI-74: Standardization of UI Patterns (Status: pending)
 
@@ -93,4 +93,4 @@ audience: [Product_Architect, Lead_Engineer, Human Engineer]
   - 2. Add mat-tab-group to the left sidenav (Explorer / Debug).
   - 3. Wrap existing components (Files, Threads, Variables, Call Stack, Breakpoints) in mat-expansion-panels within their respective tabs.
   - [Test] Verify all components render correctly inside expansion panels and state is preserved on tab switch.
-  - [Doc] docs/consolidate-left-sidenav.md
+  - [Doc] docs/archive/specs/consolidate-left-sidenav.md

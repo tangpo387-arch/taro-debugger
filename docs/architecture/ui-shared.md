@@ -41,7 +41,13 @@ A reusable container for all side-panel features.
 - **Features**: Supports collapsible headers, action buttons via `ng-content`, and consistent spacing.
 - **Usage**: Mandatory for all features in the Left and Right sidenavs.
 
-### 3.2 Empty States (`TaroEmptyStateComponent`)
+### 3.2 Panel Group Orchestrator (`PanelGroupComponent`)
+
+A flex-based layout container that dynamically orchestrates the vertical sizing of projected `taro-panel` sibling components.
+- **Features**: Safely calculates CSS Flexbox `flex-basis`, physically prevents flex compression via CSS `min-height`, handles dragging bounds, and cleanly preserves proportions during collapse/expand cycles.
+- **Usage**: Must wrap all collections of sibling `taro-panel` components within `mat-sidenav` containers to eliminate manual math logic from the parent view.
+
+### 3.3 Empty States (`TaroEmptyStateComponent`)
 
 Unifies the visual pattern for empty data states across the IDE.
 

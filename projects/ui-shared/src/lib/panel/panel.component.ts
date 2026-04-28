@@ -6,6 +6,7 @@ import {
   ChangeDetectionStrategy,
   inject,
   NgZone,
+  ElementRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -30,9 +31,13 @@ import { MatButtonModule } from '@angular/material/button';
 })
 export class PanelComponent {
   private readonly zone = inject(NgZone);
+  public readonly elementRef = inject(ElementRef<HTMLElement>);
 
   /** Panel label shown in the 32px header. Should be UPPERCASE. */
   @Input() public label: string = 'PANEL';
+
+  /** Minimum height in pixels when expanded (header + minimum content). Defaults to 72. */
+  @Input() public minExpandedHeight: number = 72;
 
   /** Whether this panel is currently expanded. Two-way bindable via (expandedChange). */
   @Input() public expanded: boolean = true;

@@ -57,40 +57,41 @@
       <!-- Left Resize Handle -->
       <div class="resize-handle resize-handle-left" (mousedown)="onResizeStart($event, 'left')"></div>
 
-      <!-- Files Panel -->
-      <taro-panel
-        label="Files"
-        [(expanded)]="leftFilesExpanded"
-        [resizable]="leftFilesExpanded && leftThreadsExpanded"
-        (resizeDrag)="onLeftPanelResizeDrag($event, 'files')"
-        [style.flex]="leftFilesExpanded ? '1 1 ' + leftFilesHeight + 'px' : '0 0 var(--sys-density-header-height)'">
-        
-        <div panel-actions>
-          <button
-            mat-icon-button
-            (click)="fileExplorer.collapseAll()"
-            title="Collapse All Nodes"
-            class="header-action-btn"
-          >
-            <mat-icon>unfold_less</mat-icon>
-          </button>
-        </div>
-
-        <app-file-explorer #fileExplorer
-          [activeFilePath]="activeFilePath"
-          [reloadTrigger]="fileTreeReloadTrigger"
-          [revealTrigger]="fileRevealTrigger"
-          (fileSelected)="onFileSelected($event)">
-        </app-file-explorer>
-      </taro-panel>
-
-      <!-- Threads Panel -->
-      <taro-panel
-        label="Threads"
-        [(expanded)]="leftThreadsExpanded"
-        [style.flex]="leftThreadsExpanded ? '1 1 ' + leftThreadsHeight + 'px' : '0 0 var(--sys-density-header-height)'">
-        <app-threads></app-threads>
-      </taro-panel>
+      <taro-panel-group>
+        <!-- Files Panel -->
+        <taro-panel
+          #filesPanel
+          label="Files"
+          [resizable]="filesPanel.expanded && (threadsPanel?.expanded ?? false)"
+          [minExpandedHeight]="150">
+          
+          <div panel-actions>
+            <button
+              mat-icon-button
+              (click)="fileExplorer.collapseAll()"
+              title="Collapse All Nodes"
+              class="header-action-btn"
+            >
+              <mat-icon>unfold_less</mat-icon>
+            </button>
+          </div>
+  
+          <app-file-explorer #fileExplorer
+            [activeFilePath]="activeFilePath"
+            [reloadTrigger]="fileTreeReloadTrigger"
+            [revealTrigger]="fileRevealTrigger"
+            (fileSelected)="onFileSelected($event)">
+          </app-file-explorer>
+        </taro-panel>
+  
+        <!-- Threads Panel -->
+        <taro-panel
+          #threadsPanel
+          label="Threads"
+          [minExpandedHeight]="100">
+          <app-threads></app-threads>
+        </taro-panel>
+      </taro-panel-group>
     </mat-sidenav>
 
     <!-- 3. Right sidenav: Breakpoints, Variables, Call Stack -->
@@ -98,37 +99,37 @@
       <!-- Right Resize Handle -->
       <div class="resize-handle resize-handle-right" (mousedown)="onResizeStart($event, 'right')"></div>
 
-      <!-- Breakpoints Panel -->
-      <taro-panel
-        label="Breakpoints"
-        [(expanded)]="rightBreakpointsExpanded"
-        [resizable]="rightBreakpointsExpanded && (rightVariablesExpanded || rightCallStackExpanded)"
-        (resizeDrag)="onRightPanelResizeDrag($event, 'breakpoints')"
-        [style.flex]="rightBreakpointsExpanded ? '0 0 ' + rightBreakpointsHeight + 'px' : '0 0 var(--sys-density-header-height)'">
-        <app-breakpoints (requestReveal)="onBreakpointReveal($event)"></app-breakpoints>
-      </taro-panel>
-
-      <!-- Variables Panel -->
-      <taro-panel
-        label="Variables"
-        [(expanded)]="rightVariablesExpanded"
-        [resizable]="rightVariablesExpanded && rightCallStackExpanded"
-        (resizeDrag)="onRightPanelResizeDrag($event, 'variables')"
-        [style.flex]="rightVariablesExpanded ? '1 1 ' + rightVariablesHeight + 'px' : '0 0 var(--sys-density-header-height)'">
-        <app-variables></app-variables>
-      </taro-panel>
-
-      <!-- Call Stack Panel -->
-      <taro-panel
-        label="Call Stack"
-        [(expanded)]="rightCallStackExpanded"
-        [style.flex]="rightCallStackExpanded ? '1 1 ' + rightCallStackHeight + 'px' : '0 0 var(--sys-density-header-height)'">
-        <app-call-stack
-          [stackFrames]="stackFrames"
-          [activeFrameId]="activeFrameId"
-          (frameSelected)="onFrameClick($event)">
-        </app-call-stack>
-      </taro-panel>
+      <taro-panel-group>
+        <!-- Breakpoints Panel -->
+        <taro-panel
+          #breakpointsPanel
+          label="Breakpoints"
+          [resizable]="breakpointsPanel.expanded && ((variablesPanel?.expanded ?? false) || (callStackPanel?.expanded ?? false))"
+          [minExpandedHeight]="100">
+          <app-breakpoints (requestReveal)="onBreakpointReveal($event)"></app-breakpoints>
+        </taro-panel>
+  
+        <!-- Variables Panel -->
+        <taro-panel
+          #variablesPanel
+          label="Variables"
+          [resizable]="variablesPanel.expanded && (callStackPanel?.expanded ?? false)"
+          [minExpandedHeight]="150">
+          <app-variables></app-variables>
+        </taro-panel>
+  
+        <!-- Call Stack Panel -->
+        <taro-panel
+          #callStackPanel
+          label="Call Stack"
+          [minExpandedHeight]="150">
+          <app-call-stack
+            [stackFrames]="stackFrames"
+            [activeFrameId]="activeFrameId"
+            (frameSelected)="onFrameClick($event)">
+          </app-call-stack>
+        </taro-panel>
+      </taro-panel-group>
     </mat-sidenav>
 
     <!-- 4. Center: Core Editor and Consoles -->

@@ -208,6 +208,29 @@
         "created": "2026-04-26",
         "created_by": "Antigravity-Agent"
       }
+    },
+    {
+      "id": "WI-88",
+      "title": "Extract panel group layout component",
+      "featureGroup": "UI System Design",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Create TaroPanelGroup to encapsulate sibling panel resizing logic",
+      "details": [
+        "Create TaroPanelGroup component in ui-shared",
+        "Move resize logic from debugger.component.ts",
+        "[Test] Verify panels resize correctly across the layout",
+        "[Doc] docs/archive/specs/ui-panel-group.md"
+      ],
+      "timeline": {
+        "created": "2026-04-27",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-28"
+      }
     }
   ]
 }

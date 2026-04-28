@@ -80,6 +80,7 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 
 | File | Responsibility | Key Exports |
 | --- | --- | --- |
+| `projects/ui-shared/src/lib/panel-group/panel-group.component.ts` | Layout orchestrator for projecting and managing sibling taro-panels (flex-basis redistribution, dynamic height clamping) | `PanelGroupComponent` (selector: `taro-panel-group`) |
 | `projects/ui-shared/src/lib/panel/panel.component.ts` | Generic collapsible/resizable panel container | `PanelComponent` (selector: `taro-panel`) |
 | `projects/ui-shared/src/lib/dialogs/error-dialog/error-dialog.ts` | Reusable error/retry dialog | `ErrorDialog`, `ErrorDialogData` |
 | `projects/ui-shared/src/lib/layout.config.ts` | Shared layout dimension tokens (breakpoints, MQ) | `LAYOUT_COMPACT_MQ` |
