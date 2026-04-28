@@ -42,7 +42,7 @@ graph TD
     stopped -- "<font color='#b85c5c'>[F] stop()</font>" --> idle
     running -- "<font color='#b85c5c'>[F] restart()</font>" --> starting
     stopped -- "<font color='#b85c5c'>[F] restart()</font>" --> starting
-    error -- "<font color='#b85c5c'>[F] reset()</font>" --> idle
+    error -- "<font color='#b85c5c'>[F] stop()</font>" --> idle
 
     %% Adapter Actions (Events)
     starting -- "<font color='#5c7fb8'>[E] launch success</font>" --> running
@@ -88,7 +88,7 @@ type ExecutionState = 'idle' | 'starting' | 'running' | 'stopped' | 'error';
 | `starting` | Transitional: establishing connection, `initialize` handshake, and `launch`/`attach` flow. |
 | `running` | The debug target is executing. DAP is busy; inspection requests (stack/vars) are discouraged. |
 | `stopped` | Program paused (breakpoint/step). Thread, stack, and variable queries are available. |
-| `error` | Unexpected anomaly (e.g., transport crash). Requires `reset()` to return to `idle`. |
+| `error` | Unexpected anomaly (e.g., transport crash). Requires calling `stop()` to return to `idle`. |
 
 ## 3. Event Processing & Synthetic Events
 
@@ -178,7 +178,6 @@ The Session layer automates thread and context management to simplify UI impleme
 | `setCurrentThread(id)` | `void` | Set active thread and trigger UI context refresh. |
 | `source(args)` | `Promise<DapResponse>` | Fetch source content (semantic wrapper). |
 | `loadedSources()` | `Promise<DapResponse>` | Fetch all loaded sources (semantic wrapper). |
-| `reset()` | `void` | Force reset to `idle` (cleans up all resources). |
 
 ## 9. Configuration Flow (DapConfig)
 

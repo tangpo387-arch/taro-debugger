@@ -31,6 +31,7 @@ graph LR
     WI_86["WI-86 Standardize Capability-Aware Stop and Restart Logic"]
     WI_87["WI-87 Merge terminated and idle execution states"]
     WI_89["WI-89 Refactor DapSessionService Encapsulation"]
+    WI_90["WI-90 Encapsulate DapSessionService Reset Logic"]
     WI_10["WI-10 Debug Control Button Functionality"]
     WI_11["WI-11 DAP Event Handling & State Management"]
     WI_39["WI-39 Command Serialization: Control Button In-Flight Guard"]
@@ -194,6 +195,7 @@ graph LR
     style WI_86 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_87 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_89 fill:#4ade80,stroke:#000,stroke-width:2.5px
+    style WI_90 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_10 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_11 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_39 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2

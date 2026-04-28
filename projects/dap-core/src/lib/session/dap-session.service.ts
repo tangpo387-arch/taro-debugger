@@ -219,14 +219,14 @@ export class DapSessionService {
    */
   public async disconnect(options: { terminateDebuggee?: boolean, restart?: boolean } = {}): Promise<void> {
     const state = this.executionStateSubject.value;
-    if (state === 'idle' || state === 'error' || this.isDisconnecting) {
+    if (state === 'idle' || this.isDisconnecting) {
       return;
     }
 
     this.isDisconnecting = true;
 
     try {
-      if (this.transport) {
+      if (this.transport && state !== 'error') {
         // Send disconnect request to DAP Server
         await this.sendRequest('disconnect', {
           restart: options.restart ?? false,
@@ -245,7 +245,7 @@ export class DapSessionService {
    * Reset session completely to idle, without sending a DAP request.
    * Clears resources directly (e.g., used to return from error to idle safely).
    */
-  public reset(): void {
+  private reset(): void {
     // Stop receiving messages
     if (this.messageSubscription) {
       this.messageSubscription.unsubscribe();
@@ -279,7 +279,11 @@ export class DapSessionService {
    */
   public async stop(): Promise<void> {
     const state = this.executionStateSubject.value;
-    if (state === 'idle' || state === 'error') {
+    if (state === 'error') {
+      this.reset();
+      return;
+    }
+    if (state === 'idle') {
       return;
     }
 

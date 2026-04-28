@@ -208,6 +208,22 @@ describe('DapSessionService', () => {
       await promise;
       expect((service as any).executionStateSubject.value).toBe('running');
     });
+
+    it('should recover from error state to idle via stop()', async () => {
+      (service as any).executionStateSubject.next('error');
+      await service.stop();
+      expect((service as any).executionStateSubject.value).toBe('idle');
+    });
+
+    it('should recover from error state to idle via disconnect() without sending DAP request', async () => {
+      (service as any).executionStateSubject.next('error');
+      (service as any).transport = mockTransport;
+      
+      await service.disconnect();
+      
+      expect((service as any).executionStateSubject.value).toBe('idle');
+      expect(mockTransport.sendRequest).not.toHaveBeenCalled();
+    });
   });
 
   describe('Command Serialization (R-CS1)', () => {

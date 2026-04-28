@@ -412,6 +412,26 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-28"
       }
+    },
+    {
+      "id": "WI-90",
+      "title": "Encapsulate DapSessionService Reset Logic",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Change the reset() method to private",
+      "details": [
+        "1. Modify DapSessionService.reset() access modifier to private. 2. Verify that all internal calls are still functional. 3. Update stop() and disconnect() to handle error recovery. 4. [Test] Verify recovery from error state via stop() and disconnect()."
+      ],
+      "timeline": {
+        "created": "2026-04-28",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-28"
+      }
     }
   ]
 }
