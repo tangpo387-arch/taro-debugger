@@ -13,9 +13,9 @@ import { DapFileTreeService } from './dap-file-tree.service';
 import { BehaviorSubject, EMPTY, of } from 'rxjs';
 
 /**
- * Unit tests for WI-83: Fix Call Stack persistence during execution.
+ * Unit tests for DebuggerComponent state transition logic (Call Stack cleanup).
  */
-describe('DebuggerComponent — WI-83 Fix', () => {
+describe('DebuggerComponent — State Cleanup Logic', () => {
   let component: DebuggerComponent;
   let executionStateSubject: BehaviorSubject<string>;
   let mockDapSession: any;
