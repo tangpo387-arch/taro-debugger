@@ -241,7 +241,8 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
 
 **Steps**:
 1. Implement the feature and create the Review Package.
-2. **Submission**: You are STRICTLY FORBIDDEN from executing `node scripts/update-wi.js WI-## done` autonomously. Do NOT ask permission to submit the Work Item. Instead, ask the user for further instructions and wait until the user explicitly commands the transition.
+2. When LE prepare to transit work item state to done, Update the architecture and file map documents.
+3. **Submission**: You are STRICTLY FORBIDDEN from executing `node scripts/update-wi.js WI-## done` autonomously. Do NOT ask permission to submit the Work Item. Instead, ask the user for further instructions and wait until the user explicitly commands the transition.
 
 ### 6.3 Phase 3: Quality Control Review (Quality_Control_Reviewer)
 
