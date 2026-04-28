@@ -19,6 +19,10 @@ audience: AI model performing role selection for each user request
 - STRICTLY FORBIDDEN from proceeding without explicit user approval.
 - After proposing a specification, you MUST STOP execution immediately, yield control, and wait for the user to approve.
 - STRICTLY FORBIDDEN from writing code or producing any implementation artifact.
+- STRICTLY FORBIDDEN from transitioning a Work Item status without following this EXACT sequence:
+  1. FIRST: You MUST successfully generate and save any required specs or WI details.
+  2. SECOND: You MUST STOP and ask the USER for authorization to transition the Work Item (e.g., to `pending`).
+  3. THIRD: ONLY after USER approval, execute `node scripts/update-wi.js WI-<ID> <status>`.
 - Before authoring, renaming, or modifying any document in docs/, you MUST load Skill: `[DEV:DOCS] Documentation Standards` for strict naming and formatting rules.
 - Before authoring, designing, or modifying any AI skill file in .agents/, you MUST load Skill: `[META:RULE] AI Skill Engineering` for prompt engineering constraints.
 - For any WI that meets the complexity gate (new architectural pattern, 3+ file changes, non-obvious protocol constraint, or Size M+), you MUST load Skill: `[PROJ:FLOW] Work Item Management` to review the Complexity Gate criteria.
@@ -39,7 +43,10 @@ audience: AI model performing role selection for each user request
 
 - You MUST NOT deviate from approved architecture.
 - You MUST NOT assume DAP behavior not listed in the context sources.
-- STRICTLY FORBIDDEN from requesting a QCR review without first: (1) producing a `docs/reviews/WI-<ID>.review-package.md` (Load Skill: `[PROJ:PROT] Review Package`) AND (2) updating the Work Item status to `done` via `node scripts/update-wi.js WI-<ID> done`.
+- STRICTLY FORBIDDEN from requesting a QCR review without following this EXACT sequence:
+  1. FIRST: You MUST successfully generate and save the `docs/reviews/WI-<ID>.review-package.md` file (Load Skill: `[PROJ:PROT] Review Package`).
+  2. SECOND: You MUST STOP and ask the USER for authorization to transition the Work Item.
+  3. THIRD: ONLY after USER approval, execute `node scripts/update-wi.js WI-<ID> done`.
 - STRICTLY FORBIDDEN from using `npx` or direct binary calls for testing. You MUST use the testing scripts defined in `project-context.md` Section 5.
 
 </constraints>
@@ -94,5 +101,6 @@ audience: AI model performing role selection for each user request
 4. **Response Packaging**: Every response MUST start with the bolded name of the chosen agent (e.g., **Agent: Product_Architect**) to confirm the context of the reply.
 5. **Deadlock Escalation**: If two or more agents hold mutually exclusive, unresolvable positions, execution MUST stop immediately. Present both positions clearly to the USER and wait for their directive before proceeding.
 6. **Strict CLI Tool Arguments**: You are STRICTLY FORBIDDEN from guessing arguments for CLI tools. You MUST refer to the relevant documentation or skill manifest and use the EXACT, case-sensitive arguments listed. NEVER use capitalized, generic, or assumed values. (Note: Work Item IDs MUST always use the `WI-<ID>` format, where `<ID>` is the numeric identifier of any length, e.g., `WI-83`, `WI-1024`).
+7. **State Transition Gate**: You are STRICTLY FORBIDDEN from autonomously transitioning Work Item states. Before executing `node scripts/manage-wi.js` or `node scripts/update-wi.js` to change a status, you MUST explicitly propose the transition to the USER, STOP execution immediately, and wait for their explicit authorization.
 
 </critical-instruction>
