@@ -22,6 +22,12 @@ description: Managing the creation, progression, and archival of Work Items (WI)
 > 2. Debugging or extending the logic within the `scripts/` directory.
 > 3. Resolving a data corruption issue in the SSOT.
 
+<constraints>
+
+**ID Format Standard (Mandatory)**: All Work Item IDs MUST include the `WI-` prefix followed by the numeric identifier of any length (e.g., `WI-83`, `WI-1024`). Bare numeric IDs (e.g., `83`) are STRICTLY FORBIDDEN and will cause script errors. You MUST use the `WI-<ID>` format in all CLI commands and internal references.
+
+</constraints>
+
 ---
 
 ## 1. Operational Context
@@ -169,12 +175,12 @@ Implementation status is updated via the `update-wi.js` script. You are STRICTLY
 
 | Action | Command | Result | Owner |
 | :--- | :--- | :--- | :--- |
-| **Commit** | `node scripts/update-wi.js WI-## pending` | Moves to ⏳ Pending | `Product_Architect` |
-| **Submit** | `node scripts/update-wi.js WI-## done` | Moves to 🔍 Done | `Lead_Engineer` |
-| **Approve** | `node scripts/update-wi.js WI-## accepted` | Moves to ✅ Accepted | `Quality_Control_Reviewer` |
-| **Reject** | `node scripts/update-wi.js WI-## rework` | Moves to 🛠️ Rework | `Quality_Control_Reviewer` |
-| **Abort** | `node scripts/update-wi.js WI-## abort` | Moves to ❌ Aborted | All Agents |
-| **Propose** | `node scripts/update-wi.js WI-## proposed` | Moves to 💡 Proposed | `Product_Architect` |
+| **Commit** | `node scripts/update-wi.js WI-<ID> pending` | Moves to ⏳ Pending | `Product_Architect` |
+| **Submit** | `node scripts/update-wi.js WI-<ID> done` | Moves to 🔍 Done | `Lead_Engineer` |
+| **Approve** | `node scripts/update-wi.js WI-<ID> accepted` | Moves to ✅ Accepted | `Quality_Control_Reviewer` |
+| **Reject** | `node scripts/update-wi.js WI-<ID> rework` | Moves to 🛠️ Rework | `Quality_Control_Reviewer` |
+| **Abort** | `node scripts/update-wi.js WI-<ID> abort` | Moves to ❌ Aborted | All Agents |
+| **Propose** | `node scripts/update-wi.js WI-<ID> proposed` | Moves to 💡 Proposed | `Product_Architect` |
 
 > [!CAUTION]
 > **Strict State Transition Constraint**: For ALL major Work Item transitions (`proposed` -> `pending`, `pending` -> `done`, and `done` -> `accepted`/`rework`), you (the AI model) are STRICTLY FORBIDDEN from executing `update-wi.js` autonomously.
@@ -221,40 +227,40 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
    - Complete the generated template under `docs/archive/specs/` (name based on kebab-case).
    - Update related project documents to reflect the new design.
 
-<critical_instruction>
+<critical-instruction>
 
-**Link the Spec**: You MUST append the spec document link to the WI details (e.g., `|[Doc] docs/archive/specs/feature-spec.md`). Use `manage-wi.js show <WI-ID>` to read existing details, then `manage-wi.js edit <WI-ID> --details "<original>|[Doc] docs/archive/specs/feature-spec.md"`. You are STRICTLY FORBIDDEN from moving to the Promotion step without verifying the `[Doc]` link is present in the Work Item's `details`.
+**Link the Spec**: You MUST append the spec document link to the WI details (e.g., `|[Doc] docs/archive/specs/feature-spec.md`). Use `manage-wi.js show WI-<ID>` to read existing details, then `manage-wi.js edit WI-<ID> --details "<original>|[Doc] docs/archive/specs/feature-spec.md"`. You are STRICTLY FORBIDDEN from moving to the Promotion step without verifying the `[Doc]` link is present in the Work Item's `details`.
 
-</critical_instruction>
+</critical-instruction>
 
-1. **Promotion**: You are STRICTLY FORBIDDEN from executing `node scripts/update-wi.js WI-## pending` autonomously. Do NOT ask permission to promote the Work Item. Instead, ask the user for further instructions and wait until the user explicitly commands the transition (e.g., "proceed to next stage").
+1. **Promotion**: You are STRICTLY FORBIDDEN from executing `node scripts/update-wi.js WI-<ID> pending` autonomously. Do NOT ask permission to promote the Work Item. Instead, ask the user for further instructions and wait until the user explicitly commands the transition (e.g., "proceed to next stage").
 
 **Verification**:
 - WI status is updated to `Pending` and appears in `work-items.md`.
 
 ### 6.2 Phase 2: Implementation & Submission (Lead_Engineer)
 
-**Goal**: Execute `node scripts/update-wi.js WI-## done` to submit the Review Package to the QCR.
+**Goal**: Execute `node scripts/update-wi.js WI-<ID> done` to submit the Review Package to the QCR.
 
 **Prerequisites**:
-- A valid `docs/archive/reviews/{WI-ID}.review-package.md` MUST exist.
+- A valid `docs/archive/reviews/WI-<ID>.review-package.md` MUST exist.
 
 **Steps**:
 1. Implement the feature and create the Review Package.
-2. When LE prepare to transit work item state to done, Update the architecture and file map documents.
-3. **Submission**: You are STRICTLY FORBIDDEN from executing `node scripts/update-wi.js WI-## done` autonomously. Do NOT ask permission to submit the Work Item. Instead, ask the user for further instructions and wait until the user explicitly commands the transition.
+2. Before transitioning the WI to `done`, update the architecture and file map documents.
+3. **Submission**: You are STRICTLY FORBIDDEN from executing `node scripts/update-wi.js WI-<ID> done` autonomously. Do NOT ask permission to submit the Work Item. Instead, ask the user for further instructions and wait until the user explicitly commands the transition.
 
 ### 6.3 Phase 3: Quality Control Review (Quality_Control_Reviewer)
 
 **Prerequisites**:
 - WI status is `done`.
-- `docs/archive/reviews/{WI-ID}.review-package.md` exists and is complete.
+- `docs/archive/reviews/WI-<ID>.review-package.md` exists and is complete.
 
 **Steps**:
-1. **Execute `node scripts/manage-wi.js show {WI-ID}` to verify the WI is in the `done` state.**
+1. **Execute `node scripts/manage-wi.js show WI-<ID>` to verify the WI is in the `done` state.**
 2. `Quality_Control_Reviewer` follows the review protocol in `Skill: [PROJ:PROT] Review Package`.
 3. Formulate an APPROVED verdict, or note precise, actionable findings for a REJECTED verdict.
-4. You are STRICTLY FORBIDDEN from executing `node scripts/update-wi.js {WI-ID} <accepted|rework>` autonomously.
+4. You are STRICTLY FORBIDDEN from executing `node scripts/update-wi.js WI-<ID> <accepted|rework>` autonomously.
 5. Do NOT ask permission to execute the status transition. Simply state your review verdict and ask the user for further instructions.
 6. Execute the transition script ONLY after the user explicitly commands the transition.
 
@@ -304,7 +310,7 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
 
 ---
 
-## 9. Trivial Changes & Maintenance
+## 8. Trivial Changes & Maintenance
 
 **Definition of "Trivial Changes"**: Pure maintenance operations that do not involve logic changes (e.g., typo fixes, comment optimization, IDE setting adjustments, bug fixes, small enhancements), for which the WI flow may be bypassed.
 

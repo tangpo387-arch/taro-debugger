@@ -137,6 +137,13 @@ it('should cancel long-running Observable on component destroy', async () => {
   // For services: spy on the destroy subject if accessible
   // expect(destroySubject.isStopped).toBe(true);
 });
+
+### 6.6 Supplementary Test Files
+
+If a component already has a primary spec file (e.g., `debugger.component.spec.ts`) but you need to add a large set of tests for a specific fix or feature:
+- **Naming**: Use `<original-base>-<feature>.spec.ts` (e.g., `debugger-state-cleanup.component.spec.ts`).
+- **Isolation**: Ensure the supplementary file focuses ONLY on the specific logic, leaving the primary spec for general lifecycle and API coverage.
+- **Suite Title**: Append the feature name to the `describe` block: `describe('DebuggerComponent — State Cleanup', () => { ... });`.
 ```
 
 ---
@@ -153,6 +160,13 @@ it('should cancel long-running Observable on component destroy', async () => {
 | `console.log` left in committed test code | Pollutes CI output |
 | `Overwrite: true` on an existing `*.spec.ts` without prior audit | High risk of silently dropping existing test cases; git history provides no recoverable diff |
 | `wi-xx*.spec.ts` naming pattern | Pollutes the repository with temporary Work Item IDs. You MUST use descriptive, functional names (e.g., `threads-integration.spec.ts`). |
+
+### 7.1 Resolution Protocol (Temporary IDs)
+
+If you encounter an existing file or a specification using a `WI-XXX` identifier:
+1. **Query**: Run `node scripts/manage-wi.js show WI-XXX` to identify the functional requirement.
+2. **Rename**: Propose a new filename following the functional description (e.g., `WI-83: Fix Call Stack cleanup` → `debugger-state-cleanup.component.spec.ts`).
+3. **Refactor**: Update internal `describe` strings and JSDoc to remove the temporary ID.
 
 ---
 

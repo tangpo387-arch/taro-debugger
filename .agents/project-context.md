@@ -13,24 +13,16 @@ This document is purely an index and terminology outline. You are STRICTLY FORBI
 
 ## 1. Project Overview
 
-<context>
-
 * **Goal**: Provide a cross-platform web frontend debugging interface for GDB/LLDB.
 * **Architecture**: The project is organized as an **Angular Workspace (Monorepo)**, separating core logic from UI hosts.
 * **Language Support**: Focused on **C/C++** (Unix/Windows path handling, pointer-aware state inspection).
 
-</context>
-
 ### Workspace Structure
-
-<context>
 
 | Project / Term | Type | Path | Architectural Responsibility |
 | :--- | :--- | :--- | :--- |
 | **Host Application** | Application | `projects/taro-debugger-frontend` | `taro-debugger-frontend`. The Angular shell responsible for UI layout, routing, and Electron IPC coordination. |
 | **DAP-Core** | Library | `projects/dap-core` | `@taro/dap-core`. Framework-agnostic library containing protocol serialization, types, and core client logic. |
-
-</context>
 
 ### Tech Stack Requirements
 
@@ -46,20 +38,14 @@ This document is purely an index and terminology outline. You are STRICTLY FORBI
 
 ## 2. Terminology
 
-<context>
-
 | Term | Definition / Role in Project |
 | :--- | :--- |
 | **Execution State** | The session lifecycle (Inactive, Launching, Running, Paused) managed by `DapSessionService`. |
 | **Standalone Unit** | The mandatory Angular component pattern (Angular 21+); strictly forbidden from using `NgModule`. |
 
-</context>
-
 ## 3. Agent Navigation
 
 <workflow>
-
-Locate documents based on task:
 
 | Task Type | Layer | Primary Agent | Mandatory Trigger |
 | :--- | :--- | :--- | :--- |
@@ -102,14 +88,18 @@ Locate documents based on task:
 | **Test Single File** | `npm run test:file -- <project> --include=**/<file.spec.ts> --watch=false` | Executes tests for a specific file. |
 | **Doc Linting** | `npm run lint:docs` | Verifies documentation against quality standards. |
 
+</workflow>
+
 ### Utility & Management Scripts
+
+<workflow>
 
 | Operation | Command | Constraints |
 | :--- | :--- | :--- |
-| **Update WI Status** | `node scripts/update-wi.js <WI-ID> <status>` | `<status>` MUST be: `pending`, `done`, `accepted`, `rework`, `abort`, or `proposed`. |
-| **Inspect WI** | `node scripts/manage-wi.js show <WI-ID> [field]` | `[field]` is optional (e.g., `details`, `status`, `deps`). |
+| **Update WI Status** | `node scripts/update-wi.js WI-<ID> <status>` | `<status>` MUST be: `pending`, `done`, `accepted`, `rework`, `abort`, or `proposed`. |
+| **Inspect WI** | `node scripts/manage-wi.js show WI-<ID> [field]` | `[field]` is optional (e.g., `details`, `status`, `deps`). |
 | **Add WI** | `node scripts/manage-wi.js add AUTO <Group> <Title> ...` | Arguments are positional. Use `AUTO` for automatic ID allocation. |
-| **Edit WI** | `node scripts/manage-wi.js edit <WI-ID> --<field> <value>` | Supported flags: `--title`, `--desc`, `--details`, `--deps`, `--size`, `--milestone`. |
+| **Edit WI** | `node scripts/manage-wi.js edit WI-<ID> --<field> <value>` | Supported flags: `--title`, `--desc`, `--details`, `--deps`, `--size`, `--milestone`. |
 | **Group Management** | `node scripts/manage-wi.js <add-group\|show-group\|list-group>` | Use `show-group` to verify existing Feature Group names before adding WIs. |
 
 </workflow>

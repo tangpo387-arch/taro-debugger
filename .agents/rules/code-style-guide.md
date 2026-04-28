@@ -22,6 +22,7 @@ This document defines the development standards for the `taro-debugger-frontend`
 ### File Naming
 
 * **File Name Format**: Always use `kebab-case`.
+* **Filename Sanitization**: You are STRICTLY FORBIDDEN from using temporary project tracking IDs (e.g., `wi-83`) in source or test filenames. Use descriptive, functional names that reflect the file's responsibility.
 * **Suffix Conventions**:
   * Component: `*.component.ts`
   * Service: `*.service.ts`
