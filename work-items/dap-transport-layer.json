@@ -387,6 +387,31 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-26"
       }
+    },
+    {
+      "id": "WI-89",
+      "title": "Refactor DapSessionService Encapsulation",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "accepted",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Make sendRequest private and expose high-level methods for loadedSources and source.",
+      "details": [
+        "Add loadedSources() and source() methods to DapSessionService",
+        "Make sendRequest() private",
+        "Update DapFileTreeService to use high-level methods",
+        "Update affected unit tests",
+        "[Test] Verify File Tree still loads correctly with new methods",
+        "[Doc] docs/archive/specs/refactor-dap-encapsulation.md"
+      ],
+      "timeline": {
+        "created": "2026-04-28",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-28"
+      }
     }
   ]
 }

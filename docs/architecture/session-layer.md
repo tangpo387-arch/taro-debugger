@@ -2,7 +2,7 @@
 title: Architecture - Session Layer
 scope: architecture, session-layer, state-machine, data-flow
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-27
+last_updated: 2026-04-29
 related:
   - ../architecture.md
   - command-serialization.md
@@ -20,7 +20,7 @@ related:
 - **Intercept and process Transport events**, including the generation of **Synthetic Events** (`_dapError`, `_transportError`)
 - Maintain **Single Source of Truth (SSOT)** for verified breakpoints across all source files
 - Manage **Thread state** (thread list tracking, active thread selection, stop reasons)
-- Publish **Session-level Observables** (`connectionStatus$`, `executionState$`, `breakpoints$`, `threads$`)
+- Publish **Session-level Observables** (`connectionStatus$`, `executionState$`, `breakpoints$`, `threads$`). Note: Execution state consumption is strictly reactive; the synchronous getter is prohibited to ensure SSOT integrity.
 
 ## 2. Execution State Machine
 
@@ -176,8 +176,8 @@ The Session layer automates thread and context management to simplify UI impleme
 | `setBreakpoints(p, l)` | `Promise<VerifiedBreakpoint[]>` | Sync breakpoints with serialization logic. |
 | `toggleBreakpointEnabled()` | `Promise<void>` | Toggle local state and re-sync with adapter. |
 | `setCurrentThread(id)` | `void` | Set active thread and trigger UI context refresh. |
-| `evaluate(expr, frame?)` | `Promise<DapResponse>` | Evaluate with **30s timeout** and cancel support. |
-| `disassemble(args)` | `Promise<DapResponse>` | Fetch instructions (requires `stopped` state). |
+| `source(args)` | `Promise<DapResponse>` | Fetch source content (semantic wrapper). |
+| `loadedSources()` | `Promise<DapResponse>` | Fetch all loaded sources (semantic wrapper). |
 | `reset()` | `void` | Force reset to `idle` (cleans up all resources). |
 
 ## 9. Configuration Flow (DapConfig)

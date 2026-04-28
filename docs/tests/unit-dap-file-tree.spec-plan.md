@@ -3,8 +3,8 @@ title: DapFileTreeService — Unit Spec Plan
 scope: unit-test
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 target-file: projects/taro-debugger-frontend/src/app/dap-file-tree.service.ts
-related-wi: WI-33, WI-34, WI-82
-last_updated: 2026-04-26
+related-wi: WI-33, WI-34, WI-82, WI-89
+last_updated: 2026-04-29
 ---
 
 # DapFileTreeService — Unit Spec Plan
@@ -18,13 +18,13 @@ Fully isolated tests for `DapFileTreeService`. Covers source content LRU caching
 ## Test Cases (LRU Cache)
 
 * **Cache hit (single request)**
-  * Call `readFile('/src/main.cpp')` twice in sequence. Verify `DapSessionService.sendRequest('source', ...)` is called **exactly once**; the second call resolves from cache without a DAP round-trip.
+  * Call `readFile('/src/main.cpp')` twice in sequence. Verify `DapSessionService.source(...)` is called **exactly once**; the second call resolves from cache without a DAP round-trip.
 
 * **`sourceReference` keying priority**
   * Call `readFile` with `sourceReference = 5` and a non-empty `path`. Verify the cache key is `ref:5`, not `path:/src/virtual.cpp`. A subsequent call with the same `sourceReference` but a different path still hits the cache.
 
 * **In-flight deduplication**
-  * Initiate two concurrent `readFile('/src/main.cpp')` calls before the first DAP response resolves. Verify `sendRequest` is called **once**, and both callers receive the same resolved content.
+  * Initiate two concurrent `readFile('/src/main.cpp')` calls before the first DAP response resolves. Verify `DapSessionService.source()` is called **once**, and both callers receive the same resolved content.
 
 * **LRU eviction on capacity overflow**
   * Pre-fill the cache with entries totalling just under 20 MB. Add a new entry that pushes total size over 20 MB. Verify the **least recently used** entry is evicted and total size remains ≤ 20 MB.

@@ -232,7 +232,7 @@ describe('TI-05 — Connection Error & Intent Detection', () => {
       simulateRunningState();
 
       // Issue a request that will never receive a response
-      const pendingPromise = service.sendRequest('stackTrace', { threadId: 1 }, 60_000);
+      const pendingPromise = (service as any).sendRequest('stackTrace', { threadId: 1 }, 60_000);
 
       // Act — simulate transport failure before server responds
       mockTransport.triggerError('Connection dropped');

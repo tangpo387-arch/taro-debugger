@@ -81,10 +81,10 @@ describe('DapSessionService', () => {
     it('should increment seq for each request', () => {
       (service as any).transport = mockTransport;
 
-      service.sendRequest('command1');
+      (service as any).sendRequest('command1');
       expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({ seq: 1 }));
 
-      service.sendRequest('command2');
+      (service as any).sendRequest('command2');
       expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({ seq: 2 }));
     });
   });
@@ -93,7 +93,7 @@ describe('DapSessionService', () => {
     it('should resolve when matching response is received', async () => {
       (service as any).transport = mockTransport;
 
-      const promise = service.sendRequest('testCommand');
+      const promise = (service as any).sendRequest('testCommand');
 
       // Manually trigger the handler
       (service as any).handleIncomingMessage({
@@ -111,7 +111,7 @@ describe('DapSessionService', () => {
     it('should reject when failed response is received', async () => {
       (service as any).transport = mockTransport;
 
-      const promise = service.sendRequest('testCommand');
+      const promise = (service as any).sendRequest('testCommand');
 
       (service as any).handleIncomingMessage({
         type: 'response',
@@ -148,7 +148,7 @@ describe('DapSessionService', () => {
     it('should reject on timeout', async () => {
       (service as any).transport = mockTransport;
 
-      const promise = service.sendRequest('slowCommand', {}, 100);
+      const promise = (service as any).sendRequest('slowCommand', {}, 100);
 
       vi.advanceTimersByTime(101);
 
@@ -660,6 +660,27 @@ describe('DapSessionService', () => {
         expect(disconnectSpy).toHaveBeenCalledWith(expect.objectContaining({ restart: true }));
         expect(startSessionSpy).toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('High-level DAP Methods', () => {
+    it('should send loadedSources request', async () => {
+      (service as any).transport = mockTransport;
+      service.loadedSources();
+
+      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+        command: 'loadedSources'
+      }));
+    });
+
+    it('should send source request with arguments', async () => {
+      (service as any).transport = mockTransport;
+      service.source({ sourceReference: 42, source: { path: '/test.cpp' } });
+
+      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+        command: 'source',
+        arguments: { sourceReference: 42, source: { path: '/test.cpp' } }
+      }));
     });
   });
 });

@@ -51,7 +51,7 @@ export class DapFileTreeService extends FileTreeService {
    * @param rootPath Displayed root label for the tree; used as the root node's name and path.
    */
   getTree(rootPath: string): Observable<FileNode> {
-    return from(this.dapSession.sendRequest('loadedSources', {})).pipe(
+    return from(this.dapSession.loadedSources()).pipe(
       map(response => {
         const sources = response.body?.sources || [];
         return this.buildTreeFromSources(sources, rootPath);
@@ -91,7 +91,7 @@ export class DapFileTreeService extends FileTreeService {
     }
 
     // 3. Issue fresh DAP `source` request.
-    const request$ = from(this.dapSession.sendRequest('source', {
+    const request$ = from(this.dapSession.source({
       sourceReference: sourceReference || 0,
       source: { path }
     })).pipe(

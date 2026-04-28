@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DapSessionService } from '@taro/dap-core';
-import { map } from 'rxjs';
+import { Observable, firstValueFrom, map } from 'rxjs';
 
 /**
  * DebugControlGroupComponent
@@ -49,8 +49,8 @@ export class DebugControlGroupComponent {
 
   // ── Execution Handlers ───────────────────────────────────────────────────
 
-  public onResume(): void {
-    const state = this.dapSession.executionState;
+  public async onResume(): Promise<void> {
+    const state = await firstValueFrom(this.dapSession.executionState$);
     if (state === 'idle') {
       this.run.emit();
     } else {

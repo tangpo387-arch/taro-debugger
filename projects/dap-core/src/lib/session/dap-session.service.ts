@@ -97,13 +97,8 @@ export class DapSessionService {
 
   public readonly commandInFlight$ = this.commandInFlightSubject.asObservable();
 
-  get executionState$(): Observable<ExecutionState> {
+  public get executionState$(): Observable<ExecutionState> {
     return this.executionStateSubject.asObservable();
-  }
-
-  /** Current execution state value (R-CS5) */
-  public get executionState(): ExecutionState {
-    return this.executionStateSubject.value;
   }
 
   public constructor() { }
@@ -707,12 +702,26 @@ export class DapSessionService {
   }
 
   /**
+   * Get all sources currently loaded by the debug adapter.
+   */
+  public async loadedSources(): Promise<DapResponse> {
+    return this.sendRequest('loadedSources', {});
+  }
+
+  /**
+   * Get the content of a specific source file.
+   */
+  public async source(args: { sourceReference: number; source?: { path: string } }): Promise<DapResponse> {
+    return this.sendRequest('source', args);
+  }
+
+  /**
    * Wrapper for sending a request and waiting for its response.
    * @param command DAP command name
    * @param args DAP command arguments (optional)
    * @param timeoutMs Timeout in milliseconds (default 5000ms)
    */
-  public sendRequest(command: string, args?: any, timeoutMs: number = 5000): Promise<DapResponse> {
+  private sendRequest(command: string, args?: any, timeoutMs: number = 5000): Promise<DapResponse> {
     const transport = this.transport;
     if (!transport) {
       return Promise.reject(new Error('Transport not initialized. Call startSession() first.'));

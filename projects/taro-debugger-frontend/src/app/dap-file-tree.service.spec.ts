@@ -16,7 +16,8 @@ function makeResponse(body?: any): DapResponse {
  * event and connection-status control within tests.
  */
 interface MockSession {
-  sendRequest: ReturnType<typeof vi.fn>;
+  loadedSources: ReturnType<typeof vi.fn>;
+  source: ReturnType<typeof vi.fn>;
   onEvent: ReturnType<typeof vi.fn>;
   connectionStatus$: ReturnType<BehaviorSubject<boolean>['asObservable']>;
   /** Push a named DAP event into the service under test. */
@@ -33,7 +34,12 @@ function makeMockSession(responseBody?: any, shouldFail = false): MockSession {
   const connectionStatusSubject = new BehaviorSubject<boolean>(true);
 
   return {
-    sendRequest: vi.fn().mockImplementation(() =>
+    loadedSources: vi.fn().mockImplementation(() =>
+      shouldFail
+        ? Promise.reject(new Error('DAP request failed'))
+        : Promise.resolve(makeResponse(responseBody))
+    ),
+    source: vi.fn().mockImplementation(() =>
       shouldFail
         ? Promise.reject(new Error('DAP request failed'))
         : Promise.resolve(makeResponse(responseBody))
@@ -90,7 +96,7 @@ describe('DapFileTreeService', () => {
   describe('getTree()', () => {
     it('should build a tree containing src and include directories (Unix paths)', async () => {
       // Arrange
-      session.sendRequest = vi.fn().mockResolvedValue(makeResponse({
+      session.loadedSources = vi.fn().mockResolvedValue(makeResponse({
         sources: [
           { path: '/project/src/main.c' },
           { path: '/project/src/utils.c' },
@@ -118,7 +124,7 @@ describe('DapFileTreeService', () => {
 
     it('should build a tree containing project directory under C: (Windows paths)', async () => {
       // Arrange
-      session.sendRequest = vi.fn().mockResolvedValue(makeResponse({
+      session.loadedSources = vi.fn().mockResolvedValue(makeResponse({
         sources: [
           { path: 'C:\\project\\main.c' },
           { path: 'C:\\project\\utils.c' },
@@ -140,7 +146,7 @@ describe('DapFileTreeService', () => {
 
     it('should preserve sourceReference in FileNode for physical sources', async () => {
       // Arrange
-      session.sendRequest = vi.fn().mockResolvedValue(makeResponse({
+      session.loadedSources = vi.fn().mockResolvedValue(makeResponse({
         sources: [{ path: '/project/main.c', sourceReference: 42 }],
       }));
 
@@ -154,7 +160,7 @@ describe('DapFileTreeService', () => {
 
     it('should handle virtual files that carry only a sourceReference (no path)', async () => {
       // Arrange
-      session.sendRequest = vi.fn().mockResolvedValue(makeResponse({
+      session.loadedSources = vi.fn().mockResolvedValue(makeResponse({
         sources: [{ sourceReference: 100 }],
       }));
 
@@ -171,7 +177,7 @@ describe('DapFileTreeService', () => {
 
     it('should sort directories before files, and entries alphabetically within the same level', async () => {
       // Arrange
-      session.sendRequest = vi.fn().mockResolvedValue(makeResponse({
+      session.loadedSources = vi.fn().mockResolvedValue(makeResponse({
         sources: [
           { path: '/p/zebra.c' },
           { path: '/p/alpha.c' },
@@ -192,7 +198,7 @@ describe('DapFileTreeService', () => {
 
     it('should skip sources that have neither a path nor a sourceReference', async () => {
       // Arrange
-      session.sendRequest = vi.fn().mockResolvedValue(makeResponse({
+      session.loadedSources = vi.fn().mockResolvedValue(makeResponse({
         sources: [
           { name: 'no-path-source' }, // no path or ref — must be skipped
           { path: '/project/main.c' },
@@ -210,7 +216,7 @@ describe('DapFileTreeService', () => {
 
     it('should group external sources under "External Libraries"', async () => {
       // Arrange
-      session.sendRequest = vi.fn().mockResolvedValue(makeResponse({
+      session.loadedSources = vi.fn().mockResolvedValue(makeResponse({
         sources: [
           { path: '/project/main.c' },
           { path: '/usr/include/stdio.h' },
@@ -232,7 +238,7 @@ describe('DapFileTreeService', () => {
 
     it('should throw when the loadedSources DAP request fails', async () => {
       // Arrange
-      session.sendRequest = vi.fn().mockRejectedValue(new Error('DAP request failed'));
+      session.loadedSources = vi.fn().mockRejectedValue(new Error('DAP request failed'));
 
       // Act & Assert
       await expect(firstValueFrom(svc.getTree('/any'))).rejects.toThrow('DAP request failed');
@@ -244,7 +250,7 @@ describe('DapFileTreeService', () => {
 
     it('should return the content field from the source response', async () => {
       // Arrange
-      session.sendRequest = vi.fn().mockResolvedValue(
+      session.source = vi.fn().mockResolvedValue(
         makeResponse({ content: '#include <stdio.h>\nint main(){}' })
       );
 
@@ -253,15 +259,14 @@ describe('DapFileTreeService', () => {
 
       // Assert
       expect(content).toBe('#include <stdio.h>\nint main(){}');
-      expect(session.sendRequest).toHaveBeenCalledWith(
-        'source',
+      expect(session.source).toHaveBeenCalledWith(
         { sourceReference: 0, source: { path: '/project/main.c' } }
       );
     });
 
     it('should return an empty string when the response body carries no content field', async () => {
       // Arrange — body exists but content property is absent
-      session.sendRequest = vi.fn().mockResolvedValue(makeResponse({}));
+      session.source = vi.fn().mockResolvedValue(makeResponse({}));
 
       // Act
       const content = await firstValueFrom(svc.readFile('/project/empty.c'));
@@ -272,7 +277,7 @@ describe('DapFileTreeService', () => {
 
     it('should propagate the error when the DAP source request fails', async () => {
       // Arrange
-      session.sendRequest = vi.fn().mockRejectedValue(new Error('DAP request failed'));
+      session.source = vi.fn().mockRejectedValue(new Error('DAP request failed'));
 
       // Act & Assert
       await expect(
@@ -282,7 +287,7 @@ describe('DapFileTreeService', () => {
 
     it('should return cached content on second call without a DAP round-trip', async () => {
       // Arrange
-      session.sendRequest = vi.fn().mockResolvedValue(makeResponse({ content: 'content v1' }));
+      session.source = vi.fn().mockResolvedValue(makeResponse({ content: 'content v1' }));
 
       // Act
       const res1 = await firstValueFrom(svc.readFile('/a.cpp'));
@@ -291,12 +296,12 @@ describe('DapFileTreeService', () => {
       // Assert
       expect(res1).toBe('content v1');
       expect(res2).toBe('content v1');
-      expect(session.sendRequest).toHaveBeenCalledTimes(1);
+      expect(session.source).toHaveBeenCalledTimes(1);
     });
 
     it('should key on sourceReference rather than path for virtual sources', async () => {
       // Arrange
-      session.sendRequest = vi.fn().mockResolvedValue(makeResponse({ content: 'virtual content' }));
+      session.source = vi.fn().mockResolvedValue(makeResponse({ content: 'virtual content' }));
 
       // Act — first call establishes ref:5 entry; second call uses a different path but same ref
       await firstValueFrom(svc.readFile('/ignored/path.cpp', 5));
@@ -304,9 +309,8 @@ describe('DapFileTreeService', () => {
 
       // Assert — only one DAP round-trip; second call resolved from cache
       expect(res).toBe('virtual content');
-      expect(session.sendRequest).toHaveBeenCalledTimes(1);
-      expect(session.sendRequest).toHaveBeenCalledWith(
-        'source',
+      expect(session.source).toHaveBeenCalledTimes(1);
+      expect(session.source).toHaveBeenCalledWith(
         expect.objectContaining({ sourceReference: 5 })
       );
     });
@@ -315,7 +319,7 @@ describe('DapFileTreeService', () => {
       // Arrange — a pending Promise that we resolve manually after both calls are initiated
       let resolveRequest!: (res: any) => void;
       const pendingPromise = new Promise(resolve => { resolveRequest = resolve; });
-      session.sendRequest = vi.fn().mockReturnValue(pendingPromise);
+      session.source = vi.fn().mockReturnValue(pendingPromise);
 
       // Act — fire two reads before the first resolves
       const p1 = firstValueFrom(svc.readFile('/long.c'));
@@ -326,14 +330,14 @@ describe('DapFileTreeService', () => {
       const [res1, res2] = await Promise.all([p1, p2]);
       expect(res1).toBe('long content');
       expect(res2).toBe('long content');
-      expect(session.sendRequest).toHaveBeenCalledTimes(1);
+      expect(session.source).toHaveBeenCalledTimes(1);
     });
 
     it('should evict the least recently used entry when total size exceeds 20 MB', async () => {
       // Arrange — file1 (10 MB) + file2 (15 MB) > 20 MB; file1 must be evicted
       const content1 = 'a'.repeat(10 * 1024 * 1024); // 10 MB — the initial LRU
       const content2 = 'b'.repeat(15 * 1024 * 1024); // 15 MB — triggers eviction of file1
-      session.sendRequest = vi.fn()
+      session.source = vi.fn()
         .mockResolvedValueOnce(makeResponse({ content: content1 }))
         .mockResolvedValueOnce(makeResponse({ content: content2 }))
         .mockResolvedValueOnce(makeResponse({ content: 're-fetched file1' }));
@@ -345,7 +349,7 @@ describe('DapFileTreeService', () => {
 
       // Assert
       expect(result).toBe('re-fetched file1');
-      expect(session.sendRequest).toHaveBeenCalledTimes(3);
+      expect(session.source).toHaveBeenCalledTimes(3);
     });
 
     it('should retain the accessed entry and evict the actual LRU when promoted', async () => {
@@ -353,7 +357,7 @@ describe('DapFileTreeService', () => {
       const contentA = 'a'.repeat(12 * 1024 * 1024); // 12 MB
       const contentB = 'b'.repeat(5 * 1024 * 1024);  //  5 MB
       const contentD = 'd'.repeat(5 * 1024 * 1024);  //  5 MB — adding D pushes total to 22 MB
-      session.sendRequest = vi.fn()
+      session.source = vi.fn()
         .mockResolvedValueOnce(makeResponse({ content: contentA }))  // fetch A
         .mockResolvedValueOnce(makeResponse({ content: contentB }))  // fetch B
         .mockResolvedValueOnce(makeResponse({ content: contentD }))  // fetch D
@@ -370,39 +374,39 @@ describe('DapFileTreeService', () => {
       // Assert — 4 DAP calls total: A, B, D, re-fetch B (A re-read served from cache)
       expect(reFetchedB).toBe('re-fetched B');
       expect(cachedA).toBe(contentA);
-      expect(session.sendRequest).toHaveBeenCalledTimes(4);
+      expect(session.source).toHaveBeenCalledTimes(4);
     });
 
     it('should flush the cache when the DAP server emits an "initialized" event', async () => {
       // Arrange — populate cache with one entry
-      session.sendRequest = vi.fn().mockResolvedValue(makeResponse({ content: 'old content' }));
+      session.source = vi.fn().mockResolvedValue(makeResponse({ content: 'old content' }));
       await firstValueFrom(svc.readFile('/file.c'));
-      expect(session.sendRequest).toHaveBeenCalledTimes(1);
+      expect(session.source).toHaveBeenCalledTimes(1);
 
       // Act — simulate session re-initialization
       session.triggerEvent('initialized');
-      session.sendRequest = vi.fn().mockResolvedValue(makeResponse({ content: 'fresh content' }));
+      session.source = vi.fn().mockResolvedValue(makeResponse({ content: 'fresh content' }));
 
       // Assert — cache was cleared; next read issues a new DAP request
       const res = await firstValueFrom(svc.readFile('/file.c'));
       expect(res).toBe('fresh content');
-      expect(session.sendRequest).toHaveBeenCalledTimes(1);
+      expect(session.source).toHaveBeenCalledTimes(1);
     });
 
     it('should flush the cache on disconnect and issue fresh requests in the new session', async () => {
       // Arrange — Session 1: populate cache
-      session.sendRequest = vi.fn().mockResolvedValue(makeResponse({ content: 'session-1' }));
+      session.source = vi.fn().mockResolvedValue(makeResponse({ content: 'session-1' }));
       await firstValueFrom(svc.readFile('/main.c'));
 
       // Act — simulate full session lifecycle: disconnect → reconnect
       session.setConnected(false);  // triggers clearCache()
       session.setConnected(true);   // new session begins
-      session.sendRequest = vi.fn().mockResolvedValue(makeResponse({ content: 'session-2' }));
+      session.source = vi.fn().mockResolvedValue(makeResponse({ content: 'session-2' }));
 
       // Assert — previously cached path now issues a fresh DAP request
       const res = await firstValueFrom(svc.readFile('/main.c'));
       expect(res).toBe('session-2');
-      expect(session.sendRequest).toHaveBeenCalledTimes(1);
+      expect(session.source).toHaveBeenCalledTimes(1);
     });
   });
 });

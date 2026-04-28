@@ -314,7 +314,7 @@ describe('DapVariablesService', () => {
       expect(mockDapSession.variables).toHaveBeenCalledTimes(1);
 
       // Trigger state change — cache should be evicted
-      executionState$.next('terminated');
+      executionState$.next('idle');
 
       // After clearing, a new request for the same ref must go back to the network
       mockDapSession.variables.mockResolvedValue(
@@ -324,13 +324,13 @@ describe('DapVariablesService', () => {
       expect(mockDapSession.variables).toHaveBeenCalledTimes(2);
     });
 
-    it('should clear state on transition to "terminated"', async () => {
+    it('should clear state on transition to "idle"', async () => {
       mockDapSession.scopes.mockResolvedValue(
         makeScopesResponse([{ name: 'Locals', variablesReference: 101, expensive: false }])
       );
       await service.fetchScopes(1);
 
-      executionState$.next('terminated');
+      executionState$.next('idle');
 
       const scopes = await firstValueFrom(service.scopes$);
       expect(scopes).toEqual([]);
