@@ -67,14 +67,14 @@ node scripts/manage-wi.js add-group "Network Layer" "#4ade80" "#22c55e" "Handles
 
 ### 2.2 List/Inspect Groups
 
-Use `manage-wi.js show-group` to see all registered groups or inspect a specific one.
+Use `manage-wi.js list-groups` to see all registered groups or `inspect-group` for a specific one.
 
 ```bash
 # List all groups
-node scripts/manage-wi.js show-group
+node scripts/manage-wi.js list-groups
 
-# Show specific group details
-node scripts/manage-wi.js show-group "Network Layer"
+# Show specific group details (metadata)
+node scripts/manage-wi.js inspect-group "Network Layer"
 ```
 
 ---
@@ -114,7 +114,7 @@ node scripts/manage-wi.js add AUTO "Editor Advanced Interaction" "Search UI" "Ad
 ```
 
 - **AUTO**: Let the system allocate the numeric ID.
-- **Group**: Must match an existing Feature Group name. Use `show-group` to list available names or `add-group` to create a new one if needed.
+- **Group**: Must match an existing Feature Group name. Use `list-groups` to list available names or `add-group` to create a new one if needed.
 - **Details**: Use `|` to separate multiple sub-tasks (see §3.1 Content Standards for formatting rules).
 - **Deps**: Comma-separated list of dependent IDs (or `none`).
 

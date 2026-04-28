@@ -128,13 +128,12 @@ function cmdAddGroup(args) {
   syncDocs();
 }
 
-// ── Subcommand: show-group ───────────────────────────────────────────
+// ── Subcommand: list-groups ──────────────────────────────────────────
 
 /**
- * Lists all groups or shows details of a specific group.
- * @param {string[]} args - [GroupName]
+ * Lists all registered Feature Groups.
  */
-function cmdShowGroup(args) {
+function cmdListGroups() {
   const entries = loadAllEntries();
   const groupMap = new Map();
 
@@ -144,33 +143,46 @@ function cmdShowGroup(args) {
     }
   });
 
-  const targetName = args[0];
-  if (targetName) {
-    const group = groupMap.get(targetName);
-    if (!group) {
-      console.error(`Error: Group "${targetName}" not found.`);
-      process.exit(1);
-    }
-    process.stdout.write(JSON.stringify(group.def, null, 2) + '\n');
-  } else {
-    console.log('\nRegistered Feature Groups:');
-    console.log(''.padEnd(60, '-'));
-    Array.from(groupMap.values())
-      .sort((a, b) => a.def.name.localeCompare(b.def.name))
-      .forEach(g => {
-        console.log(`${g.def.name.padEnd(25)} | ${g.def.color.fill}/${g.def.color.stroke} | ${g.def.description}`);
-      });
-    console.log(''.padEnd(60, '-'));
-  }
+  console.log('\nRegistered Feature Groups:');
+  console.log(''.padEnd(60, '-'));
+  Array.from(groupMap.values())
+    .sort((a, b) => a.def.name.localeCompare(b.def.name))
+    .forEach(g => {
+      console.log(`${g.def.name.padEnd(25)} | ${g.def.color.fill}/${g.def.color.stroke} | ${g.def.description}`);
+    });
+  console.log(''.padEnd(60, '-'));
 }
 
-// ── Subcommand: list-group ───────────────────────────────────────────
+// ── Subcommand: inspect-group ────────────────────────────────────────
+
+/**
+ * Shows the full JSON definition of a specific group.
+ * @param {string[]} args - [GroupName]
+ */
+function cmdInspectGroup(args) {
+  const targetName = args[0];
+  if (!targetName) {
+    console.error('Usage: manage-wi.js inspect-group <Name>');
+    process.exit(1);
+  }
+
+  const entries = loadAllEntries();
+  const group = entries.find(e => e.groupDef && e.groupDef.name === targetName);
+
+  if (!group) {
+    console.error(`Error: Group "${targetName}" not found. Use list-groups to see valid groups.`);
+    process.exit(1);
+  }
+  process.stdout.write(JSON.stringify(group.groupDef, null, 2) + '\n');
+}
+
+// ── Subcommand: list-items ───────────────────────────────────────────
 
 /**
  * Lists all Work Items in a specific group with filtering.
  * @param {string[]} args - [GroupName, ...flags]
  */
-function cmdListGroup(args) {
+function cmdListItems(args) {
   const flags = { status: 'active', detailed: false };
   const posArgs = [];
 
@@ -190,7 +202,7 @@ function cmdListGroup(args) {
 
   const groupName = posArgs[0];
   if (!groupName) {
-    console.error('Usage: manage-wi.js list-group <Name> [--status <all|pending|...>] [--detailed]');
+    console.error('Usage: manage-wi.js list-items <Name> [--status <all|active|pending|...>] [--detailed]');
     process.exit(1);
   }
 
@@ -198,7 +210,7 @@ function cmdListGroup(args) {
   const groupExists = entries.some(e => e.groupDef && e.groupDef.name === groupName);
 
   if (!groupExists) {
-    console.error(`Error: Group "${groupName}" not found. use show-group to list valid groups.`);
+    console.error(`Error: Group "${groupName}" not found. Use list-groups to list valid groups.`);
     process.exit(1);
   }
 
@@ -322,6 +334,7 @@ Flags:
   if (!existingGroup) {
     console.error(`Error: Feature Group "${group}" does not exist.`);
     console.error(`Please create it first using: node scripts/manage-wi.js add-group "${group}" <Fill> <Stroke> <Description>`);
+    console.error(`Use "node scripts/manage-wi.js list-groups" to see available groups.`);
     process.exit(1);
   }
 
@@ -510,14 +523,15 @@ Subcommands:
   edit        <WI-##> [Flags]
   show        <WI-##> [field]
   add-group   <Name> <Fill> <Stroke> <Description>
-  show-group  [Name]
-  list-group  <Name> [--status <all|active|pending|...>] [--detailed]
+  list-groups
+  inspect-group <Name>
+  list-items  <Name> [--status <all|active|pending|...>] [--detailed]
 
 Notes:
   - Details use "|" as separator; prefix any value with "@" to load from a file.
-  - Groups must be managed via add-group/show-group.
+  - Groups must be managed via add-group/list-groups/inspect-group.
   - "show <field>" filters output to a specific field (e.g. details, status, deps).
-  - "list-group" defaults to active items (pending, done, rework) in a single-line summary.
+  - "list-items" defaults to active items (pending, done, rework) in a single-line summary.
   - Status changes (done/pending/accepted/rework/aborted) are handled by update-wi.js.
 `.trim();
 
@@ -534,11 +548,14 @@ switch (subcommand) {
   case 'show':
     cmdShow(subArgs);
     break;
-  case 'show-group':
-    cmdShowGroup(subArgs);
+  case 'list-groups':
+    cmdListGroups();
     break;
-  case 'list-group':
-    cmdListGroup(subArgs);
+  case 'inspect-group':
+    cmdInspectGroup(subArgs);
+    break;
+  case 'list-items':
+    cmdListItems(subArgs);
     break;
   default:
     console.log(USAGE);

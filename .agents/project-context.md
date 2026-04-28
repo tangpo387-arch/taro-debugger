@@ -100,7 +100,7 @@ This document is purely an index and terminology outline. You are STRICTLY FORBI
 | **Inspect WI** | `node scripts/manage-wi.js show WI-<ID> [field]` | `[field]` is optional (e.g., `details`, `status`, `deps`). |
 | **Add WI** | `node scripts/manage-wi.js add AUTO <Group> <Title> ...` | Arguments are positional. Use `AUTO` for automatic ID allocation. |
 | **Edit WI** | `node scripts/manage-wi.js edit WI-<ID> --<field> <value>` | Supported flags: `--title`, `--desc`, `--details`, `--deps`, `--size`, `--milestone`. |
-| **Group Management** | `node scripts/manage-wi.js <add-group\|show-group\|list-group>` | Use `show-group` to verify existing Feature Group names before adding WIs. |
+| **Group Management** | `node scripts/manage-wi.js <add-group\|list-groups\|inspect-group\|list-items>` | Use `list-groups` to verify existing Feature Group names before adding WIs. |
 
 </workflow>
 

@@ -96,7 +96,7 @@ How the 6 canonical work item types relate to their parent Feature Group:
 - **`test`**: Fortifies the group's existing logic against regressions.
 
 > [!NOTE]
-> The canonical Feature Group registry—including names, colors, and descriptions—is managed via the project's data layer. New groups are established using `node scripts/manage-wi.js add-group <Name> <FillHex> <StrokeHex> <Desc>`, which initializes a new functional domain. Items within a group can be inspected using `node scripts/manage-wi.js list-group <Name>`.
+> The canonical Feature Group registry—including names, colors, and descriptions—is managed via the project's data layer. New groups are established using `node scripts/manage-wi.js add-group <Name> <FillHex> <StrokeHex> <Desc>`, which initializes a new functional domain. Items within a group can be inspected using `node scripts/manage-wi.js list-items <Name>`.
 
 ### 1.4 Work Item Record Completeness
 
