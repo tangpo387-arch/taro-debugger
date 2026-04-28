@@ -258,6 +258,30 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-26"
       }
+    },
+    {
+      "id": "WI-91",
+      "title": "Reactive Idle State UI Reset",
+      "featureGroup": "Execution Context Inspection",
+      "metadata": {
+        "status": "accepted",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Refactor DebuggerComponent to handle UI cleanup reactively via the idle state, ensuring the editor clears when the session ends.",
+      "details": [
+        "1. Update executionState$ subscription in DebuggerComponent to include 'idle' in the cleanup trigger.",
+        "2. Explicitly clear activeFilePath and currentCode when state is 'idle'.",
+        "3. Replace the idle Editor with <taro-empty-state> in DebuggerComponent template using @if (activeFilePath).",
+        "4. Remove redundant manual clearExecutionState() calls from 'terminated' and 'exited' event handlers.",
+        "5. [Test] Verify that the Editor shows the Empty State component when the session ends."
+      ],
+      "timeline": {
+        "created": "2026-04-28",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-28"
+      }
     }
   ]
 }

@@ -21,24 +21,23 @@
 
     <div class="toolbar-section toolbar-center">
       <!-- Debug control buttons -->
-      <app-debug-control-group 
-        [activeTabIndex]="activeTabIndex"
-        (restart)="onRestart()" 
-        (run)="onRun()"
-        (stop)="onStop()"
-        (stepInstructionTab)="onStepInstructionTab($event)">
+      <app-debug-control-group [activeTabIndex]="activeTabIndex" (restart)="onRestart()" (run)="onRun()"
+        (stop)="onStop()" (stepInstructionTab)="onStepInstructionTab($event)">
       </app-debug-control-group>
     </div>
 
     <div class="toolbar-section toolbar-right">
       @if (!isElectron) {
-        <button mat-icon-button (click)="toggleLeftSidenav()" [title]="(leftVisible ? 'Hide' : 'Show') + ' File Explorer'" [class.active-toggle]="leftVisible">
+        <button mat-icon-button (click)="toggleLeftSidenav()" [title]="(leftVisible ? 'Hide' : 'Show') + ' File Explorer'"
+          [class.active-toggle]="leftVisible">
           <mat-icon>menu</mat-icon>
         </button>
-        <button mat-icon-button (click)="toggleRightSidenav()" [title]="(rightVisible ? 'Hide' : 'Show') + ' Inspection Panels'" [class.active-toggle]="rightVisible">
+        <button mat-icon-button (click)="toggleRightSidenav()"
+          [title]="(rightVisible ? 'Hide' : 'Show') + ' Inspection Panels'" [class.active-toggle]="rightVisible">
           <mat-icon>vertical_split</mat-icon>
         </button>
-        <button mat-icon-button (click)="toggleConsole()" [title]="(consoleVisible ? 'Hide' : 'Show') + ' Console'" [class.active-toggle]="consoleVisible">
+        <button mat-icon-button (click)="toggleConsole()" [title]="(consoleVisible ? 'Hide' : 'Show') + ' Console'"
+          [class.active-toggle]="consoleVisible">
           <mat-icon>terminal</mat-icon>
         </button>
         <div class="divider-vertical"></div>
@@ -53,79 +52,58 @@
   <mat-sidenav-container class="debugger-container" autosize>
 
     <!-- 2. Left sidenav: File Explorer + Threads -->
-    <mat-sidenav #leftSidenav mode="side" [opened]="leftVisible" position="start" class="sidenav-left" [style.width.px]="leftWidth">
+    <mat-sidenav #leftSidenav mode="side" [opened]="leftVisible" position="start" class="sidenav-left"
+      [style.width.px]="leftWidth">
       <!-- Left Resize Handle -->
       <div class="resize-handle resize-handle-left" (mousedown)="onResizeStart($event, 'left')"></div>
 
       <taro-panel-group>
         <!-- Files Panel -->
-        <taro-panel
-          #filesPanel
-          label="Files"
-          [resizable]="filesPanel.expanded && (threadsPanel?.expanded ?? false)"
+        <taro-panel #filesPanel label="Files" [resizable]="filesPanel.expanded && (threadsPanel?.expanded ?? false)"
           [minExpandedHeight]="150">
-          
+
           <div panel-actions>
-            <button
-              mat-icon-button
-              (click)="fileExplorer.collapseAll()"
-              title="Collapse All Nodes"
-              class="header-action-btn"
-            >
+            <button mat-icon-button (click)="fileExplorer.collapseAll()" title="Collapse All Nodes"
+              class="header-action-btn">
               <mat-icon>unfold_less</mat-icon>
             </button>
           </div>
-  
-          <app-file-explorer #fileExplorer
-            [activeFilePath]="activeFilePath"
-            [reloadTrigger]="fileTreeReloadTrigger"
-            [revealTrigger]="fileRevealTrigger"
-            (fileSelected)="onFileSelected($event)">
+
+          <app-file-explorer #fileExplorer [activeFilePath]="activeFilePath" [reloadTrigger]="fileTreeReloadTrigger"
+            [revealTrigger]="fileRevealTrigger" (fileSelected)="onFileSelected($event)">
           </app-file-explorer>
         </taro-panel>
-  
+
         <!-- Threads Panel -->
-        <taro-panel
-          #threadsPanel
-          label="Threads"
-          [minExpandedHeight]="100">
+        <taro-panel #threadsPanel label="Threads" [minExpandedHeight]="100">
           <app-threads></app-threads>
         </taro-panel>
       </taro-panel-group>
     </mat-sidenav>
 
     <!-- 3. Right sidenav: Breakpoints, Variables, Call Stack -->
-    <mat-sidenav #rightSidenav mode="side" [opened]="rightVisible" position="end" class="sidenav-right" [style.width.px]="rightWidth">
+    <mat-sidenav #rightSidenav mode="side" [opened]="rightVisible" position="end" class="sidenav-right"
+      [style.width.px]="rightWidth">
       <!-- Right Resize Handle -->
       <div class="resize-handle resize-handle-right" (mousedown)="onResizeStart($event, 'right')"></div>
 
       <taro-panel-group>
         <!-- Breakpoints Panel -->
-        <taro-panel
-          #breakpointsPanel
-          label="Breakpoints"
+        <taro-panel #breakpointsPanel label="Breakpoints"
           [resizable]="breakpointsPanel.expanded && ((variablesPanel?.expanded ?? false) || (callStackPanel?.expanded ?? false))"
           [minExpandedHeight]="100">
           <app-breakpoints (requestReveal)="onBreakpointReveal($event)"></app-breakpoints>
         </taro-panel>
-  
+
         <!-- Variables Panel -->
-        <taro-panel
-          #variablesPanel
-          label="Variables"
-          [resizable]="variablesPanel.expanded && (callStackPanel?.expanded ?? false)"
-          [minExpandedHeight]="150">
+        <taro-panel #variablesPanel label="Variables"
+          [resizable]="variablesPanel.expanded && (callStackPanel?.expanded ?? false)" [minExpandedHeight]="150">
           <app-variables></app-variables>
         </taro-panel>
-  
+
         <!-- Call Stack Panel -->
-        <taro-panel
-          #callStackPanel
-          label="Call Stack"
-          [minExpandedHeight]="150">
-          <app-call-stack
-            [stackFrames]="stackFrames"
-            [activeFrameId]="activeFrameId"
+        <taro-panel #callStackPanel label="Call Stack" [minExpandedHeight]="150">
+          <app-call-stack [stackFrames]="stackFrames" [activeFrameId]="activeFrameId"
             (frameSelected)="onFrameClick($event)">
           </app-call-stack>
         </taro-panel>
@@ -137,12 +115,18 @@
 
       <!-- Main Content Tab Group (Source / Disassembly) -->
       <div class="editor-container">
-        <mat-tab-group [selectedIndex]="activeTabIndex" (selectedIndexChange)="activeTabIndex = $event" animationDuration="0ms">
+        <mat-tab-group [selectedIndex]="activeTabIndex" (selectedIndexChange)="activeTabIndex = $event"
+          animationDuration="0ms">
           <mat-tab label="Source">
-            <app-editor class="monaco-editor-instance" [code]="currentCode" [filename]="activeFilePath"
-              [activeLine]="activeFilePath === activeLineFilePath ? activeLine : null"
-              [revealTrigger]="fileRevealTrigger"
-              (breakpointsChange)="onBreakpointsChange($event)" />
+            @if (activeFilePath) {
+              <app-editor class="monaco-editor-instance" [code]="currentCode" [filename]="activeFilePath"
+                [activeLine]="activeFilePath === activeLineFilePath ? activeLine : null"
+                [revealTrigger]="fileRevealTrigger" (breakpointsChange)="onBreakpointsChange($event)" />
+            } @else {
+              <taro-empty-state message="No file selected" icon="source" description="start debugging to see source code."
+                [centered]="true">
+              </taro-empty-state>
+            }
           </mat-tab>
           <mat-tab label="Disassembly">
             <app-assembly-view [instructionPointerReference]="activeInstructionPointer"></app-assembly-view>
@@ -166,9 +150,9 @@
           <span class="indicator" [ngClass]="(connectionStatus$ | async) ? 'online' : 'offline'"></span>
           <span>{{ (connectionStatus$ | async) ? 'Connected' : 'Disconnected' }}</span>
           @if (currentConfig.serverAddress) {
-          <span class="server-address">
-            ({{ currentConfig.serverAddress }})
-          </span>
+            <span class="server-address">
+              ({{ currentConfig.serverAddress }})
+            </span>
           }
         </div>
         <span class="spacer"></span>

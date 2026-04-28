@@ -26,7 +26,7 @@ import {
   ThreadsComponent,
   BreakpointsComponent,
 } from '@taro/ui-inspection';
-import { PanelComponent, PanelGroupComponent, ErrorDialog, ErrorDialogData } from '@taro/ui-shared';
+import { PanelComponent, PanelGroupComponent, ErrorDialog, ErrorDialogData, TaroEmptyStateComponent } from '@taro/ui-shared';
 import { LogViewerComponent } from '@taro/ui-console';
 import { DapConfigService, DapConfig } from '@taro/dap-core';
 import { DapSessionService, ExecutionState, VerifiedBreakpoint } from '@taro/dap-core';
@@ -64,6 +64,7 @@ import { DapFileTreeService } from './dap-file-tree.service';
     PanelComponent,
     ThreadsComponent,
     BreakpointsComponent,
+    TaroEmptyStateComponent,
   ],
   providers: [
     DapSessionService,
@@ -206,14 +207,14 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       this.executionState = state;
 
       // R_SM5 compliance: Auto-clear execution-specific state whenever the process
-      // transitions out of the 'stopped' context (e.g., to 'running' or 'error').
+      // transitions out of the 'stopped' context (e.g., to 'running', 'error' or 'idle').
       // This ensures the Call Stack panel matches the Variables panel behavior.
-      if (state === 'running' || state === 'error') {
+      if (state === 'running' || state === 'error' || state === 'idle') {
         this.clearExecutionState();
       }
 
-      // Clear open file state on fatal error (disconnect) to ensure clean slate
-      if (state === 'error') {
+      // Clear open file state on fatal error or session termination to ensure clean slate
+      if (state === 'error' || state === 'idle') {
         this.currentCode = '';
         this.activeFilePath = null;
       }
@@ -551,12 +552,10 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         break;
       case 'terminated':
         this.initialSourcesLoaded = false;
-        this.clearExecutionState();
         this.logService.consoleLog('Debug session terminated', 'info', 'system');
         break;
       case 'exited': {
         this.initialSourcesLoaded = false;
-        this.clearExecutionState();
         const exitCode = event.body?.exitCode;
         if (exitCode !== undefined && exitCode !== 0) {
           // Abnormal exit: show warning snackbar with exit code (§7.2)

@@ -334,6 +334,23 @@ describe('DebuggerComponent — State Cleanup (WI-83)', () => {
     expect(component.stackFrames.length).toBe(0);
   });
 
+  it('should clear stackFrames and editor state when executionState transitions to idle', () => {
+    // Arrange
+    component.stackFrames = [{ id: 1, name: 'main', line: 10, column: 1 } as any];
+    component.activeFilePath = '/path/to/source.cpp';
+    component.currentCode = 'void main() {}';
+    expect(component.stackFrames.length).toBe(1);
+    expect(component.activeFilePath).toBe('/path/to/source.cpp');
+
+    // Act
+    executionStateSubject.next('idle');
+
+    // Assert
+    expect(component.stackFrames.length).toBe(0);
+    expect(component.activeFilePath).toBeNull();
+    expect(component.currentCode).toBe('');
+  });
+
   it('should discard stackFrames if executionState is no longer stopped after stackTrace returns (Race Guard)', async () => {
     // Arrange
     const stackRes = { body: { stackFrames: [{ id: 1, name: 'stale' } as any] } };
