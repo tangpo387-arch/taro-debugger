@@ -5,6 +5,7 @@ import {
   ViewChild,
   inject,
   ChangeDetectorRef,
+  ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -12,7 +13,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { auditTime } from 'rxjs/operators';
@@ -34,9 +34,8 @@ import { DapLogService } from '../dap-log.service';
     MatButtonModule,
     MatInputModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule,
     ScrollingModule,
-  ],
+],
   templateUrl: './debug-console.html',
   styleUrls: ['./debug-console.scss'],
 })
@@ -44,7 +43,6 @@ export class DebugConsoleComponent implements OnInit, OnDestroy {
   private readonly logService = inject(DapLogService);
   private readonly dapSession = inject(DapSessionService);
   private readonly cdr = inject(ChangeDetectorRef);
-  private readonly snackBar = inject(MatSnackBar);
 
   public readonly consoleLogs$: Observable<LogEntry[]> = this.logService.consoleLogs$;
 
@@ -56,6 +54,9 @@ export class DebugConsoleComponent implements OnInit, OnDestroy {
 
   @ViewChild(CdkVirtualScrollViewport)
   private viewport?: CdkVirtualScrollViewport;
+
+  @ViewChild('consoleInput')
+  private consoleInputRef?: ElementRef<HTMLInputElement>;
 
   private stateSubscription?: Subscription;
   private logSubscription?: Subscription;
@@ -124,14 +125,18 @@ export class DebugConsoleComponent implements OnInit, OnDestroy {
       if (response.body?.result) {
         this.logService.consoleLog(response.body.result, 'info', 'stdout');
       }
-      this.evaluateExpression = '';
     } catch (e: any) {
       if (e instanceof EvaluateCancelledError) {
         if (e.source === 'timeout') {
-          this.snackBar.open('Evaluate timed out. The debugger may be unresponsive.', 'Dismiss', { duration: 5000 });
+          this.logService.consoleLog('Evaluate timed out. The debugger may be unresponsive.', 'error', 'system');
+        } else {
+          this.logService.consoleLog('Evaluate cancelled.', 'info', 'system');
         }
+      } else {
+        this.logService.consoleLog(e.message || 'Evaluate failed.', 'error', 'system');
       }
     } finally {
+      this.evaluateExpression = '';
       this.evaluateInFlight$.next(false);
       this.pendingEvaluateSeq = undefined;
       this.cdr.detectChanges();
@@ -157,5 +162,14 @@ export class DebugConsoleComponent implements OnInit, OnDestroy {
         }
       }
     }, 50);
+  }
+
+  /**
+   * Focuses the evaluation input field.
+   */
+  public focusInput(): void {
+    if (this.consoleInputRef) {
+      this.consoleInputRef.nativeElement.focus();
+    }
   }
 }

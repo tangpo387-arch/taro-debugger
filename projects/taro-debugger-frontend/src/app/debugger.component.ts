@@ -93,6 +93,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
   /** Access the editor component for programmatic breakpoint updates */
   @ViewChild(EditorComponent) private editorComponent?: EditorComponent;
+  @ViewChild(LogViewerComponent) private logViewer?: LogViewerComponent;
 
   /** ViewChild references for sidenavs — used by vertical panel resize logic to compute bounding rects.
    *  Queried via template ref vars #leftSidenav / #rightSidenav on the mat-sidenav elements.
@@ -908,6 +909,12 @@ export class DebuggerComponent implements OnInit, OnDestroy {
           case ActionID.VIEW_TOGGLE_INSPECTION: this.toggleRightSidenav(); break;
           case ActionID.VIEW_TOGGLE_CONSOLE: this.toggleConsole(); break;
           case ActionID.VIEW_RESET_LAYOUT: this.resetLayout(); break;
+          case ActionID.CONSOLE_FOCUS:
+            if (!this.consoleVisible) {
+              this.toggleConsole();
+            }
+            this.logViewer?.focusDebugConsole();
+            break;
 
           case ActionID.FILE_NEW_SESSION: this.goBack(); break;
           case ActionID.FILE_CLOSE_SESSION: this.goBack(); break;

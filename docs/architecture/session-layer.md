@@ -94,11 +94,11 @@ type ExecutionState = 'idle' | 'starting' | 'running' | 'stopped' | 'error';
 
 Raw events from the Transport layer are processed by Session's `handleTransportEvent()` before being emitted to the UI. Additionally, the Session layer generates **Synthetic Events** to bridge protocol-level or infrastructure-level issues to the UI without polluting the core DAP event stream:
 
-| Synthetic Event | Trigger | Purpose |
-| :--- | :--- | :--- |
-| `_dapError` | DAP response `success: false` | Notify UI of command failures (e.g., "Step failed"). |
-| `_transportError` | Socket close or timeout | Notify UI of connection loss or handshake failure. |
-| `_sessionWarning` | Request timeout or unknown response | Diagnostic warnings for mismatched sequences. |
+| Synthetic Event | Trigger | Purpose | Exception |
+| :--- | :--- | :--- | :--- |
+| `_dapError` | DAP response `success: false` | Notify UI of command failures (e.g., "Step failed"). | **Silent Protocol**: Commands sent with `silentError: true` (e.g., `evaluate`) do NOT emit this event. |
+| `_transportError` | Socket close or timeout | Notify UI of connection loss or handshake failure. | None |
+| `_sessionWarning` | Request timeout or unknown response | Diagnostic warnings for mismatched sequences. | None |
 
 ## 4. Connection Status Bridging
 

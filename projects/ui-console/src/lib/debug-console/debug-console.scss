@@ -46,15 +46,18 @@
 .console-input-area {
   display: flex;
   align-items: center;
-  padding: 0 8px;
-  height: var(--sys-density-variable-row, 28px);
+  padding: 0 16px;
+  height: 28px;
   flex-shrink: 0;
-  border-top: 1px solid var(--mat-sys-outline-variant);
   background: var(--mat-sys-surface-container-low);
 
-  mat-icon {
+  .input-prefix {
     color: var(--mat-sys-primary);
     margin-right: 8px;
+    font-family: var(--font-mono);
+    font-size: var(--text-base);
+    font-weight: var(--weight-bold);
+    user-select: none;
   }
 
   input {
@@ -62,41 +65,19 @@
     background: transparent;
     border: none;
     outline: none;
-    color: var(--mat-sys-on-surface);
+    color: var(--mat-sys-primary);
     font-family: var(--font-mono);
     font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+
+    &.in-flight {
+      opacity: 0.7;
+      cursor: wait;
+    }
 
     &::placeholder {
       color: var(--mat-sys-outline);
-    }
-  }
-
-  :host & ::ng-deep button.mat-mdc-icon-button {
-    --mdc-icon-button-state-layer-size: var(--sys-density-btn-size-sm);
-    width: var(--sys-density-btn-size-sm) !important;
-    height: var(--sys-density-btn-size-sm) !important;
-    padding: 0 !important;
-    border-radius: 4px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-
-    .mat-mdc-button-state-layer,
-    .mat-mdc-button-persistent-ripple,
-    .mat-mdc-focus-indicator,
-    &::before {
-      border-radius: 4px !important;
-    }
-
-    .mat-mdc-button-touch-target {
-      display: none;
-    }
-
-    mat-icon {
-      font-size: var(--sys-density-btn-icon-size-sm);
-      width: var(--sys-density-btn-icon-size-sm);
-      height: var(--sys-density-btn-icon-size-sm);
-      margin: 0 !important;
+      opacity: 0.5;
     }
   }
 }

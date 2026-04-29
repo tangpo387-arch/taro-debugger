@@ -26,31 +26,14 @@
 </cdk-virtual-scroll-viewport>
 
 <div class="console-input-area" [title]="!isEvaluateSupported ? 'Evaluate not supported: this debug adapter does not support request cancellation.' : ''">
-  <mat-icon>chevron_right</mat-icon>
-  <input matInput
+  <span class="input-prefix">></span>
+  <input #consoleInput
+         matInput
          type="text"
          id="evaluate-expression-input"
-         placeholder="Evaluate expression..."
          [(ngModel)]="evaluateExpression"
          (keyup.enter)="evaluateCommand()"
          [readonly]="(evaluateInFlight$ | async)"
-         [disabled]="!isEvaluateSupported">
-  @if (evaluateInFlight$ | async) {
-    <mat-spinner diameter="20" style="margin-right: 8px"></mat-spinner>
-    <button mat-icon-button
-            id="cancel-evaluate-btn"
-            color="warn"
-            (click)="onCancelEvaluate()"
-            aria-label="Cancel evaluate command">
-      <mat-icon>stop</mat-icon>
-    </button>
-  } @else {
-    <button mat-icon-button
-            id="evaluate-send-btn"
-            (click)="evaluateCommand()"
-            [disabled]="executionState !== 'stopped' || !isEvaluateSupported"
-            aria-label="Send evaluate command">
-      <mat-icon>send</mat-icon>
-    </button>
-  }
+         [disabled]="!isEvaluateSupported"
+         [class.in-flight]="evaluateInFlight$ | async">
 </div>

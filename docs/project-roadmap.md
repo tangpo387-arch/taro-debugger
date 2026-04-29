@@ -2,7 +2,7 @@
 title: Project Roadmap & Dependency Map
 scope: milestones, dependencies, architecture-tracking
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer, Human Engineer]
-last_updated: 2026-04-28
+last_updated: 2026-04-29
 ---
 
 # Project Roadmap & Dependency Map
@@ -14,6 +14,7 @@ graph LR
     WI_38["WI-38 Command Serialization: Evaluate Cancel & Timeout"]
     WI_67["WI-67 Library Extraction: LogViewerComponent"]
     WI_68["WI-68 DAP Protocol Inspector (3-Tab Support)"]
+    WI_92["WI-92 Debug Console Input Integration & Output Redirection"]
     WI_04["WI-04 Create `DapTransportService` Abstract Interface"]
     WI_05["WI-05 Implement WebSocket Transport Layer (`WebSocketTransportService`)"]
     WI_06["WI-06 DAP Session Management Service (`DapSessionService`)"]
@@ -104,6 +105,8 @@ graph LR
     WI_39 --> WI_38
     WI_62 --> WI_67
     WI_67 --> WI_68
+    WI_19 --> WI_92
+    WI_38 --> WI_92
     WI_04 --> WI_05
     WI_05 --> WI_06
     WI_06 --> WI_07
@@ -179,6 +182,7 @@ graph LR
     style WI_38 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_67 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_68 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_92 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_04 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_05 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_06 fill:#4ade80,stroke:#000,stroke-width:2.5px

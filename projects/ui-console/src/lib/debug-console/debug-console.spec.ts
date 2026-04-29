@@ -2,7 +2,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DebugConsoleComponent } from './debug-console';
 import { DapSessionService } from '@taro/dap-core';
 import { DapLogService } from '../dap-log.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { EMPTY, of } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -22,14 +21,11 @@ describe('DebugConsoleComponent', () => {
       consoleLogs$: of([]),
       consoleLog: () => {}
     };
-    const mockSnackBar = { open: () => {} };
-
     await TestBed.configureTestingModule({
       imports: [DebugConsoleComponent],
       providers: [
         { provide: DapSessionService, useValue: mockDapSession },
-        { provide: DapLogService, useValue: mockLogService },
-        { provide: MatSnackBar, useValue: mockSnackBar }
+        { provide: DapLogService, useValue: mockLogService }
       ]
     }).compileComponents();
 

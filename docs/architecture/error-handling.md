@@ -66,7 +66,7 @@ graph TD
 
 | Error Scenario | Session Layer Behavior | UI Layer Behavior |
 | --- | --- | --- |
-| **DAP error response** (`success=false`) | Emit `_dapError` synthetic event<br/>Reject corresponding Promise | `MatSnackBar` displays command + error message |
+| **DAP error response** (`success=false`) | Emit `_dapError` synthetic event<br/>Reject corresponding Promise | `MatSnackBar` displays command + error message.<br/>**Exception**: Silent requests (e.g., `evaluate`) bypass the event and toast; error is handled locally by the caller. |
 | **Invalid DAP response** (unknown `request_seq`) | Emit `_sessionWarning` synthetic event | Console log (non-critical) |
 | **Unexpected process termination** (`exited` event, exit code ≠ 0) | Forward `exited` event normally | Console log |
 | **Unexpected disconnect** (Transport stream interrupted) | Emit `_transportError` synthetic event<br/>`executionState` → `error` | `MatSnackBar` notification + Console log |

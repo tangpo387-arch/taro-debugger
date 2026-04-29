@@ -28,6 +28,8 @@ import { ProtocolConsoleComponent } from '../protocol-console/protocol-console';
   styleUrls: ['./log-viewer.scss'],
 })
 export class LogViewerComponent {
+  public selectedTabIndex = 0;
+
   @ViewChildren(DebugConsoleComponent) 
   private debugConsoles!: QueryList<DebugConsoleComponent>;
   
@@ -47,5 +49,16 @@ export class LogViewerComponent {
     this.debugConsoles?.forEach(c => c.scrollToBottom());
     this.outputConsoles?.forEach(c => c.scrollToBottom());
     this.protocolConsoles?.forEach(c => c.scrollToBottom());
+  }
+
+  /**
+   * Focuses the input field of the Debug Console.
+   * Switches to the Debug Console tab if not already active.
+   */
+  public focusDebugConsole(): void {
+    this.selectedTabIndex = 0;
+    setTimeout(() => {
+      this.debugConsoles?.forEach(c => c.focusInput());
+    }, 50);
   }
 }

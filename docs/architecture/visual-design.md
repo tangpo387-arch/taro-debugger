@@ -150,6 +150,7 @@ These rules govern the Monaco Editor integration in `EditorComponent`.
 | Log content font | `font-family: var(--font-mono)` | Monospaced for DAP protocol data readability |
 | Timestamp font size | `font-size: var(--text-sm)` | Smaller than body to reinforce visual hierarchy |
 | **Console Panel Separator** | `.consoles-container` MUST declare `border-top: 1px solid var(--mat-sys-outline-variant)`. Relying on background-color contrast alone is insufficient and breaks the global horizontal divider language. | Consistent panel separation |
+| **Integrated Input** | The debug console input MUST be terminal-style: no footer bar background, no border-top, and use a simple `>` prefix icon. Input text MUST use `var(--mat-sys-primary)` with `font-weight: medium` to distinguish active commands from history. Focus MUST be accessible via `Ctrl + Shift + Y`. Feedback for in-flight requests uses `cursor: wait` and reduced opacity (`0.7`). | Modern terminal aesthetic |
 
 ### 6.4 Side Panel Navigation (File Explorer & Call Stack)
 

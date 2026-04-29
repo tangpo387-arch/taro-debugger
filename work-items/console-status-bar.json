@@ -136,6 +136,33 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-20"
       }
+    },
+    {
+      "id": "WI-92",
+      "title": "Debug Console Input Integration & Output Redirection",
+      "featureGroup": "Console & Status Bar",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-19",
+          "WI-38"
+        ]
+      },
+      "description": "Integrate evaluate input and results into the Debug Console stream.",
+      "details": [
+        "Remove console-input-area bar styling",
+        "Implement integrated terminal-style input line",
+        "Log evaluate results to consoleLogs$",
+        "Remove evaluation snackBar toasts",
+        "[Test] Verify evaluation input triggers DAP request and results appear in Debug Console stream"
+      ],
+      "timeline": {
+        "created": "2026-04-29",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-04-29"
+      }
     }
   ]
 }

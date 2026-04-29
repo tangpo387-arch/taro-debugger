@@ -43,7 +43,7 @@ export class DapSessionService {
 
   private readonly transportFactory = inject(TransportFactoryService);
   private seq = 1;
-  private readonly pendingRequests = new Map<number, { resolve: (response: DapResponse) => void; reject: (error: any) => void }>();
+  private readonly pendingRequests = new Map<number, { resolve: (response: DapResponse) => void; reject: (error: any) => void; silentError?: boolean }>();
   private messageSubscription?: Subscription;
   private readonly breakpointFileState = new Map<string, BreakpointFileState>();
   /** 
@@ -687,7 +687,7 @@ export class DapSessionService {
     // we use the current seq value. Keep in mind seq is incremented synchronously.
     const expectedSeq = this.seq;
     // We provide 35000 here so the internal DAP timeout doesn't fire before our 30000 timer.
-    const evaluatePromise = this.sendRequest('evaluate', { expression, frameId, context: 'repl' }, 35000);
+    const evaluatePromise = this.sendRequest('evaluate', { expression, frameId, context: 'repl' }, 35000, true);
 
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
@@ -725,7 +725,7 @@ export class DapSessionService {
    * @param args DAP command arguments (optional)
    * @param timeoutMs Timeout in milliseconds (default 5000ms)
    */
-  private sendRequest(command: string, args?: any, timeoutMs: number = 5000): Promise<DapResponse> {
+  private sendRequest(command: string, args?: any, timeoutMs: number = 5000, silentError: boolean = false): Promise<DapResponse> {
     const transport = this.transport;
     if (!transport) {
       return Promise.reject(new Error('Transport not initialized. Call startSession() first.'));
@@ -765,7 +765,7 @@ export class DapSessionService {
         reject(error);
       };
 
-      this.pendingRequests.set(currentSeq, { resolve: resolveWrapper, reject: rejectWrapper });
+      this.pendingRequests.set(currentSeq, { resolve: resolveWrapper, reject: rejectWrapper, silentError });
       transport.sendRequest(request);
       // Emit outgoing request to diagnostic traffic stream (§4.6)
       this.trafficSubject.next(request);
@@ -805,15 +805,18 @@ export class DapSessionService {
           handler.resolve(response);
         } else {
           // Emit DAP error response as a synthetic event for UI-layer notification (R7)
-          this.eventSubject.next({
-            seq: 0,
-            type: 'event',
-            event: '_dapError',
-            body: {
-              command: response.command,
-              message: response.message || `Command '${response.command}' failed`
-            }
-          });
+          // Suppressed if silentError is requested (WI-92)
+          if (!handler.silentError) {
+            this.eventSubject.next({
+              seq: 0,
+              type: 'event',
+              event: '_dapError',
+              body: {
+                command: response.command,
+                message: response.message || `Command '${response.command}' failed`
+              }
+            });
+          }
           handler.reject(new Error(response.message || `Command ${response.command} failed`));
         }
       } else {

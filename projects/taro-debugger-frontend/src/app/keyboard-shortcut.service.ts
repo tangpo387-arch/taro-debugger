@@ -20,6 +20,7 @@ export enum ActionID {
   VIEW_TOGGLE_INSPECTION = 'view.toggleInspection',
   VIEW_TOGGLE_CONSOLE = 'view.toggleConsole',
   VIEW_RESET_LAYOUT = 'view.resetLayout',
+  CONSOLE_FOCUS = 'console.focus',
 
   // File Operations
   FILE_NEW_SESSION = 'file.newSession',
@@ -125,6 +126,7 @@ export class KeyboardShortcutService {
     if (isCtrlAltOrMetaAlt && key.toLowerCase() === 'b') return ActionID.VIEW_TOGGLE_INSPECTION;
     if (isPureCtrlOrMeta && key.toLowerCase() === 'b') return ActionID.VIEW_TOGGLE_EXPLORER;
     if ((isCtrl || isMeta) && key === '`') return ActionID.VIEW_TOGGLE_CONSOLE;
+    if ((isCtrl || isMeta) && isShift && key.toLowerCase() === 'y') return ActionID.CONSOLE_FOCUS;
 
     // File Operations
     if ((isCtrl || isMeta) && key.toLowerCase() === 'w') return ActionID.FILE_CLOSE_SESSION;
@@ -145,7 +147,8 @@ export class KeyboardShortcutService {
     
     // Ignore if typing in a standard input or select
     if (tagName === 'INPUT' || tagName === 'SELECT') {
-      return true;
+      // Whitelist the debug console input so F5/F10/etc work while typing (WI-92)
+      return target.id !== 'evaluate-expression-input';
     }
 
     // For TEXTAREA, skip only if it's NOT the Monaco Editor area
