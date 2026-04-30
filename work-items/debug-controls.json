@@ -132,6 +132,56 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-16"
       }
+    },
+    {
+      "id": "WI-97",
+      "title": "Context-Aware Debug Toolbar",
+      "featureGroup": "Debug Controls",
+      "metadata": {
+        "status": "proposed",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-95"
+        ]
+      },
+      "description": "Update debug controls to target the currently active session",
+      "details": [
+        "Refactor DebugControlGroupComponent to use activeSession$",
+        "Ensure buttons only affect the selected process",
+        "Implement 'Session Target' dropdown/indicator",
+        "[Test] Verify stepping commands only affect the selected session",
+        "[Doc] docs/archive/specs/WI-97-context-aware-toolbar.md"
+      ],
+      "timeline": {
+        "created": "2026-04-30",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-98",
+      "title": "Global Debug Lifecycle Actions (Stop All)",
+      "featureGroup": "Debug Controls",
+      "metadata": {
+        "status": "proposed",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-94"
+        ]
+      },
+      "description": "Implement batch operations for managing all active debug sessions",
+      "details": [
+        "Add 'Stop All Sessions' command",
+        "Add 'Restart All' capability",
+        "Implement confirmation dialogs for batch termination",
+        "[Test] Verify all sessions are closed cleanly on 'Stop All'",
+        "[Doc] docs/archive/specs/WI-98-global-actions.md"
+      ],
+      "timeline": {
+        "created": "2026-04-30",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }

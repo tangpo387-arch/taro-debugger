@@ -306,6 +306,57 @@
         "created": "2026-04-30",
         "created_by": "Antigravity-Agent"
       }
+    },
+    {
+      "id": "WI-95",
+      "title": "Reactive Active-Session Context Binding",
+      "featureGroup": "Execution Context Inspection",
+      "metadata": {
+        "status": "proposed",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-94"
+        ]
+      },
+      "description": "Implement reactive routing of UI state based on the selected active session",
+      "details": [
+        "Create ActiveSessionService with activeSession$ observable",
+        "Update Editor, Variables, and Console to subscribe to active session",
+        "Handle session switching logic",
+        "[Test] Verify UI components update correctly when switching active session",
+        "[Doc] docs/archive/specs/WI-95-session-binding.md"
+      ],
+      "timeline": {
+        "created": "2026-04-30",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-96",
+      "title": "Unified Tree: Multi-Session Hierarchy Support",
+      "featureGroup": "Execution Context Inspection",
+      "metadata": {
+        "status": "proposed",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-93",
+          "WI-95"
+        ]
+      },
+      "description": "Extend the unified tree to display and manage multiple debug sessions",
+      "details": [
+        "Update ThreadCallStackTreeComponent to support SessionNode root",
+        "Implement session-aware tree actions",
+        "Visual indicators for session status",
+        "[Test] Verify 3-level hierarchy (Session > Thread > Frame) renders correctly",
+        "[Doc] docs/archive/specs/WI-96-multi-session-tree.md"
+      ],
+      "timeline": {
+        "created": "2026-04-30",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }

@@ -432,6 +432,29 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-28"
       }
+    },
+    {
+      "id": "WI-94",
+      "title": "DapSessionManager Core Implementation",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "proposed",
+        "size": "L",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Refactor session handling to support multiple concurrent DAP sessions",
+      "details": [
+        "Implement DapSessionManager to track multiple DapSessionService instances",
+        "Add SessionID to all protocol messages",
+        "Manage transport lifecycle per session",
+        "[Test] Verify multiple sessions can be started and tracked independently",
+        "[Doc] docs/archive/specs/WI-94-session-manager.md"
+      ],
+      "timeline": {
+        "created": "2026-04-30",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }
