@@ -282,6 +282,30 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-28"
       }
+    },
+    {
+      "id": "WI-93",
+      "title": "Unified Call Stack Tree",
+      "featureGroup": "Execution Context Inspection",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Consolidate Threads and Call Stack into a single hierarchical tree view",
+      "details": [
+        "Refactor CallStackComponent to use mat-tree",
+        "Integrate Threads as root nodes",
+        "Implement frame fetching for non-active threads",
+        "Support DAP 'process' event for process naming",
+        "[Test] Verify multi-thread tree expansion and frame selection",
+        "[Doc] docs/archive/specs/WI-102-unified-call-stack-tree.md"
+      ],
+      "timeline": {
+        "created": "2026-04-30",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }

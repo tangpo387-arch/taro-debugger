@@ -21,3 +21,19 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - Bidirectional data forwarding: WebSocket → DAP `stdin`; DAP `stdout` → WebSocket back to frontend
   - Handle process termination and resource cleanup
 - **Dependencies**: none
+
+## Execution Context Inspection
+
+### WI-93: Unified Call Stack Tree
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Consolidate Threads and Call Stack into a single hierarchical tree view
+- **Details**:
+  - Refactor CallStackComponent to use mat-tree
+  - Integrate Threads as root nodes
+  - Implement frame fetching for non-active threads
+  - Support DAP 'process' event for process naming
+  - [Test] Verify multi-thread tree expansion and frame selection
+  - [Doc] docs/archive/specs/WI-102-unified-call-stack-tree.md
+- **Dependencies**: none
