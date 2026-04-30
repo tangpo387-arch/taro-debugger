@@ -229,6 +229,8 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
 
 **Link the Spec**: You MUST append the spec document link to the WI details (e.g., `|[Doc] docs/archive/specs/feature-spec.md`). Use `manage-wi.js show WI-<ID>` to read existing details, then `manage-wi.js edit WI-<ID> --details "<original>|[Doc] docs/archive/specs/feature-spec.md"`. You are STRICTLY FORBIDDEN from moving to the Promotion step without verifying the `[Doc]` link is present in the Work Item's `details`.
 
+**Architecture Lock**: You are STRICTLY FORBIDDEN from modifying `docs/architecture.md` or any file within `docs/architecture/` while drafting or specifying a Work Item. Architectural changes must be approved and finalized in a separate session before a Work Item referencing them can be created.
+
 </critical-instruction>
 
 1. **Promotion**: Propose the transition to `pending` and STOP to await USER authorization before executing `update-wi.js`.
