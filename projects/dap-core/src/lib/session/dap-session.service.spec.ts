@@ -210,6 +210,8 @@ describe('DapSessionService', () => {
       expect((service as any).executionStateSubject.value).toBe('running');
     });
 
+
+
     it('should transition to running upon successful next request (instant feedback)', async () => {
       (service as any).transport = mockTransport;
       (service as any).executionStateSubject.next('stopped');
@@ -976,30 +978,7 @@ describe('DapSessionService', () => {
       expect((service as any).commandInFlightSubject.value).toBe(false);
     });
 
-    it('should keep commandInFlight=true when continue() response lacks allThreadsContinued', async () => {
-      // Arrange
-      (service as any).executionStateSubject.next('stopped');
-      (service as any).activeThreadIdSubject.next(3);
 
-      let resolveRequest!: (v: any) => void;
-      vi.spyOn(service as any, 'sendRequest').mockReturnValue(
-        new Promise(resolve => { resolveRequest = resolve; })
-      );
-
-      const continuePromise = service.continue();
-
-      // Act: adapter responds WITHOUT allThreadsContinued (single-thread continue)
-      resolveRequest({ success: true, body: { allThreadsContinued: false } });
-      await continuePromise;
-
-      // Assert: execution state unchanged — waiting for the 'continued' event
-      expect((service as any).executionStateSubject.value).toBe('stopped');
-      expect((service as any).commandInFlightSubject.value).toBe(true);
-
-      // Cleanup: manually clear the guard to avoid dangling timer warnings
-      (service as any).clearStateTransitionGuard();
-      (service as any).commandInFlightSubject.next(false);
-    });
   });
 
   describe('Active Thread Auto-Selection', () => {

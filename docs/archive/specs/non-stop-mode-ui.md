@@ -41,8 +41,15 @@ The `ThreadsComponent` will be updated to provide visual feedback:
 ### 3. Independent Execution Controls
 
 In Non-Stop mode, users can control threads individually:
-- **Per-Thread Buttons**: Each list item in the Thread Panel will feature "Pause" or "Continue" buttons that appear on hover or as fixed icons.
+- **Per-Thread Buttons**: Each list item in the Thread Panel will feature "Pause" or "Continue" actions. These requests are dispatched with the specific `threadId` target.
 - **Action Dispatch**: Clicking a per-thread control will send a `pause` or `continue` request with the specific `threadId` to the Debug Adapter.
+
+### 4. Execution State Consolidation
+
+The global `executionState$` (Running vs. Paused) is derived from the aggregate thread states:
+- **Stop-the-World Behavior**: If the adapter is NOT in true Non-Stop mode, any thread stopping transitions the global state to `stopped`.
+- **True Non-Stop Mode**: The global state becomes a composite. The UI must rely on per-thread metadata for granular control, while the global state might remain `running` as long as any thread is executing, or transition to a "Mixed" state (TBD).
+- **Stale Data Prevention**: If the currently selected `activeThreadId` is in a `running` state, inspection panels (Variables, Call Stack) MUST be locked or display a placeholder to prevent displaying stale data.
 
 ## Acceptance Criteria
 

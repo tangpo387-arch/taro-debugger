@@ -136,6 +136,13 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
 
     const expandedIds = this.getExpandedIds();
 
+    // Auto-expand the active thread if we are stopped.
+    // By adding it to expandedIds, restoreExpansion will handle it safely
+    // regardless of whether the children are loaded yet or not.
+    if (activeThreadId !== null && execState === 'stopped') {
+      expandedIds.add(`thread-${activeThreadId}`);
+    }
+
     // Fallback: use executable name if process event was not received
     let processName = processInfo?.name;
     if (!processName) {
@@ -183,15 +190,13 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
       this.tree.expand(rootNode);
     }
 
-    // Auto-fetch and expand frames for the active thread if it's stopped and hasn't been loaded yet
+    // Auto-fetch frames for the active thread if it's stopped and we don't have them yet.
     if (activeThreadId !== null && execState === 'stopped') {
       const threadNode = rootNode.children?.find(c => c.threadId === activeThreadId);
       if (threadNode && !threadNode.children) {
-        this.fetchFrames(threadNode).then(() => {
-          if (this.tree && threadNode.children) {
-            this.tree.expand(threadNode);
-            this.cdr.detectChanges();
-          }
+        // fetchFrames will run async and trigger a cacheUpdate$ which rebuilding the tree
+        this.fetchFrames(threadNode).catch(err => {
+          console.warn('Auto-fetch frames failed', err);
         });
       }
     }
@@ -268,9 +273,14 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
           threadId: threadId,
           frame: f
         } as ExecutionNode));
+      } else {
+        // If successful but no frames, initialize to empty array to prevent infinite refetch
+        cache.frames = [];
       }
     } catch (e) {
       console.warn('ThreadCallStackComponent: Failed to fetch stack frames', e);
+      // Fallback to empty array to ensure !threadNode.children evaluates to false and avoids loops
+      if (cache) cache.frames = [];
     } finally {
       // single canonical cleanup point — always reset loading state
       // and trigger a tree rebuild regardless of success or failure.
@@ -281,14 +291,19 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Handles user interaction with a tree node.
-   * - Clicking a thread updates the active thread in the session.
-   * - Clicking a frame emits the selection event for the parent component.
+   * Updates the session's active thread. 
+   * Triggered by explicit "Focus" button.
    */
-  public onNodeClick(node: ExecutionNode): void {
-    if (node.type === 'thread') {
-      this.dapSession.setCurrentThread(node.threadId!);
-    } else if (node.type === 'frame' && node.frame) {
+  public onSelectThread(threadId: number): void {
+    this.dapSession.setCurrentThread(threadId);
+  }
+
+  /**
+   * Handles user selection of a stack frame.
+   * Emits the event for the parent component.
+   */
+  public onFrameClick(node: ExecutionNode): void {
+    if (node.type === 'frame' && node.frame) {
       this.frameSelected.emit(node.frame);
     }
   }

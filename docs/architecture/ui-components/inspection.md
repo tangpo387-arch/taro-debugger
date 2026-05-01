@@ -2,9 +2,9 @@
 title: Architecture - Inspection Panels (@taro/ui-inspection)
 scope: ui-inspection, variables, call-stack, threads, breakpoints
 audience: [Human Engineer, Lead_Engineer, Product_Architect, Quality_Control_Reviewer]
-last_updated: 2026-05-01
+last_updated: 2026-05-02
 related:
-  - architecture/core/session-logic.md
+  - architecture/session-layer.md
   - architecture/ui-shared.md
 ---
 
@@ -25,7 +25,9 @@ The `@taro/ui-inspection` library contains the suite of panels used to inspect t
 Consolidates threads and stack frames into a single hierarchical tree view (Process > Thread > Frame).
 - **Data Source**: Reactive streams from `DapSessionService` (`threads$`, `activeThreadId$`, `stoppedThreads$`, `allThreadsStopped$`).
 - **Dynamic Loading**: Threads are loaded globally; stack frames are fetched on-demand when a thread node is expanded.
-- **Visuals**: Displays dynamic pause icons with tooltips pullled from `stopReason$`.
+- **Selection Mode**: Decouples tree navigation from thread selection. Clicking a thread row label toggles expansion only. Selection (Focus) is performed via a dedicated **"Focus"** icon button, ensuring navigational clicks don't inadvertently switch the session's active thread.
+- **Auto-Expansion**: Automatically expands the active thread and fetches its call stack upon any `stopped` event. This ensures the current execution context is immediately visible after any interrupt (breakpoint, step, etc.).
+- **Visuals**: Displays dynamic pause icons with tooltips pulled from `stopReason$`. Active threads are prominently marked with an "ACTIVE" badge.
 
 ### 2.3 Variables Panel
 

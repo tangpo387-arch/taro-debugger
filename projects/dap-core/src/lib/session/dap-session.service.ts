@@ -358,12 +358,8 @@ export class DapSessionService {
       const threadId = this.activeThreadIdSubject.value || 1;
       const response = await this.sendRequest('continue', { threadId });
       if (response.success) {
-        if (response.body?.allThreadsContinued) {
-          this.executionStateSubject.next('running');
-          this.stoppedThreadsSubject.next(new Set());
-          this.clearStateTransitionGuard();
-          this.commandInFlightSubject.next(false);
-        }
+        // DAP Spec: If allThreadsContinued is missing, assume true.
+        this.handleResumptionState(response.body?.allThreadsContinued ?? true, threadId);
       } else {
         this.clearStateTransitionGuard();
         this.commandInFlightSubject.next(false);
@@ -389,9 +385,7 @@ export class DapSessionService {
       const threadId = this.activeThreadIdSubject.value || 1;
       const response = await this.sendRequest('next', { threadId });
       if (response.success) {
-        this.executionStateSubject.next('running');
-        this.clearStateTransitionGuard();
-        this.commandInFlightSubject.next(false);
+        this.handleResumptionState(false, threadId);
       } else {
         this.clearStateTransitionGuard();
         this.commandInFlightSubject.next(false);
@@ -417,9 +411,7 @@ export class DapSessionService {
       const threadId = this.activeThreadIdSubject.value || 1;
       const response = await this.sendRequest('stepIn', { threadId });
       if (response.success) {
-        this.executionStateSubject.next('running');
-        this.clearStateTransitionGuard();
-        this.commandInFlightSubject.next(false);
+        this.handleResumptionState(false, threadId);
       } else {
         this.clearStateTransitionGuard();
         this.commandInFlightSubject.next(false);
@@ -445,9 +437,7 @@ export class DapSessionService {
       const threadId = this.activeThreadIdSubject.value || 1;
       const response = await this.sendRequest('stepOut', { threadId });
       if (response.success) {
-        this.executionStateSubject.next('running');
-        this.clearStateTransitionGuard();
-        this.commandInFlightSubject.next(false);
+        this.handleResumptionState(false, threadId);
       } else {
         this.clearStateTransitionGuard();
         this.commandInFlightSubject.next(false);
@@ -474,9 +464,7 @@ export class DapSessionService {
       const args: StepArguments = { threadId, granularity: 'instruction' };
       const response = await this.sendRequest('next', args);
       if (response.success) {
-        this.executionStateSubject.next('running');
-        this.clearStateTransitionGuard();
-        this.commandInFlightSubject.next(false);
+        this.handleResumptionState(false, threadId);
       } else {
         this.clearStateTransitionGuard();
         this.commandInFlightSubject.next(false);
@@ -503,9 +491,7 @@ export class DapSessionService {
       const args: StepArguments = { threadId, granularity: 'instruction' };
       const response = await this.sendRequest('stepIn', args);
       if (response.success) {
-        this.executionStateSubject.next('running');
-        this.clearStateTransitionGuard();
-        this.commandInFlightSubject.next(false);
+        this.handleResumptionState(false, threadId);
       } else {
         this.clearStateTransitionGuard();
         this.commandInFlightSubject.next(false);
@@ -948,21 +934,56 @@ export class DapSessionService {
     }
   }
 
-  /**
-   * Internal helper to clear session-specific Subjects and Maps when the 
-   * connection is lost or reset. Prevents stale data from remaining in the UI.
-   */
   private clearSessionData(): void {
     this.threadsSubject.next([]);
     this.activeThreadIdSubject.next(null);
-    this.clearStateTransitionGuard();
-    this.commandInFlightSubject.next(false);
     this.stoppedThreadsSubject.next(new Set());
     this.allThreadsStoppedSubject.next(false);
     this.stopReasonSubject.next(null);
     this.processInfoSubject.next(null);
     this.breakpointsMap.clear();
     this.breakpointsSubject.next(new Map());
+    this.clearStateTransitionGuard();
+    this.commandInFlightSubject.next(false);
+  }
+
+  /**
+   * Unified handler for debug resumption state (Continue, Step, etc).
+   * Synchronizes execution state, stopped thread tracking, and reason maps.
+   */
+  private handleResumptionState(allThreads: boolean, threadId?: number): void {
+    if (allThreads) {
+      this.executionStateSubject.next('running');
+      this.allThreadsStoppedSubject.next(false);
+      this.stoppedThreadsSubject.next(new Set());
+      this.threadStopReasonsSubject.next(new Map());
+
+      this.clearStateTransitionGuard();
+      this.commandInFlightSubject.next(false);
+      this.stopReasonSubject.next(null);
+      return;
+    }
+
+    if (threadId !== undefined) {
+      const updatedStopped = new Set(this.stoppedThreadsSubject.value);
+      if (updatedStopped.delete(threadId)) {
+        this.stoppedThreadsSubject.next(updatedStopped);
+      }
+
+      const updatedReasons = new Map(this.threadStopReasonsSubject.value);
+      if (updatedReasons.delete(threadId)) {
+        this.threadStopReasonsSubject.next(updatedReasons);
+      }
+
+      if (updatedStopped.size === 0) {
+        this.executionStateSubject.next('running');
+        this.allThreadsStoppedSubject.next(false);
+      }
+      
+      this.clearStateTransitionGuard();
+      this.commandInFlightSubject.next(false);
+      this.stopReasonSubject.next(null);
+    }
   }
 
   /**
@@ -1011,30 +1032,10 @@ export class DapSessionService {
         break;
 
       case 'continued':
-        const continuedThreadId = event.body?.threadId;
-        const allThreadsContinued = event.body?.allThreadsContinued ?? true;
-
-        if (allThreadsContinued) {
-          this.executionStateSubject.next('running');
-          this.allThreadsStoppedSubject.next(false);
-          this.stoppedThreadsSubject.next(new Set());
-          this.threadStopReasonsSubject.next(new Map());
-        } else if (continuedThreadId !== undefined) {
-          const updatedStopped = new Set(this.stoppedThreadsSubject.value);
-          updatedStopped.delete(continuedThreadId);
-          this.stoppedThreadsSubject.next(updatedStopped);
-          // Clear stop reason for the resumed thread
-          const updatedReasons = new Map(this.threadStopReasonsSubject.value);
-          updatedReasons.delete(continuedThreadId);
-          this.threadStopReasonsSubject.next(updatedReasons);
-          if (updatedStopped.size === 0) {
-            this.executionStateSubject.next('running');
-            this.allThreadsStoppedSubject.next(false);
-          }
-        }
-        this.clearStateTransitionGuard();
-        this.commandInFlightSubject.next(false);
-        this.stopReasonSubject.next(null);
+        this.handleResumptionState(
+          event.body?.allThreadsContinued ?? true,
+          event.body?.threadId
+        );
         break;
 
       case 'thread': {

@@ -149,10 +149,21 @@ To prevent race conditions when the user rapidly toggles breakpoints, the Sessio
 
 The Session layer automates thread and context management to simplify UI implementation:
 
+### 7.1 Thread Selection
+
 - **Automatic Thread Refresh**: On every `stopped` event, the Session automatically calls `threads()` and updates `threadsSubject`.
 - **Active Thread Selection**: If the `stopped` event contains a `threadId`, it is automatically set as the `activeThreadId`.
 - **Contextual Stop Reason**: The Session extracts `description` or `reason` from the `stopped` event body and exposes it via `stopReason$`.
 - **Manual Selection**: `setCurrentThread(id)` allows the user to switch inspection context, triggering a synthetic `stopped` event to force UI components to reload their stacks.
+
+> [!NOTE]
+> **Multi-Threaded Execution (Non-Stop Mode)**: While the Session layer is designed to track multiple threads, advanced Non-Stop mode behavior (independent thread control) is currently a planned feature. See [Non-Stop Mode UI Integration](../archive/specs/non-stop-mode-ui.md) for the design specification.
+
+### 7.2 Context Switching (R-CS3)
+
+When the user switches between call stack frames, the system enforces a **"Latest Selection Wins"** policy.
+- **Mechanism**: The UI uses `switchMap` on the frame selection stream.
+- **Behavior**: Selecting a new frame automatically cancels any in-flight `scopes` or `variables` requests for the previous frame. Stale responses are discarded to prevent rendering incorrect data for the active context.
 
 ## 8. Public API
 

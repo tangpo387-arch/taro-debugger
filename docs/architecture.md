@@ -61,8 +61,7 @@ The architectural documentation has been modularized. Please see the specific su
 | Sub-System | Documentation Document | Description |
 | :--- | :--- | :--- |
 | **Transport Layer** | [architecture/transport-layer.md](architecture/transport-layer.md) | Low-level connection management, binary stream parsing, and extension interface. |
-| **Session Layer** | [architecture/session-layer.md](architecture/session-layer.md) | Execution State Machine, configuration flows, request pairing, and transport lifecycle. |
-| **Session Logic** | [architecture/core/session-logic.md](architecture/core/session-logic.md) | Advanced thread state, non-stop mode, and frame-switching logic. |
+| **Session Layer** | [architecture/session-layer.md](architecture/session-layer.md) | Execution State Machine, thread tracking, and transport lifecycle. |
 | **DAP Core Lib** | [architecture/core/dap-core.md](architecture/core/dap-core.md) | Library boundaries, service relocation, and framework-agnostic session management. |
 | **UI Shared** | [architecture/ui-shared.md](architecture/ui-shared.md) | Centralized UI foundation (PanelComponent, ErrorDialog, Layout tokens). |
 | **UI Layer** | [architecture/ui-layer.md](architecture/ui-layer.md) | Dependency Injection constraints, UI rendering, layout structure, and app frame integration. |

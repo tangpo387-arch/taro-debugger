@@ -381,6 +381,31 @@
         "created": "2026-05-01",
         "created_by": "Antigravity-Agent"
       }
+    },
+    {
+      "id": "WI-102",
+      "title": "Refine Thread Interaction & Auto-Expansion",
+      "featureGroup": "Execution Context Inspection",
+      "metadata": {
+        "status": "accepted",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Decouple thread click from selection and implement auto-expansion on stop.",
+      "details": [
+        "(a) Add dedicated Focus button to thread nodes and remove setCurrentThread from row click",
+        "(b) Implement auto-expansion of current thread on stopped event",
+        "[Test] Clicking thread row does not change active thread",
+        "[Test] Clicking Focus button updates active thread",
+        "[Test] Thread automatically expands on stopped event",
+        "[Doc] docs/archive/specs/thread-interaction-refinement.md"
+      ],
+      "timeline": {
+        "created": "2026-05-01",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-01"
+      }
     }
   ]
 }

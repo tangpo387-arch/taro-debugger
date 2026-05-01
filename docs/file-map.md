@@ -59,7 +59,7 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 
 | File | Responsibility | Key Interfaces |
 | --- | --- | --- |
-| `projects/dap-core/src/lib/session/dap-session.service.ts` | DAP session lifecycle, state machine, request/response pairing, event processing | `startSession()`, `disconnect()`, `reset()`, `executionState$`, `connectionStatus$`, `onEvent()`, `loadedSources()`, `source()` |
+| `projects/dap-core/src/lib/session/dap-session.service.ts` | DAP session lifecycle, state machine, multi-threaded state synchronization, command serialization, request/response pairing, event processing | `startSession()`, `executionState$`, `commandInFlight$`, `stoppedThreads$`, `activeThreadId$`, `onEvent()` |
 | `projects/dap-core/src/lib/session/dap-config.service.ts` | Configuration persistence (localStorage), SSOT for DAP connection parameters | `setConfig()`, `getConfig()` |
 | `projects/taro-debugger-frontend/src/app/dap-file-tree.service.ts` | File tree construction from `loadedSources`, source file reading via `source` request | `getTree()`, `readFile()` |
 | `projects/ui-inspection/src/lib/dap-variables.service.ts` | Derived state management for DAP scopes and variables, caching variable references | `fetchScopes()`, `getVariables()`, `scopes$` |
