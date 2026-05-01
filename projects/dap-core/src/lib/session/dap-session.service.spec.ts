@@ -806,6 +806,55 @@ describe('DapSessionService', () => {
     });
   });
 
+  describe('Breakpoint Events', () => {
+    it('should update breakpoint state when changed event is received', () => {
+      (service as any).breakpointsMap.set('/main.c', [
+        { line: 10, verified: false, enabled: true, id: 1 }
+      ]);
+
+      (service as any).handleTransportEvent({
+        type: 'event',
+        event: 'breakpoint',
+        body: {
+          reason: 'changed',
+          breakpoint: {
+            id: 1,
+            verified: true,
+            line: 10,
+            source: { path: '/main.c' }
+          }
+        }
+      });
+
+      const bps = (service as any).breakpointsMap.get('/main.c');
+      expect(bps[0].verified).toBe(true);
+    });
+
+    it('should remove breakpoint when removed event is received', () => {
+      (service as any).breakpointsMap.set('/main.c', [
+        { line: 10, verified: true, enabled: true, id: 1 },
+        { line: 20, verified: true, enabled: true, id: 2 }
+      ]);
+
+      (service as any).handleTransportEvent({
+        type: 'event',
+        event: 'breakpoint',
+        body: {
+          reason: 'removed',
+          breakpoint: {
+            id: 1,
+            line: 10,
+            source: { path: '/main.c' }
+          }
+        }
+      });
+
+      const bps = (service as any).breakpointsMap.get('/main.c');
+      expect(bps).toHaveLength(1);
+      expect(bps[0].id).toBe(2);
+    });
+  });
+
   describe('High-level DAP Methods', () => {
     it('should send loadedSources request', async () => {
       (service as any).transport = mockTransport;

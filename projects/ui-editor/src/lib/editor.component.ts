@@ -299,7 +299,10 @@ export class EditorComponent implements OnChanges, OnDestroy {
       this.breakpoints.set(this.filename, fileBps);
     }
 
-    if (fileBps.has(lineNumber)) {
+    const verifiedMap = this.verifiedBreakpoints.get(this.filename);
+    const isCurrentlySet = fileBps.has(lineNumber) || (verifiedMap?.has(lineNumber) ?? false);
+
+    if (isCurrentlySet) {
       fileBps.delete(lineNumber);
     } else {
       fileBps.add(lineNumber);
@@ -344,30 +347,32 @@ export class EditorComponent implements OnChanges, OnDestroy {
     const decorations: any[] = [];
 
     if (this.filename) {
-      const fileBps = this.breakpoints.get(this.filename);
-      const verifiedMap = this.verifiedBreakpoints.get(this.filename);
-      if (fileBps) {
-        fileBps.forEach((line) => {
-          const status = verifiedMap?.get(line);
-          const isVerified = status ? status.verified : false;
-          const isEnabled = status ? status.enabled : true;
+      const fileBps = this.breakpoints.get(this.filename) || new Set<number>();
+      const verifiedMap = this.verifiedBreakpoints.get(this.filename) || new Map<number, any>();
 
-          let glyphClass = 'breakpoint-glyph';
-          if (!isEnabled) {
-            glyphClass = 'breakpoint-glyph-disabled';
-          } else if (!isVerified) {
-            glyphClass = 'breakpoint-glyph-unverified';
+      // Union of local intent and verified state from DAP
+      const allLines = new Set([...fileBps, ...verifiedMap.keys()]);
+
+      allLines.forEach((line) => {
+        const status = verifiedMap.get(line);
+        const isVerified = status ? status.verified : false;
+        const isEnabled = status ? status.enabled : true;
+
+        let glyphClass = 'breakpoint-glyph';
+        if (!isEnabled) {
+          glyphClass = 'breakpoint-glyph-disabled';
+        } else if (!isVerified) {
+          glyphClass = 'breakpoint-glyph-unverified';
+        }
+
+        decorations.push({
+          range: new monaco.Range(line, 1, line, 1),
+          options: {
+            isWholeLine: false,
+            glyphMarginClassName: glyphClass
           }
-
-          decorations.push({
-            range: new monaco.Range(line, 1, line, 1),
-            options: {
-              isWholeLine: false,
-              glyphMarginClassName: glyphClass
-            }
-          });
         });
-      }
+      });
     }
 
     this.breakpointIds = this.editorInstance.deltaDecorations(

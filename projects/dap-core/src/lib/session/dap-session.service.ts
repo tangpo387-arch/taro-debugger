@@ -993,6 +993,18 @@ export class DapSessionService {
           const filePath = bp.source.path;
           const currentBps = this.breakpointsMap.get(filePath) || [];
 
+          // Handle removal reason (DAP spec: 'new', 'changed', 'removed')
+          if (event.body?.reason === 'removed') {
+            const filtered = currentBps.filter(existingBp => {
+              if (bp.id !== undefined && existingBp.id === bp.id) return false;
+              if (existingBp.line === bp.line) return false;
+              return true;
+            });
+            this.breakpointsMap.set(filePath, filtered);
+            this.breakpointsSubject.next(new Map(this.breakpointsMap));
+            break;
+          }
+
           // The DAP 'breakpoint' event is typically used to update a single breakpoint's status.
           // Since we don't have a reliable ID mapping in the frontend yet for all adapters,
           // we look for a breakpoint at the same line or with the same adapter ID.

@@ -1,4 +1,5 @@
 ---
+title: Research: Portable Debug Session Persistence (.zip)
 audience: [Human Engineer, Agent Role Play]
 type: Feature Spec
 status: research-complete

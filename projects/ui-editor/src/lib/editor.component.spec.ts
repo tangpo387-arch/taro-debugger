@@ -277,4 +277,58 @@ describe('EditorComponent', () => {
       expect(emitSpy).toHaveBeenCalledWith(expect.objectContaining({ file: 'fileB.cpp', lines: [20] }));
     });
   });
+
+  describe('Server-Initiated Breakpoint Sync', () => {
+    it('should render breakpoints from verifiedBreakpoints even if not in local intent set', async () => {
+      // Arrange
+      const mockEditor = {
+        deltaDecorations: vi.fn().mockReturnValue([])
+      };
+      (component as any).editorInstance = mockEditor;
+      component.filename = 'test.cpp';
+
+      // Act: Set verified breakpoints (server-initiated)
+      component.setVerifiedBreakpoints('test.cpp', [
+        { line: 12, verified: true, enabled: true }
+      ]);
+
+      // Wait for debounced decoration update
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Assert: deltaDecorations should have been called with the new line
+      expect(mockEditor.deltaDecorations).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.arrayContaining([
+          expect.objectContaining({
+            range: expect.anything(),
+            options: expect.objectContaining({
+              glyphMarginClassName: 'breakpoint-glyph'
+            })
+          })
+        ])
+      );
+    });
+
+    it('should remove breakpoint when toggling a server-initiated breakpoint', () => {
+      // Arrange
+      const mockEditor = {
+        deltaDecorations: vi.fn().mockReturnValue([])
+      };
+      (component as any).editorInstance = mockEditor;
+      component.filename = 'test.cpp';
+
+      // 1. Server adds a breakpoint at line 12
+      component.setVerifiedBreakpoints('test.cpp', [
+        { line: 12, verified: true, enabled: true }
+      ]);
+
+      // 2. User clicks on line 12 glyph margin
+      component.toggleBreakpoint(12);
+
+      // Assert: Since line 12 was in verifiedBreakpoints, toggling should REMOVE it from local intent.
+      // Emitting an empty list will then cause the session to remove it from DAP.
+      const fileBps = (component as any).breakpoints.get('test.cpp');
+      expect(fileBps.has(12)).toBe(false);
+    });
+  });
 });
