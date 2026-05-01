@@ -138,7 +138,7 @@
       "title": "Context-Aware Debug Toolbar",
       "featureGroup": "Debug Controls",
       "metadata": {
-        "status": "proposed",
+        "status": "aborted",
         "size": "S",
         "milestone": "v1.0",
         "dependencies": [
@@ -155,7 +155,8 @@
       ],
       "timeline": {
         "created": "2026-04-30",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-01"
       }
     },
     {
@@ -163,7 +164,7 @@
       "title": "Global Debug Lifecycle Actions (Stop All)",
       "featureGroup": "Debug Controls",
       "metadata": {
-        "status": "proposed",
+        "status": "aborted",
         "size": "S",
         "milestone": "v1.0",
         "dependencies": [
@@ -180,7 +181,8 @@
       ],
       "timeline": {
         "created": "2026-04-30",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-01"
       }
     },
     {

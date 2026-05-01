@@ -221,15 +221,15 @@ graph LR
     style WI_87 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_89 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_90 fill:#4ade80,stroke:#000,stroke-width:2.5px
-    style WI_94 fill:#4ade80,stroke:#22c55e
-    style WI_10 fill:#f97316,stroke:#000,stroke-width:2.5px
-    style WI_11 fill:#f97316,stroke:#000,stroke-width:2.5px
-    style WI_39 fill:#f97316,stroke:#000,stroke-width:2.5px
-    style WI_40 fill:#f97316,stroke:#000,stroke-width:2.5px
-    style WI_43 fill:#f97316,stroke:#000,stroke-width:2.5px
-    style WI_97 fill:#f97316,stroke:#ea580c
-    style WI_98 fill:#f97316,stroke:#ea580c
-    style WI_101 fill:#f97316,stroke:#000,stroke-width:2.5px
+    style WI_94 fill:none,stroke-dasharray:5
+    style WI_10 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_11 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_39 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_40 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_43 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_97 fill:none,stroke-dasharray:5
+    style WI_98 fill:none,stroke-dasharray:5
+    style WI_101 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_12 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_13 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_14 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
@@ -253,8 +253,8 @@ graph LR
     style WI_83 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_91 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_93 fill:#f472b6,stroke:#000,stroke-width:2.5px
-    style WI_95 fill:#f472b6,stroke:#db2777
-    style WI_96 fill:#f472b6,stroke:#db2777
+    style WI_95 fill:none,stroke-dasharray:5
+    style WI_96 fill:none,stroke-dasharray:5
     style WI_100 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_102 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_15 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
@@ -262,24 +262,24 @@ graph LR
     style WI_33 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_34 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_82 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_35 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_36 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_37 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_44 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_45 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_46 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_47 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_48 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_50 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_51 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_52 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
+    style WI_35 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_36 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_37 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_44 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_45 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_46 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_47 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_48 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_50 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_51 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_52 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_54 fill:none,stroke-dasharray:5
-    style WI_57 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_58 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_63 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_64 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_72 fill:#f1f5f9,stroke:#000,stroke-width:2.5px
-    style WI_99 fill:#f1f5f9,stroke:#64748b
+    style WI_57 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_58 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_63 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_64 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_72 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_99 fill:none,stroke-dasharray:5
     style WI_27 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI_28 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI_29 fill:#6366f1,stroke:#000,stroke-width:2.5px
@@ -306,12 +306,12 @@ graph LR
 | :--- | :--- | :--- |
 | Setup View | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%234ade80'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#4ade80"/> `#4ade80` | 💎 Stabilized |
 | DAP Transport Layer | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%234ade80'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#4ade80"/> `#4ade80` | 🔵 Active |
-| Debug Controls | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f97316'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f97316"/> `#f97316` | 🔵 Active |
+| Debug Controls | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f97316'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f97316"/> `#f97316` | 💎 Stabilized |
 | Editor Features | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23a78bfa'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#a78bfa"/> `#a78bfa` | 💎 Stabilized |
 | File Explorer | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23facc15'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#facc15"/> `#facc15` | 💎 Stabilized |
 | Execution Context Inspection | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f472b6'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f472b6"/> `#f472b6` | 🔵 Active |
 | Console & Status Bar | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%232dd4bf'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#2dd4bf"/> `#2dd4bf` | 💎 Stabilized |
 | Electron Desktop Mode | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%2394a3b8'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#94a3b8"/> `#94a3b8` | 💎 Stabilized |
 | Low-Level Inspection | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%236366f1'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#6366f1"/> `#6366f1` | 🔵 Active |
-| General | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f1f5f9'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f1f5f9"/> `#f1f5f9` | 🔵 Active |
+| General | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f1f5f9'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f1f5f9"/> `#f1f5f9` | 💎 Stabilized |
 | UI System Design | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23cbd5e1'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#cbd5e1"/> `#cbd5e1` | 🔵 Active |

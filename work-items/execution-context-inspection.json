@@ -313,7 +313,7 @@
       "title": "Reactive Active-Session Context Binding",
       "featureGroup": "Execution Context Inspection",
       "metadata": {
-        "status": "proposed",
+        "status": "aborted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": [
@@ -330,7 +330,8 @@
       ],
       "timeline": {
         "created": "2026-04-30",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-01"
       }
     },
     {
@@ -338,7 +339,7 @@
       "title": "Unified Tree: Multi-Session Hierarchy Support",
       "featureGroup": "Execution Context Inspection",
       "metadata": {
-        "status": "proposed",
+        "status": "aborted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": [
@@ -356,7 +357,8 @@
       ],
       "timeline": {
         "created": "2026-04-30",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-01"
       }
     },
     {

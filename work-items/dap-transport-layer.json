@@ -438,7 +438,7 @@
       "title": "DapSessionManager Core Implementation",
       "featureGroup": "DAP Transport Layer",
       "metadata": {
-        "status": "proposed",
+        "status": "aborted",
         "size": "L",
         "milestone": "v1.0",
         "dependencies": []
@@ -453,7 +453,8 @@
       ],
       "timeline": {
         "created": "2026-04-30",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-01"
       }
     }
   ]
