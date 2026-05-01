@@ -210,6 +210,16 @@ export class EditorComponent implements OnChanges, OnDestroy {
    * @param bps VerifiedBreakpoint array from the DAP session
    */
   public setVerifiedBreakpoints(file: string, bps: any[]): void {
+    // Synchronize local intent set with the verified state (SSOT).
+    // This ensures that external removals (e.g., from the Breakpoints Panel) 
+    // correctly clear the editor's local decoration state.
+    const intentLines = new Set<number>(bps.map(bp => bp.line));
+    if (intentLines.size === 0) {
+      this.breakpoints.delete(file);
+    } else {
+      this.breakpoints.set(file, intentLines);
+    }
+
     if (bps.length === 0) {
       this.verifiedBreakpoints.delete(file);
     } else {
