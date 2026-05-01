@@ -148,12 +148,10 @@
       "title": "Implement Memory View (Hex Dump)",
       "featureGroup": "Low-Level Inspection",
       "metadata": {
-        "status": "pending",
+        "status": "aborted",
         "size": "L",
-        "milestone": "v1.1",
-        "dependencies": [
-          "WI-85"
-        ]
+        "milestone": "v1.0",
+        "dependencies": []
       },
       "description": "Add a low-level memory inspection interface to the center tab group.",
       "details": [
@@ -166,6 +164,80 @@
       ],
       "timeline": {
         "created": "2026-04-26",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-01"
+      }
+    },
+    {
+      "id": "WI-104",
+      "title": "DAP Memory Protocol & Service",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "proposed",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Define readMemory/writeMemory types and implement DapMemoryService in dap-core.",
+      "details": [
+        "Update dap.types.ts with readMemory/writeMemory schemas",
+        "Implement DapMemoryService with Base64/Hex conversion",
+        "Handle memoryReference resolution",
+        "[Test] Unit test DapMemoryService with mock DAP session",
+        "[Doc] docs/archive/specs/memory-view-spec.md"
+      ],
+      "timeline": {
+        "created": "2026-05-01",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-105",
+      "title": "Memory Hex Dump Component",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "proposed",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-104"
+        ]
+      },
+      "description": "Create the standalone MemoryViewComponent with hex/ASCII rendering.",
+      "details": [
+        "Create MemoryViewComponent in ui-inspection library",
+        "Implement hex grid with cdk-virtual-scroll",
+        "Implement ASCII character preview panel",
+        "[Test] Verify hex alignment and virtual scroll performance with large buffers",
+        "[Doc] docs/archive/specs/memory-view-spec.md"
+      ],
+      "timeline": {
+        "created": "2026-05-01",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-106",
+      "title": "Memory View Host Integration",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "proposed",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-105"
+        ]
+      },
+      "description": "Integrate Memory View into the center tabs and Variables context menu.",
+      "details": [
+        "Add 'Memory' tab to DebuggerComponent center panel",
+        "Implement 'Inspect Memory' context menu in Variables tree",
+        "Wire address bar navigation and manual input",
+        "[Test] Verify end-to-end flow from Variables right-click to Memory view render",
+        "[Doc] docs/archive/specs/memory-view-spec.md"
+      ],
+      "timeline": {
+        "created": "2026-05-01",
         "created_by": "Antigravity-Agent"
       }
     }

@@ -193,7 +193,7 @@
       "title": "Consolidate Debug Panels to Left Sidenav",
       "featureGroup": "UI System Design",
       "metadata": {
-        "status": "pending",
+        "status": "aborted",
         "size": "M",
         "milestone": "v1.1",
         "dependencies": []
@@ -208,7 +208,8 @@
       ],
       "timeline": {
         "created": "2026-04-26",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-01"
       }
     },
     {

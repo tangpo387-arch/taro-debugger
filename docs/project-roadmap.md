@@ -99,6 +99,9 @@ graph LR
     WI_32["WI-32 Implement Instruction-Level Stepping (stepi/nexti)"]
     WI_66["WI-66 Library Extraction: AssemblyViewComponent"]
     WI_84["WI-84 Implement Memory View (Hex Dump)"]
+    WI_104["WI-104 DAP Memory Protocol & Service"]
+    WI_105["WI-105 Memory Hex Dump Component"]
+    WI_106["WI-106 Memory View Host Integration"]
     WI_01["WI-01 Extend `GdbConfigService` Configuration Model"]
     WI_02["WI-02 Setup Form Field Completion"]
     WI_03["WI-03 Setup Form Validation"]
@@ -190,7 +193,8 @@ graph LR
     WI_28 --> WI_29
     WI_29 --> WI_32
     WI_62 --> WI_66
-    WI_85 --> WI_84
+    WI_104 --> WI_105
+    WI_105 --> WI_106
     WI_01 --> WI_02
     WI_02 --> WI_03
     WI_75 --> WI_74
@@ -287,7 +291,10 @@ graph LR
     style WI_29 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI_32 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI_66 fill:#6366f1,stroke:#000,stroke-width:2.5px
-    style WI_84 fill:#6366f1,stroke:#4f46e5
+    style WI_84 fill:none,stroke-dasharray:5
+    style WI_104 fill:#6366f1,stroke:#4f46e5
+    style WI_105 fill:#6366f1,stroke:#4f46e5
+    style WI_106 fill:#6366f1,stroke:#4f46e5
     style WI_01 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_02 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_03 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
@@ -298,7 +305,7 @@ graph LR
     style WI_78 fill:#cbd5e1,stroke:#475569
     style WI_80 fill:#cbd5e1,stroke:#000,stroke-width:2.5px
     style WI_81 fill:#cbd5e1,stroke:#000,stroke-width:2.5px
-    style WI_85 fill:#cbd5e1,stroke:#475569
+    style WI_85 fill:none,stroke-dasharray:5
     style WI_88 fill:#cbd5e1,stroke:#000,stroke-width:2.5px
 ```
 

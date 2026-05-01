@@ -13,35 +13,48 @@ related:
 
 ## 1. Objective
 
-Provide a low-level memory inspection interface (Hex Dump) to allow users to view and optionally modify raw memory contents during a debug session. This is critical for C/C++ development where pointer manipulation and memory layouts are central.
+Provide a low-level memory inspection interface (Hex Dump) to allow users to view and optionally modify raw memory contents during a debug session. This feature is implemented across three coordinated work items to ensure separation of concerns between protocol handling, UI rendering, and host integration.
 
-## 2. Component Architecture
+## 2. Work Item Mapping & Monorepo Boundaries
 
-### 2.1 MemoryViewComponent (`app-memory-view`)
+| WI ID | Responsibility | Library / Project |
+| :--- | :--- | :--- |
+| **WI-104** | Protocol Layer & Data Services | `projects/dap-core` |
+| **WI-105** | Standalone UI Component | `projects/ui-inspection` |
+| **WI-106** | UI Integration & UX Orchestration | `projects/taro-debugger-frontend` |
+
+## 3. Component Architecture
+
+### 3.1 MemoryViewComponent (`app-memory-view`)
 
 - **Type**: Standalone Component.
-- **Location**: `/projects/taro-debugger-frontend/src/app/memory-view.component.ts`.
-- **Primary Responsibility**: Render a virtualized hex dump table and handle user navigation/editing.
+- **Project**: `@taro/ui-inspection`.
+- **Primary Responsibility**: Render a high-performance hex dump grid with ASCII preview and virtual scrolling.
+- **Inputs**:
+  - `data: Uint8Array`: The memory buffer to display.
+  - `baseAddress: string`: The starting address for rendering.
+  - `highlightedRange?: { start: number, length: number }`: For object layout shading.
 
-### 2.2 DapMemoryService
+### 3.2 DapMemoryService
 
-- **Type**: Component-scoped Service (provided in `DebuggerComponent`).
+- **Type**: Framework-agnostic Service.
+- **Project**: `@taro/dap-core`.
 - **Responsibility**:
-  - Manage memory inspection state (base address, range, data buffer).
-  - Execute DAP `readMemory` and `writeMemory` requests.
-  - Coordinate with the Variables view to resolve pointer addresses.
+  - Encapsulate DAP `readMemory` and `writeMemory` request logic.
+  - Handle Base64 encoding/decoding for memory data payloads.
+  - Provide reactive streams for memory buffer updates.
 
-## 3. UI/UX Design
+## 4. UI/UX Design
 
-### 3.1 Main Content Integration
+### 4.1 Main Content Integration
 
-The `DebuggerComponent` main content area (center panel) features a tabbed interface. Memory View is added as the third tab:
+The `DebuggerComponent` in the host application features a tabbed interface. Memory View is integrated as a primary tab:
 
 1. **Source** (Monaco Editor)
 2. **Disassembly** (Assembly View)
-3. **Memory** (Memory View)
+3. **Memory** (Memory View - WI-106)
 
-### 3.2 Visual Layout (Hex Dump)
+### 4.2 Visual Layout (Hex Dump)
 
 The view uses a high-density table structure powered by `cdk-virtual-scroll-viewport`:
 
@@ -51,45 +64,44 @@ The view uses a high-density table structure powered by `cdk-virtual-scroll-view
 | **Hex Data** | 16 bytes per row | `48 89 E5 ...` (Monospace, Interactive) |
 | **ASCII** | Character representation | `H . . .` (Monospace, Muted) |
 
-### 3.3 Entry Points & Interaction
+### 4.3 Entry Points & Interaction (WI-106)
 
-- **Contextual**: Navigate to the **Left Sidenav -> Debug Tab**, right-click a pointer variable in the **Variables** expansion panel -> Select **"Open Memory View"**. This naturally guides the user's eye from the left navigation panel to the center Memory tab.
-- **Manual**: Click the **Memory** tab and enter a hex address in the address bar.
-- **Modification**: Clicking a hex byte enters "Edit Mode" (if supported). Pressing `Enter` triggers a `writeMemory` request.
+- **Contextual**: Right-click a pointer variable in the **Variables** panel -> Select **"Open Memory View"**.
+- **Manual**: Direct address input in the Memory View toolbar.
+- **Modification**: Inline byte editing (sends `writeMemory` via `DapMemoryService`).
 
-## 4. DAP Protocol Integration
+## 5. DAP Protocol Integration (WI-104)
 
-### 4.1 Capabilities Check
+### 5.1 Capabilities Check
 
-The UI must verify `capabilities.supportsReadMemoryRequest` before enabling the Memory tab. If `supportsWriteMemoryRequest` is false, data cells remain read-only.
+The UI must verify `capabilities.supportsReadMemoryRequest` before enabling the Memory tab. If `supportsWriteMemoryRequest` is false, editing is disabled.
 
-### 4.2 Read Memory Flow
-
-When an address is targeted:
+### 5.2 Read Memory Flow
 
 ```typescript
+// WI-104: DapMemoryService.read()
 dapSession.request('readMemory', {
-  memoryReference: '0x12345678', // Hex string
+  memoryReference: '0x12345678', 
   offset: 0,
-  count: 1024 // Bytes to read
+  count: 1024 
 });
 ```
 
-### 4.3 Write Memory Flow
+### 5.3 Write Memory Flow
 
 ```typescript
+// WI-104: DapMemoryService.write()
 dapSession.request('writeMemory', {
   memoryReference: '0x12345678',
   offset: 0,
-  data: 'SGVsbG8=' // Base64 encoded data
+  data: 'SGVsbG8=' // Base64 encoded
 });
 ```
 
-## 5. Technical Constraints
+## 6. Technical Constraints
 
-- **Base64 Handling**: DAP `writeMemory` requires data to be Base64 encoded. The `DapMemoryService` must handle conversion from Hex/ASCII strings.
-- **Unreadable Memory**: Handle `unreadableBytes` in the `readMemory` response by rendering `??` or `..` in the UI.
-- **Viewport Performance**: Ensure smooth scrolling across large memory ranges using virtual scrolling.
+- **Monorepo Strictness**: `MemoryViewComponent` (in `ui-inspection`) MUST NOT depend on `DapSessionService`. It should receive data via Inputs or a specialized interface to remain testable in isolation.
+- **Performance**: Virtual scrolling is mandatory for handling large memory blocks without DOM bloat.
 
 ## 7. Object Layout Visualization (Advanced UX)
 
@@ -113,33 +125,24 @@ Users can initiate the Object Layout Visualization through two primary methods:
 
 When an object layout is being inspected, the Hex Dump is enhanced with the following visual cues:
 
-- **Member Shading**: bytes belonging to a specific member are highlighted with a semi-transparent background color (semantic palette).
-- **Floating Labels**: member names (e.g., `_age`, `*ptr`) are rendered as small, non-obtrusive labels above their starting byte.
-- **Padding Indicators**: gaps between members (alignment padding) are rendered with a diagonal "hatch" pattern and labeled as `[padding]`.
-- **Nesting Brackets**: for nested structures, vertical "brackets" in the address gutter indicate the span of the parent object.
-
-### 7.2 Interactive Layout Inspector
-
-A collapsible side-panel within the Memory tab provides a hierarchical view of the object:
-
-- **Member Tree**: a list of members with `Offset`, `Type`, and `Size`.
-- **Bidirectional Highlighting**: hovering over a member in the tree highlights its bytes in the hex grid; clicking a hex byte selects the corresponding member in the tree.
+- **Member Shading**: Bytes belonging to a specific member are highlighted with a semi-transparent background color.
+- **Floating Labels**: Member names (e.g., `_age`, `*ptr`) are rendered as small labels above their starting byte.
+- **Padding Indicators**: Alignment gaps are rendered with a diagonal "hatch" pattern and labeled as `[padding]`.
+- **Nesting Brackets**: Vertical brackets in the address gutter indicate the span of nested parent objects.
 
 ### 7.3 Data Acquisition Strategy
 
 Since standard DAP `variables` responses may lack explicit memory offsets, the system employs a "Probing" strategy:
 
-1. **Base Address**: obtain the memory address of the parent object (via `evaluate` or `variables` metadata).
-2. **Member Offsets**: for each child variable, execute an `evaluate` request to get its absolute address (e.g., `&obj.member`).
-3. **Layout Mapping**: calculate `Offset = MemberAddress - BaseAddress`.
-4. **Padding Detection**: identify gaps between `(Offset[i] + Size[i])` and `Offset[i+1]`.
+1. **Base Address**: Obtain the memory address of the parent object.
+2. **Member Offsets**: Execute `evaluate` requests for child absolute addresses (e.g., `&obj.member`).
+3. **Layout Mapping**: Calculate `Offset = MemberAddress - BaseAddress`.
+4. **Padding Detection**: Identify gaps between `(Offset[i] + Size[i])` and `Offset[i+1]`.
 
 ## 8. Acceptance Criteria
 
-- [ ] Memory tab is visible in the center panel when connected to a supporting DA.
-- [ ] Right-clicking a pointer in Variables correctly resolves the address and opens the Memory tab.
-- [ ] Hex dump accurately represents memory bytes with ASCII preview.
-- [ ] Manual address input successfully triggers a refresh of the memory buffer.
-- [ ] (Optional) Inline editing of bytes sends a valid `writeMemory` request.
-- [ ] (Layout Mode) Members of a struct are visually delineated with distinct colors and labels.
-- [ ] (Layout Mode) Memory padding is clearly identified and visually distinguished from data.
+- [ ] **WI-104**: `DapMemoryService` successfully converts DAP Base64 responses to `Uint8Array`.
+- [ ] **WI-105**: `MemoryViewComponent` renders 1KB of memory with zero layout shift during virtual scrolling.
+- [ ] **WI-106**: Right-clicking a pointer in the Variables tree correctly switches the tab and populates the Memory View.
+- [ ] **Layout Mode**: Members of a struct are visually delineated with distinct colors and labels per Section 7.2.
+- [ ] **Padding Detection**: Alignment gaps are correctly identified and labeled as `[padding]`.
