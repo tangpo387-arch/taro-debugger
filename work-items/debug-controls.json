@@ -182,6 +182,29 @@
         "created": "2026-04-30",
         "created_by": "Antigravity-Agent"
       }
+    },
+    {
+      "id": "WI-101",
+      "title": "Fix Execution State Toggle Delay & Stepping Thread Context",
+      "featureGroup": "Debug Controls",
+      "metadata": {
+        "status": "accepted",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Resolve UI latency where 'stopped' state is delayed after 'next' command. Fix hardcoded threadId in stepping commands.",
+      "details": [
+        "Update DapSessionService to use activeThreadId for next, continue, stepIn, stepOut, and pause. Ensure commandInFlight correctly guards the async period until the response is received.",
+        "Add visual indicator for the 'Active' thread in the Thread & Call Stack panel.",
+        "[Test] Verify stepping command uses correct active thread ID.",
+        "[Test] Verify 'Active' label/icon correctly renders on the selected thread in the UI."
+      ],
+      "timeline": {
+        "created": "2026-05-01",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-01"
+      }
     }
   ]
 }

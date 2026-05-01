@@ -24,6 +24,7 @@ export interface ExecutionNode {
 
   // Data associations
   threadId?: number;
+  isActive?: boolean;
   frame?: DapStackFrame;
   isStopped?: boolean;
   isLoading?: boolean;
@@ -160,6 +161,7 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
           id: `thread-${t.id}`,
           label: t.name || `Thread ${t.id}`,
           threadId: t.id,
+          isActive: t.id === activeThreadId,
           isStopped: isStopped,
           stopReason: threadStopReasons.get(t.id),
           status: isStopped ? 'Paused' : 'Running',

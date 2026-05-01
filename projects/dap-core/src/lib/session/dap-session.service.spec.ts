@@ -354,20 +354,33 @@ describe('DapSessionService', () => {
   });
 
   describe('Command Serialization (R-CS1)', () => {
-    it('should set commandInFlight$ to true during control command execution', async () => {
+    it('should set commandInFlight$ to true during control command execution and reset on continued event', async () => {
       (service as any).transport = mockTransport;
       const promise = service.continue();
 
       expect((service as any).commandInFlightSubject.value).toBe(true);
 
+      // Simulate adapter response (without allThreadsContinued — single thread)
       (service as any).handleIncomingMessage({
         type: 'response',
         request_seq: 1,
         success: true,
-        command: 'continue'
+        command: 'continue',
+        body: {}
       });
 
       await promise;
+
+      // Per WI-101: commandInFlight stays locked until the 'continued' event arrives
+      expect((service as any).commandInFlightSubject.value).toBe(true);
+
+      // Now simulate the 'continued' event from the adapter
+      (service as any).handleTransportEvent({
+        type: 'event', event: 'continued', seq: 2,
+        body: { allThreadsContinued: true }
+      });
+
+      // Assert: commandInFlight is now released
       expect((service as any).commandInFlightSubject.value).toBe(false);
     });
 
@@ -873,6 +886,160 @@ describe('DapSessionService', () => {
         command: 'source',
         arguments: { sourceReference: 42, source: { path: '/test.cpp' } }
       }));
+    });
+  });
+
+  // ── Execution State & Thread Context ─────────────────────────────
+
+  describe('State Transition Guard', () => {
+    it('should emit _sessionError and unlock commandInFlight if no state event arrives within 5s', async () => {
+      // Arrange: mock the internal sendRequest directly on the service
+      // so the transport-level 5s request timeout doesn't interfere
+      const emittedEvents: any[] = [];
+      service.onEvent().subscribe(e => emittedEvents.push(e));
+
+      // Stub sendRequest to return a never-resolving promise (simulates adapter silent drop)
+      vi.spyOn(service as any, 'sendRequest').mockReturnValue(new Promise(() => {}));
+
+      // Act: trigger next() — this arms the state transition guard
+      service.next();
+      expect((service as any).commandInFlightSubject.value).toBe(true);
+
+      // Advance exactly 5 seconds — the state transition guard fires
+      vi.advanceTimersByTime(5000);
+
+      // Assert: UI is unlocked and a _sessionError was emitted
+      expect((service as any).commandInFlightSubject.value).toBe(false);
+      const errorEvent = emittedEvents.find(e => e.event === '_sessionError');
+      expect(errorEvent).toBeDefined();
+      expect(errorEvent.body.message).toContain('next');
+      expect(errorEvent.body.message).toContain('5000ms');
+    });
+
+    it('should clear the transition guard when a stopped event arrives before timeout', async () => {
+      // Arrange: stub sendRequest so next() doesn't create a conflicting timer
+      vi.spyOn(service as any, 'sendRequest').mockReturnValue(new Promise(() => {}));
+      // Stub fetchThreads so the stopped event doesn't attempt a real request
+      vi.spyOn(service as any, 'fetchThreads').mockResolvedValue(undefined);
+
+      const emittedEvents: any[] = [];
+      service.onEvent().subscribe(e => emittedEvents.push(e));
+
+      service.next();
+
+      // Act: stopped event arrives at t=2s (before 5s guard)
+      (service as any).handleTransportEvent({
+        type: 'event', event: 'stopped', seq: 1,
+        body: { threadId: 1, allThreadsStopped: true }
+      });
+
+      // Advance past the 5s mark — the guard should already be cleared
+      vi.advanceTimersByTime(6000);
+
+      // Assert: UI is unlocked, timer cleared, and NO _sessionError was emitted
+      expect((service as any).commandInFlightSubject.value).toBe(false);
+      expect((service as any).stateTransitionTimer).toBeUndefined();
+      const errorEvent = emittedEvents.find(e => e.event === '_sessionError');
+      expect(errorEvent).toBeUndefined();
+    });
+  });
+
+  describe('Optimistic Running Transition', () => {
+    it('should immediately transition to running when continue() response has allThreadsContinued: true', async () => {
+      // Arrange: mock the private sendRequest to simulate an adapter responding with allThreadsContinued
+      (service as any).executionStateSubject.next('stopped');
+      (service as any).activeThreadIdSubject.next(3);
+
+      let resolveRequest!: (v: any) => void;
+      vi.spyOn(service as any, 'sendRequest').mockReturnValue(
+        new Promise(resolve => { resolveRequest = resolve; })
+      );
+
+      const continuePromise = service.continue();
+      expect((service as any).commandInFlightSubject.value).toBe(true);
+
+      // Act: adapter responds with allThreadsContinued: true
+      resolveRequest({ success: true, body: { allThreadsContinued: true } });
+      await continuePromise;
+
+      // Assert: optimistic running state applied and UI unlocked immediately
+      expect((service as any).executionStateSubject.value).toBe('running');
+      expect((service as any).stoppedThreadsSubject.value.size).toBe(0);
+      expect((service as any).commandInFlightSubject.value).toBe(false);
+    });
+
+    it('should keep commandInFlight=true when continue() response lacks allThreadsContinued', async () => {
+      // Arrange
+      (service as any).executionStateSubject.next('stopped');
+      (service as any).activeThreadIdSubject.next(3);
+
+      let resolveRequest!: (v: any) => void;
+      vi.spyOn(service as any, 'sendRequest').mockReturnValue(
+        new Promise(resolve => { resolveRequest = resolve; })
+      );
+
+      const continuePromise = service.continue();
+
+      // Act: adapter responds WITHOUT allThreadsContinued (single-thread continue)
+      resolveRequest({ success: true, body: { allThreadsContinued: false } });
+      await continuePromise;
+
+      // Assert: execution state unchanged — waiting for the 'continued' event
+      expect((service as any).executionStateSubject.value).toBe('stopped');
+      expect((service as any).commandInFlightSubject.value).toBe(true);
+
+      // Cleanup: manually clear the guard to avoid dangling timer warnings
+      (service as any).clearStateTransitionGuard();
+      (service as any).commandInFlightSubject.next(false);
+    });
+  });
+
+  describe('Active Thread Auto-Selection', () => {
+    it('should auto-select first stopped thread when stopped event omits threadId and no thread is active', () => {
+      // Arrange: no active thread set
+      (service as any).activeThreadIdSubject.next(null);
+
+      // Simulate allThreadsStopped with multiple stopped threads but no explicit threadId
+      (service as any).stoppedThreadsSubject.next(new Set([5, 7, 9]));
+
+      // Act: stopped event with allThreadsStopped=true but no threadId
+      (service as any).handleTransportEvent({
+        type: 'event', event: 'stopped', seq: 1,
+        body: { allThreadsStopped: true }
+      });
+
+      // Assert: first thread from the set was auto-selected
+      const activeId = (service as any).activeThreadIdSubject.value;
+      expect([5, 7, 9]).toContain(activeId);
+    });
+
+    it('should not override an existing active thread when stopped event omits threadId', () => {
+      // Arrange: active thread is already set to 7
+      (service as any).activeThreadIdSubject.next(7);
+      (service as any).stoppedThreadsSubject.next(new Set([5, 7, 9]));
+
+      // Act: stopped event with no explicit threadId
+      (service as any).handleTransportEvent({
+        type: 'event', event: 'stopped', seq: 1,
+        body: { allThreadsStopped: true }
+      });
+
+      // Assert: original active thread preserved
+      expect((service as any).activeThreadIdSubject.value).toBe(7);
+    });
+
+    it('should update activeThreadId to the specified threadId in a stopped event', () => {
+      // Arrange
+      (service as any).activeThreadIdSubject.next(1);
+
+      // Act: stopped event with explicit threadId=12
+      (service as any).handleTransportEvent({
+        type: 'event', event: 'stopped', seq: 1,
+        body: { threadId: 12, allThreadsStopped: false }
+      });
+
+      // Assert: active thread updated to the one reported by the adapter
+      expect((service as any).activeThreadIdSubject.value).toBe(12);
     });
   });
 });

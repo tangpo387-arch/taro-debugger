@@ -78,6 +78,8 @@ export class DapSessionService {
   public readonly processInfo$ = this.processInfoSubject.asObservable();
 
   public capabilities: any = {};
+  private stateTransitionTimer?: any;
+  private readonly STATE_TRANSITION_TIMEOUT_MS = 5000;
   private transport?: DapTransportService;
   private connectionStatusSubject = new BehaviorSubject<boolean>(false);
   private transportStatusSubscription?: Subscription;
@@ -351,11 +353,26 @@ export class DapSessionService {
       return Promise.resolve({ seq: 0, type: 'response', command: 'continue', success: true, request_seq: 0 });
     }
     this.commandInFlightSubject.next(true);
+    this.startStateTransitionGuard('continue');
     try {
-      const response = await this.sendRequest('continue', { threadId: 1 });
+      const threadId = this.activeThreadIdSubject.value || 1;
+      const response = await this.sendRequest('continue', { threadId });
+      if (response.success) {
+        if (response.body?.allThreadsContinued) {
+          this.executionStateSubject.next('running');
+          this.stoppedThreadsSubject.next(new Set());
+          this.clearStateTransitionGuard();
+          this.commandInFlightSubject.next(false);
+        }
+      } else {
+        this.clearStateTransitionGuard();
+        this.commandInFlightSubject.next(false);
+      }
       return response;
-    } finally {
+    } catch (e) {
+      this.clearStateTransitionGuard();
       this.commandInFlightSubject.next(false);
+      throw e;
     }
   }
 
@@ -367,11 +384,19 @@ export class DapSessionService {
       return Promise.resolve({ seq: 0, type: 'response', command: 'next', success: true, request_seq: 0 });
     }
     this.commandInFlightSubject.next(true);
+    this.startStateTransitionGuard('next');
     try {
-      const response = await this.sendRequest('next', { threadId: 1 });
+      const threadId = this.activeThreadIdSubject.value || 1;
+      const response = await this.sendRequest('next', { threadId });
+      if (!response.success) {
+        this.clearStateTransitionGuard();
+        this.commandInFlightSubject.next(false);
+      }
       return response;
-    } finally {
+    } catch (e) {
+      this.clearStateTransitionGuard();
       this.commandInFlightSubject.next(false);
+      throw e;
     }
   }
 
@@ -383,11 +408,19 @@ export class DapSessionService {
       return Promise.resolve({ seq: 0, type: 'response', command: 'stepIn', success: true, request_seq: 0 });
     }
     this.commandInFlightSubject.next(true);
+    this.startStateTransitionGuard('stepIn');
     try {
-      const response = await this.sendRequest('stepIn', { threadId: 1 });
+      const threadId = this.activeThreadIdSubject.value || 1;
+      const response = await this.sendRequest('stepIn', { threadId });
+      if (!response.success) {
+        this.clearStateTransitionGuard();
+        this.commandInFlightSubject.next(false);
+      }
       return response;
-    } finally {
+    } catch (e) {
+      this.clearStateTransitionGuard();
       this.commandInFlightSubject.next(false);
+      throw e;
     }
   }
 
@@ -399,11 +432,19 @@ export class DapSessionService {
       return Promise.resolve({ seq: 0, type: 'response', command: 'stepOut', success: true, request_seq: 0 });
     }
     this.commandInFlightSubject.next(true);
+    this.startStateTransitionGuard('stepOut');
     try {
-      const response = await this.sendRequest('stepOut', { threadId: 1 });
+      const threadId = this.activeThreadIdSubject.value || 1;
+      const response = await this.sendRequest('stepOut', { threadId });
+      if (!response.success) {
+        this.clearStateTransitionGuard();
+        this.commandInFlightSubject.next(false);
+      }
       return response;
-    } finally {
+    } catch (e) {
+      this.clearStateTransitionGuard();
       this.commandInFlightSubject.next(false);
+      throw e;
     }
   }
 
@@ -415,11 +456,20 @@ export class DapSessionService {
       return Promise.resolve({ seq: 0, type: 'response', command: 'next', success: true, request_seq: 0 });
     }
     this.commandInFlightSubject.next(true);
+    this.startStateTransitionGuard('nextInstruction');
     try {
-      const args: StepArguments = { threadId: 1, granularity: 'instruction' };
-      return await this.sendRequest('next', args);
-    } finally {
+      const threadId = this.activeThreadIdSubject.value || 1;
+      const args: StepArguments = { threadId, granularity: 'instruction' };
+      const response = await this.sendRequest('next', args);
+      if (!response.success) {
+        this.clearStateTransitionGuard();
+        this.commandInFlightSubject.next(false);
+      }
+      return response;
+    } catch (e) {
+      this.clearStateTransitionGuard();
       this.commandInFlightSubject.next(false);
+      throw e;
     }
   }
 
@@ -431,11 +481,20 @@ export class DapSessionService {
       return Promise.resolve({ seq: 0, type: 'response', command: 'stepIn', success: true, request_seq: 0 });
     }
     this.commandInFlightSubject.next(true);
+    this.startStateTransitionGuard('stepInInstruction');
     try {
-      const args: StepArguments = { threadId: 1, granularity: 'instruction' };
-      return await this.sendRequest('stepIn', args);
-    } finally {
+      const threadId = this.activeThreadIdSubject.value || 1;
+      const args: StepArguments = { threadId, granularity: 'instruction' };
+      const response = await this.sendRequest('stepIn', args);
+      if (!response.success) {
+        this.clearStateTransitionGuard();
+        this.commandInFlightSubject.next(false);
+      }
+      return response;
+    } catch (e) {
+      this.clearStateTransitionGuard();
       this.commandInFlightSubject.next(false);
+      throw e;
     }
   }
 
@@ -561,9 +620,15 @@ export class DapSessionService {
     }
     this.commandInFlightSubject.next(true);
     try {
-      return await this.sendRequest('pause', { threadId: 1 });
-    } finally {
+      const threadId = this.activeThreadIdSubject.value || 1;
+      const response = await this.sendRequest('pause', { threadId });
+      if (!response.success) {
+        this.commandInFlightSubject.next(false);
+      }
+      return response;
+    } catch (e) {
       this.commandInFlightSubject.next(false);
+      throw e;
     }
   }
 
@@ -870,6 +935,8 @@ export class DapSessionService {
   private clearSessionData(): void {
     this.threadsSubject.next([]);
     this.activeThreadIdSubject.next(null);
+    this.clearStateTransitionGuard();
+    this.commandInFlightSubject.next(false);
     this.stoppedThreadsSubject.next(new Set());
     this.allThreadsStoppedSubject.next(false);
     this.stopReasonSubject.next(null);
@@ -891,6 +958,7 @@ export class DapSessionService {
 
       case 'stopped':
         this.executionStateSubject.next('stopped');
+        this.clearStateTransitionGuard();
         this.commandInFlightSubject.next(false);
         const stoppedThreadId = event.body?.threadId;
         const allThreadsStopped = event.body?.allThreadsStopped ?? false;
@@ -907,6 +975,9 @@ export class DapSessionService {
 
         if (stoppedThreadId !== undefined) {
           this.activeThreadIdSubject.next(stoppedThreadId);
+        } else if (this.activeThreadIdSubject.value === null && currentStopped.size > 0) {
+          // Fallback: auto-select the first stopped thread if none is active
+          this.activeThreadIdSubject.next(Array.from(currentStopped)[0]);
         }
         const stopReason = event.body?.description || event.body?.reason || 'paused';
         this.stopReasonSubject.next(stopReason);
@@ -941,6 +1012,7 @@ export class DapSessionService {
             this.allThreadsStoppedSubject.next(false);
           }
         }
+        this.clearStateTransitionGuard();
         this.commandInFlightSubject.next(false);
         this.stopReasonSubject.next(null);
         break;
@@ -1042,5 +1114,33 @@ export class DapSessionService {
 
     // Forward processed event to external subscribers (Components, etc.)
     this.eventSubject.next(event);
+  }
+
+  // ── State Transition Guard ───────────────────────────────────────────────
+  // Fires if the adapter fails to emit a stopped/continued event after a
+  // control command, unlocking the UI and reporting a synthetic session error.
+
+  private startStateTransitionGuard(command: string): void {
+    this.clearStateTransitionGuard();
+    this.stateTransitionTimer = setTimeout(() => {
+      if (this.commandInFlightSubject.value) {
+        this.commandInFlightSubject.next(false);
+        this.eventSubject.next({
+          seq: 0,
+          type: 'event',
+          event: '_sessionError',
+          body: {
+            message: `'${command}': adapter did not emit a state transition within ${this.STATE_TRANSITION_TIMEOUT_MS}ms. UI unlocked.`
+          }
+        });
+      }
+    }, this.STATE_TRANSITION_TIMEOUT_MS);
+  }
+
+  private clearStateTransitionGuard(): void {
+    if (this.stateTransitionTimer) {
+      clearTimeout(this.stateTransitionTimer);
+      this.stateTransitionTimer = undefined;
+    }
   }
 }

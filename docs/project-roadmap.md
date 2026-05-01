@@ -41,6 +41,7 @@ graph LR
     WI_43["WI-43 VS Code Compatible Keyboard Shortcuts"]
     WI_97["WI-97 Context-Aware Debug Toolbar"]
     WI_98["WI-98 Global Debug Lifecycle Actions (Stop All)"]
+    WI_101["WI-101 Fix Execution State Toggle Delay & Stepping Thread Context"]
     WI_12["WI-12 Monaco Editor Breakpoint Interaction"]
     WI_13["WI-13 Breakpoint DAP Synchronization"]
     WI_14["WI-14 Current Line Highlight"]
@@ -227,6 +228,7 @@ graph LR
     style WI_43 fill:#f97316,stroke:#000,stroke-width:2.5px
     style WI_97 fill:#f97316,stroke:#ea580c
     style WI_98 fill:#f97316,stroke:#ea580c
+    style WI_101 fill:#f97316,stroke:#000,stroke-width:2.5px
     style WI_12 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_13 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_14 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
