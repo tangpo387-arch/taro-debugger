@@ -191,7 +191,7 @@ describe('DapSessionService', () => {
       expect((service as any).executionStateSubject.value).toBe('idle');
     });
 
-    it('should optimistically transition to running upon successful continue request', async () => {
+    it('should NOT transition to running upon successful continue request (must wait for event)', async () => {
       (service as any).transport = mockTransport;
       (service as any).executionStateSubject.next('stopped');
 
@@ -206,6 +206,15 @@ describe('DapSessionService', () => {
       });
 
       await promise;
+      // Should still be stopped because we haven't received the 'continued' event yet
+      expect((service as any).executionStateSubject.value).toBe('stopped');
+
+      // Now simulate the 'continued' event
+      (service as any).handleTransportEvent({
+        type: 'event',
+        event: 'continued',
+        body: { allThreadsContinued: true }
+      });
       expect((service as any).executionStateSubject.value).toBe('running');
     });
 
@@ -223,6 +232,124 @@ describe('DapSessionService', () => {
       
       expect((service as any).executionStateSubject.value).toBe('idle');
       expect(mockTransport.sendRequest).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Multi-Thread State Tracking', () => {
+    it('should track stopped threads in a Set', () => {
+      (service as any).handleTransportEvent({
+        type: 'event',
+        event: 'stopped',
+        body: { threadId: 1, reason: 'breakpoint' }
+      });
+      expect((service as any).stoppedThreadsSubject.value.has(1)).toBe(true);
+      expect((service as any).allThreadsStoppedSubject.value).toBe(false);
+
+      (service as any).handleTransportEvent({
+        type: 'event',
+        event: 'stopped',
+        body: { threadId: 2, reason: 'step', allThreadsStopped: true }
+      });
+      expect((service as any).stoppedThreadsSubject.value.has(1)).toBe(true);
+      expect((service as any).stoppedThreadsSubject.value.has(2)).toBe(true);
+      expect((service as any).allThreadsStoppedSubject.value).toBe(true);
+    });
+
+    it('should remove thread IDs on per-thread continued event', () => {
+      // Setup: two threads stopped
+      (service as any).stoppedThreadsSubject.next(new Set([1, 2]));
+      (service as any).executionStateSubject.next('stopped');
+      
+      (service as any).handleTransportEvent({
+        type: 'event',
+        event: 'continued',
+        body: { threadId: 1, allThreadsContinued: false }
+      });
+      
+      expect((service as any).stoppedThreadsSubject.value.has(1)).toBe(false);
+      expect((service as any).stoppedThreadsSubject.value.has(2)).toBe(true);
+      expect((service as any).executionStateSubject.value).toBe('stopped');
+    });
+
+    it('should clear all threads on allThreadsContinued event', () => {
+      (service as any).stoppedThreadsSubject.next(new Set([1, 2]));
+      (service as any).allThreadsStoppedSubject.next(true);
+
+      (service as any).handleTransportEvent({
+        type: 'event',
+        event: 'continued',
+        body: { allThreadsContinued: true }
+      });
+
+      expect((service as any).stoppedThreadsSubject.value.size).toBe(0);
+      expect((service as any).allThreadsStoppedSubject.value).toBe(false);
+      expect((service as any).executionStateSubject.value).toBe('running');
+    });
+
+    it('should transition to running if last stopped thread is continued', () => {
+      (service as any).stoppedThreadsSubject.next(new Set([1]));
+      (service as any).executionStateSubject.next('stopped');
+
+      (service as any).handleTransportEvent({
+        type: 'event',
+        event: 'continued',
+        body: { threadId: 1, allThreadsContinued: false }
+      });
+
+      expect((service as any).stoppedThreadsSubject.value.size).toBe(0);
+      expect((service as any).executionStateSubject.value).toBe('running');
+    });
+
+    it('should store and clear per-thread stop reasons', () => {
+      (service as any).handleTransportEvent({
+        type: 'event',
+        event: 'stopped',
+        body: { threadId: 1, reason: 'breakpoint', description: 'Paused on breakpoint' }
+      });
+
+      expect((service as any).threadStopReasonsSubject.value.get(1)).toBe('Paused on breakpoint');
+
+      (service as any).handleTransportEvent({
+        type: 'event',
+        event: 'continued',
+        body: { threadId: 1, allThreadsContinued: false }
+      });
+
+      expect((service as any).threadStopReasonsSubject.value.has(1)).toBe(false);
+    });
+
+    it('should clear all stop reasons on allThreadsContinued', () => {
+      (service as any).threadStopReasonsSubject.next(new Map([[1, 'reason1'], [2, 'reason2']]));
+
+      (service as any).handleTransportEvent({
+        type: 'event',
+        event: 'continued',
+        body: { allThreadsContinued: true }
+      });
+
+      expect((service as any).threadStopReasonsSubject.value.size).toBe(0);
+    });
+
+    it('should transition to running when the last stopped thread exits (D2 regression)', () => {
+      // Setup: one stopped thread
+      (service as any).stoppedThreadsSubject.next(new Set([1]));
+      (service as any).executionStateSubject.next('stopped');
+      (service as any).threadsSubject.next([{ id: 1, name: 'Thread 1' }]);
+
+      // A 'thread exited' event fires instead of 'continued'
+      (service as any).handleTransportEvent({
+        type: 'event',
+        event: 'thread',
+        body: { threadId: 1, reason: 'exited' }
+      });
+
+      // Thread removed from list
+      expect((service as any).threadsSubject.value).toHaveLength(0);
+      // stoppedThreads$ cleared
+      expect((service as any).stoppedThreadsSubject.value.size).toBe(0);
+      // Execution state must NOT remain stuck in 'stopped'
+      expect((service as any).executionStateSubject.value).toBe('running');
+      expect((service as any).allThreadsStoppedSubject.value).toBe(false);
     });
   });
 

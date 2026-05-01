@@ -61,11 +61,21 @@ export class DapSessionService {
   private readonly activeThreadIdSubject = new BehaviorSubject<number | null>(null);
   public readonly activeThreadId$ = this.activeThreadIdSubject.asObservable();
 
-  private readonly stoppedThreadIdSubject = new BehaviorSubject<number | null>(null);
-  public readonly stoppedThreadId$ = this.stoppedThreadIdSubject.asObservable();
+  private readonly stoppedThreadsSubject = new BehaviorSubject<Set<number>>(new Set());
+  public readonly stoppedThreads$ = this.stoppedThreadsSubject.asObservable();
+
+  private readonly allThreadsStoppedSubject = new BehaviorSubject<boolean>(false);
+  public readonly allThreadsStopped$ = this.allThreadsStoppedSubject.asObservable();
 
   private readonly stopReasonSubject = new BehaviorSubject<string | null>(null);
   public readonly stopReason$ = this.stopReasonSubject.asObservable();
+
+  /** Per-thread stop reasons. Key = threadId, Value = stop reason string. */
+  private readonly threadStopReasonsSubject = new BehaviorSubject<Map<number, string>>(new Map());
+  public readonly threadStopReasons$ = this.threadStopReasonsSubject.asObservable();
+
+  private readonly processInfoSubject = new BehaviorSubject<{ name: string; systemProcessId?: number } | null>(null);
+  public readonly processInfo$ = this.processInfoSubject.asObservable();
 
   public capabilities: any = {};
   private transport?: DapTransportService;
@@ -189,6 +199,7 @@ export class DapSessionService {
     // Step 5: Wait for launch/attach response (the Server will reply at this point)
     const launchResponse = await launchPromise;
     this.executionStateSubject.next('running');
+    void this.fetchThreads();
 
     return launchResponse;
   }
@@ -342,11 +353,6 @@ export class DapSessionService {
     this.commandInFlightSubject.next(true);
     try {
       const response = await this.sendRequest('continue', { threadId: 1 });
-      if (response.success) {
-        this.executionStateSubject.next('running');
-        this.stoppedThreadIdSubject.next(null);
-        this.stopReasonSubject.next(null);
-      }
       return response;
     } finally {
       this.commandInFlightSubject.next(false);
@@ -363,11 +369,6 @@ export class DapSessionService {
     this.commandInFlightSubject.next(true);
     try {
       const response = await this.sendRequest('next', { threadId: 1 });
-      if (response.success) {
-        this.executionStateSubject.next('running');
-        this.stoppedThreadIdSubject.next(null);
-        this.stopReasonSubject.next(null);
-      }
       return response;
     } finally {
       this.commandInFlightSubject.next(false);
@@ -384,11 +385,6 @@ export class DapSessionService {
     this.commandInFlightSubject.next(true);
     try {
       const response = await this.sendRequest('stepIn', { threadId: 1 });
-      if (response.success) {
-        this.executionStateSubject.next('running');
-        this.stoppedThreadIdSubject.next(null);
-        this.stopReasonSubject.next(null);
-      }
       return response;
     } finally {
       this.commandInFlightSubject.next(false);
@@ -405,11 +401,6 @@ export class DapSessionService {
     this.commandInFlightSubject.next(true);
     try {
       const response = await this.sendRequest('stepOut', { threadId: 1 });
-      if (response.success) {
-        this.executionStateSubject.next('running');
-        this.stoppedThreadIdSubject.next(null);
-        this.stopReasonSubject.next(null);
-      }
       return response;
     } finally {
       this.commandInFlightSubject.next(false);
@@ -879,8 +870,10 @@ export class DapSessionService {
   private clearSessionData(): void {
     this.threadsSubject.next([]);
     this.activeThreadIdSubject.next(null);
-    this.stoppedThreadIdSubject.next(null);
+    this.stoppedThreadsSubject.next(new Set());
+    this.allThreadsStoppedSubject.next(false);
     this.stopReasonSubject.next(null);
+    this.processInfoSubject.next(null);
     this.breakpointsMap.clear();
     this.breakpointsSubject.next(new Map());
   }
@@ -900,24 +893,98 @@ export class DapSessionService {
         this.executionStateSubject.next('stopped');
         this.commandInFlightSubject.next(false);
         const stoppedThreadId = event.body?.threadId;
+        const allThreadsStopped = event.body?.allThreadsStopped ?? false;
+
+        const currentStopped = new Set(this.stoppedThreadsSubject.value);
+        if (allThreadsStopped) {
+          this.allThreadsStoppedSubject.next(true);
+          // If all stopped, we'll rely on the flag, but can also add the known ID
+          if (stoppedThreadId !== undefined) currentStopped.add(stoppedThreadId);
+        } else if (stoppedThreadId !== undefined) {
+          currentStopped.add(stoppedThreadId);
+        }
+        this.stoppedThreadsSubject.next(currentStopped);
+
         if (stoppedThreadId !== undefined) {
           this.activeThreadIdSubject.next(stoppedThreadId);
-          this.stoppedThreadIdSubject.next(stoppedThreadId);
         }
-        this.stopReasonSubject.next(event.body?.description || event.body?.reason || 'paused');
+        const stopReason = event.body?.description || event.body?.reason || 'paused';
+        this.stopReasonSubject.next(stopReason);
+        // Update per-thread reason map
+        const updatedReasons = new Map(this.threadStopReasonsSubject.value);
+        if (stoppedThreadId !== undefined) {
+          updatedReasons.set(stoppedThreadId, stopReason);
+        }
+        this.threadStopReasonsSubject.next(updatedReasons);
         void this.fetchThreads();
         break;
 
       case 'continued':
-        this.executionStateSubject.next('running');
+        const continuedThreadId = event.body?.threadId;
+        const allThreadsContinued = event.body?.allThreadsContinued ?? true;
+
+        if (allThreadsContinued) {
+          this.executionStateSubject.next('running');
+          this.allThreadsStoppedSubject.next(false);
+          this.stoppedThreadsSubject.next(new Set());
+          this.threadStopReasonsSubject.next(new Map());
+        } else if (continuedThreadId !== undefined) {
+          const updatedStopped = new Set(this.stoppedThreadsSubject.value);
+          updatedStopped.delete(continuedThreadId);
+          this.stoppedThreadsSubject.next(updatedStopped);
+          // Clear stop reason for the resumed thread
+          const updatedReasons = new Map(this.threadStopReasonsSubject.value);
+          updatedReasons.delete(continuedThreadId);
+          this.threadStopReasonsSubject.next(updatedReasons);
+          if (updatedStopped.size === 0) {
+            this.executionStateSubject.next('running');
+            this.allThreadsStoppedSubject.next(false);
+          }
+        }
         this.commandInFlightSubject.next(false);
-        this.stoppedThreadIdSubject.next(null);
         this.stopReasonSubject.next(null);
         break;
+
+      case 'thread': {
+        const reason = event.body?.reason;
+        const threadId = event.body?.threadId;
+        if (threadId !== undefined) {
+          const currentThreads = [...this.threadsSubject.value];
+          if (reason === 'started') {
+            if (!currentThreads.some(t => t.id === threadId)) {
+              currentThreads.push({ id: threadId, name: `Thread ${threadId}` });
+              this.threadsSubject.next(currentThreads);
+            }
+          } else if (reason === 'exited') {
+            const filtered = currentThreads.filter(t => t.id !== threadId);
+            this.threadsSubject.next(filtered);
+            const stopped = new Set(this.stoppedThreadsSubject.value);
+            if (stopped.delete(threadId)) {
+              this.stoppedThreadsSubject.next(stopped);
+              // D2 fix: if the exiting thread was the last stopped thread,
+              // release the paused execution state. A 'continued' event is
+              // never fired for an exiting thread, so we must handle this here.
+              if (stopped.size === 0) {
+                this.executionStateSubject.next('running');
+                this.allThreadsStoppedSubject.next(false);
+              }
+            }
+          }
+
+        }
+        break;
+      }
 
       case 'terminated':
       case 'exited':
         this.reset();
+        break;
+
+      case 'process':
+        this.processInfoSubject.next({
+          name: event.body?.name,
+          systemProcessId: event.body?.systemProcessId
+        });
         break;
 
       case 'breakpoint': {

@@ -21,9 +21,8 @@ import { EditorComponent, BreakpointChangeEvent } from '@taro/ui-editor';
 import { FileExplorerComponent } from './file-explorer.component';
 import {
   VariablesComponent,
-  CallStackComponent,
+  ThreadCallStackComponent,
   DapVariablesService,
-  ThreadsComponent,
   BreakpointsComponent,
 } from '@taro/ui-inspection';
 import { PanelComponent, PanelGroupComponent, ErrorDialog, ErrorDialogData, TaroEmptyStateComponent } from '@taro/ui-shared';
@@ -58,11 +57,10 @@ import { DapFileTreeService } from './dap-file-tree.service';
     VariablesComponent,
     LogViewerComponent,
     DebugControlGroupComponent,
-    CallStackComponent,
+    ThreadCallStackComponent,
     AssemblyViewComponent,
     PanelGroupComponent,
     PanelComponent,
-    ThreadsComponent,
     BreakpointsComponent,
     TaroEmptyStateComponent,
   ],

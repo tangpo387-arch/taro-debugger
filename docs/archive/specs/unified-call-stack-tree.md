@@ -2,7 +2,8 @@
 title: Feature Spec - Unified Call Stack Tree (WI-93)
 scope: ui-inspection, threads, call-stack, mat-tree
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer, Human Engineer]
-last_updated: 2026-04-30
+last_updated: 2026-05-01
+status: Implemented
 related:
   - docs/system-specification.md
   - docs/architecture/ui-components/inspection.md
@@ -71,11 +72,11 @@ The tree will represent the execution state using the following hierarchy:
 
 ## 5. Acceptance Criteria
 
-- [ ] A single "Call Stack" panel replaces the separate Threads and Call Stack components.
-- [ ] Threads are displayed as root nodes, with frames as child nodes.
-- [ ] Expanding a thread correctly fetches and displays its stack frames.
-- [ ] Selecting a frame correctly updates the source editor line highlight and the Variables panel.
-- [ ] The process name is correctly displayed based on the DAP `process` event or fallback logic.
-- [ ] The Left Sidenav only displays the File Explorer panel.
-- [ ] [Test] Unit test verifies that clicking a thread node triggers `setCurrentThread` and subsequent `stackTrace` request.
-- [ ] [Test] Integration test verifies that the active frame is automatically highlighted in the tree after a step operation.
+- [x] A single "Call Stack" panel replaces the separate Threads and Call Stack components.
+- [x] Threads are displayed as root nodes, with frames as child nodes.
+- [x] Expanding a thread correctly fetches and displays its stack frames.
+- [x] Selecting a frame correctly updates the source editor line highlight and the Variables panel.
+- [x] The process name is correctly displayed based on the DAP `process` event or fallback logic.
+- [x] The Left Sidenav only displays the File Explorer panel.
+- [x] [Test] Unit test verifies that clicking a thread node triggers `setCurrentThread` and subsequent `stackTrace` request.
+- [x] [Test] Integration test verifies that the active frame is automatically highlighted in the tree after a step operation.

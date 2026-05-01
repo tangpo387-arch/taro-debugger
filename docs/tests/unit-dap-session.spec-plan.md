@@ -3,8 +3,8 @@ title: DapSessionService — Unit Spec Plan
 scope: unit-test
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 target-file: projects/dap-core/src/lib/session/dap-session.service.ts
-related-wi: [WI-41, WI-86, WI-89]
-last_updated: 2026-04-29
+related-wi: [WI-41, WI-86, WI-89, WI-93]
+last_updated: 2026-05-01
 ---
 
 # DapSessionService — Unit Spec Plan
@@ -60,7 +60,11 @@ Fully isolated tests for `DapSessionService`. Focuses on DAP session lifecycle, 
   * Verify that transport completion in `terminated` state does NOT trigger an `error` transition.
   * Verify that unexpected transport completion in `running`/`stopped` states correctly transitions to `error`.
 
-* **Optimistic Execution State Transitions**
-  * Verify that control commands (`continue`, `next`, `stepIn`, `stepOut`) transition the execution state to `running` immediately upon a successful DAP response, even if no redundant `continued` event is received.
-* **Reactive State Enforcement (WI-89)**
-  * Verify that `executionState` getter is removed and the service only exposes state via the `executionState$` observable.
+* **Reactive Execution State Transitions (WI-93)**
+  * Verify that control commands (`continue`, `next`, `stepIn`, `stepOut`) do NOT modify the execution state directly.
+  * Verify that execution state transitions occur exclusively upon receiving `continued` or `stopped` events from the transport.
+
+* **Multi-Thread State Tracking (WI-93)**
+  * Verify that `stoppedThreads$` (Set) correctly adds thread IDs on `stopped` events.
+  * Verify that `stoppedThreads$` removes thread IDs on `continued` events (per-thread or all).
+  * Verify that `allThreadsStopped$` correctly reflects the state when the DAP `allThreadsStopped` property is present in the event.

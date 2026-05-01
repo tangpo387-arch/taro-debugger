@@ -2,7 +2,7 @@
 title: System Architecture (Session / Transport / UI Layers)
 scope: architecture, layers, state-machine, data-flow, error-handling
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-06
+last_updated: 2026-05-01
 related:
   - docs/system-specification.md
   - docs/dap-integration-faq.md

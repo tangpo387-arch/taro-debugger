@@ -1,0 +1,150 @@
+:host {
+  display: block;
+  height: 100%;
+  overflow: hidden;
+}
+
+.tree-container {
+  height: 100%;
+  overflow: auto;
+  background-color: var(--mat-sys-surface);
+}
+
+.execution-tree {
+  background: transparent;
+}
+
+/* S3 fix: merged duplicate .mat-tree-node blocks into a single canonical rule */
+.mat-tree-node {
+  min-height: 32px;
+  height: 32px;
+  padding: 0 4px;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--mat-sys-on-surface);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+
+  &:hover {
+    background-color: var(--mat-sys-surface-variant);
+  }
+
+  &.active-node {
+    background-color: var(--mat-sys-primary-container);
+    color: var(--mat-sys-on-primary-container);
+    font-weight: 500;
+  }
+}
+
+.node-icon {
+  margin-right: 6px;
+  flex-shrink: 0;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.process-icon { color: var(--mat-sys-primary); }
+  &.thread-icon { 
+    color: var(--mat-sys-secondary); 
+    &.running { color: var(--mat-sys-primary); }
+    &.paused { color: var(--mat-sys-error); }
+  }
+  &.stopped-icon { color: var(--mat-sys-error); }
+  &.frame-icon { color: var(--mat-sys-outline); opacity: 0.7; }
+}
+
+.node-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.node-sublabel {
+  opacity: 0.6;
+  font-family: var(--font-family-mono);
+  font-size: 0.9em;
+}
+
+.loading-spinner {
+  margin-left: 8px;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--mat-sys-outline-variant);
+  border-top: 2px solid var(--mat-sys-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.thread-id-badge {
+  font-family: var(--font-family-mono);
+  color: var(--mat-sys-primary);
+  margin-right: 4px;
+}
+
+.frame-id {
+  opacity: 0.5;
+  width: 20px;
+  display: inline-block;
+}
+
+.frame-source {
+  opacity: 0.7;
+  font-size: 0.85em;
+  margin-left: 8px;
+}
+
+/* ── Tree Hierarchy & Visibility ─────────────────────────────────── */
+
+.tree-invisible {
+  display: none;
+}
+
+.tree-toggle-button {
+  width: 24px !important;
+  height: 24px !important;
+  line-height: 24px !important;
+  padding: 0 !important;
+  margin-right: 2px;
+  flex-shrink: 0;
+  
+  .mat-icon {
+    font-size: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+  }
+}
+
+/* 
+ * Indentation for nested levels. 
+ * Level 1 (Process): Base
+ * Level 2 (Thread): 20px
+ * Level 3 (Frame): 44px
+ */
+
+// Level 1 Header
+mat-nested-tree-node > .mat-tree-node {
+  padding-left: 4px;
+}
+
+// Level 2 Header (Threads)
+mat-nested-tree-node mat-nested-tree-node > .mat-tree-node {
+  padding-left: 20px;
+}
+
+// Level 3 (Frames) - Leaf nodes
+mat-nested-tree-node mat-nested-tree-node mat-tree-node {
+  padding-left: 44px;
+}

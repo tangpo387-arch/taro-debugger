@@ -2,7 +2,7 @@
 title: Source File Responsibility Map
 scope: file-map, navigation, ownership, layers
 audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-29
+last_updated: 2026-05-01
 related:
   - docs/architecture.md
   - .agents/project-context.md
@@ -42,8 +42,7 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | `projects/ui-assembly/src/lib/assembly-view.component.ts` | Disassembly panel: renders DAP instruction list via virtual scroll, sticky function header, GDB-style offset column, active-line highlight | `@Input() frameId`, subscribes `instructions$`, `isLoading$`; `scrollToActiveInstruction()` | `assembly-view.component.html`, `assembly-view.component.scss` |
 | `projects/ui-console/src/lib/log-viewer/log-viewer.ts` | Bottom panel log viewer: console/program streams, auto-scroll, expression evaluation | subscribes `consoleLogs$`, `programLogs$`; `evaluateCommand()` | `log-viewer.html`, `log-viewer.scss` |
 | `projects/ui-inspection/src/lib/variables.component.ts` | Right sidebar variables view: tree display for DAP scopes and local variables | subscribes `scopes$`; `toggleNode()` | `variables.component.html`, `variables.component.scss` |
-| `projects/ui-inspection/src/lib/call-stack.component.ts` | Right sidebar Call Stack view: displays DAP stack frames and highlights active frame | `@Input() stackFrames`, `@Input() activeFrameId`, `@Output() frameSelected` | `call-stack.component.html`, `call-stack.component.scss` |
-| `projects/ui-inspection/src/lib/threads.component.ts` | Left sidenav threads view: displays DAP threads and allows selecting active thread | subscribes `threads$`, `activeThreadId$` | `threads.component.html`, `threads.component.scss` |
+| `projects/ui-inspection/src/lib/thread-call-stack.component.ts` | **Unified Context Panel**: Displays process, threads, and call stacks in a 3-level tree; manages active thread/frame selection | `@Input() activeFrameId`, `@Output() frameSelected` | `thread-call-stack.component.html`, `thread-call-stack.component.scss` |
 | `projects/ui-inspection/src/lib/breakpoints.component.ts` | Right sidebar breakpoints view: displays and manages user breakpoints | subscribes `breakpoints$` | `breakpoints.component.html`, `breakpoints.component.scss` |
 
 > **Note on Dialogs:** Subdirectories like `error-dialog/` contain a cohesive set of files (e.g. `error-dialog.ts`, `error-dialog.html`, `error-dialog.css`) implementing a generic dialog service.

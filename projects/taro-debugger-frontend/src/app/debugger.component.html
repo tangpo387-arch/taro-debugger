@@ -59,8 +59,7 @@
 
       <taro-panel-group>
         <!-- Files Panel -->
-        <taro-panel #filesPanel label="Files" [resizable]="filesPanel.expanded && (threadsPanel?.expanded ?? false)"
-          [minExpandedHeight]="150">
+        <taro-panel #filesPanel label="Files" [minExpandedHeight]="150">
 
           <div panel-actions>
             <button mat-icon-button (click)="fileExplorer.collapseAll()" title="Collapse All Nodes"
@@ -72,11 +71,6 @@
           <app-file-explorer #fileExplorer [activeFilePath]="activeFilePath" [reloadTrigger]="fileTreeReloadTrigger"
             [revealTrigger]="fileRevealTrigger" (fileSelected)="onFileSelected($event)">
           </app-file-explorer>
-        </taro-panel>
-
-        <!-- Threads Panel -->
-        <taro-panel #threadsPanel label="Threads" [minExpandedHeight]="100">
-          <app-threads></app-threads>
         </taro-panel>
       </taro-panel-group>
     </mat-sidenav>
@@ -102,10 +96,9 @@
         </taro-panel>
 
         <!-- Call Stack Panel -->
-        <taro-panel #callStackPanel label="Call Stack" [minExpandedHeight]="150">
-          <app-call-stack [stackFrames]="stackFrames" [activeFrameId]="activeFrameId"
-            (frameSelected)="onFrameClick($event)">
-          </app-call-stack>
+        <taro-panel #callStackPanel label="THREADS & CALL STACK" [minExpandedHeight]="150">
+          <app-thread-call-stack [activeFrameId]="activeFrameId" (frameSelected)="onFrameClick($event)">
+          </app-thread-call-stack>
         </taro-panel>
       </taro-panel-group>
     </mat-sidenav>

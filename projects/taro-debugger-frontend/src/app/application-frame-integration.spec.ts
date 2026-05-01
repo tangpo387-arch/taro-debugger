@@ -34,6 +34,13 @@ describe('WI-81: Application Frame & Global Controls Integration', () => {
       mockDapSession = {
         connectionStatus$: EMPTY,
         executionState$: new BehaviorSubject('idle').asObservable(),
+        processInfo$: EMPTY,
+        threads$: EMPTY,
+        activeThreadId$: EMPTY,
+        stoppedThreads$: EMPTY,
+        allThreadsStopped$: EMPTY,
+        stopReason$: EMPTY,
+        threadStopReasons$: EMPTY,
         onEvent: () => EMPTY,
         onTraffic$: EMPTY,
         breakpoints$: EMPTY,
