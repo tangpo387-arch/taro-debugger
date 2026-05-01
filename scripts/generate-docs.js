@@ -61,6 +61,7 @@ function formatWorkItemMarkdown(item, { showStatus = false, showSize = false, sh
         else if (status === 'done') titleLine += ' 🔍';
         else if (status === 'rework') titleLine += ' 🛠️';
         else if (status === 'aborted') titleLine += ' 🚫';
+        else if (status === 'proposed') titleLine += ' 💡';
         else titleLine += ` (Status: ${status})`;
 
         if (item.timeline?.completed) titleLine += ` (${item.timeline.completed})`;
@@ -74,6 +75,8 @@ function formatWorkItemMarkdown(item, { showStatus = false, showSize = false, sh
         md += `- **Status**: 🛠️ Rework\n`;
     } else if (status === 'done' && !showStatus) {
         md += `- **Status**: 🔍 Under Review\n`;
+    } else if (status === 'proposed' && !showStatus) {
+        md += `- **Status**: 💡 Proposed\n`;
     }
     if (showSize) {
         md += `- **Size**: ${item.metadata.size || 'M'}\n`;
@@ -97,7 +100,7 @@ function formatWorkItemMarkdown(item, { showStatus = false, showSize = false, sh
 // ── Views ────────────────────────────────────────────────────────────
 
 function getBacklogView(items) {
-    const backlogStatuses = ['pending', 'done', 'rework'];
+    const backlogStatuses = ['proposed', 'pending', 'done', 'rework'];
     const activeItems = items.filter(item =>
         backlogStatuses.includes(item.metadata.status) &&
         (item.metadata.milestone === CURRENT_MILESTONE || !item.metadata.milestone)

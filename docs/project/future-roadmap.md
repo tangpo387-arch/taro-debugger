@@ -10,7 +10,7 @@ audience: [Product_Architect, Lead_Engineer, Human Engineer]
 
 ## Milestone v1.1
 
-### WI-31: DAP 'terminated' Event _restart Payload Passing (Status: proposed)
+### WI-31: DAP 'terminated' Event _restart Payload Passing 💡
 
 - **Description**: Support context-aware session restart by forwarding the custom _restart field.
 - **Details**:
@@ -18,7 +18,7 @@ audience: [Product_Architect, Lead_Engineer, Human Engineer]
   - Ensure disconnect() cycle cleans up stale RxJS subscriptions
   - Modify startSession() initialization sequence to accept and merge this cached _restart data
 
-### WI-30: Local Variable Modification (Status: proposed)
+### WI-30: Local Variable Modification 💡
 
 - **Description**: Allow users to modify the values of local variables during a stopped debug session.
 - **Details**:
@@ -48,7 +48,7 @@ audience: [Product_Architect, Lead_Engineer, Human Engineer]
   - [Test] Verify memory data matches hex dump after 'readMemory' success.
   - [Doc] docs/archive/specs/memory-view-spec.md
 
-### WI-76: Design Tokens & Dark Mode Support (Status: proposed)
+### WI-76: Design Tokens & Dark Mode Support 💡
 
 - **Description**: Implement a centralized CSS Variable system to support seamless switching between Light and Dark themes.
 - **Details**:
@@ -57,7 +57,7 @@ audience: [Product_Architect, Lead_Engineer, Human Engineer]
   - Standardize transition durations and easings for UI elements
   - [Test] Verify all components adapt correctly to dark theme toggle
 
-### WI-77: Generic Dialog & Notification Framework (Status: proposed)
+### WI-77: Generic Dialog & Notification Framework 💡
 
 - **Description**: Create a unified DialogService and Notification system shared across all libraries.
 - **Details**:
@@ -66,7 +66,7 @@ audience: [Product_Architect, Lead_Engineer, Human Engineer]
   - Implement a centralized notification bus for non-intrusive feedback
   - [Test] Verify dialog consistency between Editor and Console modules
 
-### WI-78: A11y Audit & Interaction Hardening (Status: proposed)
+### WI-78: A11y Audit & Interaction Hardening 💡
 
 - **Description**: Conduct a full accessibility audit and harden keyboard interactions for the foundation library.
 - **Details**:
