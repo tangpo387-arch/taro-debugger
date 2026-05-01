@@ -388,7 +388,11 @@ export class DapSessionService {
     try {
       const threadId = this.activeThreadIdSubject.value || 1;
       const response = await this.sendRequest('next', { threadId });
-      if (!response.success) {
+      if (response.success) {
+        this.executionStateSubject.next('running');
+        this.clearStateTransitionGuard();
+        this.commandInFlightSubject.next(false);
+      } else {
         this.clearStateTransitionGuard();
         this.commandInFlightSubject.next(false);
       }
@@ -412,7 +416,11 @@ export class DapSessionService {
     try {
       const threadId = this.activeThreadIdSubject.value || 1;
       const response = await this.sendRequest('stepIn', { threadId });
-      if (!response.success) {
+      if (response.success) {
+        this.executionStateSubject.next('running');
+        this.clearStateTransitionGuard();
+        this.commandInFlightSubject.next(false);
+      } else {
         this.clearStateTransitionGuard();
         this.commandInFlightSubject.next(false);
       }
@@ -436,7 +444,11 @@ export class DapSessionService {
     try {
       const threadId = this.activeThreadIdSubject.value || 1;
       const response = await this.sendRequest('stepOut', { threadId });
-      if (!response.success) {
+      if (response.success) {
+        this.executionStateSubject.next('running');
+        this.clearStateTransitionGuard();
+        this.commandInFlightSubject.next(false);
+      } else {
         this.clearStateTransitionGuard();
         this.commandInFlightSubject.next(false);
       }
@@ -461,7 +473,11 @@ export class DapSessionService {
       const threadId = this.activeThreadIdSubject.value || 1;
       const args: StepArguments = { threadId, granularity: 'instruction' };
       const response = await this.sendRequest('next', args);
-      if (!response.success) {
+      if (response.success) {
+        this.executionStateSubject.next('running');
+        this.clearStateTransitionGuard();
+        this.commandInFlightSubject.next(false);
+      } else {
         this.clearStateTransitionGuard();
         this.commandInFlightSubject.next(false);
       }
@@ -486,7 +502,11 @@ export class DapSessionService {
       const threadId = this.activeThreadIdSubject.value || 1;
       const args: StepArguments = { threadId, granularity: 'instruction' };
       const response = await this.sendRequest('stepIn', args);
-      if (!response.success) {
+      if (response.success) {
+        this.executionStateSubject.next('running');
+        this.clearStateTransitionGuard();
+        this.commandInFlightSubject.next(false);
+      } else {
         this.clearStateTransitionGuard();
         this.commandInFlightSubject.next(false);
       }

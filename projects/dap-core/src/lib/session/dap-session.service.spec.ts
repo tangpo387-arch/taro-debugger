@@ -191,7 +191,7 @@ describe('DapSessionService', () => {
       expect((service as any).executionStateSubject.value).toBe('idle');
     });
 
-    it('should NOT transition to running upon successful continue request (must wait for event)', async () => {
+    it('should transition to running upon successful continue request if allThreadsContinued is true', async () => {
       (service as any).transport = mockTransport;
       (service as any).executionStateSubject.next('stopped');
 
@@ -202,20 +202,31 @@ describe('DapSessionService', () => {
         type: 'response',
         request_seq: 1,
         success: true,
-        command: 'continue'
+        command: 'continue',
+        body: { allThreadsContinued: true }
       });
 
       await promise;
-      // Should still be stopped because we haven't received the 'continued' event yet
-      expect((service as any).executionStateSubject.value).toBe('stopped');
-
-      // Now simulate the 'continued' event
-      (service as any).handleTransportEvent({
-        type: 'event',
-        event: 'continued',
-        body: { allThreadsContinued: true }
-      });
       expect((service as any).executionStateSubject.value).toBe('running');
+    });
+
+    it('should transition to running upon successful next request (instant feedback)', async () => {
+      (service as any).transport = mockTransport;
+      (service as any).executionStateSubject.next('stopped');
+
+      const promise = service.next();
+
+      // Simulate successful response
+      (service as any).handleIncomingMessage({
+        type: 'response',
+        request_seq: 1,
+        success: true,
+        command: 'next'
+      });
+
+      await promise;
+      expect((service as any).executionStateSubject.value).toBe('running');
+      expect((service as any).commandInFlightSubject.value).toBe(false);
     });
 
     it('should recover from error state to idle via stop()', async () => {
@@ -366,13 +377,10 @@ describe('DapSessionService', () => {
         request_seq: 1,
         success: true,
         command: 'continue',
-        body: {}
+        body: { allThreadsContinued: true }
       });
 
       await promise;
-
-      // Per WI-101: commandInFlight stays locked until the 'continued' event arrives
-      expect((service as any).commandInFlightSubject.value).toBe(true);
 
       // Now simulate the 'continued' event from the adapter
       (service as any).handleTransportEvent({

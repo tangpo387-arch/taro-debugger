@@ -2,7 +2,7 @@
 title: Architecture - Session Layer
 scope: architecture, session-layer, state-machine, data-flow
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-29
+last_updated: 2026-05-01
 related:
   - ../architecture.md
   - command-serialization.md
@@ -37,7 +37,7 @@ graph TD
 
     %% User Actions (Functions)
     idle -- "<font color='#b85c5c'>[F] startSession()</font>" --> starting
-    stopped -- "<font color='#b85c5c'>[F] continue()</font>" --> running
+    stopped -- "<font color='#b85c5c'>[F] continue/next/step*()</font>" --> running
     running -- "<font color='#b85c5c'>[F] stop()</font>" --> idle
     stopped -- "<font color='#b85c5c'>[F] stop()</font>" --> idle
     running -- "<font color='#b85c5c'>[F] restart()</font>" --> starting
@@ -61,6 +61,13 @@ graph TD
     classDef default fill:#eee,stroke:#333,stroke-width:1px;
     style error fill:#fcf3f3,stroke:#b85c5c;
 ```
+
+> [!NOTE]
+> **Diagram: Execution State Machine Flow**
+> The state machine transitions between five primary states: `idle`, `starting`, `running`, `stopped`, and `error`.
+> - **Imperative transitions (Red)** are triggered by User functions like `startSession()`, `continue()`, `next()`, and `stepIn/Out()`.
+> - **Asynchronous transitions (Blue)** are triggered by Adapter events like `stopped`, `continued`, and `terminated`.
+> - **Error state** is reached via unexpected disconnections and requires a `stop()` call to reset to `idle`.
 
 ### 2.1 Trigger Types
 
