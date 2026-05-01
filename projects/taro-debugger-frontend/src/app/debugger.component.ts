@@ -678,11 +678,11 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       const mod = frame.moduleId ? `\nModule: ${frame.moduleId}` : '';
       this.currentCode = `// No source code available for this frame.${mod}${ref}`;
 
-      // Force Disassembly tab if instruction pointer is available and we have no source
-      if (frame.instructionPointerReference) {
-        this.activeTabIndex = 1;
-      } else {
-        this.activeTabIndex = 0; // Fallback to source tab to show the "No source" message
+      // R_UX_A: No auto-switch to Disassembly. Stay on current tab.
+      // If we are on Source, we show the enhanced empty state.
+      // If we are on Disassembly, we stay there (already sticky).
+      if (this.activeTabIndex === 0 || !frame.instructionPointerReference) {
+        this.activeTabIndex = 0;
       }
     }
 
@@ -778,6 +778,15 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     } catch (e: any) {
       // Handled globally by synthetic DAP events
     }
+  }
+
+  /**
+   * Manually switches the center view to the Disassembly tab.
+   * Triggered by the "View Disassembly" action button in the Source tab's empty state.
+   */
+  public onSwitchToDisassembly(): void {
+    this.activeTabIndex = 1;
+    this.cdr.detectChanges();
   }
 
   /** Step Into */

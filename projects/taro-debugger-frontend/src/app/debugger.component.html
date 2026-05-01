@@ -116,9 +116,21 @@
                 [activeLine]="activeFilePath === activeLineFilePath ? activeLine : null"
                 [revealTrigger]="fileRevealTrigger" (breakpointsChange)="onBreakpointsChange($event)" />
             } @else {
-              <taro-empty-state message="No file selected" icon="source" description="start debugging to see source code."
-                [centered]="true">
-              </taro-empty-state>
+              @if (activeFrameId !== null) {
+                <taro-empty-state message="Source code not available" icon="source"
+                  description="This frame does not have associated source file information." [centered]="true">
+                  @if (activeInstructionPointer) {
+                    <button mat-flat-button color="primary" (click)="onSwitchToDisassembly()">
+                      <mat-icon>memory</mat-icon>
+                      View Disassembly
+                    </button>
+                  }
+                </taro-empty-state>
+              } @else {
+                <taro-empty-state message="No file selected" icon="source" description="start debugging to see source code."
+                  [centered]="true">
+                </taro-empty-state>
+              }
             }
           </mat-tab>
           <mat-tab label="Disassembly">

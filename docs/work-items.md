@@ -91,6 +91,19 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - [Doc] docs/archive/specs/WI-96-multi-session-tree.md
 - **Dependencies**: WI-93, WI-95
 
+### WI-100: Improve No-Source Frame UX
+
+- **Status**: 🔍 Under Review
+- **Size**: S
+- **Description**: Disable auto-switching to Disassembly view when source is missing and provide a manual toggle in the Source tab's empty state.
+- **Details**:
+  - Modify onFrameClick to remove forced tab switching
+  - Update Source tab template to show contextual 'No Source' message with action button
+  - Implement manual switch method in DebuggerComponent
+  - [Test] Verify clicking frame without source stays on Source tab and shows action button
+  - [Test] Verify action button successfully switches to Disassembly tab
+- **Dependencies**: none
+
 ## General
 
 ### WI-99: Author Multi-Process Debug Architecture Document

@@ -358,6 +358,29 @@
         "created": "2026-04-30",
         "created_by": "Antigravity-Agent"
       }
+    },
+    {
+      "id": "WI-100",
+      "title": "Improve No-Source Frame UX",
+      "featureGroup": "Execution Context Inspection",
+      "metadata": {
+        "status": "done",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Disable auto-switching to Disassembly view when source is missing and provide a manual toggle in the Source tab's empty state.",
+      "details": [
+        "Modify onFrameClick to remove forced tab switching",
+        "Update Source tab template to show contextual 'No Source' message with action button",
+        "Implement manual switch method in DebuggerComponent",
+        "[Test] Verify clicking frame without source stays on Source tab and shows action button",
+        "[Test] Verify action button successfully switches to Disassembly tab"
+      ],
+      "timeline": {
+        "created": "2026-05-01",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }

@@ -370,3 +370,73 @@ describe('DebuggerComponent — State Cleanup (WI-83)', () => {
     expect(component.stackFrames.length).toBe(0);
   });
 });
+
+/**
+ * Unit tests for No-Source Frame UX (WI-100)
+ */
+describe('DebuggerComponent — No-Source Frame UX (WI-100)', () => {
+  let component: DebuggerComponent;
+  let mockDapSession: any;
+
+  beforeEach(() => {
+    mockDapSession = {
+      connectionStatus$: EMPTY,
+      executionState$: EMPTY,
+      onEvent: () => EMPTY,
+      onTraffic$: EMPTY,
+      disconnect: vi.fn(),
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        DebuggerComponent,
+        { provide: DapSessionService, useValue: mockDapSession },
+        { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn().mockResolvedValue(undefined) } },
+        { provide: DapLogService, useValue: { consoleLog: vi.fn() } },
+        { provide: DapAssemblyService, useValue: { clear: vi.fn(), fetchInstructions: vi.fn().mockResolvedValue([]) } },
+        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
+        { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
+        { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } },
+        { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
+      ]
+    });
+    component = TestBed.inject(DebuggerComponent);
+  });
+
+  it('should not switch to Disassembly tab when clicking a frame without source if on Source tab', async () => {
+    // Arrange
+    component.activeTabIndex = 0; // Source tab
+    const frame = { id: 0, name: 'func', instructionPointerReference: '0x1234' } as any;
+
+    // Act
+    await component.onFrameClick(frame);
+
+    // Assert
+    expect(component.activeTabIndex).toBe(0);
+    expect(component.activeFilePath).toBeNull();
+  });
+
+  it('should stay on Disassembly tab if already there even if frame has no source', async () => {
+    // Arrange
+    component.activeTabIndex = 1; // Disassembly tab
+    const frame = { id: 1, name: 'func', instructionPointerReference: '0x1234' } as any;
+
+    // Act
+    await component.onFrameClick(frame);
+
+    // Assert
+    expect(component.activeTabIndex).toBe(1);
+  });
+
+  it('should manually switch to Disassembly tab when onSwitchToDisassembly is called', () => {
+    // Arrange
+    component.activeTabIndex = 0;
+
+    // Act
+    component.onSwitchToDisassembly();
+
+    // Assert
+    expect(component.activeTabIndex).toBe(1);
+  });
+});
