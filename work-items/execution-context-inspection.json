@@ -364,7 +364,7 @@
       "title": "Improve No-Source Frame UX",
       "featureGroup": "Execution Context Inspection",
       "metadata": {
-        "status": "done",
+        "status": "accepted",
         "size": "S",
         "milestone": "v1.0",
         "dependencies": []
@@ -379,7 +379,8 @@
       ],
       "timeline": {
         "created": "2026-05-01",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-01"
       }
     },
     {
