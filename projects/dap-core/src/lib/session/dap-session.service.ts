@@ -195,7 +195,10 @@ export class DapSessionService {
     // Step 3: Wait for initialized event
     await initializedPromise;
 
-    // Step 4: Send configurationDone
+    // Step 4: Send all stored breakpoints before configurationDone (DAP spec § Configuration)
+    await this.resyncAllBreakpointsInternal();
+
+    // Step 5: Send configurationDone
     await this.sendRequest('configurationDone');
 
     // Step 5: Wait for launch/attach response (the Server will reply at this point)
@@ -589,6 +592,49 @@ export class DapSessionService {
   }
 
   /**
+   * Updates the local breakpoint intent and triggers synchronization with the DAP server.
+   * This provides immediate "optimistic" UI updates by showing requested breakpoints 
+   * as unverified before the server responds.
+   */
+  private async updateBreakpointIntent(sourcePath: string, lines: number[]): Promise<void> {
+    const existingBps = this.breakpointsMap.get(sourcePath) || [];
+
+    // Create optimistic list: 
+    // - Keep existing verified/disabled breakpoints if they are still in the 'lines' list
+    // - Add new breakpoints as unverified/enabled
+    const intentBps: VerifiedBreakpoint[] = lines.map(line => {
+      const existing = existingBps.find(b => b.line === line);
+      if (existing) return existing;
+      return { line, verified: false, enabled: true };
+    });
+
+    // Update local state immediately for optimistic UI
+    this.breakpointsMap.set(sourcePath, intentBps);
+    this.breakpointsSubject.next(new Map(this.breakpointsMap));
+
+    // Trigger real sync with DAP
+    await this.setBreakpoints(sourcePath, lines);
+  }
+
+  /**
+   * Toggles a breakpoint at a specific line.
+   * This is the primary entry point for Editor interactions.
+   */
+  public async toggleBreakpoint(sourcePath: string, line: number): Promise<void> {
+    const bps = this.breakpointsMap.get(sourcePath) || [];
+    const exists = bps.some(b => b.line === line);
+
+    let newLines: number[];
+    if (exists) {
+      newLines = bps.filter(b => b.line !== line).map(b => b.line);
+    } else {
+      newLines = [...bps.map(b => b.line), line];
+    }
+
+    await this.updateBreakpointIntent(sourcePath, newLines);
+  }
+
+  /**
    * Toggles the enabled state of a specific breakpoint.
    */
   public async toggleBreakpointEnabled(sourcePath: string, line: number): Promise<void> {
@@ -596,6 +642,8 @@ export class DapSessionService {
     const index = bps.findIndex(b => b.line === line);
     if (index !== -1) {
       bps[index].enabled = !bps[index].enabled;
+
+      // Update local state immediately for optimistic UI
       this.breakpointsMap.set(sourcePath, [...bps]);
       this.breakpointsSubject.next(new Map(this.breakpointsMap));
 
@@ -611,10 +659,24 @@ export class DapSessionService {
   public async removeBreakpoint(sourcePath: string, line: number): Promise<void> {
     const bps = this.breakpointsMap.get(sourcePath) || [];
     const filtered = bps.filter(b => b.line !== line);
-
-    // Re-sync with DAP server (will update SSOT via setBreakpoints call)
     const allLines = filtered.map(b => b.line);
-    await this.setBreakpoints(sourcePath, allLines);
+
+    await this.updateBreakpointIntent(sourcePath, allLines);
+  }
+
+  /**
+   * Internal helper to re-push all stored breakpoints to a new adapter session.
+   * Called during startSession sequence (DAP Configuration phase).
+   */
+  private async resyncAllBreakpointsInternal(): Promise<void> {
+    if (this.breakpointsMap.size === 0) return;
+
+    const syncPromises = Array.from(this.breakpointsMap.entries()).map(([path, bps]) => {
+      const lines = bps.map(b => b.line);
+      return this.setBreakpoints(path, lines);
+    });
+
+    await Promise.allSettled(syncPromises);
   }
 
   /**
@@ -979,7 +1041,7 @@ export class DapSessionService {
         this.executionStateSubject.next('running');
         this.allThreadsStoppedSubject.next(false);
       }
-      
+
       this.clearStateTransitionGuard();
       this.commandInFlightSubject.next(false);
       this.stopReasonSubject.next(null);

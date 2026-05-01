@@ -409,6 +409,32 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-01"
       }
+    },
+    {
+      "id": "WI-103",
+      "title": "Refactor: Centralize Breakpoint State Management",
+      "featureGroup": "Execution Context Inspection",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Migrate 'Local Intent' breakpoint logic to a centralized service for SSOT synchronization.",
+      "details": [
+        "Extract intent Map from Editor to shared service",
+        "Implement optimistic updates",
+        "Bridge server-initiated breakpoint events to SSOT",
+        "[Test] Verify console command adds/removes Editor dots correctly",
+        "[Test] Verify editor click shows pending state in Panel",
+        "[Test] Verify panel delete clears Editor immediately",
+        "[Doc] docs/archive/specs/centralized-breakpoint-management.md"
+      ],
+      "timeline": {
+        "created": "2026-05-01",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-01"
+      }
     }
   ]
 }

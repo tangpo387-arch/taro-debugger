@@ -17,7 +17,7 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
 
-import { EditorComponent, BreakpointChangeEvent } from '@taro/ui-editor';
+import { EditorComponent } from '@taro/ui-editor';
 import { FileExplorerComponent } from './file-explorer.component';
 import {
   VariablesComponent,
@@ -230,15 +230,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       this.logService.appendDapLog(msg);
     });
 
-    // Subscribe to centralized breakpoint state to keep the editor updated (WI-71)
-    this.dapSession.breakpoints$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((map: Map<string, VerifiedBreakpoint[]>) => {
-      if (this.editorComponent) {
-        map.forEach((bps: VerifiedBreakpoint[], path: string) => {
-          this.editorComponent!.setVerifiedBreakpoints(path, bps);
-        });
-      }
-    });
-
     await this.startSession();
 
     // Initialize global keyboard shortcuts (F5-F11)
@@ -444,10 +435,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       await this.dapSession.startSession();
 
       this.logService.consoleLog(`Session started in ${this.currentConfig.launchMode} mode.`, 'info', 'system');
-
-      // Re-push any locally-stored breakpoints to the new adapter session.
-      // On first boot this is a no-op; on restart it restores the user's breakpoints.
-      await this.resyncAllBreakpoints();
     } catch (error: any) {
       // 1. Clean up problematic session
       this.dapSession.disconnect();
@@ -476,32 +463,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         }
       });
     }
-  }
-
-  /**
-   * Re-sends all locally stored breakpoints to the current DAP adapter.
-   * Called after every successful session start so that the adapter is always
-   * in sync with the editor's breakpoint state, even after a restart.
-   * Errors per file are logged and swallowed so one bad file does not block others.
-   */
-  private async resyncAllBreakpoints(): Promise<void> {
-    if (!this.editorComponent) return;
-
-    const allBps = this.editorComponent.getBreakpoints();
-    if (allBps.size === 0) return;
-
-    this.logService.consoleLog(
-      `Re-syncing ${allBps.size} file(s) of breakpoints to new session...`,
-      'info',
-      'system'
-    );
-
-    const syncPromises = Array.from(allBps.entries()).map(([filePath, lines]) =>
-      this.syncBreakpointsForFile(filePath, Array.from(lines))
-    );
-
-    // Run all file syncs in parallel; individual failures are handled inside syncBreakpointsForFile
-    await Promise.allSettled(syncPromises);
   }
 
   /**
@@ -693,28 +654,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Called by the editor when the user toggles a breakpoint.
-   * Sends the full updated breakpoint list for that file to the DAP adapter,
-   * then updates the editor's verified-state decorations from the response.
-   */
-  public async onBreakpointsChange(event: BreakpointChangeEvent): Promise<void> {
-    await this.syncBreakpointsForFile(event.file, event.lines);
-  }
-
-  /**
-   * Synchronizes breakpoints for a single file with the DAP adapter.
-   * Marks breakpoints as verified/unverified in the editor based on the response.
-   */
-  private async syncBreakpointsForFile(filePath: string, lines: number[]): Promise<void> {
-    if (!this.editorComponent) return;
-
-    const executionState = this.executionState;
-    // Only send the DAP request when the session is active (not idle/starting/error)
-    const activeStates: ExecutionState[] = ['running', 'stopped'];
-    if (!activeStates.includes(executionState)) {
-      // Session not ready — breakpoints are queued locally, no DAP sync yet
-      return;
-    }
 
     try {
       // DapSessionService.setBreakpoints now updates the SSOT internally.

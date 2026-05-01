@@ -114,7 +114,7 @@
             @if (activeFilePath) {
               <app-editor class="monaco-editor-instance" [code]="currentCode" [filename]="activeFilePath"
                 [activeLine]="activeFilePath === activeLineFilePath ? activeLine : null"
-                [revealTrigger]="fileRevealTrigger" (breakpointsChange)="onBreakpointsChange($event)" />
+                [revealTrigger]="fileRevealTrigger" />
             } @else {
               @if (activeFrameId !== null) {
                 <taro-empty-state message="Source code not available" icon="source"

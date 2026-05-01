@@ -72,24 +72,6 @@ describe('Breakpoint Integration', () => {
     (component as any).editorComponent = mockEditor;
   });
 
-  describe('Verified State Propagation (SSOT -> Editor)', () => {
-    it('should update editor decorations when session breakpoint state changes', async () => {
-      // Arrange
-      const filePath = '/src/main.c';
-      const verifiedBps: VerifiedBreakpoint[] = [{ line: 10, verified: true, enabled: true }];
-      const bpsMap = new Map<string, VerifiedBreakpoint[]>();
-      bpsMap.set(filePath, verifiedBps);
-
-      // Act
-      // Simulate ngOnInit to trigger the subscription
-      (component as any).ngOnInit();
-      breakpointsSubject.next(bpsMap);
-
-      // Assert
-      expect(mockEditor.setVerifiedBreakpoints).toHaveBeenCalledWith(filePath, verifiedBps);
-    });
-  });
-
   describe('Breakpoint Navigation (Sidebar -> Editor)', () => {
     it('should reveal source file and line when onBreakpointReveal is called', async () => {
       // Arrange
@@ -105,21 +87,6 @@ describe('Breakpoint Integration', () => {
       expect(component.activeLine).toBe(line);
       expect(component.activeLineFilePath).toBe(filePath);
       expect(component.fileRevealTrigger).toBeGreaterThan(0);
-    });
-  });
-
-  describe('Mutation Flow (Editor -> Session)', () => {
-    it('should proxy editor changes to session service', async () => {
-      // Arrange
-      const filePath = '/src/app.c';
-      const lines = [5, 12];
-      component.executionState = 'stopped';
-
-      // Act
-      await component.onBreakpointsChange({ file: filePath, lines });
-
-      // Assert
-      expect(mockDapSession.setBreakpoints).toHaveBeenCalledWith(filePath, lines);
     });
   });
 });

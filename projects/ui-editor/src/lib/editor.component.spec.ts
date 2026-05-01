@@ -2,15 +2,17 @@ import { TestBed } from '@angular/core/testing';
 import { EditorComponent } from './editor.component';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { NGX_MONACO_EDITOR_CONFIG } from 'ngx-monaco-editor-v2';
-import { DapConfigService } from '@taro/dap-core';
+import { DapConfigService, DapSessionService } from '@taro/dap-core';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { of } from 'rxjs';
+import { of, BehaviorSubject } from 'rxjs';
 import { ChangeDetectorRef } from '@angular/core';
 
 describe('EditorComponent', () => {
   let component: EditorComponent;
+  let mockBpsSubject: BehaviorSubject<Map<string, any>>;
 
   beforeEach(() => {
+    mockBpsSubject = new BehaviorSubject<Map<string, any>>(new Map());
     const mockBreakpointObserver = {
       observe: vi.fn().mockReturnValue(of({ matches: false }))
     };
@@ -20,11 +22,20 @@ describe('EditorComponent', () => {
      * This bypasses the component factory and template rendering, which avoids
      * issues with MonacoEditorModule in a headless/JSDOM environment.
      */
+
+
     TestBed.configureTestingModule({
       providers: [
         EditorComponent,
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
         { provide: DapConfigService, useValue: { getConfig: () => ({}) } },
+        { 
+          provide: DapSessionService, 
+          useValue: { 
+            breakpoints$: mockBpsSubject.asObservable(),
+            toggleBreakpoint: vi.fn().mockResolvedValue(undefined)
+          } 
+        },
         { provide: BreakpointObserver, useValue: mockBreakpointObserver },
         { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn() } }
       ]
@@ -220,115 +231,35 @@ describe('EditorComponent', () => {
     });
   });
 
-  describe('breakpointsChange Debounce (R-CS4)', () => {
-    beforeEach(() => {
-      // Mock editor instance needed for decoration update triggered by toggleBreakpoint
-      (component as any).editorInstance = {
-        deltaDecorations: vi.fn().mockReturnValue([])
-      };
-      vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
-    it('should debounce multiple rapid clicks on the same file', () => {
-      const emitSpy = vi.spyOn(component.breakpointsChange, 'emit');
+  describe('Breakpoint Interaction (WI-103)', () => {
+    it('should delegate to DapSessionService.toggleBreakpoint when gutter is clicked', () => {
+      const dapSession = TestBed.inject(DapSessionService);
+      const toggleSpy = vi.spyOn(dapSession, 'toggleBreakpoint');
       component.filename = 'test.cpp';
 
-      // Act: Simulate 3 rapid toggles
-      component.toggleBreakpoint(10);
-      component.toggleBreakpoint(20);
-      component.toggleBreakpoint(30);
+      // Act
+      component.toggleBreakpoint(42);
 
-      // Assert: No emission should have occurred yet due to 150ms debounce
-      expect(emitSpy).not.toHaveBeenCalled();
-
-      // Advance time by 149ms
-      vi.advanceTimersByTime(149);
-      expect(emitSpy).not.toHaveBeenCalled();
-
-      // Advance to 150ms
-      vi.advanceTimersByTime(1);
-      expect(emitSpy).toHaveBeenCalledTimes(1);
-      expect(emitSpy).toHaveBeenCalledWith(expect.objectContaining({
-        file: 'test.cpp',
-        lines: expect.arrayContaining([10, 20, 30])
-      }));
-    });
-
-    it('should NOT debounce clicks across different files (independent groups)', () => {
-      const emitSpy = vi.spyOn(component.breakpointsChange, 'emit');
-
-      // Act: Click on file A
-      component.filename = 'fileA.cpp';
-      component.toggleBreakpoint(10);
-
-      // Act: Switch to file B and click
-      component.filename = 'fileB.cpp';
-      component.toggleBreakpoint(20);
-
-      // Assert: Both streams should emit their results after the debounce window
-      vi.advanceTimersByTime(150);
-      
-      expect(emitSpy).toHaveBeenCalledTimes(2);
-      expect(emitSpy).toHaveBeenCalledWith(expect.objectContaining({ file: 'fileA.cpp', lines: [10] }));
-      expect(emitSpy).toHaveBeenCalledWith(expect.objectContaining({ file: 'fileB.cpp', lines: [20] }));
+      // Assert
+      expect(toggleSpy).toHaveBeenCalledWith('test.cpp', 42);
     });
   });
 
-  describe('Server-Initiated Breakpoint Sync', () => {
-    it('should render breakpoints from verifiedBreakpoints even if not in local intent set', async () => {
-      // Arrange
+  describe('Reactive State Synchronization (WI-103)', () => {
+    it('should update decorations when DapSessionService.breakpoints$ emits', async () => {
       const mockEditor = {
         deltaDecorations: vi.fn().mockReturnValue([])
       };
       (component as any).editorInstance = mockEditor;
       component.filename = 'test.cpp';
 
-      // Act: Set verified breakpoints (server-initiated)
-      component.setVerifiedBreakpoints('test.cpp', [
-        { line: 12, verified: true, enabled: true }
-      ]);
+      // Act: Push new breakpoint state through the service
+      const bpMap = new Map();
+      bpMap.set('test.cpp', [{ line: 12, verified: true, enabled: true }]);
+      mockBpsSubject.next(bpMap);
 
-      // Wait for debounced decoration update
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // Assert: deltaDecorations should have been called with the new line
-      expect(mockEditor.deltaDecorations).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.arrayContaining([
-          expect.objectContaining({
-            range: expect.anything(),
-            options: expect.objectContaining({
-              glyphMarginClassName: 'breakpoint-glyph'
-            })
-          })
-        ])
-      );
-    });
-
-    it('should remove breakpoint when toggling a server-initiated breakpoint', () => {
-      // Arrange
-      const mockEditor = {
-        deltaDecorations: vi.fn().mockReturnValue([])
-      };
-      (component as any).editorInstance = mockEditor;
-      component.filename = 'test.cpp';
-
-      // 1. Server adds a breakpoint at line 12
-      component.setVerifiedBreakpoints('test.cpp', [
-        { line: 12, verified: true, enabled: true }
-      ]);
-
-      // 2. User clicks on line 12 glyph margin
-      component.toggleBreakpoint(12);
-
-      // Assert: Since line 12 was in verifiedBreakpoints, toggling should REMOVE it from local intent.
-      // Emitting an empty list will then cause the session to remove it from DAP.
-      const fileBps = (component as any).breakpoints.get('test.cpp');
-      expect(fileBps.has(12)).toBe(false);
+      // Assert: deltaDecorations should have been called
+      expect(mockEditor.deltaDecorations).toHaveBeenCalled();
     });
   });
 });

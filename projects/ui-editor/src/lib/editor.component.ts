@@ -1,8 +1,6 @@
 import {
   Component,
   Input,
-  Output,
-  EventEmitter,
   inject,
   NgZone,
   OnChanges,
@@ -12,20 +10,13 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject } from 'rxjs';
-import { debounceTime, groupBy, mergeMap, distinctUntilChanged } from 'rxjs/operators';
+import { debounceTime } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
-import { DapConfigService } from '@taro/dap-core';
+import { DapConfigService, DapSessionService, VerifiedBreakpoint } from '@taro/dap-core';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { LAYOUT_COMPACT_MQ } from '@taro/ui-shared';
-/** Payload emitted when breakpoints change in the editor */
-export interface BreakpointChangeEvent {
-  /** Absolute path of the source file whose breakpoints changed */
-  file: string;
-  /** All current 1-based line numbers with breakpoints in this file */
-  lines: number[];
-}
 
 const UPDATE_DEBOUNCE_MS = 50;
 
@@ -82,9 +73,6 @@ export class EditorComponent implements OnChanges, OnDestroy {
   /** Incrementing trigger to force the editor to snap to the active line (e.g., on step or stack-frame click) */
   @Input() public revealTrigger: number = 0;
 
-  /** Emits the full breakpoint list for a file whenever it changes */
-  @Output() public readonly breakpointsChange = new EventEmitter<BreakpointChangeEvent>();
-
   private editorInstance: any;
   private breakpointIds: string[] = [];
   private activeLineDecorationIds: string[] = [];
@@ -96,12 +84,12 @@ export class EditorComponent implements OnChanges, OnDestroy {
   private readonly updateQueue$ = new Subject<void>();
   private lastRestoredFilename: string | null = null;
   private lastProcessedRevealTrigger: number = 0;
-  private readonly breakpointMutation$ = new Subject<BreakpointChangeEvent>();
 
   // ── Dependencies ────────────────────────────────────────────────────
 
   private readonly zone = inject(NgZone);
   private readonly configService = inject(DapConfigService);
+  private readonly dapSession = inject(DapSessionService);
   private readonly destroyRef = inject(DestroyRef);
 
   // ── Lifecycle ───────────────────────────────────────────────────────
@@ -151,16 +139,26 @@ export class EditorComponent implements OnChanges, OnDestroy {
         }
       });
 
-    // Per-file breakpoint mutation debounce (R-CS4)
-    this.breakpointMutation$.pipe(
-      groupBy(mutation => mutation.file),
-      mergeMap(group$ => group$.pipe(
-        debounceTime(150),
-        distinctUntilChanged((prev, curr) => JSON.stringify(prev.lines) === JSON.stringify(curr.lines))
-      )),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe(event => {
-      this.breakpointsChange.emit(event);
+    // Subscribe to centralized breakpoint state to keep the editor updated (WI-103)
+    this.dapSession.breakpoints$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((map: Map<string, VerifiedBreakpoint[]>) => {
+      // Clear current maps to rebuild from SSOT
+      this.breakpoints.clear();
+      this.verifiedBreakpoints.clear();
+
+      map.forEach((bps: VerifiedBreakpoint[], path: string) => {
+        const lineSet = new Set<number>();
+        const verifiedMap = new Map<number, { verified: boolean; enabled: boolean }>();
+        
+        bps.forEach(bp => {
+          lineSet.add(bp.line);
+          verifiedMap.set(bp.line, { verified: bp.verified, enabled: bp.enabled });
+        });
+
+        this.breakpoints.set(path, lineSet);
+        this.verifiedBreakpoints.set(path, verifiedMap);
+      });
+
+      this.updateBreakpointDecorations();
     });
   }
 
@@ -201,36 +199,6 @@ export class EditorComponent implements OnChanges, OnDestroy {
   public getVerifiedLines(file: string): number[] {
     const verifiedMap = this.verifiedBreakpoints.get(file);
     return verifiedMap ? Array.from(verifiedMap.keys()) : [];
-  }
-
-  /**
-   * Updates the verified breakpoint set for a given file and refreshes decorations.
-   * Called by the parent component after receiving a `setBreakpoints` response.
-   * @param file Absolute file path
-   * @param bps VerifiedBreakpoint array from the DAP session
-   */
-  public setVerifiedBreakpoints(file: string, bps: any[]): void {
-    // Synchronize local intent set with the verified state (SSOT).
-    // This ensures that external removals (e.g., from the Breakpoints Panel) 
-    // correctly clear the editor's local decoration state.
-    const intentLines = new Set<number>(bps.map(bp => bp.line));
-    if (intentLines.size === 0) {
-      this.breakpoints.delete(file);
-    } else {
-      this.breakpoints.set(file, intentLines);
-    }
-
-    if (bps.length === 0) {
-      this.verifiedBreakpoints.delete(file);
-    } else {
-      const lineMap = new Map<number, { verified: boolean; enabled: boolean }>();
-      bps.forEach(bp => lineMap.set(bp.line, { verified: bp.verified, enabled: bp.enabled }));
-      this.verifiedBreakpoints.set(file, lineMap);
-    }
-    // Only refresh decorations if this file is currently open
-    if (this.filename === file) {
-      this.updateBreakpointDecorations();
-    }
   }
 
   /**
@@ -302,29 +270,7 @@ export class EditorComponent implements OnChanges, OnDestroy {
 
   public toggleBreakpoint(lineNumber: number): void {
     if (!this.filename) return;
-
-    let fileBps = this.breakpoints.get(this.filename);
-    if (!fileBps) {
-      fileBps = new Set<number>();
-      this.breakpoints.set(this.filename, fileBps);
-    }
-
-    const verifiedMap = this.verifiedBreakpoints.get(this.filename);
-    const isCurrentlySet = fileBps.has(lineNumber) || (verifiedMap?.has(lineNumber) ?? false);
-
-    if (isCurrentlySet) {
-      fileBps.delete(lineNumber);
-    } else {
-      fileBps.add(lineNumber);
-    }
-
-    this.updateBreakpointDecorations();
-
-    // Notify parent with debounce (WI-41 / R-CS4)
-    this.breakpointMutation$.next({
-      file: this.filename,
-      lines: Array.from(fileBps)
-    });
+    this.dapSession.toggleBreakpoint(this.filename, lineNumber);
   }
 
   private updateActiveLineDecoration(): void {
