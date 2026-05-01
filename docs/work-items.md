@@ -62,3 +62,42 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - [Test] Verify end-to-end flow from Variables right-click to Memory view render
   - [Doc] docs/archive/specs/memory-view-spec.md
 - **Dependencies**: WI-105
+
+### WI-107: DapRegisterService Implementation
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Create a reactive service to manage register states and identify changes.
+- **Details**:
+  - Implement periodic/event-driven fetching of the 'Registers' scope
+  - Implement a 'diff' mechanism to track value changes between stopped events
+  - Expose registers$: Observable<RegisterState[]>
+  - [Doc] docs/archive/specs/assembly-registers-integration.md
+  - [Test] Unit test DapRegisterService with mock DAP session
+- **Dependencies**: none
+
+### WI-108: AssemblyRegisterPanelComponent
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Build the high-density UI component for the register list with mutation highlights.
+- **Details**:
+  - Create AssemblyRegisterPanelComponent in ui-assembly library
+  - Implement conditional styling for 'changed' values
+  - Add format toggles (Hex/Dec/Bin) via context menu
+  - [Doc] docs/archive/specs/assembly-registers-integration.md
+  - [Test] Verify register mutation highlights in Storybook/Mock context
+- **Dependencies**: WI-107
+
+### WI-109: Assembly Dashboard Integration
+
+- **Status**: ⏳ Pending
+- **Size**: S
+- **Description**: Integrate the Register Panel into the Assembly View with a resizable split-pane.
+- **Details**:
+  - Refactor AssemblyViewComponent to use a taro-panel-group layout
+  - Integrate AssemblyRegisterPanelComponent as a nested child
+  - Implement a toggle button to show/hide the register panel
+  - [Doc] docs/archive/specs/assembly-registers-integration.md
+  - [Test] Verify resizable split layout and panel visibility toggling
+- **Dependencies**: WI-108

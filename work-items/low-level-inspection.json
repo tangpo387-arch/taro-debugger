@@ -240,6 +240,79 @@
         "created": "2026-05-01",
         "created_by": "Antigravity-Agent"
       }
+    },
+    {
+      "id": "WI-107",
+      "title": "DapRegisterService Implementation",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Create a reactive service to manage register states and identify changes.",
+      "details": [
+        "Implement periodic/event-driven fetching of the 'Registers' scope",
+        "Implement a 'diff' mechanism to track value changes between stopped events",
+        "Expose registers$: Observable<RegisterState[]>",
+        "[Doc] docs/archive/specs/assembly-registers-integration.md",
+        "[Test] Unit test DapRegisterService with mock DAP session"
+      ],
+      "timeline": {
+        "created": "2026-05-01",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-108",
+      "title": "AssemblyRegisterPanelComponent",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-107"
+        ]
+      },
+      "description": "Build the high-density UI component for the register list with mutation highlights.",
+      "details": [
+        "Create AssemblyRegisterPanelComponent in ui-assembly library",
+        "Implement conditional styling for 'changed' values",
+        "Add format toggles (Hex/Dec/Bin) via context menu",
+        "[Doc] docs/archive/specs/assembly-registers-integration.md",
+        "[Test] Verify register mutation highlights in Storybook/Mock context"
+      ],
+      "timeline": {
+        "created": "2026-05-01",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-109",
+      "title": "Assembly Dashboard Integration",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "pending",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-108"
+        ]
+      },
+      "description": "Integrate the Register Panel into the Assembly View with a resizable split-pane.",
+      "details": [
+        "Refactor AssemblyViewComponent to use a taro-panel-group layout",
+        "Integrate AssemblyRegisterPanelComponent as a nested child",
+        "Implement a toggle button to show/hide the register panel",
+        "[Doc] docs/archive/specs/assembly-registers-integration.md",
+        "[Test] Verify resizable split layout and panel visibility toggling"
+      ],
+      "timeline": {
+        "created": "2026-05-01",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }
