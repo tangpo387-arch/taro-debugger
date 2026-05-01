@@ -176,13 +176,13 @@ function cmdInspectGroup(args) {
   process.stdout.write(JSON.stringify(group.groupDef, null, 2) + '\n');
 }
 
-// ── Subcommand: list-items ───────────────────────────────────────────
+// ── Subcommand: list-group-items ─────────────────────────────────────
 
 /**
  * Lists all Work Items in a specific group with filtering.
  * @param {string[]} args - [GroupName, ...flags]
  */
-function cmdListItems(args) {
+function cmdListGroupItems(args) {
   const flags = { status: 'active', detailed: false };
   const posArgs = [];
 
@@ -202,7 +202,7 @@ function cmdListItems(args) {
 
   const groupName = posArgs[0];
   if (!groupName) {
-    console.error('Usage: manage-wi.js list-items <Name> [--status <all|active|pending|...>] [--detailed]');
+    console.error('Usage: manage-wi.js list-group-items <Name> [--status <all|active|pending|...>] [--detailed]');
     process.exit(1);
   }
 
@@ -525,13 +525,13 @@ Subcommands:
   add-group   <Name> <Fill> <Stroke> <Description>
   list-groups
   inspect-group <Name>
-  list-items  <Name> [--status <all|active|pending|...>] [--detailed]
+  list-group-items <Name> [--status <all|active|pending|...>] [--detailed]
 
 Notes:
   - Details use "|" as separator; prefix any value with "@" to load from a file.
   - Groups must be managed via add-group/list-groups/inspect-group.
   - "show <field>" filters output to a specific field (e.g. details, status, deps).
-  - "list-items" defaults to active items (pending, done, rework) in a single-line summary.
+  - "list-group-items" defaults to active items (pending, done, rework) in a single-line summary.
   - Status changes (done/pending/accepted/rework/aborted) are handled by update-wi.js.
 `.trim();
 
@@ -554,8 +554,8 @@ switch (subcommand) {
   case 'inspect-group':
     cmdInspectGroup(subArgs);
     break;
-  case 'list-items':
-    cmdListItems(subArgs);
+  case 'list-group-items':
+    cmdListGroupItems(subArgs);
     break;
   default:
     console.log(USAGE);

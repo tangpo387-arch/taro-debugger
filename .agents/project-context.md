@@ -100,7 +100,10 @@ This document is purely an index and terminology outline. You are STRICTLY FORBI
 | **Inspect WI** | `node scripts/manage-wi.js show WI-<ID> [field]` | `[field]` is optional (e.g., `details`, `status`, `deps`). |
 | **Add WI** | `node scripts/manage-wi.js add AUTO <Group> <Title> ...` | Arguments are positional. Use `AUTO` for automatic ID allocation. |
 | **Edit WI** | `node scripts/manage-wi.js edit WI-<ID> --<field> <value>` | Supported flags: `--title`, `--desc`, `--details`, `--deps`, `--size`, `--milestone`. |
-| **Group Management** | `node scripts/manage-wi.js <add-group\|list-groups\|inspect-group\|list-items>` | Use `list-groups` to verify existing Feature Group names before adding WIs. |
+| **List Groups** | `node scripts/manage-wi.js list-groups` | Returns a summary table of all functional domains. |
+| **Inspect Group** | `node scripts/manage-wi.js inspect-group <Name>` | Returns raw JSON metadata for the specified group. |
+| **List Group Items** | `node scripts/manage-wi.js list-group-items <Name> [--status <v>] [--detailed]` | You MUST run `list-groups` first to identify valid `<Name>` values. |
+| **Add Group** | `node scripts/manage-wi.js add-group <Name> <Fill> <Stroke> <Desc>` | Positional arguments only. Syncs all derivative Markdown docs. |
 
 </workflow>
 

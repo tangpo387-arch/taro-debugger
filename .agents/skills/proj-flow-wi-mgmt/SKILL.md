@@ -65,16 +65,38 @@ Use `manage-wi.js add-group` to initialize a new functional boundary.
 node scripts/manage-wi.js add-group "Network Layer" "#4ade80" "#22c55e" "Handles API calls and socket events"
 ```
 
-### 2.2 List/Inspect Groups
+### 2.2 List & Inspect Groups
 
-Use `manage-wi.js list-groups` to see all registered groups or `inspect-group` for a specific one.
+Use these commands to discover valid Feature Group names and their metadata.
+
+<workflow>
+
+1. **`list-groups`**: Returns a summary table of all registered groups. Use this first to find the exact, case-sensitive group name.
+2. **`inspect-group`**: Returns the raw JSON metadata (colors, description) for a specific group.
+
+</workflow>
 
 ```bash
-# List all groups
+# List all groups (Summary view)
 node scripts/manage-wi.js list-groups
 
-# Show specific group details (metadata)
+# Show specific group metadata (JSON view)
 node scripts/manage-wi.js inspect-group "Network Layer"
+```
+
+### 2.3 List Group Items
+
+Use `list-group-items` to see the work items associated with a specific Feature Group.
+
+```bash
+# Usage:
+# node scripts/manage-wi.js list-group-items <Name> [--status <all|active|pending|...>] [--detailed]
+
+# List active items (pending, done, rework) in a group
+node scripts/manage-wi.js list-group-items "UI Components"
+
+# List ALL items in a group with detailed descriptions
+node scripts/manage-wi.js list-group-items "DAP Protocol" --status all --detailed
 ```
 
 ---
