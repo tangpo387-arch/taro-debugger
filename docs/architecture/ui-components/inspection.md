@@ -22,11 +22,12 @@ The `@taro/ui-inspection` library contains the suite of panels used to inspect t
 
 ### 2.1 Thread Call Stack Panel
 
-Consolidates threads and stack frames into a single hierarchical tree view (Process > Thread > Frame).
+Consolidates threads and stack frames into a single hierarchical flat tree view (Process > Thread > Frame) using the `childrenAccessor` API. Supports horizontal scrolling for deep nesting or long function names.
 - **Data Source**: Reactive streams from `DapSessionService` (`threads$`, `activeThreadId$`, `stoppedThreads$`, `allThreadsStopped$`).
 - **Dynamic Loading**: Threads are loaded globally; stack frames are fetched on-demand when a thread node is expanded.
-- **Selection Mode**: Decouples tree navigation from thread selection. Clicking a thread row label toggles expansion only. Selection (Focus) is performed via a dedicated **"Focus"** icon button, ensuring navigational clicks don't inadvertently switch the session's active thread.
-- **Auto-Expansion**: Automatically expands the active thread and fetches its call stack upon any `stopped` event. This ensures the current execution context is immediately visible after any interrupt (breakpoint, step, etc.).
+- **Selection Mode**: Decouples tree navigation from thread selection. Clicking a thread row label toggles expansion only. Selection (Focus) is performed via a dedicated **"Focus"** icon button, ensuring navigational clicks don't inadvertently switch the session's active thread. This button utilizes a `sticky` CSS layout to remain accessible on the right edge of the viewport even when long function names force horizontal scrolling.
+- **Signature Formatting**: Employs the `CppSignaturePipe` to automatically parse and collapse overly verbose C++ function signatures (e.g., massive template types and lambdas) into readable shorthand, while exposing the full original signature via an Angular Material tooltip.
+- **Auto-Expansion**: Automatically expands the active thread and fetches its call stack upon a *fresh* `stopped` event or active thread transition. Employs a "sticky" expansion flag to maintain state across asynchronous data reloads while explicitly respecting manual user collapse during the same debug pause.
 - **Visuals**: Displays dynamic pause icons with tooltips pulled from `stopReason$`. Active threads are prominently marked with an "ACTIVE" badge.
 
 ### 2.3 Variables Panel

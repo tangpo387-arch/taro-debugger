@@ -76,11 +76,12 @@ describe('ThreadCallStackComponent', () => {
       await new Promise(r => setTimeout(r, 20));
       fixture.detectChanges();
 
-      const threadRow = fixture.debugElement.query(By.css('.mat-nested-tree-node .mat-tree-node'));
-      expect(threadRow).not.toBeNull();
+      const threadRows = fixture.debugElement.queryAll(By.css('.mat-tree-node'));
+      const threadRow = threadRows.find(el => el.nativeElement.textContent.includes('Main'));
+      expect(threadRow).toBeDefined();
       
       // Act
-      threadRow.nativeElement.click();
+      threadRow!.nativeElement.click();
 
       // Assert
       expect(mockSession.setCurrentThread).not.toHaveBeenCalled();
@@ -171,11 +172,13 @@ describe('ThreadCallStackComponent', () => {
       tree.collapse(threadNode);
       expect(tree.isExpanded(threadNode)).toBe(false);
 
-      // Act - trigger another "stop" (simulated by re-pushing values to streams)
-      mockSession.activeThreadId$.next(1);
+      // Act - trigger another "stop" via transition (not just a re-push)
+      mockSession.executionState$.next('running');
+      fixture.detectChanges();
+      await new Promise(r => setTimeout(r, 20)); // Wait for debounce
       mockSession.executionState$.next('stopped');
       fixture.detectChanges();
-      await new Promise(r => setTimeout(r, 20));
+      await new Promise(r => setTimeout(r, 50)); // Wait for auto-expansion
       fixture.detectChanges();
 
       // Assert - should be expanded again
@@ -195,7 +198,9 @@ describe('ThreadCallStackComponent', () => {
       
       mockSession.executionState$.next('stopped');
       fixture.detectChanges();
-      await new Promise(r => setTimeout(r, 50));
+      await new Promise(r => setTimeout(r, 20)); // Wait for debounce
+      fixture.detectChanges();
+      await new Promise(r => setTimeout(r, 50)); // Wait for fetchFrames
       fixture.detectChanges();
 
       const emitSpy = vi.spyOn(component.frameSelected, 'emit');

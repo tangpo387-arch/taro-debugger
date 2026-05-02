@@ -4,74 +4,72 @@
     description="Start a debug session to see threads and call stack.">
   </taro-empty-state>
   } @else {
-  <mat-tree #tree [dataSource]="dataSource" [childrenAccessor]="childrenAccessor" class="execution-tree">
+  <mat-tree #tree [dataSource]="dataSource" [childrenAccessor]="childrenAccessor" [trackBy]="trackByNodeId" class="execution-tree">
 
     <!-- Leaf node: Stack Frame -->
-    <mat-tree-node *matTreeNodeDef="let node"
+    <mat-tree-node *matTreeNodeDef="let node" class="mat-tree-node"
       [class.active-node]="node.type === 'frame' && node.frame?.id === activeFrameId" (click)="onFrameClick(node)">
+      <div class="indent-spacer" matTreeNodePadding [matTreeNodePaddingIndent]="20"></div>
       <span class="node-icon frame-icon">
         <mat-icon>subdirectory_arrow_right</mat-icon>
       </span>
       <div class="node-label">
         <span class="frame-id">#{{node.frame?.id}}</span>
-        <span class="frame-func">{{node.frame?.name}}</span>
+        <span class="frame-func" [matTooltip]="node.frame?.name">{{node.frame?.name | cppSignature}}</span>
         @if (node.frame?.source) {
         <span class="frame-source">{{node.frame?.source?.name}}:{{node.frame?.line}}</span>
         }
       </div>
     </mat-tree-node>
 
-    <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
-      <div class="mat-tree-node" [class.active-node]="node.type === 'thread' && node.isActive">
-        <button mat-icon-button matTreeNodeToggle class="tree-toggle-button" [attr.aria-label]="'Toggle ' + node.label"
-          (click)="onToggle(node); $event.stopPropagation()">
-          <mat-icon class="mat-icon-rtl-mirror">
-            {{tree.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
-          </mat-icon>
-        </button>
+    <!-- Branch node: Process or Thread -->
+    <mat-tree-node *matTreeNodeDef="let node; when: hasChild" class="mat-tree-node"
+      [class.active-node]="node.type === 'thread' && node.isActive">
+      <div class="indent-spacer" matTreeNodePadding [matTreeNodePaddingIndent]="20"></div>
+      <button mat-icon-button matTreeNodeToggle class="tree-toggle-button" [attr.aria-label]="'Toggle ' + node.label"
+        (click)="onToggle(node); $event.stopPropagation()">
+        <mat-icon class="mat-icon-rtl-mirror">
+          {{tree.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
+        </mat-icon>
+      </button>
 
-        @if (node.icon) {
-        <span class="node-icon" [ngClass]="[node.type + '-icon', node.status?.toLowerCase() || '']">
-          <mat-icon>{{node.icon}}</mat-icon>
-        </span>
+      @if (node.icon) {
+      <span class="node-icon" [ngClass]="[node.type + '-icon', node.status?.toLowerCase() || '']">
+        <mat-icon>{{node.icon}}</mat-icon>
+      </span>
+      }
+
+      <div class="node-label">
+        @if (node.type === 'thread' && node.isActive) {
+        <span class="active-badge">ACTIVE</span>
+        }
+        @if (node.type === 'thread') {
+        <span class="thread-id-badge">[{{node.threadId}}]</span>
+        }
+        {{node.label}}
+        @if (node.status) {
+        <span class="node-sublabel">({{node.status}})</span>
+        }
+        @if (node.isLoading) {
+        <div class="loading-spinner"></div>
         }
 
-        <div class="node-label">
-          @if (node.type === 'thread' && node.isActive) {
-          <span class="active-badge">ACTIVE</span>
-          }
-          @if (node.type === 'thread') {
-          <span class="thread-id-badge">[{{node.threadId}}]</span>
-          }
-          {{node.label}}
-          @if (node.status) {
-          <span class="node-sublabel">({{node.status}})</span>
-          }
-          @if (node.isLoading) {
-          <div class="loading-spinner"></div>
-          }
+        @if (node.isStopped) {
+        <mat-icon class="stopped-icon" [matTooltip]="'Paused on ' + (node.stopReason || 'breakpoint')">
+          pause_circle
+        </mat-icon>
+        }
 
-          @if (node.isStopped) {
-          <mat-icon class="stopped-icon" [matTooltip]="'Paused on ' + (node.stopReason || 'breakpoint')">
-            pause_circle
-          </mat-icon>
-          }
+        <div class="node-spacer"></div>
 
-          <div class="node-spacer"></div>
-
-          @if (node.type === 'thread' && !node.isActive) {
-          <button mat-icon-button class="focus-button" (click)="onSelectThread(node.threadId); $event.stopPropagation()"
-            matTooltip="Set as Active Thread">
-            <mat-icon>my_location</mat-icon>
-          </button>
-          }
-        </div>
+        @if (node.type === 'thread' && !node.isActive) {
+        <button mat-icon-button class="focus-button" (click)="onSelectThread(node.threadId); $event.stopPropagation()"
+          matTooltip="Set as Active Thread">
+          <mat-icon>my_location</mat-icon>
+        </button>
+        }
       </div>
-      <!-- Nested children container -->
-      <div [class.tree-invisible]="!tree.isExpanded(node)" role="group">
-        <ng-container matTreeNodeOutlet></ng-container>
-      </div>
-    </mat-nested-tree-node>
+    </mat-tree-node>
   </mat-tree>
   }
 </div>

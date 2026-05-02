@@ -8,6 +8,7 @@ import { DapSessionService, DapThread, DapStackFrame, DapConfigService, Executio
 import { TaroEmptyStateComponent } from '@taro/ui-shared';
 import { Subscription, combineLatest, BehaviorSubject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
+import { CppSignaturePipe } from './cpp-signature.pipe';
 
 /** 
  * Hierarchical tree node for execution context. 
@@ -41,7 +42,8 @@ export interface ExecutionNode {
     MatIconModule,
     MatButtonModule,
     MatTooltipModule,
-    TaroEmptyStateComponent
+    TaroEmptyStateComponent,
+    CppSignaturePipe
   ],
   templateUrl: './thread-call-stack.component.html',
   styleUrls: ['./thread-call-stack.component.scss']
@@ -72,6 +74,11 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
   public readonly childrenAccessor = (node: ExecutionNode): ExecutionNode[] => node.children ?? [];
   public readonly hasChild = (_: number, node: ExecutionNode): boolean => node.type !== 'frame';
 
+  /** trackBy function for MatTree to maintain expansion state across data rebuilds. */
+  public trackByNodeId(_: number, node: ExecutionNode): string {
+    return node.id;
+  }
+
   private subscription = new Subscription();
   /** 
    * Local cache for stack frames and loading state per thread to avoid redundant 
@@ -81,6 +88,19 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
 
   /** Triggered whenever the frame cache is updated to refresh the tree. */
   private cacheUpdate$ = new BehaviorSubject<void>(undefined);
+
+  /** 
+   * Tracking for auto-expansion logic to avoid "fighting" the user's manual 
+   * collapse actions during the same stop session.
+   */
+  private lastAutoExpandedThreadId: number | null = null;
+  private lastExecState: ExecutionState = 'idle';
+
+  /** 
+   * Sticky flag to keep the active thread expanded across data refreshes 
+   * (e.g. after frames load) while still allowing manual collapse.
+   */
+  private autoExpandedActiveThread = false;
 
   public ngOnInit(): void {
     // Synchronize tree structure with reactive session state
@@ -136,12 +156,28 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
 
     const expandedIds = this.getExpandedIds();
 
-    // Auto-expand the active thread if we are stopped.
-    // By adding it to expandedIds, restoreExpansion will handle it safely
-    // regardless of whether the children are loaded yet or not.
+    // Auto-expand the active thread if we are stopped and this is a "new" stop context.
+    // We use autoExpandedActiveThread as a sticky flag to prevent the tree from 
+    // collapsing during asynchronous data refreshes (e.g. frame loading), 
+    // while still allowing the user to manually collapse it.
     if (activeThreadId !== null && execState === 'stopped') {
-      expandedIds.add(`thread-${activeThreadId}`);
+      const isNewStop = execState !== this.lastExecState;
+      const isNewThread = activeThreadId !== this.lastAutoExpandedThreadId;
+
+      if (isNewStop || isNewThread) {
+        expandedIds.add(`thread-${activeThreadId}`);
+        this.lastAutoExpandedThreadId = activeThreadId;
+        this.autoExpandedActiveThread = true;
+      } else if (this.autoExpandedActiveThread) {
+        // Sticky expansion: keep it expanded even if getExpandedIds() missed it 
+        // due to object identity reconciliation, unless the user manually collapsed it.
+        expandedIds.add(`thread-${activeThreadId}`);
+      }
+    } else if (execState !== 'stopped') {
+      this.lastAutoExpandedThreadId = null;
+      this.autoExpandedActiveThread = false;
     }
+    this.lastExecState = execState;
 
     // Fallback: use executable name if process event was not received
     let processName = processInfo?.name;
@@ -240,8 +276,22 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
    * event listener, so the next expand will re-fetch correctly.
    */
   public async onToggle(node: ExecutionNode): Promise<void> {
-    if (node.type === 'thread' && !node.children && node.isStopped) {
-      await this.fetchFrames(node);
+    // We need to check expansion state AFTER the toggle has occurred.
+    // Since matTreeNodeToggle happens on the same click, we check the tree's state.
+    const isExpanded = this.tree?.isExpanded(node);
+
+    if (isExpanded) {
+      // User expanded the node
+      if (node.type === 'thread' && !node.children && node.isStopped) {
+        await this.fetchFrames(node);
+      }
+    } else {
+      // User collapsed the node. 
+      // If it's the active thread, we must clear the sticky auto-expansion flag 
+      // so we don't fight the user's manual collapse.
+      if (node.id === `thread-${this.activeThreadId}`) {
+        this.autoExpandedActiveThread = false;
+      }
     }
   }
 
