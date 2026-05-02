@@ -2,7 +2,7 @@
 title: Project Roadmap & Dependency Map
 scope: milestones, dependencies, architecture-tracking
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer, Human Engineer]
-last_updated: 2026-05-01
+last_updated: 2026-05-02
 ---
 
 # Project Roadmap & Dependency Map
@@ -105,6 +105,7 @@ graph LR
     WI_107["WI-107 DapRegisterService Implementation"]
     WI_108["WI-108 AssemblyRegisterPanelComponent"]
     WI_109["WI-109 Assembly Dashboard Integration"]
+    WI_110["WI-110 Assembly Instruction Cache Implementation"]
     WI_01["WI-01 Extend `GdbConfigService` Configuration Model"]
     WI_02["WI-02 Setup Form Field Completion"]
     WI_03["WI-03 Setup Form Validation"]
@@ -200,6 +201,8 @@ graph LR
     WI_105 --> WI_106
     WI_107 --> WI_108
     WI_108 --> WI_109
+    WI_28 --> WI_110
+    WI_29 --> WI_110
     WI_01 --> WI_02
     WI_02 --> WI_03
     WI_75 --> WI_74
@@ -303,6 +306,7 @@ graph LR
     style WI_107 fill:#6366f1,stroke:#4f46e5
     style WI_108 fill:#6366f1,stroke:#4f46e5
     style WI_109 fill:#6366f1,stroke:#4f46e5
+    style WI_110 fill:#6366f1,stroke:#4f46e5
     style WI_01 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_02 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_03 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2

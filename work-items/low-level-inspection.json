@@ -313,6 +313,33 @@
         "created": "2026-05-01",
         "created_by": "Antigravity-Agent"
       }
+    },
+    {
+      "id": "WI-110",
+      "title": "Assembly Instruction Cache Implementation",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-28",
+          "WI-29"
+        ]
+      },
+      "description": "Implement a memory-resident instruction cache for the disassembly view to improve scrolling performance and reduce redundant DAP requests.",
+      "details": [
+        "[Architecture] Design address-range based cache indexing using BigInt",
+        "[Implementation] Modify DapAssemblyService to check cache before dispatching disassemble command",
+        "[Logic] Implement instruction merging, Spatial Pruning, and Auto-fetch for infinite scrolling",
+        "[Persistence] Clear cache on debug session termination or active thread change",
+        "[Test] Verify that repeated scrolling to the same address range does not trigger new DAP requests",
+        "[Doc] docs/archive/specs/assembly-cache-spec.md"
+      ],
+      "timeline": {
+        "created": "2026-05-02",
+        "created_by": "Antigravity-Agent"
+      }
     }
   ]
 }
