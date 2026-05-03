@@ -50,8 +50,9 @@ describe('DebuggerComponent — State Cleanup Logic', () => {
 
     const mockAssemblyService = {
       clear: vi.fn(),
-      fetchInstructions: vi.fn().mockResolvedValue([]),
-      instructions$: EMPTY
+      relocateWindow: vi.fn().mockResolvedValue([]),
+      instructions$: EMPTY,
+      currentPc$: EMPTY
     };
 
     const mockConfigService = {

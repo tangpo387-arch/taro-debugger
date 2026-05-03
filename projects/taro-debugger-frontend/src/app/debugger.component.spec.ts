@@ -8,9 +8,10 @@ import { DapAssemblyService } from '@taro/ui-assembly';
 import { NGX_MONACO_EDITOR_CONFIG } from 'ngx-monaco-editor-v2';
 import { Router } from '@angular/router';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { ChangeDetectorRef, Injector, DestroyRef } from '@angular/core';
+import { ChangeDetectorRef, Injector, DestroyRef, NO_ERRORS_SCHEMA } from '@angular/core';
 import { KeyboardShortcutService, ActionID } from './keyboard-shortcut.service';
 import { DapFileTreeService } from './dap-file-tree.service';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { Subject, BehaviorSubject, EMPTY, of } from 'rxjs';
 
 /**
@@ -54,8 +55,10 @@ describe('DebuggerComponent — onStepInstructionTab()', () => {
 
     const mockAssemblyService = {
       clear: vi.fn(),
-      fetchInstructions: vi.fn().mockResolvedValue([]),
-      instructions$: new BehaviorSubject<any[]>([]).asObservable()
+      relocateWindow: vi.fn().mockResolvedValue([]),
+      setPC: vi.fn(),
+      instructions$: new BehaviorSubject<any[]>([]).asObservable(),
+      currentPc$: new BehaviorSubject<string | null>(null).asObservable()
     };
 
     const mockConfigService = {
@@ -78,7 +81,11 @@ describe('DebuggerComponent — onStepInstructionTab()', () => {
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: { baseUrl: 'assets/monaco' } },
         { provide: ChangeDetectorRef, useValue: mockCdr },
         { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
-      ]
+        { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false }) } },
+      ],
+      schemas: [NO_ERRORS_SCHEMA]
+    }).overrideComponent(DebuggerComponent, {
+      set: { providers: [] }
     });
 
     component = TestBed.inject(DebuggerComponent);
@@ -151,12 +158,16 @@ describe('DebuggerComponent — Keyboard Shortcut Integration', () => {
         { provide: DapLogService, useValue: mockLogService },
         { provide: ChangeDetectorRef, useValue: mockCdr },
         { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
-        { provide: DapAssemblyService, useValue: { clear: vi.fn() } },
+        { provide: DapAssemblyService, useValue: { clear: vi.fn(), setPC: vi.fn(), currentPc$: EMPTY } },
         { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
         { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
-      ]
+        { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false }) } },
+      ],
+      schemas: [NO_ERRORS_SCHEMA]
+    }).overrideComponent(DebuggerComponent, {
+      set: { providers: [] }
     });
 
     component = TestBed.inject(DebuggerComponent);
@@ -220,34 +231,38 @@ describe('DebuggerComponent — Reveal Logic', () => {
     TestBed.configureTestingModule({
       providers: [
         DebuggerComponent,
-        { 
-          provide: DapSessionService, 
-          useValue: { 
-            connectionStatus$: EMPTY, 
-            executionState$: EMPTY, 
-            onEvent: () => EMPTY, 
-            onTraffic$: EMPTY, 
+        {
+          provide: DapSessionService,
+          useValue: {
+            connectionStatus$: EMPTY,
+            executionState$: EMPTY,
+            onEvent: () => EMPTY,
+            onTraffic$: EMPTY,
             disconnect: vi.fn(),
-            fileTree: { readFile: () => of('') } 
-          } 
+            fileTree: { readFile: () => of('') }
+          }
         },
-        { 
-          provide: DapVariablesService, 
-          useValue: { 
-            executionState$: EMPTY, 
-            scopes$: EMPTY, 
-            clear: vi.fn(), 
-            fetchScopes: vi.fn().mockResolvedValue(undefined) 
-          } 
+        {
+          provide: DapVariablesService,
+          useValue: {
+            executionState$: EMPTY,
+            scopes$: EMPTY,
+            clear: vi.fn(),
+            fetchScopes: vi.fn().mockResolvedValue(undefined)
+          }
         },
         { provide: DapLogService, useValue: { consoleLog: vi.fn() } },
-        { provide: DapAssemblyService, useValue: { clear: vi.fn() } },
+        { provide: DapAssemblyService, useValue: { clear: vi.fn(), setPC: vi.fn(), currentPc$: EMPTY } },
         { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
         { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } },
         { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
-      ]
+        { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false }) } },
+      ],
+      schemas: [NO_ERRORS_SCHEMA]
+    }).overrideComponent(DebuggerComponent, {
+      set: { providers: [] }
     });
     component = TestBed.inject(DebuggerComponent);
   });
@@ -296,16 +311,20 @@ describe('DebuggerComponent — State Cleanup (WI-83)', () => {
         { provide: DapSessionService, useValue: mockDapSession },
         { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
         { provide: DapLogService, useValue: { consoleLog: vi.fn() } },
-        { provide: DapAssemblyService, useValue: { clear: vi.fn() } },
+        { provide: DapAssemblyService, useValue: { clear: vi.fn(), setPC: vi.fn(), currentPc$: EMPTY } },
         { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
         { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } },
         { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
-      ]
+        { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false }) } },
+      ],
+      schemas: [NO_ERRORS_SCHEMA]
+    }).overrideComponent(DebuggerComponent, {
+      set: { providers: [] }
     });
     component = TestBed.inject(DebuggerComponent);
-    
+
     // Trigger ngOnInit to subscribe to executionState$
     component.ngOnInit();
   });
@@ -359,7 +378,7 @@ describe('DebuggerComponent — State Cleanup (WI-83)', () => {
       component.executionState = 'running';
       return stackRes;
     });
-    
+
     component.stackFrames = [];
     component.executionState = 'stopped';
 
@@ -393,13 +412,17 @@ describe('DebuggerComponent — No-Source Frame UX (WI-100)', () => {
         { provide: DapSessionService, useValue: mockDapSession },
         { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn().mockResolvedValue(undefined) } },
         { provide: DapLogService, useValue: { consoleLog: vi.fn() } },
-        { provide: DapAssemblyService, useValue: { clear: vi.fn(), fetchInstructions: vi.fn().mockResolvedValue([]) } },
+        { provide: DapAssemblyService, useValue: { clear: vi.fn(), setPC: vi.fn(), currentPc$: EMPTY, relocateWindow: vi.fn().mockResolvedValue([]) } },
         { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
         { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } },
         { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
-      ]
+        { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false }) } },
+      ],
+      schemas: [NO_ERRORS_SCHEMA]
+    }).overrideComponent(DebuggerComponent, {
+      set: { providers: [] }
     });
     component = TestBed.inject(DebuggerComponent);
   });

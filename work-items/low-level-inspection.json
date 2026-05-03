@@ -341,6 +341,56 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-03"
       }
+    },
+    {
+      "id": "WI-111",
+      "title": "Decouple Disassembly Cache to Core",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Migrate disassembly caching and enhancement logic from ui-assembly to dap-core to enable reuse and architectural alignment.",
+      "details": [
+        "[Refactor] Extract DapAssemblyCacheService to dap-core/session",
+        "[Refactor] Migrate TaroDisassembledInstruction type to dap-core",
+        "[UI] Update ui-assembly service to delegate caching to the new core service",
+        "[Test] Verify caching and pruning logic with Vitest",
+        "[Doc] docs/archive/specs/assembly-core-migration.md"
+      ],
+      "timeline": {
+        "created": "2026-05-03",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-03"
+      }
+    },
+    {
+      "id": "WI-112",
+      "title": "Centralize Assembly PC & Window Logic",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Migrate Program Counter (PC) state and centered instruction window logic (+/- 1000) to DapAssemblyService.",
+      "details": [
+        "Add currentPc$ and setPC() to DapAssemblyService",
+        "Implement centered window fetching (+/- 1000) in DapAssemblyService",
+        "Update AssemblyViewComponent to bind to service PC state",
+        "Update DebuggerComponent to update assembly PC on frame selection",
+        "[Test] Verify assembly view automatically centers on PC after stepping",
+        "[Test] Verify assembly view maintains +/- 1000 instruction context after frame switching",
+        "[Doc] docs/archive/specs/assembly-pc-centralization.md"
+      ],
+      "timeline": {
+        "created": "2026-05-03",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-03"
+      }
     }
   ]
 }

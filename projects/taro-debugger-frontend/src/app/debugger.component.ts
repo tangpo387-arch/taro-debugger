@@ -34,6 +34,7 @@ import { FileNode } from './file-tree.service';
 import { DapLogService } from '@taro/ui-console';
 import { DebugControlGroupComponent } from './debug-control-group.component';
 import { AssemblyViewComponent, DapAssemblyService } from '@taro/ui-assembly';
+import { DapAssemblyCacheService } from '@taro/dap-core';
 import { KeyboardShortcutService, ActionID } from './keyboard-shortcut.service';
 import { DapFileTreeService } from './dap-file-tree.service';
 
@@ -69,6 +70,7 @@ import { DapFileTreeService } from './dap-file-tree.service';
     DapFileTreeService,
     DapVariablesService,
     DapLogService,
+    DapAssemblyCacheService,
     DapAssemblyService
   ],
   templateUrl: './debugger.component.html',
@@ -273,7 +275,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         // 2. Load Disassembly
         if (frame.instructionPointerReference) {
           tasks.push(
-            from(this.assemblyService.fetchInstructions(frame.instructionPointerReference, 200, -100)).pipe(
+            from(this.assemblyService.setPC(frame.instructionPointerReference)).pipe(
               catchError(e => {
                 this.logService.consoleLog(`Disassembly failed: ${e.message}`, 'error', 'system');
                 return of(null);

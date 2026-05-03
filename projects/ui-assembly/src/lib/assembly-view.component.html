@@ -15,7 +15,7 @@
          [style.height.px]="rowHeight()">
       
       <div class="gutter">
-        <mat-icon *ngIf="isInstructionPointer(instruction.address)" class="ip-indicator">arrow_right_alt</mat-icon>
+        <span *ngIf="isInstructionPointer(instruction.address)" class="ip-indicator">&#10148;</span>
         <div class="breakpoint-marker"></div> <!-- For future BP integration -->
       </div>
       
@@ -43,7 +43,7 @@
     </taro-empty-state>
   }
 
-  <div class="floating-actions" *ngIf="instructionPointerReference">
+  <div class="floating-actions" *ngIf="currentPc()">
     <button mat-mini-fab color="primary" 
             (click)="revealPC()" 
             matTooltip="Reveal current execution point"

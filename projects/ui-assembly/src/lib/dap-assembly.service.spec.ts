@@ -2,28 +2,23 @@ import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, Subject, BehaviorSubject } from 'rxjs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DapAssemblyService } from './dap-assembly.service';
-import { DapSessionService } from '@taro/dap-core';
+import { DapAssemblyCacheService } from '@taro/dap-core';
 
-/** Builds a minimal mock DAP disassemble response. */
-function makeDisassembleResponse(instructions: { address: string; instruction: string }[]) {
-  return { success: true, body: { instructions } };
-}
-
-describe('DapAssemblyService', () => {
+describe('DapAssemblyService (UI Layer)', () => {
   let service: DapAssemblyService;
-  let mockDapSession: any;
+  let mockCacheService: any;
 
   beforeEach(() => {
-    mockDapSession = {
-      disassemble: vi.fn(),
-      onEvent: vi.fn().mockReturnValue(new Subject().asObservable()),
-      activeThreadId$: new BehaviorSubject<number | null>(null).asObservable(),
+    mockCacheService = {
+      fetchInstructions: vi.fn(),
+      clear: vi.fn(),
+      setCacheLimits: vi.fn(),
     };
 
     TestBed.configureTestingModule({
       providers: [
         DapAssemblyService,
-        { provide: DapSessionService, useValue: mockDapSession },
+        { provide: DapAssemblyCacheService, useValue: mockCacheService },
       ],
     });
 
@@ -39,221 +34,152 @@ describe('DapAssemblyService', () => {
     expect(service).toBeTruthy();
   });
 
-  describe('Caching & Performance', () => {
-    it('should cache instructions and avoid redundant DAP requests', async () => {
+  // ── setPC ───────────────────────────────────────────────────────────────
+
+  describe('setPC', () => {
+    it('should update currentPc$ and trigger a centered instruction fetch', async () => {
+      mockCacheService.fetchInstructions.mockResolvedValue([]);
+
+      await service.setPC('0x1000');
+
+      expect(await firstValueFrom(service.currentPc$)).toBe('0x1000');
+      expect(mockCacheService.fetchInstructions).toHaveBeenCalledWith('0x1000', 2001, -1000);
+    });
+
+    it('should skip fetching if the PC is null or empty', async () => {
+      await service.setPC('');
+      expect(mockCacheService.fetchInstructions).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── relocateWindow ────────────────────────────────────────────────────
+
+  describe('relocateWindow', () => {
+    it('should update instructions$ with data from the cache service', async () => {
       const fakeInstructions = [
         { address: '0x1000', instruction: 'mov eax, 1' },
-        { address: '0x1004', instruction: 'add eax, 2' },
+        { address: '0x1005', instruction: 'add eax, 2' },
       ];
-      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse(fakeInstructions));
+      mockCacheService.fetchInstructions.mockResolvedValue(fakeInstructions);
 
-      // First fetch: should call DAP
-      await service.fetchInstructions('0x1000', 2);
-      expect(mockDapSession.disassemble).toHaveBeenCalledTimes(1);
-
-      // Second fetch for same range: should NOT call DAP
-      await service.fetchInstructions('0x1000', 2);
-      expect(mockDapSession.disassemble).toHaveBeenCalledTimes(1);
+      await service.relocateWindow('0x1000', 2);
 
       const instructions = await firstValueFrom(service.instructions$);
       expect(instructions.length).toBe(2);
       expect(instructions[0].address).toBe('0x1000');
     });
 
-    it('should perform gap filling (partial cache hit)', async () => {
-      // 1. Fetch first 2 instructions
-      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse([
-        { address: '0x1000', instruction: 'inst 1' },
-        { address: '0x1004', instruction: 'inst 2' },
-      ]));
-      await service.fetchInstructions('0x1000', 2);
+    it('should skip the fetch entirely when the IP is already in the UI stream (fast-path)', async () => {
+      // Seed the UI stream directly
+      const existing = [{ address: '0x1000', instruction: 'nop' }];
+      (service as any).instructionsSubject.next(existing);
 
-      // Clear UI stream to bypass the 'Fast-Path' stepping optimization
-      // This simulates jumping back to 0x1000 from a different call stack frame
-      (service as any).instructionsSubject.next([]);
+      await service.relocateWindow('0x1000', 1);
 
-      // 2. Request 4 instructions starting at 0x1000. 
-      // It should fetch 2 more starting from the end of cached block.
-      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse([
-        { address: '0x1008', instruction: 'inst 3' },
-        { address: '0x100c', instruction: 'inst 4' },
-      ]));
-
-      await service.fetchInstructions('0x1000', 4);
-
-      // Should have called DAP twice
-      expect(mockDapSession.disassemble).toHaveBeenCalledTimes(2);
-
-      // Second call should have offset: 2 and count: 2
-      expect(mockDapSession.disassemble).toHaveBeenLastCalledWith(expect.objectContaining({
-        memoryReference: '0x1000',
-        instructionOffset: 2,
-        instructionCount: 2
-      }));
-
-      const instructions = await firstValueFrom(service.instructions$);
-      expect(instructions.length).toBe(4);
-      expect(instructions[3].address).toBe('0x100c');
+      // No cache call expected
+      expect(mockCacheService.fetchInstructions).not.toHaveBeenCalled();
     });
 
-    it('should perform spatial pruning when cache exceeds limit', async () => {
-      service.setCacheLimits(5, 3);
+    it('should set isLoading$ to true while fetching, then false when done', async () => {
+      let loadingDuringFetch = false;
+      mockCacheService.fetchInstructions.mockImplementation(async () => {
+        loadingDuringFetch = (await firstValueFrom(service.isLoading$));
+        return [];
+      });
 
-      // 1. Fetch 5 instructions at 0x1000
-      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse([
-        { address: '0x1000', instruction: 'i1' },
-        { address: '0x1004', instruction: 'i2' },
-        { address: '0x1008', instruction: 'i3' },
-        { address: '0x100c', instruction: 'i4' },
-        { address: '0x1010', instruction: 'i5' },
-      ]));
-      await service.fetchInstructions('0x1000', 5);
+      await service.relocateWindow('0x1000', 1);
 
-      // 2. Fetch 2 more instructions far away at 0x2000
-      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse([
-        { address: '0x2000', instruction: 'i6' },
-        { address: '0x2004', instruction: 'i7' },
-      ]));
-      await service.fetchInstructions('0x2000', 2);
+      expect(loadingDuringFetch).toBe(true);
+      expect(await firstValueFrom(service.isLoading$)).toBe(false);
+    });
 
-      // Pruning should have removed the furthest range [0x1000, 0x1010].
-      // Fetch 0x1000 again should trigger DAP.
-      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse([{ address: '0x1000', instruction: 'i1' }]));
-      await service.fetchInstructions('0x1000', 1);
-      expect(mockDapSession.disassemble).toHaveBeenCalledTimes(3);
+    it('should clear instructions$ and re-throw when the cache service throws', async () => {
+      mockCacheService.fetchInstructions.mockRejectedValue(new Error('DAP error'));
+
+      await expect(service.relocateWindow('0x1000', 1)).rejects.toThrow('DAP error');
+      const instructions = await firstValueFrom(service.instructions$);
+      expect(instructions.length).toBe(0);
+    });
+
+    it('should pass offset parameter correctly to cache service', async () => {
+      mockCacheService.fetchInstructions.mockResolvedValue([]);
+      await service.relocateWindow('0x1000', 200, -100);
+
+      expect(mockCacheService.fetchInstructions).toHaveBeenCalledWith('0x1000', 200, -100);
     });
   });
 
-  describe('Session Lifecycle', () => {
-    it('should NOT clear cache when threadId changes', async () => {
-      const threadIdSubject = new BehaviorSubject<number | null>(1);
-      mockDapSession.activeThreadId$ = threadIdSubject.asObservable();
+  // ── fetchMore ────────────────────────────────────────────────────────────
 
-      TestBed.resetTestingModule();
-      TestBed.configureTestingModule({
-        providers: [
-          DapAssemblyService,
-          { provide: DapSessionService, useValue: mockDapSession },
-        ],
-      });
-      service = TestBed.inject(DapAssemblyService);
+  describe('fetchMore', () => {
+    it('should append instructions forward and update the stream', async () => {
+      const initial = [{ address: '0x1000', instruction: 'nop' }];
+      (service as any).instructionsSubject.next(initial);
 
-      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse([{ address: '0x1000', instruction: 'nop' }]));
-      await service.fetchInstructions('0x1000', 1);
+      const newInsts = [{ address: '0x1004', instruction: 'ret' }];
+      mockCacheService.fetchInstructions.mockResolvedValue(newInsts);
 
-      threadIdSubject.next(2);
-
-      // Should hit cache, no second call to DAP
-      await service.fetchInstructions('0x1000', 1);
-      expect(mockDapSession.disassemble).toHaveBeenCalledTimes(1);
-    });
-
-    it('should clear cache on terminated event', async () => {
-      const eventSubject = new Subject<any>();
-      mockDapSession.onEvent = vi.fn().mockReturnValue(eventSubject.asObservable());
-
-      TestBed.resetTestingModule();
-      TestBed.configureTestingModule({
-        providers: [
-          DapAssemblyService,
-          { provide: DapSessionService, useValue: mockDapSession },
-        ],
-      });
-      service = TestBed.inject(DapAssemblyService);
-
-      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse([{ address: '0x1000', instruction: 'nop' }]));
-      await service.fetchInstructions('0x1000', 1);
-
-      eventSubject.next({ event: 'terminated' });
-
-      await service.fetchInstructions('0x1000', 1);
-      expect(mockDapSession.disassemble).toHaveBeenCalledTimes(2);
-    });
-
-    it('should clear cache on module event', async () => {
-      const eventSubject = new Subject<any>();
-      mockDapSession.onEvent = vi.fn().mockReturnValue(eventSubject.asObservable());
-
-      TestBed.resetTestingModule();
-      TestBed.configureTestingModule({
-        providers: [
-          DapAssemblyService,
-          { provide: DapSessionService, useValue: mockDapSession },
-        ],
-      });
-      service = TestBed.inject(DapAssemblyService);
-
-      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse([{ address: '0x1000', instruction: 'nop' }]));
-      await service.fetchInstructions('0x1000', 1);
-
-      eventSubject.next({ event: 'module', body: { reason: 'new' } });
-
-      await service.fetchInstructions('0x1000', 1);
-      expect(mockDapSession.disassemble).toHaveBeenCalledTimes(2);
-    });
-  });
-
-  describe('Standard fetchInstructions behavior', () => {
-    it('should update instructions$ with the response when successful', async () => {
-      const fakeInstructions = [
-        { address: '0x1000', instruction: 'mov eax, 1' },
-        { address: '0x1005', instruction: 'add eax, 2' },
-      ];
-      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse(fakeInstructions));
-
-      await service.fetchInstructions('0x1000', 2);
+      await service.fetchMore('forward');
 
       const instructions = await firstValueFrom(service.instructions$);
-      expect(instructions).toEqual([
-        expect.objectContaining({ address: '0x1000', instruction: 'mov eax, 1' }),
-        expect.objectContaining({ address: '0x1005', instruction: 'add eax, 2' }),
-      ]);
+      expect(instructions.length).toBe(2);
+      expect(instructions[1].address).toBe('0x1004');
     });
 
-    it('should correctly parse symbols and calculate offsets', async () => {
-      const fakeInstructions = [
-        { address: '0x1000', instruction: 'push rbp', symbol: '<main+0>' },
-        { address: '0x1014', instruction: 'mov rbp, rsp', symbol: '<foo+4>' },
-      ];
-      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse(fakeInstructions));
+    it('should prepend instructions backward and update the stream', async () => {
+      const initial = [{ address: '0x1000', instruction: 'nop' }];
+      (service as any).instructionsSubject.next(initial);
 
-      await service.fetchInstructions('0x1000', 2);
-      const instructions = await firstValueFrom(service.instructions$);
-
-      expect(instructions[0]).toMatchObject({ normalizedSymbol: 'main', byteOffset: 0, isFunctionStart: true });
-      expect(instructions[1]).toMatchObject({ normalizedSymbol: 'foo', byteOffset: 4, isFunctionStart: true });
-    });
-
-    it('should respect explicit context window parameters', async () => {
-      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse([]));
-      await service.fetchInstructions('0x1000', 200, -100);
-
-      expect(mockDapSession.disassemble).toHaveBeenCalledWith(expect.objectContaining({
-        memoryReference: '0x1000',
-        instructionOffset: -100,
-        instructionCount: 200
-      }));
-    });
-
-    it('should handle backward auto-fetch (fetchMore)', async () => {
-      // 1. Initial state
-      const initialInst = { address: '0x1000', instruction: 'nop' };
-      service['instructionsSubject'].next([initialInst]);
-
-      // 2. Trigger fetchMore('backward')
-      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse([
-        { address: '0x09F0', instruction: 'prev' }
-      ]));
+      const newInsts = [{ address: '0x09F0', instruction: 'prev' }];
+      mockCacheService.fetchInstructions.mockResolvedValue(newInsts);
 
       await service.fetchMore('backward');
 
       const instructions = await firstValueFrom(service.instructions$);
       expect(instructions.length).toBe(2);
       expect(instructions[0].address).toBe('0x09F0');
-      expect(mockDapSession.disassemble).toHaveBeenCalledWith(expect.objectContaining({
-        memoryReference: '0x1000',
-        instructionOffset: -100 // AUTO_FETCH_COUNT is 100
-      }));
+    });
+
+    it('should use last address + offset=1 for forward fetch', async () => {
+      (service as any).instructionsSubject.next([
+        { address: '0x1000', instruction: 'nop' },
+        { address: '0x1008', instruction: 'ret' },
+      ]);
+      mockCacheService.fetchInstructions.mockResolvedValue([]);
+
+      await service.fetchMore('forward');
+
+      expect(mockCacheService.fetchInstructions).toHaveBeenCalledWith('0x1008', 100, 1);
+    });
+
+    it('should use first address + offset=-100 for backward fetch', async () => {
+      (service as any).instructionsSubject.next([
+        { address: '0x1000', instruction: 'nop' },
+      ]);
+      mockCacheService.fetchInstructions.mockResolvedValue([]);
+
+      await service.fetchMore('backward');
+
+      expect(mockCacheService.fetchInstructions).toHaveBeenCalledWith('0x1000', 100, -100);
+    });
+
+    it('should not fetch when stream is empty', async () => {
+      await service.fetchMore('forward');
+      expect(mockCacheService.fetchInstructions).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── clear ────────────────────────────────────────────────────────────────
+
+  describe('clear', () => {
+    it('should clear instructions$, reset loading$, and delegate to the cache service', async () => {
+      (service as any).instructionsSubject.next([{ address: '0x1000', instruction: 'nop' }]);
+
+      service.clear();
+
+      expect(mockCacheService.clear).toHaveBeenCalled();
+      expect(await firstValueFrom(service.instructions$)).toEqual([]);
+      expect(await firstValueFrom(service.isLoading$)).toBe(false);
     });
   });
 });

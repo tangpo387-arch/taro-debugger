@@ -14,9 +14,6 @@ export class EvaluateCancelledError extends Error {
   }
 }
 
-
-
-
 /** A single verified breakpoint returned by the DAP adapter */
 export interface VerifiedBreakpoint {
   /** The verified 1-based line number (may differ from the requested line) */
@@ -849,7 +846,7 @@ export class DapSessionService {
    * @param args DAP command arguments (optional)
    * @param timeoutMs Timeout in milliseconds (default 5000ms)
    */
-  private sendRequest(command: string, args?: any, timeoutMs: number = 5000, silentError: boolean = false): Promise<DapResponse> {
+  private sendRequest(command: string, args?: any, timeoutMs: number = 500000, silentError: boolean = false): Promise<DapResponse> {
     const transport = this.transport;
     if (!transport) {
       return Promise.reject(new Error('Transport not initialized. Call startSession() first.'));

@@ -56,7 +56,7 @@ describe('Breakpoint Integration', () => {
         { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: '/path/to/exe' }) } },
         { provide: DapVariablesService, useValue: { fetchScopes: vi.fn().mockResolvedValue(undefined) } },
         { provide: DapLogService, useValue: mockLogService },
-        { provide: DapAssemblyService, useValue: { clear: vi.fn() } },
+        { provide: DapAssemblyService, useValue: { clear: vi.fn(), setPC: vi.fn(), currentPc$: EMPTY } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: MatSnackBar, useValue: { open: vi.fn() } },
         { provide: MatDialog, useValue: { open: vi.fn() } },

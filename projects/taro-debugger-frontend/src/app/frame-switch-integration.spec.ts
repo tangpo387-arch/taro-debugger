@@ -49,11 +49,13 @@ describe('Frame Switch Integration', () => {
     };
 
     mockAssemblyService = {
-      fetchInstructions: vi.fn().mockImplementation(async () => {
+      relocateWindow: vi.fn().mockImplementation(async () => {
         await new Promise(resolve => setTimeout(resolve, 50));
         return [];
       }),
-      clear: vi.fn()
+      clear: vi.fn(),
+      setPC: vi.fn(),
+      currentPc$: EMPTY
     };
 
     mockFileTreeService = {

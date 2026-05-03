@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef, inject, OnInit, OnDestroy, Input, OnChanges, SimpleChanges, ViewChild, AfterViewInit, DestroyRef } from '@angular/core';
+import { Component, ChangeDetectorRef, inject, OnInit, OnDestroy, ViewChild, AfterViewInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,7 +9,6 @@ import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { map, Subscription } from 'rxjs';
 
 import { DapAssemblyService, TaroDisassembledInstruction } from './dap-assembly.service';
-import { DapDisassembledInstruction } from '@taro/dap-core';
 import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent } from '@taro/ui-shared';
 
 @Component({
@@ -19,17 +18,16 @@ import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent } from '@taro/ui-shared';
   templateUrl: './assembly-view.component.html',
   styleUrls: ['./assembly-view.component.scss']
 })
-export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
+export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly assemblyService = inject(DapAssemblyService);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
 
-  @Input() public instructionPointerReference: string | null = null;
-  /** Emits to toggle breakpoint at a specific address (stub for integration) */
-  //@Output() public toggleBreakpoint = new EventEmitter<string>();
-
   @ViewChild(CdkVirtualScrollViewport) viewport?: CdkVirtualScrollViewport;
+
+  /** Signal representing the current PC from the service */
+  public readonly currentPc = toSignal(this.assemblyService.currentPc$);
 
   /** Responsive row height for cdk-virtual-scroll itemSize */
   public rowHeight = toSignal(
@@ -84,8 +82,8 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy, 
           this.viewport?.checkViewportSize();
           // Only jump to IP if we haven't scrolled to this specific address yet
           // to prevent jumping back during infinite scroll expansion.
-          if (this.instructionPointerReference &&
-            this.normalizeAddress(this.instructionPointerReference) !== this.normalizeAddress(this.lastScrolledIP)) {
+          const pc = this.currentPc();
+          if (pc && this.normalizeAddress(pc) !== this.normalizeAddress(this.lastScrolledIP)) {
             this.scrollToCurrentInstruction();
           }
         }, 0);
@@ -105,15 +103,23 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy, 
     // which starts out with 0 height. Without this, the viewport may fail to
     // calculate its true size when the tab becomes active, leading to blank space.
     if (this.viewport && this.viewport.elementRef.nativeElement && typeof ResizeObserver !== 'undefined') {
-      this.resizeObserver = new ResizeObserver(() => {
+      let previousHeight = 0;
+      this.resizeObserver = new ResizeObserver((entries) => {
+        const height = entries[0]?.contentRect?.height || 0;
+        const becameVisible = previousHeight === 0 && height > 0;
+        previousHeight = height;
+
         // Wrap in setTimeout to prevent ResizeObserver limits and ExpressionChanged errors.
         if (this.viewportCheckTimeout) {
           clearTimeout(this.viewportCheckTimeout);
         }
         this.viewportCheckTimeout = setTimeout(() => {
           this.viewport?.checkViewportSize();
+          if (becameVisible) {
+            this.revealPC(true);
+          }
           this.viewportCheckTimeout = undefined;
-        }, 0);
+        }, 50);
       });
       this.resizeObserver.observe(this.viewport.elementRef.nativeElement);
     }
@@ -150,12 +156,6 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy, 
     }
   }
 
-  public ngOnChanges(changes: SimpleChanges): void {
-    if (changes['instructionPointerReference']) {
-      this.scrollToCurrentInstruction();
-    }
-  }
-
   public ngOnDestroy(): void {
     this.resizeObserver?.disconnect();
     if (this.viewportCheckTimeout) {
@@ -175,13 +175,13 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy, 
    */
   private normalizeAddress(addr: string | null | undefined): string {
     if (!addr) return '';
-    const lower = addr.toLowerCase();
+    const lower = addr.toLowerCase().trim();
     if (lower.startsWith('0x')) {
       try {
         return BigInt(lower).toString(16);
       } catch { }
     }
-    return lower.replace(/^0x/, '');
+    return lower.replace(/^0x/, '').trim();
   }
 
   private lastScrolledIP: string | null = null;
@@ -191,15 +191,16 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy, 
    * Resets the lastScrolledIP to force the scroll logic to execute even if
    * the IP hasn't changed (e.g. user scrolled away and wants to return).
    */
-  public revealPC(): void {
+  public revealPC(instant: boolean = false): void {
     this.lastScrolledIP = null;
-    this.scrollToCurrentInstruction();
+    this.scrollToCurrentInstruction(instant);
   }
 
-  private scrollToCurrentInstruction(): void {
-    if (!this.instructionPointerReference || this.instructions.length === 0 || !this.viewport) return;
+  private scrollToCurrentInstruction(instant: boolean = false): void {
+    const pc = this.currentPc();
+    if (!pc || this.instructions.length === 0 || !this.viewport) return;
 
-    const normalizedTarget = this.normalizeAddress(this.instructionPointerReference);
+    const normalizedTarget = this.normalizeAddress(pc);
 
     // Find the active instruction using normalized comparison
     const activeIndex = this.instructions.findIndex(i =>
@@ -207,9 +208,10 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy, 
     );
 
     if (activeIndex >= 0) {
+      const isInitial = this.lastScrolledIP === null;
       // Determine if this is a new IP we haven't scrolled to yet
-      if (this.normalizeAddress(this.instructionPointerReference) !== this.normalizeAddress(this.lastScrolledIP)) {
-        this.lastScrolledIP = this.instructionPointerReference;
+      if (this.normalizeAddress(pc) !== this.normalizeAddress(this.lastScrolledIP)) {
+        this.lastScrolledIP = pc;
 
         // Use a fallback viewport size if the CDK viewport hasn't fully measured the DOM yet
         const viewportSize = this.viewport.getViewportSize() || 400;
@@ -223,7 +225,8 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy, 
         this.scrollTimeout = setTimeout(() => {
           if (this.viewport) {
             // Force center alignment via direct offset manipulation
-            this.viewport.scrollToOffset(targetOffset, 'smooth');
+            const behavior = (instant || isInitial) ? 'auto' : 'smooth';
+            this.viewport.scrollToOffset(targetOffset, behavior);
           }
           this.scrollTimeout = null;
         }, 50);
@@ -234,7 +237,8 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy, 
   }
 
   public isInstructionPointer(address: string): boolean {
-    return this.normalizeAddress(address) === this.normalizeAddress(this.instructionPointerReference);
+    const pc = this.currentPc();
+    return this.normalizeAddress(address) === this.normalizeAddress(pc);
   }
 
   /**
@@ -248,8 +252,9 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy, 
     }
 
     // 2. Dim if it belongs to a different function than our active instruction!
-    if (this.instructionPointerReference) {
-      const activeInst = this.instructions.find(i => this.normalizeAddress(i.address) === this.normalizeAddress(this.instructionPointerReference));
+    const pc = this.currentPc();
+    if (pc) {
+      const activeInst = this.instructions.find(i => this.normalizeAddress(i.address) === this.normalizeAddress(pc));
       if (activeInst && activeInst.normalizedSymbol && instruction.normalizedSymbol) {
         if (activeInst.normalizedSymbol !== instruction.normalizedSymbol) {
           return true;
