@@ -4,7 +4,10 @@ import { DapAssemblyService, TaroDisassembledInstruction } from './dap-assembly.
 import { BehaviorSubject } from 'rxjs';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { CommonModule } from '@angular/common';
+import { of } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
 import { vi } from 'vitest';
+import { JumpToAddressDialogComponent } from './jump-to-address-dialog/jump-to-address-dialog.component';
 
 describe('AssemblyViewComponent', () => {
   let component: AssemblyViewComponent;
@@ -13,6 +16,7 @@ describe('AssemblyViewComponent', () => {
   let instructionsSubject: BehaviorSubject<TaroDisassembledInstruction[]>;
   let currentPcSubject: BehaviorSubject<string | null>;
   let loadingSubject: BehaviorSubject<boolean>;
+  let mockDialog: any;
 
   beforeEach(async () => {
     instructionsSubject = new BehaviorSubject<TaroDisassembledInstruction[]>([]);
@@ -24,14 +28,31 @@ describe('AssemblyViewComponent', () => {
       currentPc$: currentPcSubject.asObservable(),
       isLoading$: loadingSubject.asObservable(),
       onViewportScroll: vi.fn().mockResolvedValue(undefined),
+      relocateWindow: vi.fn().mockResolvedValue(undefined),
+    };
+
+    mockDialog = {
+      open: vi.fn().mockReturnValue({
+        afterClosed: () => of('0x401234')
+      })
     };
 
     await TestBed.configureTestingModule({
       imports: [AssemblyViewComponent, CommonModule, ScrollingModule],
       providers: [
-        { provide: DapAssemblyService, useValue: mockAssemblyService }
+        { provide: DapAssemblyService, useValue: mockAssemblyService },
+        { provide: MatDialog, useValue: mockDialog }
       ]
-    }).compileComponents();
+    })
+    .overrideComponent(AssemblyViewComponent, {
+      set: {
+        providers: [
+          { provide: DapAssemblyService, useValue: mockAssemblyService },
+          { provide: MatDialog, useValue: mockDialog }
+        ]
+      }
+    })
+    .compileComponents();
 
     fixture = TestBed.createComponent(AssemblyViewComponent);
     component = fixture.componentInstance;
@@ -99,5 +120,30 @@ describe('AssemblyViewComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const bpMarker = compiled.querySelector('.breakpoint-marker');
     expect(bpMarker).toBeTruthy();
+  });
+
+  describe('Jump to Address', () => {
+    it('should open the Jump to Address dialog when the Jump FAB is clicked', () => {
+      // Arrange
+      currentPcSubject.next('0x1000'); // Ensure FABs are visible
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const jumpButton = compiled.querySelector('button[aria-label="Jump to address"]') as HTMLButtonElement;
+      expect(jumpButton).toBeTruthy();
+
+      // Act
+      jumpButton.click();
+
+      // Assert
+      expect(mockDialog.open).toHaveBeenCalledWith(JumpToAddressDialogComponent, { width: '350px' });
+    });
+
+    it('should call relocateWindow when the dialog is confirmed with an address', async () => {
+      // Act
+      component.openJumpToAddressDialog();
+
+      // Assert
+      expect(mockAssemblyService.relocateWindow).toHaveBeenCalledWith('0x401234', 2001, -1000);
+    });
   });
 });

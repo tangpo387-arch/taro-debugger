@@ -1,0 +1,27 @@
+<h2 mat-dialog-title>Jump to Address</h2>
+
+<mat-dialog-content>
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Address</mat-label>
+    <input matInput 
+           [formControl]="addressControl" 
+           placeholder="e.g. 0x401234"
+           (keyup.enter)="onJump()">
+    <mat-error *ngIf="addressControl.hasError('required')">
+      Address is required
+    </mat-error>
+    <mat-error *ngIf="addressControl.hasError('pattern')">
+      Invalid hex address format
+    </mat-error>
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-flat-button 
+          color="primary" 
+          (click)="onJump()" 
+          [disabled]="addressControl.invalid">
+    Jump
+  </button>
+</mat-dialog-actions>

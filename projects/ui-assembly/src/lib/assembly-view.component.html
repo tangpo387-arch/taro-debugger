@@ -45,6 +45,12 @@
 
   <div class="floating-actions" *ngIf="currentPc()">
     <button mat-mini-fab color="primary" 
+            (click)="openJumpToAddressDialog()" 
+            matTooltip="Jump to address"
+            aria-label="Jump to address">
+      <mat-icon>pin_drop</mat-icon>
+    </button>
+    <button mat-mini-fab color="primary" 
             (click)="revealPC()" 
             matTooltip="Reveal current execution point"
             aria-label="Reveal PC">

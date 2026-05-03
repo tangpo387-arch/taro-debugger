@@ -7,14 +7,16 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { map, Subscription } from 'rxjs';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { DapAssemblyService, TaroDisassembledInstruction } from './dap-assembly.service';
 import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent } from '@taro/ui-shared';
+import { JumpToAddressDialogComponent } from './jump-to-address-dialog/jump-to-address-dialog.component';
 
 @Component({
   selector: 'app-assembly-view',
   standalone: true,
-  imports: [CommonModule, ScrollingModule, MatIconModule, MatButtonModule, MatTooltipModule, TaroEmptyStateComponent],
+  imports: [CommonModule, ScrollingModule, MatIconModule, MatButtonModule, MatTooltipModule, MatDialogModule, TaroEmptyStateComponent],
   templateUrl: './assembly-view.component.html',
   styleUrls: ['./assembly-view.component.scss']
 })
@@ -23,6 +25,7 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly dialog = inject(MatDialog);
 
   @ViewChild(CdkVirtualScrollViewport) viewport?: CdkVirtualScrollViewport;
 
@@ -80,11 +83,17 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy {
         // to resolve the blank space issue (R_UX_SCROLL_1)
         setTimeout(() => {
           this.viewport?.checkViewportSize();
-          // Only jump to IP if we haven't scrolled to this specific address yet
-          // to prevent jumping back during infinite scroll expansion.
-          const pc = this.currentPc();
-          if (pc && this.normalizeAddress(pc) !== this.normalizeAddress(this.lastScrolledIP)) {
-            this.scrollToCurrentInstruction();
+          
+          // If we have a pending jump target, scroll to it.
+          // Otherwise, only jump to IP if we haven't scrolled to this specific address yet.
+          if (this.pendingJumpAddress) {
+            this.scrollToAddress(this.pendingJumpAddress, true);
+            this.pendingJumpAddress = null;
+          } else {
+            const pc = this.currentPc();
+            if (pc && this.normalizeAddress(pc) !== this.normalizeAddress(this.lastScrolledIP)) {
+              this.scrollToCurrentInstruction();
+            }
           }
         }, 0);
       });
@@ -166,6 +175,20 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  public openJumpToAddressDialog(): void {
+    const dialogRef = this.dialog.open(JumpToAddressDialogComponent, {
+      width: '350px'
+    });
+
+    dialogRef.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
+      if (result) {
+        this.pendingJumpAddress = result;
+        // Use a large count and negative offset to ensure we're centered
+        this.assemblyService.relocateWindow(result, 2001, -1000);
+      }
+    });
+  }
+
   public trackByAddress(_index: number, item: TaroDisassembledInstruction): string {
     return item.address;
   }
@@ -185,6 +208,7 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private lastScrolledIP: string | null = null;
+  private pendingJumpAddress: string | null = null;
 
   /**
    * Manually triggers a scroll to center the current instruction pointer.
@@ -198,39 +222,48 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private scrollToCurrentInstruction(instant: boolean = false): void {
     const pc = this.currentPc();
-    if (!pc || this.instructions.length === 0 || !this.viewport) return;
+    if (pc) {
+      this.scrollToAddress(pc, instant);
+    }
+  }
 
-    const normalizedTarget = this.normalizeAddress(pc);
+  private scrollToAddress(address: string, instant: boolean = false): void {
+    if (!address || this.instructions.length === 0 || !this.viewport) return;
 
-    // Find the active instruction using normalized comparison
+    const normalizedTarget = this.normalizeAddress(address);
+
+    // Find the target instruction using normalized comparison
     const activeIndex = this.instructions.findIndex(i =>
       this.normalizeAddress(i.address) === normalizedTarget
     );
 
     if (activeIndex >= 0) {
       const isInitial = this.lastScrolledIP === null;
-      // Determine if this is a new IP we haven't scrolled to yet
-      if (this.normalizeAddress(pc) !== this.normalizeAddress(this.lastScrolledIP)) {
-        this.lastScrolledIP = pc;
-
-        // Use a fallback viewport size if the CDK viewport hasn't fully measured the DOM yet
-        const viewportSize = this.viewport.getViewportSize() || 400;
-        const rowHeight = this.rowHeight() || 28;
-
-        // Calculate the exact pixel offset required to center the active row
-        const centerOffsetPx = (viewportSize / 2) - (rowHeight / 2);
-        const targetOffset = Math.max(0, (activeIndex * rowHeight) - centerOffsetPx);
-
-        if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
-        this.scrollTimeout = setTimeout(() => {
-          if (this.viewport) {
-            // Force center alignment via direct offset manipulation
-            const behavior = (instant || isInitial) ? 'auto' : 'smooth';
-            this.viewport.scrollToOffset(targetOffset, behavior);
-          }
-          this.scrollTimeout = null;
-        }, 50);
+      // Update the lastScrolledIP to the CURRENT PC (if any).
+      // This "acknowledges" the current execution point even if we are scrolling elsewhere,
+      // preventing the automatic scroll-to-PC logic from snapping back until the PC moves again.
+      const currentPc = this.currentPc();
+      if (currentPc) {
+        this.lastScrolledIP = currentPc;
       }
+
+      // Use a fallback viewport size if the CDK viewport hasn't fully measured the DOM yet
+      const viewportSize = this.viewport.getViewportSize() || 400;
+      const rowHeight = this.rowHeight() || 28;
+
+      // Calculate the exact pixel offset required to center the active row
+      const centerOffsetPx = (viewportSize / 2) - (rowHeight / 2);
+      const targetOffset = Math.max(0, (activeIndex * rowHeight) - centerOffsetPx);
+
+      if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
+      this.scrollTimeout = setTimeout(() => {
+        if (this.viewport) {
+          // Force center alignment via direct offset manipulation
+          const behavior = (instant || isInitial) ? 'auto' : 'smooth';
+          this.viewport.scrollToOffset(targetOffset, behavior);
+        }
+        this.scrollTimeout = null;
+      }, 50);
 
       this.updateStickyHeader(activeIndex);
     }

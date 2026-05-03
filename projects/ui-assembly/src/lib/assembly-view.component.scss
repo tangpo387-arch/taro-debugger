@@ -44,6 +44,12 @@
   /* Prevent browser from messing with scroll position when content updates */
   overflow-anchor: none;
   background-color: var(--mat-sys-surface);
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  scrollbar-width: none; // Firefox compatibility
+  -ms-overflow-style: none; // IE/Edge compatibility
 }
 
 .assembly-row {

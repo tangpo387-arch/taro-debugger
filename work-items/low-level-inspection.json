@@ -391,6 +391,37 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-03"
       }
+    },
+    {
+      "id": "WI-113",
+      "title": "Assembly View: Address-Based Navigation",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-112"
+        ]
+      },
+      "description": "Replace the inaccurate virtual scrollbar in the Assembly View with a hidden scrollbar and a Jump-to-Address toolbar input, eliminating the misleading scrollbar thumb caused by the unknown instruction address space.",
+      "details": [
+        "Remove vertical scrollbar from cdk-virtual-scroll-viewport via CSS",
+        "Add a new pin_drop mat-mini-fab button to .floating-actions, positioned above the Return-to-PC FAB",
+        "Create standalone JumpToAddressDialogComponent in ui-assembly with hex input, inline validation, Cancel and Jump actions",
+        "Wire dialog afterClosed() result in AssemblyViewComponent to call relocateWindow() with normalized address",
+        "Retain the existing Return-to-PC floating action button as the primary escape hatch",
+        "[Test] Verify that clicking the Jump FAB opens JumpToAddressDialogComponent via MatDialog",
+        "[Test] Verify that a confirmed valid hex address calls relocateWindow() with the correct normalized address",
+        "[Test] Verify that invalid input shows mat-error and does not close the dialog or call relocateWindow()",
+        "[Test] Verify that the scrollbar is not visible and no layout regression occurs",
+        "[Doc] docs/archive/specs/assembly-address-navigation.md"
+      ],
+      "timeline": {
+        "created": "2026-05-03",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-03"
+      }
     }
   ]
 }
