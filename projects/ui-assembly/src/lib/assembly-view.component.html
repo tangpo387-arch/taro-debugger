@@ -1,6 +1,6 @@
 <div class="assembly-container">
   <!-- Sticky Function Header -->
-  <div *ngIf="activeSymbol && instructions.length > 0 && !isLoading" class="function-header">
+  <div *ngIf="activeSymbol && instructions.length > 0" class="function-header">
     Dump of assembler code for function <span class="symbol-name">{{ activeSymbol }}</span>:
   </div>
 
@@ -42,4 +42,13 @@
       message="No assembly instructions loaded.">
     </taro-empty-state>
   }
+
+  <div class="floating-actions" *ngIf="instructionPointerReference">
+    <button mat-mini-fab color="primary" 
+            (click)="revealPC()" 
+            matTooltip="Reveal current execution point"
+            aria-label="Reveal PC">
+      <mat-icon>my_location</mat-icon>
+    </button>
+  </div>
 </div>

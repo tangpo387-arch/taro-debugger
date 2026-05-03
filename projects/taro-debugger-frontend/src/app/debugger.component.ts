@@ -273,7 +273,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         // 2. Load Disassembly
         if (frame.instructionPointerReference) {
           tasks.push(
-            from(this.assemblyService.fetchInstructions(frame.instructionPointerReference)).pipe(
+            from(this.assemblyService.fetchInstructions(frame.instructionPointerReference, 200, -100)).pipe(
               catchError(e => {
                 this.logService.consoleLog(`Disassembly failed: ${e.message}`, 'error', 'system');
                 return of(null);
@@ -783,7 +783,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     this.activeLine = null;
     this.activeLineFilePath = null;
     this.activeInstructionPointer = null;
-    this.assemblyService.clear();
     // Note: initialSourcesLoaded is intentionally NOT reset here.
     // It is only reset on session-level events (terminated, exited) or explicit
     // disconnect/reconnect — to prevent a Resume → StepOver cycle from triggering

@@ -2,6 +2,7 @@
 title: Assembly Instruction Cache Implementation
 scope: Low-Level Inspection
 audience: [Human Engineer, Agent Role Play]
+last_updated: 2026-05-02
 related:
   - work-items.md
 ---
@@ -54,19 +55,19 @@ When a request for `[RequestedStart, RequestedEnd]` arrives:
 
 ### 3. Eviction Policy
 
-- **Capacity**: Maximum of 10,000 instructions.
-- **Policy**: When capacity is exceeded, the cache performs **Spatial Pruning**. It calculates the absolute numerical distance between each `CachedRange` and the current `instructionPointerReference`. The range(s) with the greatest distance are evicted first until memory usage falls below the 80% watermark (8,000 instructions).
+- **Capacity**: Maximum of 20,000 instructions.
+- **Policy**: When capacity is exceeded, the cache performs **Spatial Pruning**. It calculates the absolute numerical distance between each `CachedRange` and the current `instructionPointerReference`. The range(s) with the greatest distance are evicted first until memory usage falls below the 75% watermark (15,000 instructions).
 
 ### 4. Lifecycle & Invalidation
 
-- **Clear Trigger 1**: `DapSessionService` emits a `terminated` or `disconnect` event.
-- **Clear Trigger 2**: The active `threadId` or `frameId` changes (to prevent stale data if memory is remapped).
-- **Clear Trigger 3**: Manual "Refresh" action in the UI.
+- **Clear Trigger 1**: `DapSessionService` emits a `terminated`, `exited`, or `disconnect` event.
+- **Clear Trigger 2**: A `module` event is received (indicating a shared library load/unload that could change the memory map).
+- **Persistence**: The cache is **PERSISTED** across thread switches within the same session, as all threads share the same instruction memory space.
 
 ## Acceptance Criteria
 
 1. **Redundancy Test**: Scrolling to an address range, scrolling away, and scrolling back MUST NOT trigger a second `disassemble` request for that range.
 2. **Gap Filling**: If a request spans both cached and uncached memory, only the uncached portion is requested from DAP.
 3. **Auto-Fetch**: Scrolling near the boundaries of the cached range automatically triggers background loading of adjacent instructions.
-4. **Spatial Eviction**: When the 10k limit is hit, instructions farthest from the current IP are removed, while instructions near the IP remain cached.
+4. **Spatial Eviction**: When the 20k limit is hit, instructions farthest from the current IP are removed until the 15k watermark is reached.
 5. **BigInt Safety**: Handles high-memory addresses (e.g., `0xffffffff80000000`) without precision loss.

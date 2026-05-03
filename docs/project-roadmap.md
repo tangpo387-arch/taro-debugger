@@ -2,7 +2,7 @@
 title: Project Roadmap & Dependency Map
 scope: milestones, dependencies, architecture-tracking
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer, Human Engineer]
-last_updated: 2026-05-02
+last_updated: 2026-05-03
 ---
 
 # Project Roadmap & Dependency Map
@@ -306,7 +306,7 @@ graph LR
     style WI_107 fill:#6366f1,stroke:#4f46e5
     style WI_108 fill:#6366f1,stroke:#4f46e5
     style WI_109 fill:#6366f1,stroke:#4f46e5
-    style WI_110 fill:#6366f1,stroke:#4f46e5
+    style WI_110 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI_01 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_02 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_03 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
