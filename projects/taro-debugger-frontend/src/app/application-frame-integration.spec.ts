@@ -66,7 +66,7 @@ describe('WI-81: Application Frame & Global Controls Integration', () => {
           { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
           { provide: DapLogService, useValue: { consoleLog: vi.fn(), appendDapLog: vi.fn(), consoleLogs$: EMPTY, programLogs$: EMPTY, dapLogs$: EMPTY } },
           { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
-          { provide: DapAssemblyService, useValue: { clear: vi.fn(), instructions$: EMPTY, isLoading$: EMPTY, currentPc$: EMPTY } },
+          { provide: DapAssemblyService, useValue: { clear: vi.fn(), instructions$: EMPTY, isLoading$: EMPTY } },
           { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
           { provide: Router, useValue: { navigate: vi.fn() } },
           { provide: MatSnackBar, useValue: { open: vi.fn() } },
@@ -83,7 +83,7 @@ describe('WI-81: Application Frame & Global Controls Integration', () => {
             { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
             { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
             { provide: DapLogService, useValue: { consoleLog: vi.fn(), appendDapLog: vi.fn(), consoleLogs$: EMPTY, programLogs$: EMPTY, dapLogs$: EMPTY } },
-            { provide: DapAssemblyService, useValue: { clear: vi.fn(), instructions$: EMPTY, isLoading$: EMPTY, currentPc$: EMPTY } },
+            { provide: DapAssemblyService, useValue: { clear: vi.fn(), instructions$: EMPTY, isLoading$: EMPTY } },
           ]
         }
       });

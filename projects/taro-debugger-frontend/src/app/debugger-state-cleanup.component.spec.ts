@@ -4,7 +4,6 @@ import { DapSessionService } from '@taro/dap-core';
 import { DapConfigService } from '@taro/dap-core';
 import { DapVariablesService } from '@taro/ui-inspection';
 import { DapLogService } from '@taro/ui-console';
-import { DapAssemblyService } from '@taro/ui-assembly';
 import { NGX_MONACO_EDITOR_CONFIG } from 'ngx-monaco-editor-v2';
 import { Router } from '@angular/router';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
@@ -48,13 +47,6 @@ describe('DebuggerComponent — State Cleanup Logic', () => {
       appendDapLog: vi.fn(),
     };
 
-    const mockAssemblyService = {
-      clear: vi.fn(),
-      relocateWindow: vi.fn().mockResolvedValue([]),
-      instructions$: EMPTY,
-      currentPc$: EMPTY
-    };
-
     const mockConfigService = {
       getConfig: () => ({ executablePath: '/path/to/exe', transportType: 'websocket' })
     };
@@ -67,7 +59,6 @@ describe('DebuggerComponent — State Cleanup Logic', () => {
         { provide: DapSessionService, useValue: mockDapSession },
         { provide: DapVariablesService, useValue: mockVariablesService },
         { provide: DapLogService, useValue: mockLogService },
-        { provide: DapAssemblyService, useValue: mockAssemblyService },
         { provide: DapConfigService, useValue: mockConfigService },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: { baseUrl: 'assets/monaco' } },
@@ -77,7 +68,7 @@ describe('DebuggerComponent — State Cleanup Logic', () => {
     });
 
     component = TestBed.inject(DebuggerComponent);
-    
+
     // Manually trigger ngOnInit to set up subscriptions
     component.ngOnInit();
   });

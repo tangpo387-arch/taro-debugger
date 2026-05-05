@@ -8,8 +8,9 @@ import { BreakpointObserver } from '@angular/cdk/layout';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { map, Subscription } from 'rxjs';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { input, effect } from '@angular/core';
 
-import { DapAssemblyService, TaroDisassembledInstruction } from './dap-assembly.service';
+import { DapAssemblyService, TaroDisassembledInstruction, normalizeAddress } from './dap-assembly.service';
 import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent } from '@taro/ui-shared';
 import { JumpToAddressDialogComponent } from './jump-to-address-dialog/jump-to-address-dialog.component';
 
@@ -29,8 +30,17 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @ViewChild(CdkVirtualScrollViewport) viewport?: CdkVirtualScrollViewport;
 
-  /** Signal representing the current PC from the service */
-  public readonly currentPc = toSignal(this.assemblyService.currentPc$);
+  /** Signal representing the current PC */
+  public readonly currentPc = input<string | null>(null);
+
+  constructor() {
+    effect(() => {
+      const pc = this.currentPc();
+      if (pc) {
+        this.assemblyService.relocateWindow(BigInt(pc));
+      }
+    });
+  }
 
   /** Responsive row height for cdk-virtual-scroll itemSize */
   public rowHeight = toSignal(
@@ -41,7 +51,7 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy {
   );
 
   public instructions: TaroDisassembledInstruction[] = [];
-  public isLoading: boolean = false;
+  public readonly isLoading = toSignal(this.assemblyService.isLoading$, { initialValue: false });
 
   /** Current active symbol for sticky header */
   public activeSymbol: string | null = null;
@@ -61,7 +71,7 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cdr.detectChanges();
 
         // Stabilization: If we prepended items (backward scroll), adjust offset to prevent jumping
-        if (prevCount > 0 && this.instructions.length > prevCount && firstOldAddr) {
+        if (prevCount > 0 && this.instructions.length > prevCount && firstOldAddr !== null && firstOldAddr !== undefined) {
           const newFirstIndex = this.instructions.findIndex(i => i.address === firstOldAddr);
           if (newFirstIndex > 0) {
             const addedCount = newFirstIndex;
@@ -83,7 +93,7 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy {
         // to resolve the blank space issue (R_UX_SCROLL_1)
         setTimeout(() => {
           this.viewport?.checkViewportSize();
-          
+
           // If we have a pending jump target, scroll to it.
           // Otherwise, only jump to IP if we haven't scrolled to this specific address yet.
           if (this.pendingJumpAddress) {
@@ -91,18 +101,11 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy {
             this.pendingJumpAddress = null;
           } else {
             const pc = this.currentPc();
-            if (pc && this.normalizeAddress(pc) !== this.normalizeAddress(this.lastScrolledIP)) {
-              this.scrollToCurrentInstruction();
+            if (pc && normalizeAddress(pc) !== normalizeAddress(this.lastScrolledIP)) {
+              this.scrollToAddress(pc, false);
             }
           }
         }, 0);
-      });
-
-    this.assemblyService.isLoading$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((loading: boolean) => {
-        this.isLoading = loading;
-        this.cdr.detectChanges();
       });
   }
 
@@ -183,28 +186,29 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy {
     dialogRef.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
       if (result) {
         this.pendingJumpAddress = result;
-        // Use a large count and negative offset to ensure we're centered
-        this.assemblyService.relocateWindow(result, 2001, -1000);
+        this.assemblyService.relocateWindow(result);
       }
     });
   }
 
   public trackByAddress(_index: number, item: TaroDisassembledInstruction): string {
-    return item.address;
+    return normalizeAddress(item.address);
+  }
+
+  /**
+   * Formats a bigint or string address into a standardized hex string for UI display.
+   */
+  public formatAddress(addr: string | bigint | undefined): string {
+    if (addr === undefined || addr === null) return '';
+    if (typeof addr === 'bigint') return `0x${addr.toString(16)}`;
+    return addr;
   }
 
   /**
    * Normalizes hex addresses for reliable comparison (strips 0x and lowercases)
    */
-  private normalizeAddress(addr: string | null | undefined): string {
-    if (!addr) return '';
-    const lower = addr.toLowerCase().trim();
-    if (lower.startsWith('0x')) {
-      try {
-        return BigInt(lower).toString(16);
-      } catch { }
-    }
-    return lower.replace(/^0x/, '').trim();
+  private normalizeAddress(addr: string | bigint | null | undefined): string {
+    return normalizeAddress(addr);
   }
 
   private lastScrolledIP: string | null = null;
@@ -217,10 +221,6 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   public revealPC(instant: boolean = false): void {
     this.lastScrolledIP = null;
-    this.scrollToCurrentInstruction(instant);
-  }
-
-  private scrollToCurrentInstruction(instant: boolean = false): void {
     const pc = this.currentPc();
     if (pc) {
       this.scrollToAddress(pc, instant);
@@ -269,7 +269,7 @@ export class AssemblyViewComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  public isInstructionPointer(address: string): boolean {
+  public isInstructionPointer(address: string | bigint | undefined): boolean {
     const pc = this.currentPc();
     return this.normalizeAddress(address) === this.normalizeAddress(pc);
   }

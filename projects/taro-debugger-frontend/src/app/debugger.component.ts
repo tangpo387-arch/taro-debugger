@@ -71,7 +71,7 @@ import { DapFileTreeService } from './dap-file-tree.service';
     DapVariablesService,
     DapLogService,
     DapAssemblyCacheService,
-    DapAssemblyService
+    DapAssemblyService,
   ],
   templateUrl: './debugger.component.html',
   styleUrls: ['./debugger.component.scss']
@@ -82,7 +82,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly dapSession = inject(DapSessionService);
   private readonly variablesService = inject(DapVariablesService);
-  private readonly assemblyService = inject(DapAssemblyService);
   private readonly logService = inject(DapLogService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
@@ -272,19 +271,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
           );
         }
 
-        // 2. Load Disassembly
-        if (frame.instructionPointerReference) {
-          tasks.push(
-            from(this.assemblyService.setPC(frame.instructionPointerReference)).pipe(
-              catchError(e => {
-                this.logService.consoleLog(`Disassembly failed: ${e.message}`, 'error', 'system');
-                return of(null);
-              })
-            )
-          );
-        }
-
-        // 3. Load Scopes (Variable Inspector)
+        // 2. Load Scopes (Variable Inspector)
         tasks.push(
           from(this.variablesService.fetchScopes(frame.id)).pipe(
             catchError(() => of(null))

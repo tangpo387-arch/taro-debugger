@@ -10,7 +10,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { DapConfigService } from '@taro/dap-core';
 import { DapVariablesService } from '@taro/ui-inspection';
 import { DapLogService } from '@taro/ui-console';
-import { DapAssemblyService } from '@taro/ui-assembly';
 import { KeyboardShortcutService } from './keyboard-shortcut.service';
 import { DapFileTreeService } from './dap-file-tree.service';
 import { NGX_MONACO_EDITOR_CONFIG } from 'ngx-monaco-editor-v2';
@@ -56,7 +55,6 @@ describe('Breakpoint Integration', () => {
         { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: '/path/to/exe' }) } },
         { provide: DapVariablesService, useValue: { fetchScopes: vi.fn().mockResolvedValue(undefined) } },
         { provide: DapLogService, useValue: mockLogService },
-        { provide: DapAssemblyService, useValue: { clear: vi.fn(), setPC: vi.fn(), currentPc$: EMPTY } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: MatSnackBar, useValue: { open: vi.fn() } },
         { provide: MatDialog, useValue: { open: vi.fn() } },

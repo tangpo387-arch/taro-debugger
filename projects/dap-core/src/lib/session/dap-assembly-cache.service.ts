@@ -79,22 +79,16 @@ export class DapAssemblyCacheService implements OnDestroy {
    * @returns Enhanced instruction array (may be combined from cache + DAP).
    */
   public async fetchInstructions(
-    memoryReference: string,
+    memoryReference: bigint,
     instructionCount: number,
-    instructionOffset: number = 0
+    instructionOffset: number
   ): Promise<TaroDisassembledInstruction[]> {
     if (!memoryReference) return [];
 
     // Resolve starting address when a hex reference is provided.
-    let startAddr: bigint | null = null;
-    if (memoryReference.startsWith('0x')) {
-      try {
-        startAddr = BigInt(memoryReference);
-        this.currentIpRef = startAddr;
-      } catch (e) {
-        throw new Error(`Fatal error: Non-parseable memory reference: ${memoryReference}`);
-      }
-    }
+    const startAddr = memoryReference;
+    this.currentIpRef = startAddr;
+    const memRefStr = `0x${memoryReference.toString(16)}`;
 
     // Cache check: try to satisfy the full request from local store.
     let cachedInstructions: TaroDisassembledInstruction[] = [];
@@ -120,13 +114,13 @@ export class DapAssemblyCacheService implements OnDestroy {
       try {
         const [negRes, posRes] = await Promise.all([
           this.sessionService.disassemble({
-            memoryReference,
+            memoryReference: memRefStr,
             instructionCount: negCount,
             instructionOffset: actualOffset,
             resolveSymbols: true
           }),
           this.sessionService.disassemble({
-            memoryReference,
+            memoryReference: memRefStr,
             instructionCount: posCount,
             instructionOffset: 0,
             resolveSymbols: true
@@ -137,12 +131,11 @@ export class DapAssemblyCacheService implements OnDestroy {
 
         // Workaround for GDB DAP bug: if negative instructionOffset returns empty,
         // fallback to computing a preceding memory reference using byte math.
-        if (negInstructions.length === 0 && negCount > 0 && memoryReference.startsWith('0x')) {
+        if (negInstructions.length === 0 && negCount > 0) {
           try {
-            const addr = BigInt(memoryReference);
             // Assume max ~4 bytes per instruction + padding, over-fetch slightly
-            const guessBytes = BigInt(negCount * 4 + 32); 
-            const fallbackRef = '0x' + (addr - guessBytes).toString(16);
+            const guessBytes = BigInt(negCount * 4 + 32);
+            const fallbackRef = `0x${(startAddr - guessBytes).toString(16)}`;
             const fallbackRes = await this.sessionService.disassemble({
               memoryReference: fallbackRef,
               instructionCount: negCount + 10, // over-fetch to ensure overlap with PC
@@ -160,7 +153,7 @@ export class DapAssemblyCacheService implements OnDestroy {
       } catch (e) {
         // Fallback to single request if adapter doesn't support concurrent requests well
         const response = await this.sessionService.disassemble({
-          memoryReference,
+          memoryReference: memRefStr,
           instructionCount: actualCount,
           instructionOffset: actualOffset,
           resolveSymbols: true
@@ -169,7 +162,7 @@ export class DapAssemblyCacheService implements OnDestroy {
       }
     } else {
       const response = await this.sessionService.disassemble({
-        memoryReference,
+        memoryReference: memRefStr,
         instructionCount: actualCount,
         instructionOffset: actualOffset,
         resolveSymbols: true
@@ -198,7 +191,20 @@ export class DapAssemblyCacheService implements OnDestroy {
     this.updateCachedRanges(uniqueEnhanced);
     this.pruneCache();
 
-    return [...cachedInstructions, ...uniqueEnhanced];
+    // Combine and deduplicate to ensure a clean continuous stream for the UI
+    const merged = [...cachedInstructions, ...uniqueEnhanced];
+    const finalResults: TaroDisassembledInstruction[] = [];
+    const finalSeen = new Set<string>();
+
+    for (const inst of merged) {
+      const addr = this.normalizeAddress(inst.address);
+      if (!finalSeen.has(addr)) {
+        finalSeen.add(addr);
+        finalResults.push(inst);
+      }
+    }
+
+    return finalResults.slice(0, instructionCount);
   }
 
   /**
@@ -231,12 +237,7 @@ export class DapAssemblyCacheService implements OnDestroy {
       const rawSymbol = inst.symbol || '';
       let isFunctionStart = false;
 
-      let addr: bigint;
-      try {
-        addr = BigInt(inst.address.startsWith('0x') ? inst.address : `0x${inst.address}`);
-      } catch {
-        addr = BigInt(0);
-      }
+      const addr = this.parseAddress(inst.address);
 
       // Strip angle brackets, operator suffixes, and offset component.
       let parsedOffset: number | undefined;
@@ -358,7 +359,9 @@ export class DapAssemblyCacheService implements OnDestroy {
     this.cachedRanges = merged;
   }
 
-  private parseAddress(addr: string): bigint {
+  private parseAddress(addr: string | bigint | undefined): bigint {
+    if (addr === undefined || addr === null) return BigInt(0);
+    if (typeof addr === 'bigint') return addr;
     try {
       return BigInt(addr.startsWith('0x') ? addr : `0x${addr}`);
     } catch {

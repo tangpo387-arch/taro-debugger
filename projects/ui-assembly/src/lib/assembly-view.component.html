@@ -19,7 +19,7 @@
         <div class="breakpoint-marker"></div> <!-- For future BP integration -->
       </div>
       
-      <div class="address">{{ instruction.address }}</div>
+      <div class="address">{{ formatAddress(instruction.address) }}</div>
       
       <!-- Offset column -->
       <div class="offset">
@@ -32,11 +32,11 @@
       
     </div>
   </cdk-virtual-scroll-viewport>
-  <div *ngIf="isLoading" class="loading-overlay">
+  <div *ngIf="isLoading()" class="loading-overlay">
     <span>Loading disassembly...</span>
   </div>
 
-  @if (!isLoading && instructions.length === 0) {
+  @if (!isLoading() && instructions.length === 0) {
     <taro-empty-state 
       icon="terminal" 
       message="No assembly instructions loaded.">

@@ -14,18 +14,15 @@ describe('AssemblyViewComponent', () => {
   let fixture: ComponentFixture<AssemblyViewComponent>;
   let mockAssemblyService: any;
   let instructionsSubject: BehaviorSubject<TaroDisassembledInstruction[]>;
-  let currentPcSubject: BehaviorSubject<string | null>;
   let loadingSubject: BehaviorSubject<boolean>;
   let mockDialog: any;
 
   beforeEach(async () => {
     instructionsSubject = new BehaviorSubject<TaroDisassembledInstruction[]>([]);
-    currentPcSubject = new BehaviorSubject<string | null>(null);
     loadingSubject = new BehaviorSubject<boolean>(false);
 
     mockAssemblyService = {
       instructions$: instructionsSubject.asObservable(),
-      currentPc$: currentPcSubject.asObservable(),
       isLoading$: loadingSubject.asObservable(),
       onViewportScroll: vi.fn().mockResolvedValue(undefined),
       relocateWindow: vi.fn().mockResolvedValue(undefined),
@@ -44,15 +41,15 @@ describe('AssemblyViewComponent', () => {
         { provide: MatDialog, useValue: mockDialog }
       ]
     })
-    .overrideComponent(AssemblyViewComponent, {
-      set: {
-        providers: [
-          { provide: DapAssemblyService, useValue: mockAssemblyService },
-          { provide: MatDialog, useValue: mockDialog }
-        ]
-      }
-    })
-    .compileComponents();
+      .overrideComponent(AssemblyViewComponent, {
+        set: {
+          providers: [
+            { provide: DapAssemblyService, useValue: mockAssemblyService },
+            { provide: MatDialog, useValue: mockDialog }
+          ]
+        }
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(AssemblyViewComponent);
     component = fixture.componentInstance;
@@ -67,7 +64,7 @@ describe('AssemblyViewComponent', () => {
     const fakeInstructions: TaroDisassembledInstruction[] = [];
     for (let i = 0; i < 1000; i++) {
       fakeInstructions.push({
-        address: `0x${i.toString(16).padStart(8, '0')}`,
+        address: BigInt(i),
         instructionBytes: '90',
         instruction: 'nop'
       });
@@ -86,13 +83,13 @@ describe('AssemblyViewComponent', () => {
 
   it('should verify the highlighted instruction is synchronized with the current instruction pointer reference', () => {
     const fakeInstructions: TaroDisassembledInstruction[] = [
-      { address: '0x1000', instruction: 'nop', normalizedSymbol: 'main' },
-      { address: '0x1004', instruction: 'mov eax, ebx', normalizedSymbol: 'main' },
-      { address: '0x1008', instruction: 'ret', normalizedSymbol: 'main' }
+      { address: BigInt('0x1000'), instruction: 'nop', normalizedSymbol: 'main' },
+      { address: BigInt('0x1004'), instruction: 'mov eax, ebx', normalizedSymbol: 'main' },
+      { address: BigInt('0x1008'), instruction: 'ret', normalizedSymbol: 'main' }
     ];
 
     instructionsSubject.next(fakeInstructions);
-    currentPcSubject.next('0x1004');
+    fixture.componentRef.setInput('currentPc', '0x1004');
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
@@ -111,7 +108,7 @@ describe('AssemblyViewComponent', () => {
     // Currently breakpoint toggle is a stub in the UI placeholder, 
     // but the template contains the `.breakpoint-marker` gutter column.
     const fakeInstructions: TaroDisassembledInstruction[] = [
-      { address: '0x1000', instruction: 'nop', normalizedSymbol: 'main' }
+      { address: BigInt('0x1000'), instruction: 'nop', normalizedSymbol: 'main' }
     ];
 
     instructionsSubject.next(fakeInstructions);
@@ -125,7 +122,7 @@ describe('AssemblyViewComponent', () => {
   describe('Jump to Address', () => {
     it('should open the Jump to Address dialog when the Jump FAB is clicked', () => {
       // Arrange
-      currentPcSubject.next('0x1000'); // Ensure FABs are visible
+      fixture.componentRef.setInput('currentPc', '0x1000'); // Ensure FABs are visible
       fixture.detectChanges();
       const compiled = fixture.nativeElement as HTMLElement;
       const jumpButton = compiled.querySelector('button[aria-label="Jump to address"]') as HTMLButtonElement;
@@ -138,12 +135,12 @@ describe('AssemblyViewComponent', () => {
       expect(mockDialog.open).toHaveBeenCalledWith(JumpToAddressDialogComponent, { width: '350px' });
     });
 
-    it('should call relocateWindow when the dialog is confirmed with an address', async () => {
+    it('should call jumpTo when the dialog is confirmed with an address', async () => {
       // Act
       component.openJumpToAddressDialog();
 
       // Assert
-      expect(mockAssemblyService.relocateWindow).toHaveBeenCalledWith('0x401234', 2001, -1000);
+      expect(mockAssemblyService.relocateWindow).toHaveBeenCalledWith('0x401234');
     });
   });
 });

@@ -1,11 +1,30 @@
 import { TestBed } from '@angular/core/testing';
-import { firstValueFrom, Subject, BehaviorSubject } from 'rxjs';
+import { firstValueFrom, BehaviorSubject } from 'rxjs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { DapAssemblyService } from './dap-assembly.service';
+import { DapAssemblyService, TaroDisassembledInstruction } from './dap-assembly.service';
 import { DapAssemblyCacheService } from '@taro/dap-core';
+
+/**
+ * Typed accessor for DapAssemblyService private/internal members.
+ *
+ * Using a standalone interface (not `DapAssemblyService & {...}`) avoids the
+ * TypeScript intersection-to-`never` collapse that occurs when you redeclare a
+ * member that is `private` in the base class.  Cast once at setup via `unknown`;
+ * all subsequent accesses through `svc` are fully type-checked.
+ */
+interface DapAssemblyServiceInternals {
+  relocateWindow(ref: bigint, count: number, offset: number): Promise<void>;
+  fetchMore(direction: 'forward' | 'backward'): Promise<void>;
+  readonly instructionsSubject: BehaviorSubject<TaroDisassembledInstruction[]>;
+  readonly loadingSubject: BehaviorSubject<boolean>;
+  readonly instructions$: DapAssemblyService['instructions$'];
+  readonly isLoading$: DapAssemblyService['isLoading$'];
+}
 
 describe('DapAssemblyService (UI Layer)', () => {
   let service: DapAssemblyService;
+  /** Typed view of private members — cast once, used throughout all tests. */
+  let svc: DapAssemblyServiceInternals;
   let mockCacheService: any;
 
   beforeEach(() => {
@@ -23,6 +42,7 @@ describe('DapAssemblyService (UI Layer)', () => {
     });
 
     service = TestBed.inject(DapAssemblyService);
+    svc = service as unknown as DapAssemblyServiceInternals;
   });
 
   afterEach(() => {
@@ -34,78 +54,63 @@ describe('DapAssemblyService (UI Layer)', () => {
     expect(service).toBeTruthy();
   });
 
-  // ── setPC ───────────────────────────────────────────────────────────────
-
-  describe('setPC', () => {
-    it('should update currentPc$ and trigger a centered instruction fetch', async () => {
-      mockCacheService.fetchInstructions.mockResolvedValue([]);
-
-      await service.setPC('0x1000');
-
-      expect(await firstValueFrom(service.currentPc$)).toBe('0x1000');
-      expect(mockCacheService.fetchInstructions).toHaveBeenCalledWith('0x1000', 2001, -1000);
-    });
-
-    it('should skip fetching if the PC is null or empty', async () => {
-      await service.setPC('');
-      expect(mockCacheService.fetchInstructions).not.toHaveBeenCalled();
-    });
-  });
-
   // ── relocateWindow ────────────────────────────────────────────────────
 
   describe('relocateWindow', () => {
     it('should update instructions$ with data from the cache service', async () => {
       const fakeInstructions = [
-        { address: '0x1000', instruction: 'mov eax, 1' },
-        { address: '0x1005', instruction: 'add eax, 2' },
+        { address: BigInt('0x1000'), instruction: 'mov eax, 1' },
+        { address: BigInt('0x1005'), instruction: 'add eax, 2' },
       ];
       mockCacheService.fetchInstructions.mockResolvedValue(fakeInstructions);
 
-      await service.relocateWindow('0x1000', 2);
+      await svc.relocateWindow(BigInt('0x1000'), 2, 0);
 
-      const instructions = await firstValueFrom(service.instructions$);
+      const instructions = await firstValueFrom(svc.instructions$);
       expect(instructions.length).toBe(2);
-      expect(instructions[0].address).toBe('0x1000');
+      expect(instructions[0].address).toBe(BigInt('0x1000'));
     });
 
     it('should skip the fetch entirely when the IP is already in the UI stream (fast-path)', async () => {
-      // Seed the UI stream directly
-      const existing = [{ address: '0x1000', instruction: 'nop' }];
-      (service as any).instructionsSubject.next(existing);
+      // Arrange — seed the UI stream directly via the internal subject
+      const existing = [{ address: BigInt('0x1000'), instruction: 'nop' }];
+      svc.instructionsSubject.next(existing);
 
-      await service.relocateWindow('0x1000', 1);
+      // Act
+      await svc.relocateWindow(BigInt('0x1000'), 1, 0);
 
-      // No cache call expected
+      // Assert — no cache call expected
       expect(mockCacheService.fetchInstructions).not.toHaveBeenCalled();
     });
 
     it('should set isLoading$ to true while fetching, then false when done', async () => {
       let loadingDuringFetch = false;
       mockCacheService.fetchInstructions.mockImplementation(async () => {
-        loadingDuringFetch = (await firstValueFrom(service.isLoading$));
+        loadingDuringFetch = (await firstValueFrom(svc.isLoading$));
         return [];
       });
 
-      await service.relocateWindow('0x1000', 1);
+      await svc.relocateWindow(BigInt('0x1000'), 1, 0);
 
       expect(loadingDuringFetch).toBe(true);
-      expect(await firstValueFrom(service.isLoading$)).toBe(false);
+      expect(await firstValueFrom(svc.isLoading$)).toBe(false);
     });
 
-    it('should clear instructions$ and re-throw when the cache service throws', async () => {
+    it('should clear instructions$ and log when the cache service throws', async () => {
       mockCacheService.fetchInstructions.mockRejectedValue(new Error('DAP error'));
 
-      await expect(service.relocateWindow('0x1000', 1)).rejects.toThrow('DAP error');
-      const instructions = await firstValueFrom(service.instructions$);
+      // Should resolve (not reject) — errors are handled internally
+      await expect(svc.relocateWindow(BigInt('0x1000'), 1, 0)).resolves.toBeUndefined();
+      const instructions = await firstValueFrom(svc.instructions$);
       expect(instructions.length).toBe(0);
     });
 
     it('should pass offset parameter correctly to cache service', async () => {
       mockCacheService.fetchInstructions.mockResolvedValue([]);
-      await service.relocateWindow('0x1000', 200, -100);
 
-      expect(mockCacheService.fetchInstructions).toHaveBeenCalledWith('0x1000', 200, -100);
+      await svc.relocateWindow(BigInt('0x1000'), 200, -100);
+
+      expect(mockCacheService.fetchInstructions).toHaveBeenCalledWith(BigInt('0x1000'), 200, -100);
     });
   });
 
@@ -113,73 +118,60 @@ describe('DapAssemblyService (UI Layer)', () => {
 
   describe('fetchMore', () => {
     it('should append instructions forward and update the stream', async () => {
-      const initial = [{ address: '0x1000', instruction: 'nop' }];
-      (service as any).instructionsSubject.next(initial);
+      const initial = [{ address: BigInt('0x1000'), instruction: 'nop' }];
+      svc.instructionsSubject.next(initial);
 
-      const newInsts = [{ address: '0x1004', instruction: 'ret' }];
+      const newInsts = [{ address: BigInt('0x1004'), instruction: 'ret' }];
       mockCacheService.fetchInstructions.mockResolvedValue(newInsts);
 
-      await service.fetchMore('forward');
+      await svc.fetchMore('forward');
 
       const instructions = await firstValueFrom(service.instructions$);
       expect(instructions.length).toBe(2);
-      expect(instructions[1].address).toBe('0x1004');
+      expect(instructions[1].address).toBe(BigInt('0x1004'));
     });
 
     it('should prepend instructions backward and update the stream', async () => {
-      const initial = [{ address: '0x1000', instruction: 'nop' }];
-      (service as any).instructionsSubject.next(initial);
+      const initial = [{ address: BigInt('0x1000'), instruction: 'nop' }];
+      svc.instructionsSubject.next(initial);
 
-      const newInsts = [{ address: '0x09F0', instruction: 'prev' }];
+      const newInsts = [{ address: BigInt('0x09F0'), instruction: 'prev' }];
       mockCacheService.fetchInstructions.mockResolvedValue(newInsts);
 
-      await service.fetchMore('backward');
+      await svc.fetchMore('backward');
 
       const instructions = await firstValueFrom(service.instructions$);
       expect(instructions.length).toBe(2);
-      expect(instructions[0].address).toBe('0x09F0');
+      expect(instructions[0].address).toBe(BigInt('0x09F0'));
     });
 
     it('should use last address + offset=1 for forward fetch', async () => {
-      (service as any).instructionsSubject.next([
-        { address: '0x1000', instruction: 'nop' },
-        { address: '0x1008', instruction: 'ret' },
+      svc.instructionsSubject.next([
+        { address: BigInt('0x1000'), instruction: 'nop' },
+        { address: BigInt('0x1008'), instruction: 'ret' },
       ]);
       mockCacheService.fetchInstructions.mockResolvedValue([]);
 
-      await service.fetchMore('forward');
+      await svc.fetchMore('forward');
 
-      expect(mockCacheService.fetchInstructions).toHaveBeenCalledWith('0x1008', 100, 1);
+      expect(mockCacheService.fetchInstructions).toHaveBeenCalledWith(BigInt('0x1008'), 100, 1);
     });
 
     it('should use first address + offset=-100 for backward fetch', async () => {
-      (service as any).instructionsSubject.next([
-        { address: '0x1000', instruction: 'nop' },
+      svc.instructionsSubject.next([
+        { address: BigInt('0x1000'), instruction: 'nop' },
       ]);
       mockCacheService.fetchInstructions.mockResolvedValue([]);
 
-      await service.fetchMore('backward');
+      await svc.fetchMore('backward');
 
-      expect(mockCacheService.fetchInstructions).toHaveBeenCalledWith('0x1000', 100, -100);
+      expect(mockCacheService.fetchInstructions).toHaveBeenCalledWith(BigInt('0x1000'), 100, -100);
     });
 
     it('should not fetch when stream is empty', async () => {
-      await service.fetchMore('forward');
+      await svc.fetchMore('forward');
       expect(mockCacheService.fetchInstructions).not.toHaveBeenCalled();
     });
   });
 
-  // ── clear ────────────────────────────────────────────────────────────────
-
-  describe('clear', () => {
-    it('should clear instructions$, reset loading$, and delegate to the cache service', async () => {
-      (service as any).instructionsSubject.next([{ address: '0x1000', instruction: 'nop' }]);
-
-      service.clear();
-
-      expect(mockCacheService.clear).toHaveBeenCalled();
-      expect(await firstValueFrom(service.instructions$)).toEqual([]);
-      expect(await firstValueFrom(service.isLoading$)).toBe(false);
-    });
-  });
 });

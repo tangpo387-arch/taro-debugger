@@ -2,7 +2,6 @@ import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { DebuggerComponent } from './debugger.component';
 import { DapSessionService } from '@taro/dap-core';
 import { DapVariablesService } from '@taro/ui-inspection';
-import { DapAssemblyService } from '@taro/ui-assembly';
 import { DapFileTreeService } from './dap-file-tree.service';
 import { DapLogService } from '@taro/ui-console';
 import { DapConfigService } from '@taro/dap-core';
@@ -16,7 +15,6 @@ describe('Frame Switch Integration', () => {
   let component: DebuggerComponent;
   let mockDapSession: any;
   let mockVariablesService: any;
-  let mockAssemblyService: any;
   let mockFileTreeService: any;
 
   beforeEach(() => {
@@ -48,16 +46,6 @@ describe('Frame Switch Integration', () => {
       clear: vi.fn()
     };
 
-    mockAssemblyService = {
-      relocateWindow: vi.fn().mockImplementation(async () => {
-        await new Promise(resolve => setTimeout(resolve, 50));
-        return [];
-      }),
-      clear: vi.fn(),
-      setPC: vi.fn(),
-      currentPc$: EMPTY
-    };
-
     mockFileTreeService = {
       readFile: vi.fn().mockImplementation((path: string) => {
         // Return observable with delay to test switchMap cancellation
@@ -72,7 +60,6 @@ describe('Frame Switch Integration', () => {
         DebuggerComponent,
         { provide: DapSessionService, useValue: mockDapSession },
         { provide: DapVariablesService, useValue: mockVariablesService },
-        { provide: DapAssemblyService, useValue: mockAssemblyService },
         { provide: DapFileTreeService, useValue: mockFileTreeService },
         { provide: DapLogService, useValue: { consoleLog: vi.fn(), appendDapLog: vi.fn() } },
         { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },

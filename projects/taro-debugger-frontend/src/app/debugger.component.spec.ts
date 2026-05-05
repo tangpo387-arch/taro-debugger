@@ -4,7 +4,6 @@ import { DapSessionService } from '@taro/dap-core';
 import { DapConfigService } from '@taro/dap-core';
 import { DapVariablesService } from '@taro/ui-inspection';
 import { DapLogService } from '@taro/ui-console';
-import { DapAssemblyService } from '@taro/ui-assembly';
 import { NGX_MONACO_EDITOR_CONFIG } from 'ngx-monaco-editor-v2';
 import { Router } from '@angular/router';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
@@ -53,14 +52,6 @@ describe('DebuggerComponent — onStepInstructionTab()', () => {
       appendProgramLog: vi.fn()
     };
 
-    const mockAssemblyService = {
-      clear: vi.fn(),
-      relocateWindow: vi.fn().mockResolvedValue([]),
-      setPC: vi.fn(),
-      instructions$: new BehaviorSubject<any[]>([]).asObservable(),
-      currentPc$: new BehaviorSubject<string | null>(null).asObservable()
-    };
-
     const mockConfigService = {
       getConfig: () => ({ executablePath: '/path/to/exe', transportType: 'websocket' })
     };
@@ -75,7 +66,6 @@ describe('DebuggerComponent — onStepInstructionTab()', () => {
         { provide: DapSessionService, useValue: mockDapSession },
         { provide: DapVariablesService, useValue: mockVariablesService },
         { provide: DapLogService, useValue: mockLogService },
-        { provide: DapAssemblyService, useValue: mockAssemblyService },
         { provide: DapConfigService, useValue: mockConfigService },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: { baseUrl: 'assets/monaco' } },
@@ -158,7 +148,6 @@ describe('DebuggerComponent — Keyboard Shortcut Integration', () => {
         { provide: DapLogService, useValue: mockLogService },
         { provide: ChangeDetectorRef, useValue: mockCdr },
         { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
-        { provide: DapAssemblyService, useValue: { clear: vi.fn(), setPC: vi.fn(), currentPc$: EMPTY } },
         { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
@@ -252,7 +241,6 @@ describe('DebuggerComponent — Reveal Logic', () => {
           }
         },
         { provide: DapLogService, useValue: { consoleLog: vi.fn() } },
-        { provide: DapAssemblyService, useValue: { clear: vi.fn(), setPC: vi.fn(), currentPc$: EMPTY } },
         { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
@@ -311,7 +299,6 @@ describe('DebuggerComponent — State Cleanup (WI-83)', () => {
         { provide: DapSessionService, useValue: mockDapSession },
         { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
         { provide: DapLogService, useValue: { consoleLog: vi.fn() } },
-        { provide: DapAssemblyService, useValue: { clear: vi.fn(), setPC: vi.fn(), currentPc$: EMPTY } },
         { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
@@ -412,7 +399,6 @@ describe('DebuggerComponent — No-Source Frame UX (WI-100)', () => {
         { provide: DapSessionService, useValue: mockDapSession },
         { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn().mockResolvedValue(undefined) } },
         { provide: DapLogService, useValue: { consoleLog: vi.fn() } },
-        { provide: DapAssemblyService, useValue: { clear: vi.fn(), setPC: vi.fn(), currentPc$: EMPTY, relocateWindow: vi.fn().mockResolvedValue([]) } },
         { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
