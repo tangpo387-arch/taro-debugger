@@ -33,7 +33,7 @@ import { DapEvent, DapStackFrame } from '@taro/dap-core';
 import { FileNode } from './file-tree.service';
 import { DapLogService } from '@taro/ui-console';
 import { DebugControlGroupComponent } from './debug-control-group.component';
-import { AssemblyViewComponent, DapAssemblyService } from '@taro/ui-assembly';
+import { AssemblyViewComponent } from '@taro/ui-assembly';
 import { DapAssemblyCacheService } from '@taro/dap-core';
 import { KeyboardShortcutService, ActionID } from './keyboard-shortcut.service';
 import { DapFileTreeService } from './dap-file-tree.service';
@@ -71,7 +71,6 @@ import { DapFileTreeService } from './dap-file-tree.service';
     DapVariablesService,
     DapLogService,
     DapAssemblyCacheService,
-    DapAssemblyService,
   ],
   templateUrl: './debugger.component.html',
   styleUrls: ['./debugger.component.scss']
@@ -169,7 +168,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public activeFrameId: number | null = null;
   public activeLine: number | null = null;
   public activeLineFilePath: string | null = null;
-  public activeInstructionPointer: string | null = null;
+  public activeInstructionPointer: bigint | undefined = undefined;
 
   /** Sidenav widths, console height, and left visibility */
   public leftWidth: number = 250;
@@ -610,7 +609,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     this.activeLine = frame.line;
     // Normalize: strip any trailing slash that some DAP adapters (e.g. GDB MI) append to source paths.
     this.activeLineFilePath = frame.source?.path?.replace(/\/+$/, '') || null;
-    this.activeInstructionPointer = frame.instructionPointerReference || null;
+    this.activeInstructionPointer = frame.instructionPointerReference;
 
     if (frame.source && frame.source.path) {
       // Normalize: strip trailing slash before storing as the editor filename / breakpoint map key.
@@ -619,7 +618,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       this.currentCode = '// Loading source code...';
 
       // Focus Source tab only if we're already there, or if there's no IP to show in Disassembly
-      if (this.activeTabIndex === 0 || !frame.instructionPointerReference) {
+      if (this.activeTabIndex === 0 || frame.instructionPointerReference == undefined) {
         this.activeTabIndex = 0;
       }
     } else {
@@ -771,7 +770,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     this.activeFrameId = null;
     this.activeLine = null;
     this.activeLineFilePath = null;
-    this.activeInstructionPointer = null;
+    this.activeInstructionPointer = undefined;
     // Note: initialSourcesLoaded is intentionally NOT reset here.
     // It is only reset on session-level events (terminated, exited) or explicit
     // disconnect/reconnect — to prevent a Resume → StepOver cycle from triggering

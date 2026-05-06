@@ -5,8 +5,9 @@ import { KeyboardShortcutService, ActionID } from './keyboard-shortcut.service';
 import { DapSessionService, DapConfigService } from '@taro/dap-core';
 import { DapLogService } from '@taro/ui-console';
 import { DapVariablesService } from '@taro/ui-inspection';
-import { DapAssemblyService, AssemblyViewComponent } from '@taro/ui-assembly';
+import { AssemblyViewComponent } from '@taro/ui-assembly';
 import { DapFileTreeService } from './dap-file-tree.service';
+import { DapAssemblyCacheService } from '@taro/dap-core';
 import { Subject, BehaviorSubject, of, EMPTY } from 'rxjs';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -66,12 +67,12 @@ describe('WI-81: Application Frame & Global Controls Integration', () => {
           { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
           { provide: DapLogService, useValue: { consoleLog: vi.fn(), appendDapLog: vi.fn(), consoleLogs$: EMPTY, programLogs$: EMPTY, dapLogs$: EMPTY } },
           { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
-          { provide: DapAssemblyService, useValue: { clear: vi.fn(), instructions$: EMPTY, isLoading$: EMPTY } },
           { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
           { provide: Router, useValue: { navigate: vi.fn() } },
           { provide: MatSnackBar, useValue: { open: vi.fn() } },
           { provide: MatDialog, useValue: mockDialog },
           { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } },
+          { provide: DapAssemblyCacheService, useValue: { fetchInstructions: () => of([]), clear: vi.fn() } },
           { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
         ]
       }).compileComponents();
@@ -83,7 +84,7 @@ describe('WI-81: Application Frame & Global Controls Integration', () => {
             { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
             { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
             { provide: DapLogService, useValue: { consoleLog: vi.fn(), appendDapLog: vi.fn(), consoleLogs$: EMPTY, programLogs$: EMPTY, dapLogs$: EMPTY } },
-            { provide: DapAssemblyService, useValue: { clear: vi.fn(), instructions$: EMPTY, isLoading$: EMPTY } },
+            { provide: DapAssemblyCacheService, useValue: { fetchInstructions: () => of([]), clear: vi.fn() } },
           ]
         }
       });

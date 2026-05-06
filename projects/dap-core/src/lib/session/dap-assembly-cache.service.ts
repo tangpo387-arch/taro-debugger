@@ -25,7 +25,7 @@ export class DapAssemblyCacheService implements OnDestroy {
   private readonly sessionService = inject(DapSessionService);
 
   // ── Cache State ──────────────────────────────────────────────────────────
-  private readonly instructionCache = new Map<string, TaroDisassembledInstruction>();
+  private readonly instructionCache = new Map<bigint, TaroDisassembledInstruction>();
   /** Sorted list of all cached instruction addresses for fast neighbor lookup. */
   private sortedAddresses: bigint[] = [];
   /** Non-overlapping merged cached ranges, sorted by start address. */
@@ -174,18 +174,18 @@ export class DapAssemblyCacheService implements OnDestroy {
 
     // Deduplicate to prevent Angular ngFor trackBy errors from overlapping fetches
     const uniqueEnhanced: TaroDisassembledInstruction[] = [];
-    const seen = new Set<string>();
+    const seen = new Set<bigint>();
     for (const inst of enhanced) {
-      const addr = this.normalizeAddress(inst.address);
-      if (!seen.has(addr)) {
-        seen.add(addr);
+      if (inst.address !== undefined && !seen.has(inst.address)) {
+        seen.add(inst.address);
         uniqueEnhanced.push(inst);
       }
     }
 
     // Persist new instructions to the cache.
     for (const inst of uniqueEnhanced) {
-      this.instructionCache.set(this.normalizeAddress(inst.address), inst);
+      if (inst.address !== undefined)
+        this.instructionCache.set(inst.address, inst);
     }
     this.updateSortedAddresses();
     this.updateCachedRanges(uniqueEnhanced);
@@ -194,12 +194,11 @@ export class DapAssemblyCacheService implements OnDestroy {
     // Combine and deduplicate to ensure a clean continuous stream for the UI
     const merged = [...cachedInstructions, ...uniqueEnhanced];
     const finalResults: TaroDisassembledInstruction[] = [];
-    const finalSeen = new Set<string>();
+    const finalSeen = new Set<bigint>();
 
     for (const inst of merged) {
-      const addr = this.normalizeAddress(inst.address);
-      if (!finalSeen.has(addr)) {
-        finalSeen.add(addr);
+      if (inst.address !== undefined && !finalSeen.has(inst.address)) {
+        finalSeen.add(inst.address);
         finalResults.push(inst);
       }
     }
@@ -229,7 +228,7 @@ export class DapAssemblyCacheService implements OnDestroy {
    * - Calculates the `byteOffset` from the start of the current function.
    * - Sets `isFunctionStart = true` on the first instruction of each function.
    */
-  public enhanceInstructions(instructions: DapDisassembledInstruction[]): TaroDisassembledInstruction[] {
+  private enhanceInstructions(instructions: DapDisassembledInstruction[]): TaroDisassembledInstruction[] {
     let currentBaseSymbol = '';
     let currentBaseAddress = BigInt(0);
 
@@ -237,7 +236,9 @@ export class DapAssemblyCacheService implements OnDestroy {
       const rawSymbol = inst.symbol || '';
       let isFunctionStart = false;
 
-      const addr = this.parseAddress(inst.address);
+      const addr = inst.address;
+      if (addr === undefined)
+        return { ...inst, normalizedSymbol: '', byteOffset: undefined, isFunctionStart: false };
 
       // Strip angle brackets, operator suffixes, and offset component.
       let parsedOffset: number | undefined;
@@ -290,8 +291,7 @@ export class DapAssemblyCacheService implements OnDestroy {
 
     const result: TaroDisassembledInstruction[] = [];
     for (let i = startIdx; i < this.sortedAddresses.length && result.length < count; i++) {
-      const addr = this.sortedAddresses[i];
-      const inst = this.instructionCache.get(this.normalizeAddress(addr.toString(16)));
+      const inst = this.instructionCache.get(this.sortedAddresses[i]);
       if (inst) {
         result.push(inst);
       } else {
@@ -315,29 +315,15 @@ export class DapAssemblyCacheService implements OnDestroy {
 
   private updateSortedAddresses(): void {
     this.sortedAddresses = Array.from(this.instructionCache.keys())
-      .map(a => BigInt(`0x${a}`))
-      .sort((a, b) => (a < b ? -1 : 1));
-  }
-
-  private normalizeAddress(addr: string | bigint | null | undefined): string {
-    if (!addr) return '';
-    if (typeof addr === 'bigint') {
-      return addr.toString(16).toLowerCase();
-    }
-    const lower = addr.toLowerCase();
-    if (lower.startsWith('0x')) {
-      try {
-        return BigInt(lower).toString(16);
-      } catch { }
-    }
-    return lower.replace(/^0x/, '');
+      .sort((a, b) => (a < b ? -1 : (a > b ? 1 : 0)));
   }
 
   private updateCachedRanges(newInstructions: TaroDisassembledInstruction[]): void {
     if (newInstructions.length === 0) return;
 
-    const start = this.parseAddress(newInstructions[0].address);
-    const end = this.parseAddress(newInstructions[newInstructions.length - 1].address);
+    const start = newInstructions[0].address;
+    const end = newInstructions[newInstructions.length - 1].address;
+    if (start === undefined || end === undefined) return;
 
     this.cachedRanges.push({ start, end });
 
@@ -357,16 +343,6 @@ export class DapAssemblyCacheService implements OnDestroy {
     }
     merged.push(current);
     this.cachedRanges = merged;
-  }
-
-  private parseAddress(addr: string | bigint | undefined): bigint {
-    if (addr === undefined || addr === null) return BigInt(0);
-    if (typeof addr === 'bigint') return addr;
-    try {
-      return BigInt(addr.startsWith('0x') ? addr : `0x${addr}`);
-    } catch {
-      return BigInt(0);
-    }
   }
 
   /**
@@ -397,10 +373,9 @@ export class DapAssemblyCacheService implements OnDestroy {
   }
 
   private evictRange(range: CachedRange): void {
-    for (const [addrStr, inst] of this.instructionCache.entries()) {
-      const addr = this.parseAddress(inst.address);
+    for (const [addr] of this.instructionCache.entries()) {
       if (addr >= range.start && addr <= range.end) {
-        this.instructionCache.delete(addrStr);
+        this.instructionCache.delete(addr);
       }
     }
   }

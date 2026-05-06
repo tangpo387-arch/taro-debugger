@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AssemblyViewComponent } from './assembly-view.component';
-import { DapAssemblyService, TaroDisassembledInstruction } from './dap-assembly.service';
-import { BehaviorSubject } from 'rxjs';
+import { TaroDisassembledInstruction } from '@taro/dap-core';
+import { DapAssemblyCacheService } from '@taro/dap-core';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { CommonModule } from '@angular/common';
 import { of } from 'rxjs';
@@ -12,20 +12,12 @@ import { JumpToAddressDialogComponent } from './jump-to-address-dialog/jump-to-a
 describe('AssemblyViewComponent', () => {
   let component: AssemblyViewComponent;
   let fixture: ComponentFixture<AssemblyViewComponent>;
-  let mockAssemblyService: any;
-  let instructionsSubject: BehaviorSubject<TaroDisassembledInstruction[]>;
-  let loadingSubject: BehaviorSubject<boolean>;
+  let mockCacheService: any;
   let mockDialog: any;
 
   beforeEach(async () => {
-    instructionsSubject = new BehaviorSubject<TaroDisassembledInstruction[]>([]);
-    loadingSubject = new BehaviorSubject<boolean>(false);
-
-    mockAssemblyService = {
-      instructions$: instructionsSubject.asObservable(),
-      isLoading$: loadingSubject.asObservable(),
-      onViewportScroll: vi.fn().mockResolvedValue(undefined),
-      relocateWindow: vi.fn().mockResolvedValue(undefined),
+    mockCacheService = {
+      fetchInstructions: vi.fn().mockResolvedValue([]),
     };
 
     mockDialog = {
@@ -37,14 +29,14 @@ describe('AssemblyViewComponent', () => {
     await TestBed.configureTestingModule({
       imports: [AssemblyViewComponent, CommonModule, ScrollingModule],
       providers: [
-        { provide: DapAssemblyService, useValue: mockAssemblyService },
+        { provide: DapAssemblyCacheService, useValue: mockCacheService },
         { provide: MatDialog, useValue: mockDialog }
       ]
     })
       .overrideComponent(AssemblyViewComponent, {
         set: {
           providers: [
-            { provide: DapAssemblyService, useValue: mockAssemblyService },
+            { provide: DapAssemblyCacheService, useValue: mockCacheService },
             { provide: MatDialog, useValue: mockDialog }
           ]
         }
@@ -70,7 +62,7 @@ describe('AssemblyViewComponent', () => {
       });
     }
 
-    instructionsSubject.next(fakeInstructions);
+    component.instructions = fakeInstructions;
     fixture.detectChanges();
 
     expect(component.instructions.length).toBe(1000);
@@ -88,8 +80,8 @@ describe('AssemblyViewComponent', () => {
       { address: BigInt('0x1008'), instruction: 'ret', normalizedSymbol: 'main' }
     ];
 
-    instructionsSubject.next(fakeInstructions);
-    fixture.componentRef.setInput('currentPc', '0x1004');
+    component.instructions = fakeInstructions;
+    fixture.componentRef.setInput('currentPc', BigInt('0x1004'));
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
@@ -111,7 +103,7 @@ describe('AssemblyViewComponent', () => {
       { address: BigInt('0x1000'), instruction: 'nop', normalizedSymbol: 'main' }
     ];
 
-    instructionsSubject.next(fakeInstructions);
+    component.instructions = fakeInstructions;
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
@@ -122,7 +114,7 @@ describe('AssemblyViewComponent', () => {
   describe('Jump to Address', () => {
     it('should open the Jump to Address dialog when the Jump FAB is clicked', () => {
       // Arrange
-      fixture.componentRef.setInput('currentPc', '0x1000'); // Ensure FABs are visible
+      fixture.componentRef.setInput('currentPc', BigInt('0x1000')); // Ensure FABs are visible
       fixture.detectChanges();
       const compiled = fixture.nativeElement as HTMLElement;
       const jumpButton = compiled.querySelector('button[aria-label="Jump to address"]') as HTMLButtonElement;
@@ -136,11 +128,12 @@ describe('AssemblyViewComponent', () => {
     });
 
     it('should call jumpTo when the dialog is confirmed with an address', async () => {
+      vi.spyOn(component, 'relocateWindow').mockResolvedValue(undefined);
       // Act
       component.openJumpToAddressDialog();
 
       // Assert
-      expect(mockAssemblyService.relocateWindow).toHaveBeenCalledWith('0x401234');
+      expect(component.relocateWindow).toHaveBeenCalledWith(BigInt('0x401234'));
     });
   });
 });

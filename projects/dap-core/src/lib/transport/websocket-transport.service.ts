@@ -89,11 +89,11 @@ export class WebSocketTransportService extends DapTransportService {
       this.socket.close();
       this.socket = undefined;
     }
-    
+
     // Complete the current message stream; a fresh one will be used for the next connect()
     this.messageSubject.complete();
     this.messageSubject = new Subject<DapMessage>();
-    
+
     this.connectionStatusSubject.next(false);
   }
 
@@ -191,7 +191,19 @@ export class WebSocketTransportService extends DapTransportService {
       this.bufferLength -= totalLength;
 
       try {
-        const message = JSON.parse(payloadString) as DapMessage;
+        const message = JSON.parse(payloadString, (key, value) => {
+          if (key === 'instructionPointerReference' || key === 'address' || key === 'memoryReference') {
+            if (value === null) return undefined;
+            if (typeof value === 'string') {
+              try {
+                return value.startsWith('0x') ? BigInt(value) : BigInt(`0x${value}`);
+              } catch {
+                return value;
+              }
+            }
+          }
+          return value;
+        }) as DapMessage;
         this.messageSubject.next(message);
       } catch (e: any) {
         console.error('Failed to parse DAP message:', e, payloadString);

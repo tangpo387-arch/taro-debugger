@@ -66,7 +66,7 @@ export interface DapStackFrame {
   };
   line: number;
   column: number;
-  instructionPointerReference?: string;
+  instructionPointerReference?: bigint;
   moduleId?: number | string;
   [key: string]: any;
 }
