@@ -28,7 +28,7 @@ export class DapLogService {
    */
   public consoleLog(message: string, level: 'info' | 'error' = 'info', category: LogCategory = 'console', data?: any): void {
     if (!message) return;
-    
+
     const lines = message.split(/\r?\n/);
     // Filter out trailing empty line caused by a final \n (mirrors appendProgramLog guard)
     if (lines.length > 1 && lines[lines.length - 1] === '') {
@@ -68,7 +68,7 @@ export class DapLogService {
     if (lines.length > 1 && lines[lines.length - 1] === '') {
       lines.pop();
     }
-    
+
     const now = new Date();
     const level: 'info' | 'error' = category === 'stderr' ? 'error' : 'info';
     const newEntries: LogEntry[] = lines
@@ -96,19 +96,26 @@ export class DapLogService {
   public appendDapLog(message: any): void {
     if (!message) return;
 
+    // Convert any bigint fields to string to prevent JSON serialization errors in the UI
+    const safeMessage = JSON.parse(
+      JSON.stringify(message, (_, value) =>
+        typeof value === 'bigint' ? `0x${value.toString(16)}` : value
+      )
+    );
+
     let summary = '';
     let level: 'info' | 'error' = 'info';
 
-    if (message.type === 'request') {
-      summary = `[${message.seq}] ${message.command}`;
-    } else if (message.type === 'response') {
-      summary = `[${message.request_seq}] ${message.command}`;
-      if (!message.success) {
+    if (safeMessage.type === 'request') {
+      summary = `[${safeMessage.seq}] ${safeMessage.command}`;
+    } else if (safeMessage.type === 'response') {
+      summary = `[${safeMessage.request_seq}] ${safeMessage.command}`;
+      if (!safeMessage.success) {
         level = 'error';
-        summary += ` - Failed: ${message.message || 'Unknown error'}`;
+        summary += ` - Failed: ${safeMessage.message || 'Unknown error'}`;
       }
-    } else if (message.type === 'event') {
-      summary = `${message.event}`;
+    } else if (safeMessage.type === 'event') {
+      summary = `${safeMessage.event}`;
     }
 
     const entry: LogEntry = {
@@ -117,7 +124,7 @@ export class DapLogService {
       message: summary,
       category: 'dap',
       level,
-      data: message
+      data: safeMessage
     };
 
     const newLogs = [...this.dapLogsSubject.value, entry];
