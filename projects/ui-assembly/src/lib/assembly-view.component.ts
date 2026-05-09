@@ -46,7 +46,7 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
 
   constructor() {
     const effectRef = effect(() => {
-      this.relocateWindow(this.currentPc());
+      this.relocateWindow(this.currentPc(), 'jump');
     });
     this.destroyRef.onDestroy(() => {
       effectRef.destroy();
@@ -71,14 +71,18 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
   private viewportCheckTimeout?: any;
   private scrollTimeout?: any;
 
-  private updateInstructions(inst: TaroDisassembledInstruction[], direction: 'forward' | 'backward' | 'replace'): void {
+  private updateInstructions(
+    inst: TaroDisassembledInstruction[],
+    action: 'forward' | 'backward' | 'jump',
+    targetAddress?: bigint
+  ): void {
     const prevCount = this.instructions.length;
     const firstOldAddr = prevCount > 0 ? this.instructions[0].address : null;
 
     this.instructions = inst || [];
     this.cdr.detectChanges();
 
-    if (direction === 'backward' && prevCount > 0 && firstOldAddr !== null && firstOldAddr !== undefined) {
+    if (action === 'backward' && prevCount > 0 && firstOldAddr !== null && firstOldAddr !== undefined) {
       const newFirstIndex = this.instructions.findIndex(i => i.address === firstOldAddr);
       if (newFirstIndex > 0) {
         const addedCount = newFirstIndex;
@@ -96,13 +100,10 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
     setTimeout(() => {
       this.viewport?.checkViewportSize();
 
-      if (this.pendingJumpAddress !== undefined) {
-        this.scrollToAddress(this.pendingJumpAddress);
-        this.pendingJumpAddress = undefined;
-      } else if (direction === 'replace') {
-        const pc = this.currentPc();
-        if (pc !== undefined) {
-          this.scrollToAddress(pc);
+      if (action === 'jump') {
+        const target = targetAddress ?? this.currentPc();
+        if (target !== undefined) {
+          this.scrollToAddress(target);
         }
       }
     }, 0);
@@ -194,8 +195,7 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
     dialogRef.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
       if (result) {
         const addr = BigInt(result);
-        this.pendingJumpAddress = addr;
-        this.relocateWindow(addr);
+        this.relocateWindow(addr, 'jump');
       }
     });
   }
@@ -212,7 +212,6 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
     return `0x${addr.toString(16)}`;
   }
 
-  private pendingJumpAddress: bigint | undefined = undefined;
   private relocateToken: number = 0;
 
   private scrollToAddress(address: bigint): void {
@@ -290,7 +289,8 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
   }
 
   public async relocateWindow(
-    memoryReference: bigint | undefined = this.currentPc(),
+    memoryReference: bigint | undefined,
+    action: 'forward' | 'backward' | 'jump',
     instructionCount: number = AssemblyViewComponent.ASSEMBLY_WINDOW_SIZE,
     instructionOffset: number = AssemblyViewComponent.ASSEMBLY_WINDOW_OFFSET
   ): Promise<void> {
@@ -299,55 +299,54 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
     const currentToken = ++this.relocateToken;
 
     const currentUI = this.instructions;
-    if (currentUI.length > 0) {
+    if (currentUI.length > 0 && action === 'jump') {
       const found = currentUI.some(i => i.address === memoryReference);
       if (found && instructionOffset >= 0) return;
     }
 
     this.isLoading.set(true);
     try {
-      const instructions = await this.cacheService.fetchInstructions(memoryReference!,
+      const instructions = await this.cacheService.fetchInstructions(
+        memoryReference,
         instructionCount,
-        instructionOffset);
+        instructionOffset
+      );
       if (this.relocateToken !== currentToken) return; // Ignore stale request results
 
-      this.updateInstructions(instructions, 'replace');
+      this.updateInstructions(instructions, action, memoryReference);
     } catch (error: any) {
       if (this.relocateToken !== currentToken) return;
-      this.updateInstructions([], 'replace');
+      this.updateInstructions([], action);
       console.error('[AssemblyViewComponent] relocateWindow failed:', error?.message ?? error);
     } finally {
-      this.isLoading.set(false);
+      if (this.relocateToken === currentToken) {
+        this.isLoading.set(false);
+      }
     }
   }
 
   private async onViewportScroll(index: number, viewportSize: number): Promise<void> {
+    if (this.DEBUG_SCROLL && isDevMode()) {
+      console.log(`[AssemblyView] onViewportScroll entry: index=${index}, viewportSize=${viewportSize}, loading=${this.isLoading()}, instructions=${this.instructions.length}`);
+    }
     const current = this.instructions;
+    if (current.length === 0 || current[0].address === undefined || this.isLoading()) return;
+
+    let action: "forward" | "backward" | undefined;
     if (index + viewportSize >= current.length - AssemblyViewComponent.AUTO_FETCH_THRESHOLD) {
-      await this.fetchMore('forward');
+      action = 'forward';
     } else if (index <= AssemblyViewComponent.AUTO_FETCH_THRESHOLD) {
-      await this.fetchMore('backward');
+      action = 'backward';
+    }
+    if (action !== undefined) {
+      if (this.DEBUG_SCROLL && isDevMode()) {
+        console.log(`[AssemblyView] onViewportScroll: index=${index}, viewportSize=${viewportSize}, action=${action}`);
+      }
+      const count = AssemblyViewComponent.AUTO_FETCH_COUNT;
+      const instructionOffset = action === 'forward' ? count : -count;
+      await this.relocateWindow(current[0].address, action,
+        AssemblyViewComponent.ASSEMBLY_WINDOW_SIZE, instructionOffset);
     }
   }
 
-  private async fetchMore(direction: 'forward' | 'backward'): Promise<void> {
-    const current = this.instructions;
-    if (current.length === 0 || this.isLoading()) return;
-
-    const count = AssemblyViewComponent.AUTO_FETCH_COUNT;
-    const windowSize = AssemblyViewComponent.ASSEMBLY_WINDOW_SIZE;
-    const first = current[0].address!;
-
-    const instructionOffset = direction === 'forward' ? count : -count;
-
-    try {
-      this.isLoading.set(true);
-      const nextList = await this.cacheService.fetchInstructions(first, windowSize, instructionOffset);
-      this.updateInstructions(nextList, direction);
-    } catch (error) {
-      console.error('Auto-fetch failed', error);
-    } finally {
-      this.isLoading.set(false);
-    }
-  }
 }

@@ -133,7 +133,7 @@ describe('AssemblyViewComponent', () => {
       component.openJumpToAddressDialog();
 
       // Assert
-      expect(component.relocateWindow).toHaveBeenCalledWith(BigInt('0x401234'));
+      expect(component.relocateWindow).toHaveBeenCalledWith(BigInt('0x401234'), 'jump');
     });
   });
 });
