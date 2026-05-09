@@ -79,24 +79,19 @@ export class DapAssemblyCacheService implements OnDestroy {
    * @returns Enhanced instruction array (may be combined from cache + DAP).
    */
   public async fetchInstructions(
-    memoryReference: bigint,
+    startAddr: bigint,
     instructionCount: number,
     instructionOffset: number
   ): Promise<TaroDisassembledInstruction[]> {
-    if (!memoryReference) return [];
 
-    // Resolve starting address when a hex reference is provided.
-    const startAddr = memoryReference;
     this.currentIpRef = startAddr;
-    const memRefStr = `0x${memoryReference.toString(16)}`;
+    const memRefStr = `0x${startAddr.toString(16)}`;
 
     // Cache check: try to satisfy the full request from local store.
     let cachedInstructions: TaroDisassembledInstruction[] = [];
-    if (startAddr !== null) {
-      cachedInstructions = this.getFromCache(startAddr, instructionCount, instructionOffset);
-      if (cachedInstructions.length === instructionCount) {
-        return cachedInstructions;
-      }
+    cachedInstructions = this.getFromCache(startAddr, instructionCount, instructionOffset);
+    if (cachedInstructions.length === instructionCount) {
+      return cachedInstructions;
     }
 
     // Partial / miss: fetch only the gap from the DAP adapter.
@@ -111,23 +106,18 @@ export class DapAssemblyCacheService implements OnDestroy {
       const negCount = Math.abs(actualOffset);
       const posCount = actualCount - negCount;
 
+      // ── Neg leg (instructions before PC) ─────────────────────────────────
+      // Virtual base address for placeholder rows: walk back negCount slots from PC.
+      const negVirtualBase = startAddr - BigInt(negCount);
+      let negInstructions: DapDisassembledInstruction[] = [];
       try {
-        const [negRes, posRes] = await Promise.all([
-          this.sessionService.disassemble({
-            memoryReference: memRefStr,
-            instructionCount: negCount,
-            instructionOffset: actualOffset,
-            resolveSymbols: true
-          }),
-          this.sessionService.disassemble({
-            memoryReference: memRefStr,
-            instructionCount: posCount,
-            instructionOffset: 0,
-            resolveSymbols: true
-          })
-        ]);
-        let negInstructions = negRes.body?.instructions || [];
-        const posInstructions = posRes.body?.instructions || [];
+        const negRes = await this.sessionService.disassemble({
+          memoryReference: memRefStr,
+          instructionCount: negCount,
+          instructionOffset: actualOffset,
+          resolveSymbols: true
+        }, true);
+        negInstructions = negRes.body?.instructions || [];
 
         // Workaround for GDB DAP bug: if negative instructionOffset returns empty,
         // fallback to computing a preceding memory reference using byte math.
@@ -141,33 +131,48 @@ export class DapAssemblyCacheService implements OnDestroy {
               instructionCount: negCount + 10, // over-fetch to ensure overlap with PC
               instructionOffset: 0,
               resolveSymbols: true
-            });
+            }, true);
             negInstructions = fallbackRes.body?.instructions || [];
-          } catch { /* Fallback failed, proceed with empty */ }
+          } catch (fallbackErr) {
+            // Fallback failed, fill with error hints
+            negInstructions = this.buildErrorHintInstructions(negVirtualBase, negCount, fallbackErr);
+          }
         }
+      } catch (negErr) {
+        // Neg request failed — fill this half with error hints.
+        negInstructions = this.buildErrorHintInstructions(negVirtualBase, negCount, negErr);
+      }
 
-        rawInstructions = [
-          ...negInstructions,
-          ...posInstructions
-        ];
-      } catch (e) {
-        // Fallback to single request if adapter doesn't support concurrent requests well
+      // ── Pos leg (instructions at/after PC) ────────────────────────────────
+      let posInstructions: DapDisassembledInstruction[] = [];
+      try {
+        const posRes = await this.sessionService.disassemble({
+          memoryReference: memRefStr,
+          instructionCount: posCount,
+          instructionOffset: 0,
+          resolveSymbols: true
+        }, true);
+        posInstructions = posRes.body?.instructions || [];
+      } catch (posErr) {
+        // Pos request failed — fill this half with error hints starting at PC.
+        posInstructions = this.buildErrorHintInstructions(startAddr, posCount, posErr);
+      }
+
+      rawInstructions = [...negInstructions, ...posInstructions];
+    } else {
+      try {
         const response = await this.sessionService.disassemble({
           memoryReference: memRefStr,
           instructionCount: actualCount,
           instructionOffset: actualOffset,
           resolveSymbols: true
-        });
+        }, true);
         rawInstructions = response.body?.instructions || [];
+      } catch (e) {
+        // DAP adapter rejected the single disassemble request — fill with error hints.
+        const virtualBase = startAddr + BigInt(actualOffset);
+        rawInstructions = this.buildErrorHintInstructions(virtualBase, actualCount, e);
       }
-    } else {
-      const response = await this.sessionService.disassemble({
-        memoryReference: memRefStr,
-        instructionCount: actualCount,
-        instructionOffset: actualOffset,
-        resolveSymbols: true
-      });
-      rawInstructions = response.body?.instructions || [];
     }
 
     const enhanced = this.enhanceInstructions(rawInstructions);
@@ -202,8 +207,12 @@ export class DapAssemblyCacheService implements OnDestroy {
         finalResults.push(inst);
       }
     }
-
-    return finalResults.slice(0, instructionCount);
+    let centralIndex = finalResults.findIndex(inst => inst.address === startAddr);
+    if (centralIndex === -1) {
+      return finalResults.slice(0, instructionCount);
+    }
+    const startIndex = Math.max(0, instructionOffset + centralIndex)
+    return finalResults.slice(startIndex, startIndex + instructionCount);
   }
 
   /**
@@ -215,6 +224,38 @@ export class DapAssemblyCacheService implements OnDestroy {
     this.cachedRanges = [];
     this.sortedAddresses = [];
     this.currentIpRef = null;
+  }
+
+  // ── Error Recovery ────────────────────────────────────────────────────────
+
+  /**
+   * Builds a list of synthetic placeholder instructions when a DAP disassemble
+   * request fails. Each placeholder occupies one virtual row in the assembly
+   * view and carries a human-readable error hint so the UI is never left blank.
+   *
+   * @param baseAddr   Starting address for the synthetic block.
+   * @param count      Number of placeholder rows to generate.
+   * @param error      The caught error — its message is embedded in each row.
+   * @returns          Array of `TaroDisassembledInstruction` placeholders.
+   */
+  private buildErrorHintInstructions(
+    baseAddr: bigint,
+    count: number,
+    error: unknown
+  ): TaroDisassembledInstruction[] {
+    const message =
+      error instanceof Error ? error.message : String(error);
+    const hint = `; ${message}`;
+
+    // Assign ascending virtual addresses so address-keyed maps never collide.
+    return Array.from({ length: count }, (_, i) => ({
+      address: baseAddr + BigInt(i),
+      instruction: hint,
+      instructionBytes: '',
+      normalizedSymbol: '',
+      byteOffset: undefined,
+      isFunctionStart: false,
+    }));
   }
 
   // ── Instruction Enhancement ──────────────────────────────────────────────

@@ -84,7 +84,7 @@ describe('DapAssemblyCacheService', () => {
         memoryReference: '0x1000',
         instructionOffset: 2,
         instructionCount: 2
-      }));
+      }), true);
 
       expect(result.length).toBe(4);
       expect(result[3].address).toBe(BigInt('0x100c'));

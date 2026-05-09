@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef, inject, OnDestroy, ViewChild, AfterViewInit, DestroyRef } from '@angular/core';
+import { Component, ChangeDetectorRef, inject, OnDestroy, ViewChild, AfterViewInit, DestroyRef, isDevMode } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
 import { MatIconModule } from '@angular/material/icon';
@@ -25,6 +25,8 @@ export type { TaroDisassembledInstruction };
   styleUrls: ['./assembly-view.component.scss']
 })
 export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
+  private readonly DEBUG_SCROLL = false;
+
   private readonly cacheService = inject(DapAssemblyCacheService);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -44,10 +46,7 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
 
   constructor() {
     const effectRef = effect(() => {
-      const pc = this.currentPc();
-      if (pc != undefined) {
-        this.relocateWindow(pc);
-      }
+      this.relocateWindow(this.currentPc());
     });
     this.destroyRef.onDestroy(() => {
       effectRef.destroy();
@@ -98,12 +97,12 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
       this.viewport?.checkViewportSize();
 
       if (this.pendingJumpAddress !== undefined) {
-        this.scrollToAddress(this.pendingJumpAddress, true);
+        this.scrollToAddress(this.pendingJumpAddress);
         this.pendingJumpAddress = undefined;
-      } else {
+      } else if (direction === 'replace') {
         const pc = this.currentPc();
-        if (pc !== undefined && pc !== this.lastScrolledIP) {
-          this.scrollToAddress(pc, false);
+        if (pc !== undefined) {
+          this.scrollToAddress(pc);
         }
       }
     }, 0);
@@ -128,7 +127,10 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
         this.viewportCheckTimeout = setTimeout(() => {
           this.viewport?.checkViewportSize();
           if (becameVisible) {
-            this.revealPC(true);
+            const pc = this.currentPc();
+            if (pc !== undefined) {
+              this.scrollToAddress(pc); // Instantly center when tab becomes visible
+            }
           }
           this.viewportCheckTimeout = undefined;
         }, 50);
@@ -144,6 +146,12 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
 
         if (this.viewport) {
           const viewportSize = this.viewport.getViewportSize();
+
+          // CRITICAL: Ignore scroll events when the tab is hidden.
+          // The browser resets scrollTop to 0 when display: none is applied,
+          // which would otherwise trigger an erroneous fetchMore('backward').
+          if (viewportSize === 0) return;
+
           const visibleCount = Math.ceil(viewportSize / (this.rowHeight() || 28));
           this.onViewportScroll(index, visibleCount);
         }
@@ -204,25 +212,11 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
     return `0x${addr.toString(16)}`;
   }
 
-  private lastScrolledIP: bigint | undefined = undefined;
   private pendingJumpAddress: bigint | undefined = undefined;
   private relocateToken: number = 0;
 
-  /**
-   * Manually triggers a scroll to center the current instruction pointer.
-   * Resets the lastScrolledIP to force the scroll logic to execute even if
-   * the IP hasn't changed (e.g. user scrolled away and wants to return).
-   */
-  public revealPC(instant: boolean = false): void {
-    this.lastScrolledIP = undefined;
-    const pc = this.currentPc();
-    if (pc) {
-      this.scrollToAddress(pc, instant);
-    }
-  }
-
-  private scrollToAddress(address: bigint, instant: boolean = false): void {
-    if (address === undefined || address === null || this.instructions.length === 0 || !this.viewport) return;
+  private scrollToAddress(address: bigint): void {
+    if (!this.viewport) return;
 
     // Find the target instruction
     const activeIndex = this.instructions.findIndex(i =>
@@ -230,15 +224,6 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
     );
 
     if (activeIndex >= 0) {
-      const isInitial = this.lastScrolledIP === undefined;
-      // Update the lastScrolledIP to the CURRENT PC (if any).
-      // This "acknowledges" the current execution point even if we are scrolling elsewhere,
-      // preventing the automatic scroll-to-PC logic from snapping back until the PC moves again.
-      const currentPc = this.currentPc();
-      if (currentPc !== null) {
-        this.lastScrolledIP = currentPc;
-      }
-
       // Use a fallback viewport size if the CDK viewport hasn't fully measured the DOM yet
       const viewportSize = this.viewport.getViewportSize() || 400;
       const rowHeight = this.rowHeight() || 28;
@@ -251,8 +236,11 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
       this.scrollTimeout = setTimeout(() => {
         if (this.viewport) {
           // Force center alignment via direct offset manipulation
-          const behavior = (instant || isInitial) ? 'auto' : 'smooth';
-          this.viewport.scrollToOffset(targetOffset, behavior);
+          if (!this.DEBUG_SCROLL && isDevMode()) {
+            console.log(`view port size ${viewportSize}, row height ${rowHeight}`);
+            console.log(`Scrolling to address ${address.toString(16)} at index ${activeIndex} with offset ${targetOffset}`);
+          }
+          this.viewport.scrollToOffset(targetOffset, 'auto');
         }
         this.scrollTimeout = null;
       }, 50);
@@ -302,11 +290,12 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
   }
 
   public async relocateWindow(
-    memoryReference: bigint,
+    memoryReference: bigint | undefined = this.currentPc(),
     instructionCount: number = AssemblyViewComponent.ASSEMBLY_WINDOW_SIZE,
     instructionOffset: number = AssemblyViewComponent.ASSEMBLY_WINDOW_OFFSET
   ): Promise<void> {
-    if (!memoryReference) return;
+    if (memoryReference === undefined) return;
+
     const currentToken = ++this.relocateToken;
 
     const currentUI = this.instructions;
@@ -317,7 +306,9 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
 
     this.isLoading.set(true);
     try {
-      const instructions = await this.cacheService.fetchInstructions(memoryReference, instructionCount, instructionOffset);
+      const instructions = await this.cacheService.fetchInstructions(memoryReference!,
+        instructionCount,
+        instructionOffset);
       if (this.relocateToken !== currentToken) return; // Ignore stale request results
 
       this.updateInstructions(instructions, 'replace');

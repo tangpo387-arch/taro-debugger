@@ -771,10 +771,12 @@ export class DapSessionService {
   /**
    * Disassemble instructions starting from a memory reference.
    * @param args Strongly-typed disassemble arguments
+   * @param silentError When true, suppresses the `_dapError` UI event on failure.
+   *                    Use this when the caller handles the error itself (e.g. cache service).
    */
-  public async disassemble(args: DisassembleArguments): Promise<DapResponse> {
+  public async disassemble(args: DisassembleArguments, silentError = false): Promise<DapResponse> {
     this.ensureStopped();
-    return this.sendRequest('disassemble', args);
+    return this.sendRequest('disassemble', args, 500000, silentError);
   }
 
   /**

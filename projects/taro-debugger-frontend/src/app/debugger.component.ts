@@ -588,8 +588,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         // Load the top frame to show source code by default after success
         if (this.stackFrames.length > 0) {
           await this.onFrameClick(this.stackFrames[0]);
-          // After setting activeFilePath via onFrameClick, trigger the tree reveal
-          this.fileRevealTrigger++;
         }
       }
     } catch (e: any) {

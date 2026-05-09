@@ -4,23 +4,18 @@
     Dump of assembler code for function <span class="symbol-name">{{ activeSymbol }}</span>:
   </div>
 
-  <cdk-virtual-scroll-viewport [itemSize]="rowHeight()" 
-                               minBufferPx="200" 
-                               maxBufferPx="400" 
-                               class="assembly-viewport">
-    <div *cdkVirtualFor="let instruction of instructions; trackBy: trackByAddress"
-         class="assembly-row"
-         [class.is-active]="isInstructionPointer(instruction.address)"
-         [class.is-out-of-range]="isOutOfRange(instruction)"
-         [style.height.px]="rowHeight()">
-      
+  <cdk-virtual-scroll-viewport [itemSize]="rowHeight()" minBufferPx="200" maxBufferPx="400" class="assembly-viewport">
+    <div *cdkVirtualFor="let instruction of instructions; trackBy: trackByAddress" class="assembly-row"
+      [class.is-active]="isInstructionPointer(instruction.address)" [class.is-out-of-range]="isOutOfRange(instruction)"
+      [style.height.px]="rowHeight()">
+
       <div class="gutter">
         <span *ngIf="isInstructionPointer(instruction.address)" class="ip-indicator">&#10148;</span>
         <div class="breakpoint-marker"></div> <!-- For future BP integration -->
       </div>
-      
+
       <div class="address">{{ formatAddress(instruction.address) }}</div>
-      
+
       <!-- Offset column -->
       <div class="offset">
         <ng-container *ngIf="instruction.byteOffset !== undefined">&lt;+{{ instruction.byteOffset }}&gt;</ng-container>
@@ -29,7 +24,7 @@
       <div class="opcode">{{ instruction.instructionBytes || '' }}</div>
       <div class="mnemonic">{{ instruction.instruction }}</div>
       <div class="annotation" *ngIf="instruction.symbol">{{ instruction.symbol }}</div>
-      
+
     </div>
   </cdk-virtual-scroll-viewport>
   <div *ngIf="isLoading()" class="loading-overlay">
@@ -37,23 +32,17 @@
   </div>
 
   @if (!isLoading() && instructions.length === 0) {
-    <taro-empty-state 
-      icon="terminal" 
-      message="No assembly instructions loaded.">
-    </taro-empty-state>
+  <taro-empty-state icon="terminal" message="No assembly instructions loaded.">
+  </taro-empty-state>
   }
 
   <div class="floating-actions" *ngIf="currentPc()">
-    <button mat-mini-fab color="primary" 
-            (click)="openJumpToAddressDialog()" 
-            matTooltip="Jump to address"
-            aria-label="Jump to address">
+    <button mat-mini-fab color="primary" (click)="openJumpToAddressDialog()" matTooltip="Jump to address"
+      aria-label="Jump to address">
       <mat-icon>pin_drop</mat-icon>
     </button>
-    <button mat-mini-fab color="primary" 
-            (click)="revealPC()" 
-            matTooltip="Reveal current execution point"
-            aria-label="Reveal PC">
+    <button mat-mini-fab color="primary" (click)="relocateWindow()" matTooltip="Reveal current execution point"
+      aria-label="Reveal PC">
       <mat-icon>my_location</mat-icon>
     </button>
   </div>
