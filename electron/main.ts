@@ -303,7 +303,20 @@ ipcMain.handle('dap-invoke', async (event, payload) => {
           dapBuffer = dapBuffer.subarray(totalLen);
 
           try {
-            const msg = JSON.parse(payloadStr);
+            const msg = JSON.parse(payloadStr, (key, value) => {
+              // DAP Protocol level conversion: ensure all hex-string addresses are BigInt
+              if (key === 'instructionPointerReference' || key === 'address' || key === 'memoryReference') {
+                if (value === null) return undefined;
+                if (typeof value === 'string') {
+                  try {
+                    return value.startsWith('0x') ? BigInt(value) : BigInt(`0x${value}`);
+                  } catch {
+                    return value;
+                  }
+                }
+              }
+              return value;
+            });
             if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('dap-message', msg);
           } catch (e: any) {
             if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('dap-error', 'Failed to parse JSON payload. ' + String(e));
