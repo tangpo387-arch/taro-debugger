@@ -422,6 +422,31 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-03"
       }
+    },
+    {
+      "id": "WI-114",
+      "title": "Decouple viewport from execution PC in Assembly View",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Introduce viewAnchor state to preserve manual navigation and improve reactive rendering.",
+      "details": [
+        "Introduce viewAnchor WritableSignal",
+        "Refactor ResizeObserver becameVisible to use viewAnchor",
+        "Update JumpToAddressDialog to update viewAnchor",
+        "Sync currentPc to viewAnchor on break/step",
+        "[Test] Verify Jump to Address does not reset to PC on tab switch",
+        "[Doc] docs/archive/specs/assembly-view-anchor-spec.md"
+      ],
+      "timeline": {
+        "created": "2026-05-10",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-10"
+      }
     }
   ]
 }

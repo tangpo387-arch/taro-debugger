@@ -104,6 +104,8 @@ The following table is the **authoritative specification** for dependency inject
 
 **Strict Dependency Rule:** Only the objects explicitly listed in the "Root-Level Injected Services" table below are permitted to come from the `root` injector. **Every other object reference, service, or piece of state must be component-scoped** and cleared according to the `DebuggerComponent` destruction state. (e.g. `DapSessionService`, `DapVariablesService`, `DapLogService` MUST be destroyed).
 
+- **Affected services in `DebuggerComponent.providers`**: `DapSessionService`, `DapFileTreeService`, `DapVariablesService`, `DapLogService`, `DapAssemblyCacheService`.
+
 **Root-Level Injected Services** (Whitelisted Singletons):
 
 | Service / Object | Scope | Responsibility | Restriction |

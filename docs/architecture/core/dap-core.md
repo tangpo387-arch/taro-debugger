@@ -44,6 +44,7 @@ Manages the high-level protocol handshake and execution state machine.
   - Sequential DAP handshake (`initialize` → `launch`/`attach`).
   - Request/Response pairing and timeout management.
   - Broadcasting the `executionState$` (Inactive, Launching, Running, Paused).
+- **`DapAssemblyCacheService`**: Manages instruction-level caching and BigInt-based address indexing for disassembly.
 - **`DapConfigService`**: Manages connection settings and adapter-specific configurations.
 
 ## 3. Interaction Model

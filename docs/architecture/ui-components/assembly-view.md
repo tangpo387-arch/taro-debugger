@@ -20,13 +20,13 @@ The Assembly View provides a low-level inspection interface for machine instruct
 - **Responsibility**: Render the disassembled instruction list and synchronized Instruction Pointer (IP) highlight.
 - **Performance**: Utilizes `cdk-virtual-scroll-viewport` to handle large address ranges with minimal DOM overhead.
 
-### 1.2 DapAssemblyService
+### 1.2 DapAssemblyCacheService
 
-- **Scope**: Component-scoped (provided in `DebuggerComponent` to persist state across tab switches).
+- **Scope**: App-scoped (provided in `DapCoreModule` via `provideDapCore()`).
 - **Responsibility**:
-  - Orchestrate DAP `disassemble` requests.
-  - Synchronize with the global `executionState$` to update the current address highlight.
-  - Manage the instruction buffer and caching logic.
+  - Unified caching logic for `disassemble` responses.
+  - BigInt-based address normalization and instruction retrieval.
+  - Invalidation logic triggered by `module` load events or session resets.
 
 ### 1.3 Reactive Lifecycle Management
 
@@ -48,7 +48,23 @@ The Assembly View provides a low-level inspection interface for machine instruct
 
 ### 2.2 Navigation Features
 
-- **Return to PC Button**: A floating `mat-mini-fab` (icon: `my_location`) in the bottom right corner. Clicking it triggers a smooth-scroll to center the active Instruction Pointer.
+The component maintains two independent address references to decouple the execution state from the viewport position:
+
+```text
+instructions[0]  ← window start         instructions[2000]  ← window end
+    │────────────────────┬──────────────────────│
+                     viewAnchor (center)
+                    ┌────┴────┐
+                    │ visible │  ← ~16 rows (viewport height)
+                    └─────────┘
+                         ↕
+          scroll threshold triggers forward/backward fetch
+```
+
+> [Diagram: A 2001-instruction sliding window is centered on the `viewAnchor` address. The visible viewport shows ~16 rows. When the user scrolls within 20 rows of either edge, `onViewportScroll` triggers a `forward` or `backward` fetch to extend the window.]
+
+- **Return to PC Button**: A floating `mat-mini-fab` (icon: `my_location`) in the bottom right corner. Clicking it resets the `viewAnchor` signal to match `currentPc()`, triggering a smooth-scroll to center the active Instruction Pointer.
+- **Viewport Decoupling**: The component separates the **Execution PC** (for highlighting) from the **Viewport Anchor** (for navigation). This allows the user to manually "Jump to Address" without losing their focus when the debugger steps or when switching UI tabs.
 - **Scroll Stabilization**: Implements an offset-adjustment algorithm when prepending instructions (backward scroll) to prevent the viewport from jumping.
 - **Fast-Path Stepping**: Bypasses DAP disassemble requests if the target IP is already within the loaded UI stream, ensuring zero-latency stepping for function-local execution.
 

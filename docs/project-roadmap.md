@@ -2,7 +2,7 @@
 title: Project Roadmap & Dependency Map
 scope: milestones, dependencies, architecture-tracking
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer, Human Engineer]
-last_updated: 2026-05-03
+last_updated: 2026-05-10
 ---
 
 # Project Roadmap & Dependency Map
@@ -109,6 +109,7 @@ graph LR
     WI_111["WI-111 Decouple Disassembly Cache to Core"]
     WI_112["WI-112 Centralize Assembly PC & Window Logic"]
     WI_113["WI-113 Assembly View: Address-Based Navigation"]
+    WI_114["WI-114 Decouple viewport from execution PC in Assembly View"]
     WI_01["WI-01 Extend `GdbConfigService` Configuration Model"]
     WI_02["WI-02 Setup Form Field Completion"]
     WI_03["WI-03 Setup Form Validation"]
@@ -314,6 +315,7 @@ graph LR
     style WI_111 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI_112 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI_113 fill:#6366f1,stroke:#000,stroke-width:2.5px
+    style WI_114 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI_01 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_02 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_03 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2

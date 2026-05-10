@@ -45,7 +45,7 @@ This document defines where "state" should be stored in the `taro-debugger-front
     component-level registration — the intended per-component instance is never created
     and the `providers` entry has no effect.
   * **Affected services in `DebuggerComponent.providers`**: `DapSessionService`,
-    `DapFileTreeService`, `DapVariablesService`, `DapLogService`, `DapAssemblyService`.
+    `DapFileTreeService`, `DapVariablesService`, `DapLogService`, `DapAssemblyCacheService`.
     All must use plain `@Injectable()` with no `providedIn` argument.
 * **R_SM5.2: DI Scope Co-location — Downstream Dependents Must Match Scope**
   * If Service A is component-scoped (declared in `DebuggerComponent.providers`), then

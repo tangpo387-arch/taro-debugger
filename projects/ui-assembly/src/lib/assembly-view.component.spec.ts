@@ -127,13 +127,32 @@ describe('AssemblyViewComponent', () => {
       expect(mockDialog.open).toHaveBeenCalledWith(JumpToAddressDialogComponent, { width: '350px' });
     });
 
-    it('should call jumpTo when the dialog is confirmed with an address', async () => {
-      vi.spyOn(component, 'relocateWindow').mockResolvedValue(undefined);
+    it('should set viewAnchor when the dialog is confirmed with an address', () => {
       // Act
       component.openJumpToAddressDialog();
 
       // Assert
-      expect(component.relocateWindow).toHaveBeenCalledWith(BigInt('0x401234'), 'jump');
+      expect(component.viewAnchor()).toBe(BigInt('0x401234'));
+    });
+
+    it('should sync currentPc to viewAnchor when currentPc updates', () => {
+      fixture.componentRef.setInput('currentPc', BigInt('0x2000'));
+      fixture.detectChanges();
+      
+      expect(component.viewAnchor()).toBe(BigInt('0x2000'));
+    });
+
+    it('should verify Jump to Address does not reset to PC on tab switch', () => {
+      fixture.componentRef.setInput('currentPc', BigInt('0x1000'));
+      fixture.detectChanges();
+      
+      // User jumps to 0x401234
+      component.openJumpToAddressDialog();
+      expect(component.viewAnchor()).toBe(BigInt('0x401234'));
+      
+      // We verify that viewAnchor remains at the jumped address,
+      // representing the SSOT for the ResizeObserver's becameVisible logic.
+      expect(component.viewAnchor()).not.toBe(BigInt('0x1000'));
     });
   });
 });

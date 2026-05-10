@@ -14,9 +14,6 @@ import { DapAssemblyCacheService, TaroDisassembledInstruction } from '@taro/dap-
 import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent } from '@taro/ui-shared';
 import { JumpToAddressDialogComponent } from './jump-to-address-dialog/jump-to-address-dialog.component';
 
-export type { TaroDisassembledInstruction };
-
-
 @Component({
   selector: 'app-assembly-view',
   standalone: true,
@@ -38,18 +35,30 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
   /** Signal representing the current PC */
   public readonly currentPc = input<bigint>();
 
+  /** The anchor address the viewport is currently focused on */
+  public readonly viewAnchor = signal<bigint | undefined>(undefined, { equal: () => false });
+
   // ── Sliding Window Config ────────────────────────────────────────────────
   private static readonly AUTO_FETCH_THRESHOLD = 20;
-  private static readonly AUTO_FETCH_COUNT = 100;
   private static readonly ASSEMBLY_WINDOW_SIZE = 2001;
   private static readonly ASSEMBLY_WINDOW_OFFSET = -1000;
 
   constructor() {
-    const effectRef = effect(() => {
-      this.relocateWindow(this.currentPc(), 'jump');
+    const pcSyncEffect = effect(() => {
+      const pc = this.currentPc();
+      if (pc !== undefined) {
+        this.viewAnchor.set(pc);
+      }
     });
-    this.destroyRef.onDestroy(() => {
-      effectRef.destroy();
+
+    const relocateEffect = effect(() => {
+      const anchor = this.viewAnchor();
+      if (anchor !== undefined) {
+        if (this.DEBUG_SCROLL && isDevMode()) {
+          console.log(`Relocating to address ${anchor.toString(16)}`);
+        }
+        this.relocateWindow(anchor, 'jump');
+      }
     });
   }
 
@@ -68,13 +77,13 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
   public activeSymbol: string | null = null;
 
   private resizeObserver?: ResizeObserver;
-  private viewportCheckTimeout?: any;
-  private scrollTimeout?: any;
+  private viewportCheckTimeout?: ReturnType<typeof setTimeout>;
+  private scrollTimeout?: ReturnType<typeof setTimeout>;
 
   private updateInstructions(
     inst: TaroDisassembledInstruction[],
     action: 'forward' | 'backward' | 'jump',
-    targetAddress?: bigint
+    targetAddress: bigint
   ): void {
     const prevCount = this.instructions.length;
     const firstOldAddr = prevCount > 0 ? this.instructions[0].address : null;
@@ -97,16 +106,12 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
       this.updateStickyHeader(this.viewport?.measureScrollOffset('top') === 0 ? 0 : (this.viewport?.getRenderedRange().start || 0));
     }
 
-    setTimeout(() => {
-      this.viewport?.checkViewportSize();
-
-      if (action === 'jump') {
-        const target = targetAddress ?? this.currentPc();
-        if (target !== undefined) {
-          this.scrollToAddress(target);
-        }
-      }
-    }, 0);
+    if (action === 'jump') {
+      setTimeout(() => {
+        this.viewport?.checkViewportSize();
+        this.scrollToAddress(targetAddress);
+      }, 0);
+    }
   }
 
   public ngAfterViewInit(): void {
@@ -128,9 +133,9 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
         this.viewportCheckTimeout = setTimeout(() => {
           this.viewport?.checkViewportSize();
           if (becameVisible) {
-            const pc = this.currentPc();
-            if (pc !== undefined) {
-              this.scrollToAddress(pc); // Instantly center when tab becomes visible
+            const anchor = this.viewAnchor();
+            if (anchor !== undefined) {
+              this.scrollToAddress(anchor); // Instantly center when tab becomes visible
             }
           }
           this.viewportCheckTimeout = undefined;
@@ -195,9 +200,22 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
     dialogRef.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
       if (result) {
         const addr = BigInt(result);
-        this.relocateWindow(addr, 'jump');
+        if (this.DEBUG_SCROLL && isDevMode()) {
+          console.log(`[openJumpToAddressDialog] Updating viewAnchor to ${addr.toString(16)}`);
+        }
+        this.viewAnchor.set(addr);
       }
     });
+  }
+
+  /**
+   * Navigates the viewport back to the current PC location.
+   */
+  public revealPc(): void {
+    const pc = this.currentPc();
+    if (pc !== undefined) {
+      this.viewAnchor.set(pc);
+    }
   }
 
   public trackByAddress(_index: number, item: TaroDisassembledInstruction): string {
@@ -235,13 +253,13 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
       this.scrollTimeout = setTimeout(() => {
         if (this.viewport) {
           // Force center alignment via direct offset manipulation
-          if (!this.DEBUG_SCROLL && isDevMode()) {
+          if (this.DEBUG_SCROLL && isDevMode()) {
             console.log(`view port size ${viewportSize}, row height ${rowHeight}`);
             console.log(`Scrolling to address ${address.toString(16)} at index ${activeIndex} with offset ${targetOffset}`);
           }
           this.viewport.scrollToOffset(targetOffset, 'auto');
         }
-        this.scrollTimeout = null;
+        this.scrollTimeout = undefined;
       }, 50);
 
       this.updateStickyHeader(activeIndex);
@@ -288,7 +306,7 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
     return false;
   }
 
-  public async relocateWindow(
+  private async relocateWindow(
     memoryReference: bigint | undefined,
     action: 'forward' | 'backward' | 'jump',
     instructionCount: number = AssemblyViewComponent.ASSEMBLY_WINDOW_SIZE,
@@ -297,13 +315,6 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
     if (memoryReference === undefined) return;
 
     const currentToken = ++this.relocateToken;
-
-    const currentUI = this.instructions;
-    if (currentUI.length > 0 && action === 'jump') {
-      const found = currentUI.some(i => i.address === memoryReference);
-      if (found && instructionOffset >= 0) return;
-    }
-
     this.isLoading.set(true);
     try {
       const instructions = await this.cacheService.fetchInstructions(
@@ -316,8 +327,10 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
       this.updateInstructions(instructions, action, memoryReference);
     } catch (error: any) {
       if (this.relocateToken !== currentToken) return;
-      this.updateInstructions([], action);
-      console.error('[AssemblyViewComponent] relocateWindow failed:', error?.message ?? error);
+      // DapAssemblyCacheService handles all DAP errors internally (error hint rows).
+      // Any exception here is an unexpected component-level fault — preserve the
+      // last valid instruction list rather than blanking the viewport.
+      console.error('[AssemblyViewComponent] Unexpected error in relocateWindow:', error);
     } finally {
       if (this.relocateToken === currentToken) {
         this.isLoading.set(false);
@@ -342,10 +355,11 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
       if (this.DEBUG_SCROLL && isDevMode()) {
         console.log(`[AssemblyView] onViewportScroll: index=${index}, viewportSize=${viewportSize}, action=${action}`);
       }
-      const count = AssemblyViewComponent.AUTO_FETCH_COUNT;
-      const instructionOffset = action === 'forward' ? count : -count;
-      await this.relocateWindow(current[0].address, action,
-        AssemblyViewComponent.ASSEMBLY_WINDOW_SIZE, instructionOffset);
+      // Anchor the fetch to the visible region top, not the buffer start,
+      // so the new window is centered on where the user is actually scrolling.
+      const visibleTopAddress = current[index]?.address ?? current[0].address;
+      await this.relocateWindow(visibleTopAddress, action,
+        AssemblyViewComponent.ASSEMBLY_WINDOW_SIZE, AssemblyViewComponent.ASSEMBLY_WINDOW_OFFSET);
     }
   }
 
