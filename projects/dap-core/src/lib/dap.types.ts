@@ -88,6 +88,7 @@ export interface DisassembleArguments {
 export interface DapDisassembledInstruction {
   address?: bigint;
   instructionBytes?: string;
+  instructionByteLength: number;
   instruction: string;
   symbol?: string;
   location?: any;
@@ -95,6 +96,15 @@ export interface DapDisassembledInstruction {
   column?: number;
   endLine?: number;
   endColumn?: number;
+}
+
+/**
+ * Response to 'disassemble' request.
+ */
+export interface DapDisassemblyResponse extends DapResponse {
+  body?: {
+    instructions: DapDisassembledInstruction[];
+  };
 }
 
 /**

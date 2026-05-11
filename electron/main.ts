@@ -305,7 +305,7 @@ ipcMain.handle('dap-invoke', async (event, payload) => {
           try {
             const msg = JSON.parse(payloadStr, (key, value) => {
               // DAP Protocol level conversion: ensure all hex-string addresses are BigInt
-              if (key === 'instructionPointerReference' || key === 'address' || key === 'memoryReference') {
+              if (key === 'instructionPointerReference' || key === 'memoryReference') {
                 if (value === null) return undefined;
                 if (typeof value === 'string') {
                   try {

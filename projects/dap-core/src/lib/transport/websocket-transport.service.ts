@@ -192,7 +192,7 @@ export class WebSocketTransportService extends DapTransportService {
 
       try {
         const message = JSON.parse(payloadString, (key, value) => {
-          if (key === 'instructionPointerReference' || key === 'address' || key === 'memoryReference') {
+          if (key === 'instructionPointerReference' || key === 'memoryReference') {
             if (value === null) return undefined;
             if (typeof value === 'string') {
               try {

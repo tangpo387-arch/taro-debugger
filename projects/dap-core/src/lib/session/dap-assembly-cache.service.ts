@@ -98,67 +98,103 @@ export class DapAssemblyCacheService implements OnDestroy {
     const actualOffset = instructionOffset + cachedInstructions.length;
     const actualCount = instructionCount - cachedInstructions.length;
 
-    let rawInstructions: DapDisassembledInstruction[] = [];
+    let negInstructions: DapDisassembledInstruction[] = [];
+    let gapInstructions: DapDisassembledInstruction[] = [];
+    let posInstructions: DapDisassembledInstruction[] = [];
 
-    // [IMPORTANT] Split the request if we are fetching backwards across the PC reference to ensure 
-    // the DAP adapter doesn't swallow the PC due to instruction misalignment.
-    if (actualOffset < 0 && (actualOffset + actualCount) > 0) {
+    // [IMPORTANT] Never use negative instructionOffset as some DAP adapters do not support it.
+    // If actualOffset < 0, we compute a preceding memory reference using byte math and
+    // split the request to ensure alignment at the PC reference.
+    if (actualOffset < 0) {
       const negCount = Math.abs(actualOffset);
-      const posCount = actualCount - negCount;
+      const posCount = actualCount > negCount ? actualCount - negCount : 0;
 
       // ── Neg leg (instructions before PC) ─────────────────────────────────
       // Virtual base address for placeholder rows: walk back negCount slots from PC.
       const negVirtualBase = startAddr - BigInt(negCount);
-      let negInstructions: DapDisassembledInstruction[] = [];
       try {
+        // Assume max ~4 bytes per instruction + padding, over-fetch slightly
+        const guessBytes = BigInt(negCount * 4 + 32);
+        const fallbackRef = `0x${(startAddr - guessBytes).toString(16)}`;
         const negRes = await this.sessionService.disassemble({
-          memoryReference: memRefStr,
-          instructionCount: negCount,
-          instructionOffset: actualOffset,
+          memoryReference: fallbackRef,
+          instructionCount: negCount + 10, // over-fetch to ensure overlap with PC
+          instructionOffset: 0,
           resolveSymbols: true
         }, true);
-        negInstructions = negRes.body?.instructions || [];
 
-        // Workaround for GDB DAP bug: if negative instructionOffset returns empty,
-        // fallback to computing a preceding memory reference using byte math.
-        if (negInstructions.length === 0 && negCount > 0) {
-          try {
-            // Assume max ~4 bytes per instruction + padding, over-fetch slightly
-            const guessBytes = BigInt(negCount * 4 + 32);
-            const fallbackRef = `0x${(startAddr - guessBytes).toString(16)}`;
-            const fallbackRes = await this.sessionService.disassemble({
-              memoryReference: fallbackRef,
-              instructionCount: negCount + 10, // over-fetch to ensure overlap with PC
-              instructionOffset: 0,
-              resolveSymbols: true
-            }, true);
-            negInstructions = fallbackRes.body?.instructions || [];
-          } catch (fallbackErr) {
-            // Fallback failed, fill with error hints
-            negInstructions = this.buildErrorHintInstructions(negVirtualBase, negCount, fallbackErr);
-          }
-        }
+        negInstructions = negRes.body?.instructions || [];
       } catch (negErr) {
         // Neg request failed — fill this half with error hints.
         negInstructions = this.buildErrorHintInstructions(negVirtualBase, negCount, negErr);
       }
 
       // ── Pos leg (instructions at/after PC) ────────────────────────────────
-      let posInstructions: DapDisassembledInstruction[] = [];
-      try {
-        const posRes = await this.sessionService.disassemble({
-          memoryReference: memRefStr,
-          instructionCount: posCount,
-          instructionOffset: 0,
-          resolveSymbols: true
-        }, true);
-        posInstructions = posRes.body?.instructions || [];
-      } catch (posErr) {
-        // Pos request failed — fill this half with error hints starting at PC.
-        posInstructions = this.buildErrorHintInstructions(startAddr, posCount, posErr);
+      if (posCount > 0) {
+        try {
+          const posRes = await this.sessionService.disassemble({
+            memoryReference: memRefStr,
+            instructionCount: posCount,
+            instructionOffset: 0,
+            resolveSymbols: true
+          }, true);
+          posInstructions = posRes.body?.instructions || [];
+        } catch (posErr) {
+          // Pos request failed — fill this half with error hints starting at PC.
+          posInstructions = this.buildErrorHintInstructions(startAddr, posCount, posErr);
+        }
       }
 
-      rawInstructions = [...negInstructions, ...posInstructions];
+      // ── Fill Gap (if any) between Neg and Pos ─────────────────────────────
+      if (negInstructions.length > 0 && posInstructions.length > 0) {
+        const lastNeg = negInstructions[negInstructions.length - 1];
+        const firstPos = posInstructions[0];
+
+        if (lastNeg.address !== undefined && firstPos.address !== undefined) {
+          const lastSize = lastNeg.instructionByteLength;
+          let currentGapStart = lastNeg.address + BigInt(lastSize);
+
+          // Iterate to fill the gap if one exists. Some adapters might not return
+          // enough instructions in a single call to close the gap entirely.
+          while (firstPos.address > currentGapStart && gapInstructions.length < 1000) {
+            const byteDiff = Number(firstPos.address - currentGapStart);
+            // Request enough instructions to cover the remaining byte difference.
+            const guessCount = Math.min(1000, Math.max(1, byteDiff));
+
+            try {
+              const gapRes = await this.sessionService.disassemble({
+                memoryReference: `0x${currentGapStart.toString(16)}`,
+                instructionCount: guessCount,
+                instructionOffset: 0,
+                resolveSymbols: true
+              }, true);
+
+              const batch = (gapRes.body?.instructions || []).filter((inst: DapDisassembledInstruction) =>
+                inst.address !== undefined && inst.address >= currentGapStart && inst.address < firstPos.address!
+              );
+
+              if (batch.length === 0) break;
+
+              gapInstructions.push(...batch);
+              const lastInBatch = batch[batch.length - 1];
+              const batchLastSize = lastInBatch.instructionByteLength;
+              const nextStart = lastInBatch.address! + BigInt(batchLastSize);
+
+              if (nextStart <= currentGapStart) {
+                // Ensure we always move forward at least one byte if size is unknown
+                currentGapStart += BigInt(1);
+              } else {
+                currentGapStart = nextStart;
+              }
+            } catch (gapErr) {
+              // Mark failure point with an error hint and stop filling this gap.
+              gapInstructions.push(...(this.buildErrorHintInstructions(currentGapStart, 1, gapErr) as any[]));
+              break;
+            }
+          }
+        }
+      }
+
     } else {
       try {
         const response = await this.sessionService.disassemble({
@@ -167,22 +203,37 @@ export class DapAssemblyCacheService implements OnDestroy {
           instructionOffset: actualOffset,
           resolveSymbols: true
         }, true);
-        rawInstructions = response.body?.instructions || [];
+        posInstructions = response.body?.instructions || [];
       } catch (e) {
         // DAP adapter rejected the single disassemble request — fill with error hints.
         const virtualBase = startAddr + BigInt(actualOffset);
-        rawInstructions = this.buildErrorHintInstructions(virtualBase, actualCount, e);
+        posInstructions = this.buildErrorHintInstructions(virtualBase, actualCount, e);
       }
     }
 
-    const enhanced = this.enhanceInstructions(rawInstructions);
+    negInstructions = this.enhanceInstructions(negInstructions);
+    gapInstructions = this.enhanceInstructions(gapInstructions);
+    posInstructions = this.enhanceInstructions(posInstructions);
 
-    // Deduplicate to prevent Angular ngFor trackBy errors from overlapping fetches
+    // Filter out duplicates and misaligned backward overlaps in a single pass.
+    // By enforcing strict ascending order, we resolve overlaps caused by variable-length x86 instructions.
     const uniqueEnhanced: TaroDisassembledInstruction[] = [];
-    const seen = new Set<bigint>();
-    for (const inst of enhanced) {
-      if (inst.address !== undefined && !seen.has(inst.address)) {
-        seen.add(inst.address);
+    let maxAddr = BigInt(-1);
+    for (const inst of negInstructions) {
+      if (inst.address !== undefined && inst.address > maxAddr) {
+        maxAddr = inst.address;
+        uniqueEnhanced.push(inst);
+      }
+    }
+    for (const inst of gapInstructions) {
+      if (inst.address !== undefined && inst.address > maxAddr) {
+        maxAddr = inst.address;
+        uniqueEnhanced.push(inst);
+      }
+    }
+    for (const inst of posInstructions) {
+      if (inst.address !== undefined && inst.address > maxAddr) {
+        maxAddr = inst.address;
         uniqueEnhanced.push(inst);
       }
     }
@@ -196,14 +247,16 @@ export class DapAssemblyCacheService implements OnDestroy {
     this.updateCachedRanges(uniqueEnhanced);
     this.pruneCache();
 
-    // Combine and deduplicate to ensure a clean continuous stream for the UI
-    const merged = [...cachedInstructions, ...uniqueEnhanced];
-    const finalResults: TaroDisassembledInstruction[] = [];
-    const finalSeen = new Set<bigint>();
+    // Combine and enforce strictly ascending order to ensure a clean continuous stream for the UI.
+    // cachedInstructions is already a fresh array from getFromCache, so we can use it as our base.
+    const finalResults = cachedInstructions;
+    let maxFinalAddr = finalResults.length > 0
+      ? (finalResults[finalResults.length - 1].address ?? BigInt(-1))
+      : BigInt(-1);
 
-    for (const inst of merged) {
-      if (inst.address !== undefined && !finalSeen.has(inst.address)) {
-        finalSeen.add(inst.address);
+    for (const inst of uniqueEnhanced) {
+      if (inst.address !== undefined && inst.address > maxFinalAddr) {
+        maxFinalAddr = inst.address;
         finalResults.push(inst);
       }
     }
@@ -251,7 +304,8 @@ export class DapAssemblyCacheService implements OnDestroy {
     return Array.from({ length: count }, (_, i) => ({
       address: baseAddr + BigInt(i),
       instruction: hint,
-      instructionBytes: '',
+      instructionBytes: '0',
+      instructionByteLength: 1,
       normalizedSymbol: '',
       byteOffset: undefined,
       isFunctionStart: false,
@@ -330,13 +384,22 @@ export class DapAssemblyCacheService implements OnDestroy {
     const startIdx = idx + instructionOffset;
     if (startIdx < 0 || startIdx >= this.sortedAddresses.length) return [];
 
+    const startAddr = this.sortedAddresses[startIdx];
+    const range = this.cachedRanges.find(r => startAddr >= r.start && startAddr <= r.end);
+    if (!range) return [];
+
     const result: TaroDisassembledInstruction[] = [];
     for (let i = startIdx; i < this.sortedAddresses.length && result.length < count; i++) {
-      const inst = this.instructionCache.get(this.sortedAddresses[i]);
+      const addr = this.sortedAddresses[i];
+      // If we cross a range boundary, there is a potential gap.
+      // Stop here to force a fresh DAP fetch for the next contiguous block.
+      if (addr > range.end) {
+        break;
+      }
+
+      const inst = this.instructionCache.get(addr);
       if (inst) {
         result.push(inst);
-      } else {
-        break; // Gap detected — return the contiguous prefix only.
       }
     }
     return result;
@@ -363,27 +426,36 @@ export class DapAssemblyCacheService implements OnDestroy {
     if (newInstructions.length === 0) return;
 
     const start = newInstructions[0].address;
-    const end = newInstructions[newInstructions.length - 1].address;
-    if (start === undefined || end === undefined) return;
+    const lastInst = newInstructions[newInstructions.length - 1];
+    if (start === undefined || lastInst.address === undefined) return;
+
+    // Use instruction bytes to calculate the true inclusive end of the memory block.
+    // getInstructionByteSize guarantees at least 1 byte.
+    const lastSize = lastInst.instructionByteLength;
+    const end = lastInst.address + BigInt(lastSize - 1);
 
     this.cachedRanges.push({ start, end });
 
     // Sort then merge overlapping/adjacent ranges.
     this.cachedRanges.sort((a, b) => (a.start < b.start ? -1 : 1));
 
-    const merged: CachedRange[] = [];
-    let current = this.cachedRanges[0];
-    for (let i = 1; i < this.cachedRanges.length; i++) {
-      const next = this.cachedRanges[i];
-      if (next.start <= current.end) {
-        current.end = current.end > next.end ? current.end : next.end;
-      } else {
-        merged.push(current);
-        current = next;
+    if (this.cachedRanges.length > 0) {
+      let writeIndex = 0;
+      for (let i = 1; i < this.cachedRanges.length; i++) {
+        const current = this.cachedRanges[writeIndex];
+        const next = this.cachedRanges[i];
+
+        // Merge if they overlap or are strictly adjacent
+        if (next.start <= current.end + BigInt(1)) {
+          current.end = current.end > next.end ? current.end : next.end;
+        } else {
+          writeIndex++;
+          this.cachedRanges[writeIndex] = next;
+        }
       }
+      // Truncate the array to remove obsolete trailing items
+      this.cachedRanges.length = writeIndex + 1;
     }
-    merged.push(current);
-    this.cachedRanges = merged;
   }
 
   /**

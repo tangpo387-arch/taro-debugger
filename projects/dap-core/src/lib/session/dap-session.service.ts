@@ -4,7 +4,7 @@ import { filter, timeout } from 'rxjs/operators';
 import { DapTransportService } from '../transport/dap-transport.service';
 import { TransportFactoryService } from '../transport/transport-factory.service';
 import { DapConfigService } from './dap-config.service';
-import { DapRequest, DapResponse, DapEvent, DisassembleArguments, StepArguments } from '../dap.types';
+import { DapRequest, DapResponse, DapEvent, DisassembleArguments, StepArguments, DapDisassemblyResponse } from '../dap.types';
 
 /** Error thrown when an evaluate request is cancelled or times out */
 export class EvaluateCancelledError extends Error {
@@ -774,9 +774,26 @@ export class DapSessionService {
    * @param silentError When true, suppresses the `_dapError` UI event on failure.
    *                    Use this when the caller handles the error itself (e.g. cache service).
    */
-  public async disassemble(args: DisassembleArguments, silentError = false): Promise<DapResponse> {
+  public async disassemble(args: DisassembleArguments, silentError = false): Promise<DapDisassemblyResponse> {
     this.ensureStopped();
-    return this.sendRequest('disassemble', args, 500000, silentError);
+    const response = await this.sendRequest('disassemble', args, 500000, silentError);
+
+    // Translation layer to ensure addresses are correctly cast to BigInt
+    if (response.body?.instructions) {
+      response.body.instructions = response.body.instructions.map((inst: any) => {
+        let byteLength = 1;
+        if (inst.instructionBytes) {
+          byteLength = Math.max(1, Math.floor(inst.instructionBytes.replace(/\s+/g, '').length / 2));
+        }
+        return {
+          ...inst,
+          address: inst.address !== undefined ? BigInt(inst.address) : undefined,
+          instructionByteLength: byteLength
+        };
+      });
+    }
+
+    return response as DapDisassemblyResponse;
   }
 
   /**
