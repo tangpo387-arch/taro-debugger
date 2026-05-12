@@ -234,6 +234,31 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-04-28"
       }
+    },
+    {
+      "id": "WI-115",
+      "title": "Implement Dual-Layer Fatal Error Handling",
+      "featureGroup": "UI System Design",
+      "metadata": {
+        "status": "accepted",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Standardize unrecoverable error handling with separated core (DapFatalException) and UI (UiFatalException) types.",
+      "details": [
+        "Define DapFatalException in dap-core",
+        "Define UiFatalException in ui-shared",
+        "Implement GlobalFatalErrorHandler in host app to catch both exception types",
+        "Register GlobalFatalErrorHandler in app.config.ts",
+        "[Test] Verify redirection after asynchronous core/UI exceptions",
+        "[Doc] docs/architecture/fatal-error-flow.md"
+      ],
+      "timeline": {
+        "created": "2026-05-12",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-12"
+      }
     }
   ]
 }

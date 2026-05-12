@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 export interface ErrorDialogData {
   title?: string;
   message: string;
+  hideRetry?: boolean;
 }
 
 @Component({

@@ -9,5 +9,7 @@
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="onGoBack()">GO BACK</button>
-  <button mat-flat-button color="primary" (click)="onRetry()">RETRY</button>
+  @if (!data.hideRetry) {
+    <button mat-flat-button color="primary" (click)="onRetry()">RETRY</button>
+  }
 </mat-dialog-actions>

@@ -67,6 +67,7 @@ The architectural documentation has been modularized. Please see the specific su
 | **UI Layer** | [architecture/ui-layer.md](architecture/ui-layer.md) | Dependency Injection constraints, UI rendering, layout structure, and app frame integration. |
 | **Visual Design** | [architecture/visual-design.md](architecture/visual-design.md) | Design Tokens, typography, density scaling, and strict layout spacing rules. |
 | **Error Handling** | [architecture/error-handling.md](architecture/error-handling.md) | Synthetic Event handling (`_transportError`, `_dapError`), failure detection, and recovery sequences. |
+| **Fatal Error Flow** | [architecture/fatal-error-flow.md](architecture/fatal-error-flow.md) | Global exception handling pattern for unrecoverable failures and automated setup redirection. |
 | **Command Serialization** | [architecture/command-serialization.md](architecture/command-serialization.md) | Sync/cancel contract for control buttons, evaluate command, and gutter interaction. |
 | **Monorepo Standards** | [architecture/monorepo-standards.md](architecture/monorepo-standards.md) | Workspace resolution strategy, build-time constraints, and dependency hierarchy rules. |
 

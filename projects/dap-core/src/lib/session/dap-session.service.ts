@@ -14,6 +14,17 @@ export class EvaluateCancelledError extends Error {
   }
 }
 
+/** 
+ * Exception thrown when the DAP session or transport encounters an 
+ * unrecoverable protocol-level failure.
+ */
+export class DapFatalException extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'DapFatalException';
+  }
+}
+
 /** A single verified breakpoint returned by the DAP adapter */
 export interface VerifiedBreakpoint {
   /** The verified 1-based line number (may differ from the requested line) */
