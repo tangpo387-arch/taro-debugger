@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AssemblyViewComponent } from './assembly-view.component';
-import { TaroDisassembledInstruction } from '@taro/dap-core';
+import { DapDisassembledInstruction } from '@taro/dap-core';
 import { DapAssemblyCacheService } from '@taro/dap-core';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { CommonModule } from '@angular/common';
@@ -53,7 +53,7 @@ describe('AssemblyViewComponent', () => {
   });
 
   it('should verify virtual scrolling correctly renders a subset of the assembly instructions', () => {
-    const fakeInstructions: TaroDisassembledInstruction[] = [];
+    const fakeInstructions: DapDisassembledInstruction[] = [];
     for (let i = 0; i < 1000; i++) {
       fakeInstructions.push({
         address: BigInt(i),
@@ -75,7 +75,7 @@ describe('AssemblyViewComponent', () => {
   });
 
   it('should verify the highlighted instruction is synchronized with the current instruction pointer reference', () => {
-    const fakeInstructions: TaroDisassembledInstruction[] = [
+    const fakeInstructions: DapDisassembledInstruction[] = [
       { address: BigInt('0x1000'), instruction: 'nop', instructionBytes: '90', instructionByteLength: 1, normalizedSymbol: 'main' },
       { address: BigInt('0x1004'), instruction: 'mov eax, ebx', instructionBytes: '89 d8', instructionByteLength: 2, normalizedSymbol: 'main' },
       { address: BigInt('0x1008'), instruction: 'ret', instructionBytes: 'c3', instructionByteLength: 1, normalizedSymbol: 'main' }
@@ -100,7 +100,7 @@ describe('AssemblyViewComponent', () => {
   it('should verify breakpoint markers are accurately mapped to the corresponding address rows', () => {
     // Currently breakpoint toggle is a stub in the UI placeholder, 
     // but the template contains the `.breakpoint-marker` gutter column.
-    const fakeInstructions: TaroDisassembledInstruction[] = [
+    const fakeInstructions: DapDisassembledInstruction[] = [
       { address: BigInt('0x1000'), instruction: 'nop', instructionBytes: '90', instructionByteLength: 1, normalizedSymbol: 'main' }
     ];
 

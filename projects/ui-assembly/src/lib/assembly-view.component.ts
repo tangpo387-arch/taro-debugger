@@ -10,7 +10,7 @@ import { map } from 'rxjs';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { input, effect, signal } from '@angular/core';
 
-import { DapAssemblyCacheService, TaroDisassembledInstruction } from '@taro/dap-core';
+import { DapAssemblyCacheService, DapDisassembledInstruction } from '@taro/dap-core';
 import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent } from '@taro/ui-shared';
 import { JumpToAddressDialogComponent } from './jump-to-address-dialog/jump-to-address-dialog.component';
 
@@ -70,7 +70,7 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
     { initialValue: 28 }
   );
 
-  public instructions: TaroDisassembledInstruction[] = [];
+  public instructions: DapDisassembledInstruction[] = [];
   public readonly isLoading = signal<boolean>(false);
 
   /** Current active symbol for sticky header */
@@ -81,7 +81,7 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
   private scrollTimeout?: ReturnType<typeof setTimeout>;
 
   private updateInstructions(
-    inst: TaroDisassembledInstruction[],
+    inst: DapDisassembledInstruction[],
     action: 'forward' | 'backward' | 'jump',
     targetAddress: bigint
   ): void {
@@ -218,7 +218,7 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  public trackByAddress(_index: number, item: TaroDisassembledInstruction): string {
+  public trackByAddress(_index: number, item: DapDisassembledInstruction): string {
     return item.address?.toString(16) || '';
   }
 
@@ -275,7 +275,7 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
    * Checks if an instruction is likely out of the current function range.
    * Dims cross-function boundaries to focus on the active execution context.
    */
-  public isOutOfRange(instruction: TaroDisassembledInstruction): boolean {
+  public isOutOfRange(instruction: DapDisassembledInstruction): boolean {
     // 1. Active pointer is ALWAYS in range
     if (this.isInstructionPointer(instruction.address)) {
       return false;

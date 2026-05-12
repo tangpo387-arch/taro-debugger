@@ -2,7 +2,7 @@ import { Injectable, inject, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { DapSessionService } from './dap-session.service';
 import { DapDisassembledInstruction, DisassembleArguments } from '../dap.types';
-import { TaroDisassembledInstruction, CachedRange } from './assembly.types';
+import { CachedRange } from './assembly.types';
 
 /**
  * Session-layer service for managing a spatial, address-range-indexed cache
@@ -25,7 +25,7 @@ export class DapAssemblyCacheService implements OnDestroy {
   private readonly sessionService = inject(DapSessionService);
 
   // ── Cache State ──────────────────────────────────────────────────────────
-  private readonly instructionCache = new Map<bigint, TaroDisassembledInstruction>();
+  private readonly instructionCache = new Map<bigint, DapDisassembledInstruction>();
   /** Sorted list of all cached instruction addresses for fast neighbor lookup. */
   private sortedAddresses: bigint[] = [];
   /** Non-overlapping merged cached ranges, sorted by start address. */
@@ -82,13 +82,13 @@ export class DapAssemblyCacheService implements OnDestroy {
     startAddr: bigint,
     instructionCount: number,
     instructionOffset: number
-  ): Promise<TaroDisassembledInstruction[]> {
+  ): Promise<DapDisassembledInstruction[]> {
 
     this.currentIpRef = startAddr;
     const memRefStr = `0x${startAddr.toString(16)}`;
 
     // Cache check: try to satisfy the full request from local store.
-    let cachedInstructions: TaroDisassembledInstruction[] = [];
+    let cachedInstructions: DapDisassembledInstruction[] = [];
     cachedInstructions = this.getFromCache(startAddr, instructionCount, instructionOffset);
     if (cachedInstructions.length === instructionCount) {
       return cachedInstructions;
@@ -169,7 +169,7 @@ export class DapAssemblyCacheService implements OnDestroy {
             }, true);
 
             const batch = (gapRes.body?.instructions || []).filter((inst: DapDisassembledInstruction) =>
-              inst.address >= currentGapStart && inst.address < firstPos.address!
+              inst.address >= currentGapStart && inst.address < firstPos.address
             );
 
             if (batch.length === 0) break;
@@ -177,7 +177,7 @@ export class DapAssemblyCacheService implements OnDestroy {
             gapInstructions.push(...batch);
             const lastInBatch = batch[batch.length - 1];
             const batchLastSize = lastInBatch.instructionByteLength;
-            const nextStart = lastInBatch.address! + BigInt(batchLastSize);
+            const nextStart = lastInBatch.address + BigInt(batchLastSize);
 
             if (nextStart <= currentGapStart) {
               // Ensure we always move forward at least one byte if size is unknown
@@ -209,19 +209,13 @@ export class DapAssemblyCacheService implements OnDestroy {
       }
     }
 
-    negInstructions = this.enhanceInstructions(negInstructions);
-    gapInstructions = this.enhanceInstructions(gapInstructions);
-    posInstructions = this.enhanceInstructions(posInstructions);
-
     // Filter out duplicates and misaligned backward overlaps in a single pass.
     // By enforcing strict ascending order, we resolve overlaps caused by variable-length x86 instructions.
-    const uniqueEnhanced: TaroDisassembledInstruction[] = [];
+    const uniqueEnhanced: DapDisassembledInstruction[] = negInstructions;
     let maxAddr = BigInt(-1);
-    for (const inst of negInstructions) {
-      if (inst.address > maxAddr) {
-        maxAddr = inst.address;
-        uniqueEnhanced.push(inst);
-      }
+    if (negInstructions.length > 0) {
+      const last = negInstructions[negInstructions.length - 1];
+      maxAddr = last.address + BigInt(last.instructionByteLength);
     }
     for (const inst of gapInstructions) {
       if (inst.address > maxAddr) {
@@ -235,6 +229,7 @@ export class DapAssemblyCacheService implements OnDestroy {
         uniqueEnhanced.push(inst);
       }
     }
+    this.enhanceInstructions(uniqueEnhanced);
 
     // Persist new instructions to the cache.
     for (const inst of uniqueEnhanced) {
@@ -292,7 +287,7 @@ export class DapAssemblyCacheService implements OnDestroy {
     baseAddr: bigint,
     count: number,
     error: unknown
-  ): TaroDisassembledInstruction[] {
+  ): DapDisassembledInstruction[] {
     const message =
       error instanceof Error ? error.message : String(error);
     const hint = `; ${message}`;
@@ -320,11 +315,12 @@ export class DapAssemblyCacheService implements OnDestroy {
    * - Calculates the `byteOffset` from the start of the current function.
    * - Sets `isFunctionStart = true` on the first instruction of each function.
    */
-  private enhanceInstructions(instructions: DapDisassembledInstruction[]): TaroDisassembledInstruction[] {
+  private enhanceInstructions(instructions: DapDisassembledInstruction[]) {
     let currentBaseSymbol = '';
     let currentBaseAddress = BigInt(0);
 
-    return instructions.map(inst => {
+    for (const inst of instructions) {
+
       const rawSymbol = inst.symbol || '';
       let isFunctionStart = false;
 
@@ -360,18 +356,16 @@ export class DapAssemblyCacheService implements OnDestroy {
         }
       }
 
-      return {
-        ...inst,
-        normalizedSymbol: normalized,
-        byteOffset,
-        isFunctionStart
-      };
-    });
+      inst.normalizedSymbol = normalized;
+      inst.byteOffset = byteOffset;
+      inst.isFunctionStart = isFunctionStart;
+    }
   }
+
 
   // ── Cache Internals ──────────────────────────────────────────────────────
 
-  private getFromCache(referenceAddr: bigint, count: number, instructionOffset: number = 0): TaroDisassembledInstruction[] {
+  private getFromCache(referenceAddr: bigint, count: number, instructionOffset: number = 0): DapDisassembledInstruction[] {
     const idx = this.binarySearch(this.sortedAddresses, referenceAddr);
     if (idx === -1) return [];
 
@@ -382,7 +376,7 @@ export class DapAssemblyCacheService implements OnDestroy {
     const range = this.cachedRanges.find(r => startAddr >= r.start && startAddr <= r.end);
     if (!range) return [];
 
-    const result: TaroDisassembledInstruction[] = [];
+    const result: DapDisassembledInstruction[] = [];
     for (let i = startIdx; i < this.sortedAddresses.length && result.length < count; i++) {
       const addr = this.sortedAddresses[i];
       // If we cross a range boundary, there is a potential gap.
@@ -416,7 +410,7 @@ export class DapAssemblyCacheService implements OnDestroy {
       .sort((a, b) => (a < b ? -1 : (a > b ? 1 : 0)));
   }
 
-  private updateCachedRanges(newInstructions: TaroDisassembledInstruction[]): void {
+  private updateCachedRanges(newInstructions: DapDisassembledInstruction[]): void {
     if (newInstructions.length === 0) return;
 
     const start = newInstructions[0].address;

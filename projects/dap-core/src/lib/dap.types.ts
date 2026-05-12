@@ -96,6 +96,12 @@ export interface DapDisassembledInstruction {
   column?: number;
   endLine?: number;
   endColumn?: number;
+  /** Normalized function name (brackets, offsets, and angle-brackets stripped). */
+  normalizedSymbol?: string;
+  /** Byte offset of this instruction from the start of its function. */
+  byteOffset?: number;
+  /** True if this instruction is the entry point of its function. */
+  isFunctionStart?: boolean;
 }
 
 /**
