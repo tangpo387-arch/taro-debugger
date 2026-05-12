@@ -58,6 +58,7 @@ describe('AssemblyViewComponent', () => {
       fakeInstructions.push({
         address: BigInt(i),
         instructionBytes: '90',
+        instructionByteLength: 1,
         instruction: 'nop'
       });
     }
@@ -75,9 +76,9 @@ describe('AssemblyViewComponent', () => {
 
   it('should verify the highlighted instruction is synchronized with the current instruction pointer reference', () => {
     const fakeInstructions: TaroDisassembledInstruction[] = [
-      { address: BigInt('0x1000'), instruction: 'nop', normalizedSymbol: 'main' },
-      { address: BigInt('0x1004'), instruction: 'mov eax, ebx', normalizedSymbol: 'main' },
-      { address: BigInt('0x1008'), instruction: 'ret', normalizedSymbol: 'main' }
+      { address: BigInt('0x1000'), instruction: 'nop', instructionBytes: '90', instructionByteLength: 1, normalizedSymbol: 'main' },
+      { address: BigInt('0x1004'), instruction: 'mov eax, ebx', instructionBytes: '89 d8', instructionByteLength: 2, normalizedSymbol: 'main' },
+      { address: BigInt('0x1008'), instruction: 'ret', instructionBytes: 'c3', instructionByteLength: 1, normalizedSymbol: 'main' }
     ];
 
     component.instructions = fakeInstructions;
@@ -100,7 +101,7 @@ describe('AssemblyViewComponent', () => {
     // Currently breakpoint toggle is a stub in the UI placeholder, 
     // but the template contains the `.breakpoint-marker` gutter column.
     const fakeInstructions: TaroDisassembledInstruction[] = [
-      { address: BigInt('0x1000'), instruction: 'nop', normalizedSymbol: 'main' }
+      { address: BigInt('0x1000'), instruction: 'nop', instructionBytes: '90', instructionByteLength: 1, normalizedSymbol: 'main' }
     ];
 
     component.instructions = fakeInstructions;

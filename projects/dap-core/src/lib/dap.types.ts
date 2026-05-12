@@ -86,8 +86,8 @@ export interface DisassembleArguments {
  * Represents a single disassembled instruction.
  */
 export interface DapDisassembledInstruction {
-  address?: bigint;
-  instructionBytes?: string;
+  address: bigint;
+  instructionBytes: string;
   instructionByteLength: number;
   instruction: string;
   symbol?: string;

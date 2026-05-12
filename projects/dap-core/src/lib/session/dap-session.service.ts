@@ -792,13 +792,16 @@ export class DapSessionService {
     // Translation layer to ensure addresses are correctly cast to BigInt
     if (response.body?.instructions) {
       response.body.instructions = response.body.instructions.map((inst: any) => {
+        if (inst.address === undefined || inst.instructionBytes === undefined) {
+          throw new Error('Invalid disassembly response: missing attributes');
+        }
         let byteLength = 1;
         if (inst.instructionBytes) {
           byteLength = Math.max(1, Math.floor(inst.instructionBytes.replace(/\s+/g, '').length / 2));
         }
         return {
           ...inst,
-          address: inst.address !== undefined ? BigInt(inst.address) : undefined,
+          address: BigInt(inst.address),
           instructionByteLength: byteLength
         };
       });

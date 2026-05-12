@@ -150,47 +150,45 @@ export class DapAssemblyCacheService implements OnDestroy {
         const lastNeg = negInstructions[negInstructions.length - 1];
         const firstPos = posInstructions[0];
 
-        if (lastNeg.address !== undefined && firstPos.address !== undefined) {
-          const lastSize = lastNeg.instructionByteLength;
-          let currentGapStart = lastNeg.address + BigInt(lastSize);
+        const lastSize = lastNeg.instructionByteLength;
+        let currentGapStart = lastNeg.address + BigInt(lastSize);
 
-          // Iterate to fill the gap if one exists. Some adapters might not return
-          // enough instructions in a single call to close the gap entirely.
-          while (firstPos.address > currentGapStart && gapInstructions.length < 1000) {
-            const byteDiff = Number(firstPos.address - currentGapStart);
-            // Request enough instructions to cover the remaining byte difference.
-            const guessCount = Math.min(1000, Math.max(1, byteDiff));
+        // Iterate to fill the gap if one exists. Some adapters might not return
+        // enough instructions in a single call to close the gap entirely.
+        while (firstPos.address > currentGapStart && gapInstructions.length < 1000) {
+          const byteDiff = Number(firstPos.address - currentGapStart);
+          // Request enough instructions to cover the remaining byte difference.
+          const guessCount = Math.min(1000, Math.max(1, byteDiff));
 
-            try {
-              const gapRes = await this.sessionService.disassemble({
-                memoryReference: `0x${currentGapStart.toString(16)}`,
-                instructionCount: guessCount,
-                instructionOffset: 0,
-                resolveSymbols: true
-              }, true);
+          try {
+            const gapRes = await this.sessionService.disassemble({
+              memoryReference: `0x${currentGapStart.toString(16)}`,
+              instructionCount: guessCount,
+              instructionOffset: 0,
+              resolveSymbols: true
+            }, true);
 
-              const batch = (gapRes.body?.instructions || []).filter((inst: DapDisassembledInstruction) =>
-                inst.address !== undefined && inst.address >= currentGapStart && inst.address < firstPos.address!
-              );
+            const batch = (gapRes.body?.instructions || []).filter((inst: DapDisassembledInstruction) =>
+              inst.address >= currentGapStart && inst.address < firstPos.address!
+            );
 
-              if (batch.length === 0) break;
+            if (batch.length === 0) break;
 
-              gapInstructions.push(...batch);
-              const lastInBatch = batch[batch.length - 1];
-              const batchLastSize = lastInBatch.instructionByteLength;
-              const nextStart = lastInBatch.address! + BigInt(batchLastSize);
+            gapInstructions.push(...batch);
+            const lastInBatch = batch[batch.length - 1];
+            const batchLastSize = lastInBatch.instructionByteLength;
+            const nextStart = lastInBatch.address! + BigInt(batchLastSize);
 
-              if (nextStart <= currentGapStart) {
-                // Ensure we always move forward at least one byte if size is unknown
-                currentGapStart += BigInt(1);
-              } else {
-                currentGapStart = nextStart;
-              }
-            } catch (gapErr) {
-              // Mark failure point with an error hint and stop filling this gap.
-              gapInstructions.push(...(this.buildErrorHintInstructions(currentGapStart, 1, gapErr) as any[]));
-              break;
+            if (nextStart <= currentGapStart) {
+              // Ensure we always move forward at least one byte if size is unknown
+              currentGapStart += BigInt(1);
+            } else {
+              currentGapStart = nextStart;
             }
+          } catch (gapErr) {
+            // Mark failure point with an error hint and stop filling this gap.
+            gapInstructions.push(...(this.buildErrorHintInstructions(currentGapStart, 1, gapErr) as any[]));
+            break;
           }
         }
       }
@@ -220,19 +218,19 @@ export class DapAssemblyCacheService implements OnDestroy {
     const uniqueEnhanced: TaroDisassembledInstruction[] = [];
     let maxAddr = BigInt(-1);
     for (const inst of negInstructions) {
-      if (inst.address !== undefined && inst.address > maxAddr) {
+      if (inst.address > maxAddr) {
         maxAddr = inst.address;
         uniqueEnhanced.push(inst);
       }
     }
     for (const inst of gapInstructions) {
-      if (inst.address !== undefined && inst.address > maxAddr) {
+      if (inst.address > maxAddr) {
         maxAddr = inst.address;
         uniqueEnhanced.push(inst);
       }
     }
     for (const inst of posInstructions) {
-      if (inst.address !== undefined && inst.address > maxAddr) {
+      if (inst.address > maxAddr) {
         maxAddr = inst.address;
         uniqueEnhanced.push(inst);
       }
@@ -240,8 +238,7 @@ export class DapAssemblyCacheService implements OnDestroy {
 
     // Persist new instructions to the cache.
     for (const inst of uniqueEnhanced) {
-      if (inst.address !== undefined)
-        this.instructionCache.set(inst.address, inst);
+      this.instructionCache.set(inst.address, inst);
     }
     this.updateSortedAddresses();
     this.updateCachedRanges(uniqueEnhanced);
@@ -255,7 +252,7 @@ export class DapAssemblyCacheService implements OnDestroy {
       : BigInt(-1);
 
     for (const inst of uniqueEnhanced) {
-      if (inst.address !== undefined && inst.address > maxFinalAddr) {
+      if (inst.address > maxFinalAddr) {
         maxFinalAddr = inst.address;
         finalResults.push(inst);
       }
@@ -332,9 +329,6 @@ export class DapAssemblyCacheService implements OnDestroy {
       let isFunctionStart = false;
 
       const addr = inst.address;
-      if (addr === undefined)
-        return { ...inst, normalizedSymbol: '', byteOffset: undefined, isFunctionStart: false };
-
       // Strip angle brackets, operator suffixes, and offset component.
       let parsedOffset: number | undefined;
       let normalized = rawSymbol.replace(/<|>|\+.*$/g, '').trim();
@@ -427,7 +421,7 @@ export class DapAssemblyCacheService implements OnDestroy {
 
     const start = newInstructions[0].address;
     const lastInst = newInstructions[newInstructions.length - 1];
-    if (start === undefined || lastInst.address === undefined) return;
+    if (start === undefined) return;
 
     // Use instruction bytes to calculate the true inclusive end of the memory block.
     // getInstructionByteSize guarantees at least 1 byte.
