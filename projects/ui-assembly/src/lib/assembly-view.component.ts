@@ -230,6 +230,47 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
     return `0x${addr.toString(16)}`;
   }
 
+  /**
+   * Generates a unified, comprehensive tooltip for an instruction row.
+   * Format:
+   * ADDRESS: 0x1234 <+offset>
+   * OPCODE:  90 90
+   * DISASM:  nop
+   */
+  public getInstructionTooltip(inst: DapDisassembledInstruction): string {
+    const addr = this.formatAddress(inst.address);
+    const offset = inst.byteOffset !== undefined ? `<+${inst.byteOffset}>` : '';
+    const bytes = inst.instructionBytes || '--';
+
+    const indent = '          '; // 10 spaces to align with "DISASM:   "
+    const wrapText = (text: string, limit: number) => {
+      if (text.length <= limit) return text;
+      const chunks = [];
+      for (let i = 0; i < text.length; i += limit) {
+        chunks.push(text.substring(i, i + limit));
+      }
+      return chunks.join('\n' + indent);
+    };
+
+    let disasm = inst.instruction;
+    const symbolMatch = disasm.match(/ <.*>$/);
+    if (symbolMatch && symbolMatch.index !== undefined) {
+      const idx = symbolMatch.index;
+      const baseInst = disasm.substring(0, idx);
+      const symbolText = disasm.substring(idx + 1);
+      disasm = baseInst + '\n' + indent + wrapText(symbolText, 75);
+    } else {
+      disasm = wrapText(disasm, 85);
+    }
+
+    let tooltip = `ADDRESS:  ${addr} ${offset}\nOPCODE:   ${bytes}\nDISASM:   ${disasm}`;
+    if (inst.symbol) {
+      tooltip += `\nSYMBOL:   ${wrapText(inst.symbol, 75)}`;
+    }
+
+    return tooltip;
+  }
+
   private relocateToken: number = 0;
 
   private scrollToAddress(address: bigint): void {

@@ -447,6 +447,34 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-10"
       }
+    },
+    {
+      "id": "WI-116",
+      "title": "Assembly View: Fix Opcode and Mnemonic Column Truncation",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Resolve the silent truncation of instruction bytes (opcode column) and instruction text (mnemonic column) in the Assembly View by replacing fixed-width clipping with flexible, tooltip-assisted rendering.",
+      "details": [
+        "Audit opcode column width against max real-world x86/ARM byte sequences",
+        "Audit mnemonic column width against long operand patterns (e.g. memory-indirect addressing)",
+        "Replace fixed flex-basis with min-width constraints and allow columns to expand",
+        "Add text-overflow: ellipsis with title attribute tooltips on opcode and mnemonic cells",
+        "Ensure row layout remains single-line (white-space: nowrap preserved)",
+        "[Test] Verify that a 6-byte opcode (e.g. FF 25 00 00 00 00) is fully visible at standard viewport width",
+        "[Test] Verify that a long mnemonic (e.g. movq -0x8(%rbp), %rax) is not clipped in a 1280px viewport",
+        "[Test] Verify tooltip (title attr) appears on hover for truncated cells",
+        "[Doc] docs/archive/specs/assembly-column-truncation-fix.md"
+      ],
+      "timeline": {
+        "created": "2026-05-12",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-13"
+      }
     }
   ]
 }

@@ -14,15 +14,17 @@
         <div class="breakpoint-marker"></div> <!-- For future BP integration -->
       </div>
 
-      <div class="address">{{ formatAddress(instruction.address) }}</div>
+      <div class="address" [matTooltip]="getInstructionTooltip(instruction)" [matTooltipClass]="'assembly-tooltip'" matTooltipShowDelay="400">{{ formatAddress(instruction.address) }}</div>
 
       <!-- Offset column -->
-      <div class="offset">
-        <ng-container *ngIf="instruction.byteOffset !== undefined">&lt;+{{ instruction.byteOffset }}&gt;</ng-container>
-      </div>
+      <div class="offset" [matTooltip]="getInstructionTooltip(instruction)" [matTooltipClass]="'assembly-tooltip'" matTooltipShowDelay="400"><ng-container *ngIf="instruction.byteOffset !== undefined">&lt;+{{ instruction.byteOffset }}&gt;</ng-container></div>
 
-      <div class="opcode">{{ instruction.instructionBytes || '' }}</div>
-      <div class="mnemonic">{{ instruction.instruction }}</div>
+      <div class="opcode" [matTooltip]="getInstructionTooltip(instruction)" [matTooltipClass]="'assembly-tooltip'" matTooltipShowDelay="400">
+        {{ instruction.instructionBytes || '' }}
+      </div>
+      <div class="mnemonic" [matTooltip]="getInstructionTooltip(instruction)" [matTooltipClass]="'assembly-tooltip'" matTooltipShowDelay="400">
+        {{ instruction.instruction }}
+      </div>
       <div class="annotation" *ngIf="instruction.symbol">{{ instruction.symbol }}</div>
 
     </div>

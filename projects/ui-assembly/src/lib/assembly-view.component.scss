@@ -44,6 +44,7 @@
   /* Prevent browser from messing with scroll position when content updates */
   overflow-anchor: none;
   background-color: var(--mat-sys-surface);
+  overflow-x: hidden; // CRITICAL: Force horizontal constraint so rows shrink instead of scrolling off-screen
 
   &::-webkit-scrollbar {
     display: none;
@@ -57,6 +58,7 @@
   align-items: center;
   overflow: hidden;
   width: 100%;
+  max-width: 100%; // CRITICAL: Prevent row from exceeding viewport width, which breaks flex-shrink
   /* height is bound in template via [style.height.px] to match itemSize */
   padding: 0 var(--sys-density-panel-padding);
   font-size: var(--text-base);
@@ -64,7 +66,7 @@
   border-bottom: 1px solid var(--mat-sys-outline-variant);
   box-sizing: border-box;
   white-space: nowrap;
-  gap: 12px; /* Add spacing between columns */
+  gap: 8px; /* High-density spacing between columns */
 
   &:hover {
     background-color: var(--mat-sys-surface-container-high);
@@ -134,31 +136,45 @@
 }
 
 .address {
-  flex: 0 0 120px;
+  flex: 0 0 112px; /* Standardized to 8px grid modulus */
   color: var(--mat-sys-outline);
   font-size: var(--text-sm);
   overflow: hidden;
 }
 
 .offset {
-  flex: 0 0 70px;
+  flex: 0 0 56px; /* Standardized to 8px grid modulus */
   color: var(--mat-sys-tertiary);
   font-size: var(--text-sm);
   overflow: hidden;
   text-overflow: clip;
+
+  &:empty {
+    display: none;
+  }
 }
 
 .opcode {
-  flex: 0 0 110px;
+  flex: 0 0 180px;
+  min-width: 120px;
+  max-width: 180px;
   color: var(--mat-sys-secondary);
   font-size: var(--text-sm);
+  display: block;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mnemonic {
-  flex: 0 0 250px;
+  flex: 1 1 250px;
+  min-width: 0; // Essential for ellipsis in flexbox
+  max-width: 600px; // Cap extremely long mnemonics to preserve space for annotations
   font-weight: var(--weight-medium);
+  display: block;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .annotation {
@@ -227,3 +243,4 @@
     box-shadow: var(--mat-sys-shadow);
   }
 }
+

@@ -156,4 +156,25 @@ describe('AssemblyViewComponent', () => {
       expect(component.viewAnchor()).not.toBe(BigInt('0x1000'));
     });
   });
+
+  it('should verify opcode and mnemonic elements have title attributes for tooltips', () => {
+    const fakeInstructions: DapDisassembledInstruction[] = [
+      { 
+        address: BigInt('0x1000'), 
+        instruction: 'mov eax, [ebp-0x4]', 
+        instructionBytes: '8b 45 fc', 
+        instructionByteLength: 3 
+      }
+    ];
+
+    component.instructions = fakeInstructions;
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const opcode = compiled.querySelector('.opcode') as HTMLElement;
+    const mnemonic = compiled.querySelector('.mnemonic') as HTMLElement;
+
+    expect(opcode.textContent?.trim()).toBe('8b 45 fc');
+    expect(mnemonic.textContent?.trim()).toBe('mov eax, [ebp-0x4]');
+  });
 });
