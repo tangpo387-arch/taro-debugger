@@ -2,7 +2,7 @@
 title: Test Plan (Index)
 scope: testing, vitest, unit-tests, integration-tests, e2e, coverage
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-14
+last_updated: 2026-05-14
 related:
   - docs/work-items.md
   - docs/system-specification.md
@@ -48,6 +48,7 @@ Each file below corresponds to a specific module or test level. **Open and read 
 | [unit-dap-session.spec-plan.md](tests/unit-dap-session.spec-plan.md) | `DapSessionService` |
 | [unit-websocket-transport.spec-plan.md](tests/unit-websocket-transport.spec-plan.md) | `WebSocketTransportService` |
 | [unit-dap-variables.spec-plan.md](tests/unit-dap-variables.spec-plan.md) | `DapVariablesService` |
+| [unit-assembly-cache.spec-plan.md](tests/unit-assembly-cache.spec-plan.md) | `DapAssemblyCacheService` (range-embedded storage) |
 
 ### 2.2 Unit Tests — UI Components
 

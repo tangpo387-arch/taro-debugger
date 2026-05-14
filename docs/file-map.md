@@ -2,7 +2,7 @@
 title: Source File Responsibility Map
 scope: file-map, navigation, ownership, layers
 audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-05-01
+last_updated: 2026-05-14
 related:
   - docs/architecture.md
   - .agents/project-context.md
@@ -64,7 +64,7 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | `projects/dap-core/src/lib/session/dap-config.service.ts` | Configuration persistence (localStorage), SSOT for DAP connection parameters | `setConfig()`, `getConfig()` |
 | `projects/taro-debugger-frontend/src/app/dap-file-tree.service.ts` | File tree construction from `loadedSources`, source file reading via `source` request | `getTree()`, `readFile()` |
 | `projects/ui-inspection/src/lib/dap-variables.service.ts` | Derived state management for DAP scopes and variables, caching variable references | `fetchScopes()`, `getVariables()`, `scopes$` |
-| `projects/dap-core/src/lib/session/dap-assembly-cache.service.ts` | Unified caching for disassembled instructions with BigInt-based address indexing and range-based retrieval | `fetchInstructions()`, `clear()`, `invalidate()` |
+| `projects/dap-core/src/lib/session/dap-assembly-cache.service.ts` | Unified caching for disassembled instructions. Instructions are embedded in self-contained `CachedRange` objects (no global Map/sortedAddresses). Merge cost $O(K+M)$; prune cost $O(1)$ per range. | `fetchInstructions()`, `clear()` |
 
 ## Transport Layer (Services)
 

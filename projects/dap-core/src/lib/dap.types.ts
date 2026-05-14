@@ -76,8 +76,8 @@ export interface DapStackFrame {
  */
 export interface DisassembleArguments {
   memoryReference: string;
-  offset?: number;
   instructionOffset?: number;
+  offset?: number;
   instructionCount: number;
   resolveSymbols?: boolean;
 }

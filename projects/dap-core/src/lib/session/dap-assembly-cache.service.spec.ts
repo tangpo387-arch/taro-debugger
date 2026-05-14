@@ -332,4 +332,184 @@ describe('DapAssemblyCacheService', () => {
     });
   });
 
+  // ── Range-Embedded Storage Invariants ────────────────────────────
+
+  describe('CachedRange Structure Invariants', () => {
+    it('A1 — should produce exactly one CachedRange on single fetch', async () => {
+      const fakeInstructions = [
+        { address: BigInt('0x1000'), instruction: 'i1', instructionBytes: '90' },
+        { address: BigInt('0x1001'), instruction: 'i2', instructionBytes: '90' },
+      ];
+      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse(fakeInstructions));
+
+      await service.fetchInstructions(BigInt('0x1000'), 2, 0);
+
+      const ranges = (service as any).cachedRanges;
+      expect(ranges.length).toBe(1);
+      expect(ranges[0].start).toBe(BigInt('0x1000'));
+      expect(ranges[0].end).toBe(BigInt('0x1001'));
+      expect(ranges[0].instructions.length).toBe(2);
+    });
+
+    it('A2 — should keep instructions strictly ascending and de-duplicated', async () => {
+      const negPart = [
+        { address: BigInt('0x1000'), instruction: 'neg1', instructionBytes: '90909090', instructionByteLength: 4 },
+        { address: BigInt('0x1004'), instruction: 'neg2', instructionBytes: '90909090', instructionByteLength: 4 }
+      ] as any;
+      const posPart = [
+        { address: BigInt('0x1002'), instruction: 'overlap', instructionBytes: '90909090909090909090', instructionByteLength: 10 },
+        { address: BigInt('0x1008'), instruction: 'pos1', instructionBytes: '90909090', instructionByteLength: 4 }
+      ] as any;
+
+      (service as any).mergeBatchIntoRanges(negPart);
+      (service as any).mergeBatchIntoRanges(posPart);
+
+      const ranges = (service as any).cachedRanges;
+      expect(ranges.length).toBe(1);
+      const insts = ranges[0].instructions;
+      for (let i = 0; i < insts.length - 1; i++) {
+        expect(insts[i].address).toBeLessThan(insts[i + 1].address);
+      }
+    });
+
+    it('A3 — should collapse two adjacent fetches into a single CachedRange', async () => {
+      mockDapSession.disassemble.mockResolvedValueOnce(makeDisassembleResponse([
+        { address: BigInt('0x1000'), instruction: 'i1', instructionBytes: '9090' }
+      ]));
+      mockDapSession.disassemble.mockResolvedValueOnce(makeDisassembleResponse([
+        { address: BigInt('0x1002'), instruction: 'i2', instructionBytes: '90' }
+      ]));
+
+      await service.fetchInstructions(BigInt('0x1000'), 1, 0);
+      await service.fetchInstructions(BigInt('0x1002'), 1, 0);
+
+      const ranges = (service as any).cachedRanges;
+      expect(ranges.length).toBe(1);
+      expect(ranges[0].start).toBe(BigInt('0x1000'));
+      expect(ranges[0].end).toBe(BigInt('0x1002'));
+    });
+
+    it('A4 — should keep two non-adjacent fetches as separate CachedRange objects', async () => {
+      mockDapSession.disassemble.mockResolvedValueOnce(makeDisassembleResponse([{ address: BigInt('0x1000'), instruction: 'i1' }]));
+      mockDapSession.disassemble.mockResolvedValueOnce(makeDisassembleResponse([{ address: BigInt('0x2000'), instruction: 'i2' }]));
+
+      await service.fetchInstructions(BigInt('0x1000'), 1, 0);
+      await service.fetchInstructions(BigInt('0x2000'), 1, 0);
+
+      const ranges = (service as any).cachedRanges;
+      expect(ranges.length).toBe(2);
+      expect(ranges[0].start).toBe(BigInt('0x1000'));
+      expect(ranges[1].start).toBe(BigInt('0x2000'));
+    });
+  });
+
+  describe('Lookup Correctness', () => {
+    it('B1 — should return slice from correct range when two ranges exist', async () => {
+      (service as any).mergeBatchIntoRanges([{ address: BigInt('0x1000'), instruction: 'i1', instructionByteLength: 1 }]);
+      (service as any).mergeBatchIntoRanges([{ address: BigInt('0x2000'), instruction: 'i2', instructionByteLength: 1 }]);
+
+      const result = await service.fetchInstructions(BigInt('0x2000'), 1, 0);
+
+      expect(result.length).toBe(1);
+      expect(result[0].address).toBe(BigInt('0x2000'));
+      expect(mockDapSession.disassemble).not.toHaveBeenCalled();
+    });
+
+    it('B2 — should apply instructionOffset within range boundary', async () => {
+      const batch = [
+        { address: BigInt('0x1000'), instruction: 'i0', instructionByteLength: 1 },
+        { address: BigInt('0x1001'), instruction: 'i1', instructionByteLength: 1 },
+        { address: BigInt('0x1002'), instruction: 'i2', instructionByteLength: 1 },
+        { address: BigInt('0x1003'), instruction: 'i3', instructionByteLength: 1 },
+        { address: BigInt('0x1004'), instruction: 'i4', instructionByteLength: 1 },
+      ];
+      (service as any).mergeBatchIntoRanges(batch);
+
+      const result = await service.fetchInstructions(BigInt('0x1001'), 1, 2);
+
+      expect(result.length).toBe(1);
+      expect(result[0].address).toBe(BigInt('0x1003'));
+      expect(mockDapSession.disassemble).not.toHaveBeenCalled();
+    });
+
+    it('B3 — should trigger DAP fetch when instructionOffset reaches beyond range end', async () => {
+      const batch = [{ address: BigInt('0x1000'), instruction: 'i0', instructionByteLength: 1 }];
+      (service as any).mergeBatchIntoRanges(batch);
+      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse([{ address: BigInt('0x1001'), instruction: 'new' }]));
+
+      await service.fetchInstructions(BigInt('0x1000'), 2, 0);
+
+      expect(mockDapSession.disassemble).toHaveBeenCalled();
+    });
+  });
+
+  describe('Merge Correctness', () => {
+    it('C1 — should de-duplicate overlapping batch during merge', async () => {
+      (service as any).mergeBatchIntoRanges([
+        { address: BigInt('0x1000'), instruction: 'i0', instructionByteLength: 4 },
+        { address: BigInt('0x1004'), instruction: 'i1', instructionByteLength: 4 }
+      ]);
+      const overlapBatch = [
+        { address: BigInt('0x1004'), instruction: 'i1', instructionByteLength: 4 },
+        { address: BigInt('0x1008'), instruction: 'i2', instructionByteLength: 4 }
+      ];
+
+      (service as any).mergeBatchIntoRanges(overlapBatch);
+
+      const ranges = (service as any).cachedRanges;
+      expect(ranges[0].instructions.length).toBe(3);
+      expect(ranges[0].instructions.map((i: any) => i.address)).toEqual([BigInt('0x1000'), BigInt('0x1004'), BigInt('0x1008')]);
+    });
+
+    it('C3 — should bridge two existing ranges with a mid-batch', async () => {
+      (service as any).mergeBatchIntoRanges([{ address: BigInt('0x1000'), instruction: 'i0', instructionByteLength: 1 }]);
+      (service as any).mergeBatchIntoRanges([{ address: BigInt('0x1002'), instruction: 'i2', instructionByteLength: 1 }]);
+      expect((service as any).cachedRanges.length).toBe(2);
+
+      (service as any).mergeBatchIntoRanges([{ address: BigInt('0x1001'), instruction: 'i1', instructionByteLength: 1 }]);
+
+      expect((service as any).cachedRanges.length).toBe(1);
+      expect((service as any).cachedRanges[0].start).toBe(BigInt('0x1000'));
+      expect((service as any).cachedRanges[0].end).toBe(BigInt('0x1002'));
+    });
+  });
+
+  describe('Range-Level Eviction', () => {
+    it('D1 — should remove the single furthest range as a unit', async () => {
+      service.setCacheLimits(5, 3);
+      (service as any).mergeBatchIntoRanges(Array.from({ length: 5 }, (_, i) => ({ address: BigInt(0x1000 + i), instruction: 'nop', instructionByteLength: 1 })));
+      (service as any).currentIpRef = BigInt(0x1000);
+
+      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse([
+        { address: BigInt('0x9000'), instruction: 'nop', instructionByteLength: 1 } as any,
+        { address: BigInt('0x9001'), instruction: 'nop', instructionByteLength: 1 } as any
+      ]));
+      await service.fetchInstructions(BigInt('0x9000'), 2, 0);
+
+      const ranges = (service as any).cachedRanges;
+      expect(ranges.some((r: any) => r.start === BigInt(0x1000))).toBe(false);
+      expect(ranges.length).toBe(1);
+    });
+
+    it('D2 — should preserve the range containing the current IP', async () => {
+      service.setCacheLimits(5, 3);
+      // Range 1 at 0x1000 (3 insts)
+      (service as any).mergeBatchIntoRanges(Array.from({ length: 3 }, (_, i) => ({ address: BigInt(0x1000 + i), instruction: 'nop', instructionByteLength: 1 })));
+      // Range 2 at 0x2000 (3 insts)
+      (service as any).mergeBatchIntoRanges(Array.from({ length: 3 }, (_, i) => ({ address: BigInt(0x2000 + i), instruction: 'nop', instructionByteLength: 1 })));
+
+      // Set IP back to 0x1000
+      (service as any).currentIpRef = BigInt(0x1000);
+
+      // Act
+      (service as any).pruneCache();
+
+      // Assert
+      const ranges = (service as any).cachedRanges;
+      expect(ranges.some((r: any) => r.start === BigInt(0x1000))).toBe(true);
+      expect(ranges.some((r: any) => r.start === BigInt(0x2000))).toBe(false);
+    });
+  });
+
 });
+

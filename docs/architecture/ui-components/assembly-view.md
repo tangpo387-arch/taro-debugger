@@ -2,7 +2,7 @@
 title: Architecture - Assembly View (Disassembly)
 scope: ui-assembly, disassembly, dap-integration
 audience: [Human Engineer, Lead_Engineer, Product_Architect, Quality_Control_Reviewer]
-last_updated: 2026-05-02
+last_updated: 2026-05-14
 related:
   - architecture/ui-layer.md
   - system-specification.md
@@ -23,9 +23,10 @@ The Assembly View provides a low-level inspection interface for machine instruct
 ### 1.2 DapAssemblyCacheService
 
 - **Scope**: App-scoped (provided in `DapCoreModule` via `provideDapCore()`).
+- **Storage Model**: Instructions are embedded directly within self-contained `CachedRange` objects. Each range holds a strictly ascending `instructions: DapDisassembledInstruction[]` array. Merge cost is $O(K+M)$ per incoming batch; pruning drops an entire range object.
 - **Responsibility**:
-  - Unified caching logic for `disassemble` responses.
-  - BigInt-based address normalization and instruction retrieval.
+  - Unified caching logic for `disassemble` responses with gap-filling.
+  - BigInt-based binary search within per-range instruction arrays.
   - Invalidation logic triggered by `module` load events or session resets.
 
 ### 1.3 Reactive Lifecycle Management
@@ -85,5 +86,5 @@ The application applies post-processing to normalize the display of function blo
 ## 4. Technical Constraints
 
 - **Capability Guard**: The view is disabled if the Debug Adapter does not support the `disassemble` capability.
-- **Cache Policy**: Instructions are cached per address range. The cache is **preserved across thread switches** (since threads share memory) but is **invalidated on `module` events** to account for dynamic library loading.
-- **Capacity**: Maintained via a spatial pruning watermark (15,000 instructions) and a hard limit (20,000 instructions) to optimize memory usage and virtual scroll performance.
+- **Cache Policy**: Instructions are cached in self-contained `CachedRange` objects. The cache is **preserved across thread switches** (since threads share memory) but is **invalidated on `module` events** to account for dynamic library loading.
+- **Capacity**: Maintained via a spatial pruning watermark (15,000 instructions) and a hard limit (20,000 instructions). When the limit is exceeded, the `CachedRange` farthest from the current IP is evicted atomically — no per-address iteration is required.

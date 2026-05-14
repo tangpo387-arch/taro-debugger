@@ -475,6 +475,33 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-13"
       }
+    },
+    {
+      "id": "WI-117",
+      "title": "Remove sortedAddresses from DapAssemblyCacheService",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Refactor the assembly instruction cache to eliminate the redundant sortedAddresses array by embedding instruction arrays directly within each CachedRange, reducing merge complexity from O(N log N) to O(K+M).",
+      "details": [
+        "Embed instructions: bigint[] in CachedRange to replace global Map + sortedAddresses",
+        "Rewrite getFromCache to binary-search within the range-local instruction array",
+        "Remove updateSortedAddresses() and replace with range-local insertion",
+        "Update evictRange() to drop the CachedRange object entirely",
+        "Update pruneCache() to operate on CachedRange array only",
+        "[Test] Verify all existing cache spec tests pass with new storage model",
+        "[Test] Verify pruning evicts the correct range and sortedAddresses no longer exists",
+        "[Doc] docs/archive/specs/assembly-cache-range-refactor.md"
+      ],
+      "timeline": {
+        "created": "2026-05-14",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-15"
+      }
     }
   ]
 }

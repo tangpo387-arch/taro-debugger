@@ -2,7 +2,7 @@
 title: Architecture - DAP Core Library (@taro/dap-core)
 scope: dap-core, session-layer, transport-layer, protocol
 audience: [Human Engineer, Lead_Engineer, Product_Architect, Quality_Control_Reviewer]
-last_updated: 2026-04-28
+last_updated: 2026-05-14
 related:
   - architecture/session-layer.md
   - architecture/transport-layer.md
@@ -44,7 +44,7 @@ Manages the high-level protocol handshake and execution state machine.
   - Sequential DAP handshake (`initialize` → `launch`/`attach`).
   - Request/Response pairing and timeout management.
   - Broadcasting the `executionState$` (Inactive, Launching, Running, Paused).
-- **`DapAssemblyCacheService`**: Manages instruction-level caching and BigInt-based address indexing for disassembly.
+- **`DapAssemblyCacheService`**: Manages instruction-level caching for disassembly. Instructions are embedded directly in self-contained `CachedRange` objects (sorted by address) - merge cost is $O(K+M)$ per batch; pruning evicts an entire range object in $O(1)$.
 - **`DapConfigService`**: Manages connection settings and adapter-specific configurations.
 
 ## 3. Interaction Model

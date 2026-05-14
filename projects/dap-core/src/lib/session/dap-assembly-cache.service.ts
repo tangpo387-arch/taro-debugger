@@ -10,7 +10,8 @@ import { CachedRange } from './assembly.types';
  *
  * Responsibilities (Session Layer):
  * - Fetch disassembled instructions from the DAP adapter via DapSessionService.
- * - Cache results in a Map keyed by normalized hex address.
+ * - Cache results in self-contained CachedRange objects, each storing a sorted
+ *   instruction array. No global Map or sortedAddresses index is maintained.
  * - Perform gap-filling: return cached instructions and only fetch missing ones.
  * - Perform spatial pruning (LRU by distance from IP) when the cache is full.
  * - Enhance raw DAP instructions with normalized symbol metadata.
@@ -25,16 +26,19 @@ export class DapAssemblyCacheService implements OnDestroy {
   private readonly sessionService = inject(DapSessionService);
 
   // ── Cache State ──────────────────────────────────────────────────────────
-  private readonly instructionCache = new Map<bigint, DapDisassembledInstruction>();
-  /** Sorted list of all cached instruction addresses for fast neighbor lookup. */
-  private sortedAddresses: bigint[] = [];
-  /** Non-overlapping merged cached ranges, sorted by start address. */
+  /** Non-overlapping merged cached ranges, sorted by start address. Each range
+   *  embeds its own instruction array — no global Map or sorted address index. */
   private cachedRanges: CachedRange[] = [];
   /** Last known instruction pointer address, used as reference for pruning. */
   private currentIpRef: bigint | null = null;
 
   private CACHE_LIMIT = 20000;
   private WATERMARK = 15000;
+
+  /** Maximum number of cached instructions to "discount" from a new fetch request.
+   *  Capping this ensures we always over-fetch a minimum amount to fill the cache
+   *  and avoid continuous small requests during scrolling. */
+  private static readonly MAX_CACHE_HIT_DISCOUNT = 1000;
 
   private sessionSubscription?: Subscription;
 
@@ -63,17 +67,16 @@ export class DapAssemblyCacheService implements OnDestroy {
   // ── Public API ───────────────────────────────────────────────────────────
 
   /**
-   * Fetches a contiguous block of enhanced instructions starting at `memoryReference`.
+   * Fetches a contiguous block of enhanced instructions starting at `startAddr`.
    *
    * Uses the cache where possible (gap-filling strategy):
-   * 1. If `memoryReference` is a hex address, check the cache for a contiguous
-   *    block starting there.
+   * 1. Check the cache for a contiguous block starting at `startAddr`.
    * 2. If the cache covers the full requested `instructionCount`, return from
    *    cache without issuing a DAP request.
    * 3. Otherwise, fetch only the missing suffix from the DAP adapter and merge
    *    the result into the cache.
    *
-   * @param memoryReference Hex address string (e.g. '0x1000') or opaque reference.
+   * @param startAddr       Absolute instruction address as bigint.
    * @param instructionCount Total instructions desired in the returned block.
    * @param instructionOffset Instruction offset applied when a DAP request is needed.
    * @returns Enhanced instruction array (may be combined from cache + DAP).
@@ -96,7 +99,7 @@ export class DapAssemblyCacheService implements OnDestroy {
 
     // Partial / miss: fetch only the gap from the DAP adapter.
     const actualOffset = instructionOffset + cachedInstructions.length;
-    const actualCount = instructionCount - cachedInstructions.length;
+    const actualCount = instructionCount - Math.min(DapAssemblyCacheService.MAX_CACHE_HIT_DISCOUNT, cachedInstructions.length);
 
     let negInstructions: DapDisassembledInstruction[] = [];
     let gapInstructions: DapDisassembledInstruction[] = [];
@@ -232,11 +235,7 @@ export class DapAssemblyCacheService implements OnDestroy {
     this.enhanceInstructions(uniqueEnhanced);
 
     // Persist new instructions to the cache.
-    for (const inst of uniqueEnhanced) {
-      this.instructionCache.set(inst.address, inst);
-    }
-    this.updateSortedAddresses();
-    this.updateCachedRanges(uniqueEnhanced);
+    this.mergeBatchIntoRanges(uniqueEnhanced);
     this.pruneCache();
 
     // Combine and enforce strictly ascending order to ensure a clean continuous stream for the UI.
@@ -256,7 +255,7 @@ export class DapAssemblyCacheService implements OnDestroy {
     if (centralIndex === -1) {
       return finalResults.slice(0, instructionCount);
     }
-    const startIndex = Math.max(0, instructionOffset + centralIndex)
+    const startIndex = Math.max(0, instructionOffset + centralIndex);
     return finalResults.slice(startIndex, startIndex + instructionCount);
   }
 
@@ -265,9 +264,7 @@ export class DapAssemblyCacheService implements OnDestroy {
    * Called on session lifecycle events (terminated, exited, module change).
    */
   public clear(): void {
-    this.instructionCache.clear();
     this.cachedRanges = [];
-    this.sortedAddresses = [];
     this.currentIpRef = null;
   }
 
@@ -281,7 +278,7 @@ export class DapAssemblyCacheService implements OnDestroy {
    * @param baseAddr   Starting address for the synthetic block.
    * @param count      Number of placeholder rows to generate.
    * @param error      The caught error — its message is embedded in each row.
-   * @returns          Array of `TaroDisassembledInstruction` placeholders.
+   * @returns          Array of `DapDisassembledInstruction` placeholders.
    */
   private buildErrorHintInstructions(
     baseAddr: bigint,
@@ -365,85 +362,123 @@ export class DapAssemblyCacheService implements OnDestroy {
 
   // ── Cache Internals ──────────────────────────────────────────────────────
 
-  private getFromCache(referenceAddr: bigint, count: number, instructionOffset: number = 0): DapDisassembledInstruction[] {
-    const idx = this.binarySearch(this.sortedAddresses, referenceAddr);
+  /**
+   * Looks up a contiguous instruction slice starting near `referenceAddr` from
+   * the range-local instruction arrays. No global sorted index is consulted.
+   *
+   * @param referenceAddr  The anchor address (e.g. PC or viewport top).
+   * @param count          Maximum number of instructions to return.
+   * @param instructionOffset  Signed offset from referenceAddr index.
+   */
+  private getFromCache(referenceAddr: bigint, count: number, instructionOffset: number): DapDisassembledInstruction[] {
+    const range = this.findRange(referenceAddr);
+    if (!range) return [];
+
+    const idx = this.binarySearchInstructions(range.instructions, referenceAddr);
     if (idx === -1) return [];
 
     const startIdx = idx + instructionOffset;
-    if (startIdx < 0 || startIdx >= this.sortedAddresses.length) return [];
+    if (startIdx < 0 || startIdx >= range.instructions.length) return [];
 
-    const startAddr = this.sortedAddresses[startIdx];
-    const range = this.cachedRanges.find(r => startAddr >= r.start && startAddr <= r.end);
-    if (!range) return [];
-
-    const result: DapDisassembledInstruction[] = [];
-    for (let i = startIdx; i < this.sortedAddresses.length && result.length < count; i++) {
-      const addr = this.sortedAddresses[i];
-      // If we cross a range boundary, there is a potential gap.
-      // Stop here to force a fresh DAP fetch for the next contiguous block.
-      if (addr > range.end) {
-        break;
-      }
-
-      const inst = this.instructionCache.get(addr);
-      if (inst) {
-        result.push(inst);
-      }
-    }
-    return result;
+    return range.instructions.slice(startIdx, startIdx + count);
   }
 
-  private binarySearch(arr: bigint[], target: bigint): number {
+  /**
+   * Finds the single CachedRange whose [start, end] interval contains `addr`.
+   * Since cachedRanges is kept sorted by start, a linear scan suffices for the
+   * typical case of <10 ranges; a binary search can be substituted if needed.
+   */
+  private findRange(addr: bigint): CachedRange | undefined {
+    for (const range of this.cachedRanges) {
+      if (addr >= range.start && addr <= range.end) return range;
+      if (range.start > addr) break; // Sorted — no point continuing.
+    }
+    return undefined;
+  }
+
+  /**
+   * Binary-searches a sorted DapDisassembledInstruction[] for the given address.
+   * @returns Index of the matching instruction, or -1 if not found.
+   */
+  private binarySearchInstructions(instructions: DapDisassembledInstruction[], target: bigint): number {
     let left = 0;
-    let right = arr.length - 1;
+    let right = instructions.length - 1;
     while (left <= right) {
       const mid = Math.floor((left + right) / 2);
-      if (arr[mid] === target) return mid;
-      if (arr[mid] < target) left = mid + 1;
+      if (instructions[mid].address === target) return mid;
+      if (instructions[mid].address < target) left = mid + 1;
       else right = mid - 1;
     }
     return -1;
   }
 
-  private updateSortedAddresses(): void {
-    this.sortedAddresses = Array.from(this.instructionCache.keys())
-      .sort((a, b) => (a < b ? -1 : (a > b ? 1 : 0)));
-  }
+  /**
+   * Merges a newly fetched, enhanced batch of instructions into `cachedRanges`.
+   *
+   * Steps:
+   * 1. Derive start/end from the batch's first and last instruction.
+   * 2. Binary-insert a new CachedRange into the sorted cachedRanges array.
+   * 3. Merge any overlapping or adjacent ranges by concatenating their
+   *    instruction arrays (ascending-order filter applied to de-duplicate).
+   *
+   * Complexity: O(K + M) — no global sort over the full cache.
+   */
+  private mergeBatchIntoRanges(batch: DapDisassembledInstruction[]): void {
+    if (batch.length === 0) return;
 
-  private updateCachedRanges(newInstructions: DapDisassembledInstruction[]): void {
-    if (newInstructions.length === 0) return;
-
-    const start = newInstructions[0].address;
-    const lastInst = newInstructions[newInstructions.length - 1];
-    if (start === undefined) return;
-
-    // Use instruction bytes to calculate the true inclusive end of the memory block.
-    // getInstructionByteSize guarantees at least 1 byte.
+    const firstInst = batch[0];
+    const lastInst = batch[batch.length - 1];
     const lastSize = lastInst.instructionByteLength;
-    const end = lastInst.address + BigInt(lastSize - 1);
 
-    this.cachedRanges.push({ start, end });
+    const newRange: CachedRange = {
+      start: firstInst.address,
+      end: lastInst.address + BigInt(lastSize - 1),
+      instructions: batch,
+    };
 
-    // Sort then merge overlapping/adjacent ranges.
-    this.cachedRanges.sort((a, b) => (a.start < b.start ? -1 : 1));
+    // Binary-insert into sorted cachedRanges by start address.
+    let insertIdx = this.cachedRanges.length;
+    for (let i = 0; i < this.cachedRanges.length; i++) {
+      if (this.cachedRanges[i].start >= newRange.start) {
+        insertIdx = i;
+        break;
+      }
+    }
+    this.cachedRanges.splice(insertIdx, 0, newRange);
 
-    if (this.cachedRanges.length > 0) {
-      let writeIndex = 0;
+    // Merge overlapping or adjacent ranges in a single forward pass.
+    if (this.cachedRanges.length > 1) {
+      let writeIdx = 0;
       for (let i = 1; i < this.cachedRanges.length; i++) {
-        const current = this.cachedRanges[writeIndex];
+        const current = this.cachedRanges[writeIdx];
         const next = this.cachedRanges[i];
 
-        // Merge if they overlap or are strictly adjacent
         if (next.start <= current.end + BigInt(1)) {
+          // Ranges overlap or are adjacent — merge instructions and update end.
+          const merged = current.instructions.slice();
+          let maxMergeAddr = merged.length > 0 ? merged[merged.length - 1].address : BigInt(-1);
+          for (const inst of next.instructions) {
+            if (inst.address > maxMergeAddr) {
+              maxMergeAddr = inst.address;
+              merged.push(inst);
+            }
+          }
+          current.instructions = merged;
           current.end = current.end > next.end ? current.end : next.end;
         } else {
-          writeIndex++;
-          this.cachedRanges[writeIndex] = next;
+          writeIdx++;
+          this.cachedRanges[writeIdx] = next;
         }
       }
-      // Truncate the array to remove obsolete trailing items
-      this.cachedRanges.length = writeIndex + 1;
+      this.cachedRanges.length = writeIdx + 1;
     }
+  }
+
+  /**
+   * Returns the total number of cached instructions across all ranges.
+   */
+  private get totalCachedCount(): number {
+    return this.cachedRanges.reduce((sum, r) => sum + r.instructions.length, 0);
   }
 
   /**
@@ -451,7 +486,7 @@ export class DapAssemblyCacheService implements OnDestroy {
    * to the WATERMARK threshold.
    */
   private pruneCache(): void {
-    if (this.instructionCache.size <= this.CACHE_LIMIT) return;
+    if (this.totalCachedCount <= this.CACHE_LIMIT) return;
 
     const ip = this.currentIpRef ?? BigInt(0);
 
@@ -464,19 +499,10 @@ export class DapAssemblyCacheService implements OnDestroy {
     // Sort descending — furthest ranges evicted first.
     rangeDistances.sort((a, b) => (a.distance > b.distance ? -1 : 1));
 
-    while (this.instructionCache.size > this.WATERMARK && rangeDistances.length > 1) {
+    while (this.totalCachedCount > this.WATERMARK && rangeDistances.length > 1) {
       const furthest = rangeDistances.shift();
       if (furthest) {
-        this.evictRange(furthest.range);
         this.cachedRanges = this.cachedRanges.filter(r => r !== furthest.range);
-      }
-    }
-  }
-
-  private evictRange(range: CachedRange): void {
-    for (const [addr] of this.instructionCache.entries()) {
-      if (addr >= range.start && addr <= range.end) {
-        this.instructionCache.delete(addr);
       }
     }
   }
