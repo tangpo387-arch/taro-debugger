@@ -113,6 +113,7 @@ graph LR
     WI_116["WI-116 Assembly View: Fix Opcode and Mnemonic Column Truncation"]
     WI_117["WI-117 Remove sortedAddresses from DapAssemblyCacheService"]
     WI_118["WI-118 Fix Assembly View Icon Flashing during Stepping"]
+    WI_119["WI-119 Fix Assembly Header Symbol Overflow"]
     WI_01["WI-01 Extend `GdbConfigService` Configuration Model"]
     WI_02["WI-02 Setup Form Field Completion"]
     WI_03["WI-03 Setup Form Validation"]
@@ -323,6 +324,7 @@ graph LR
     style WI_116 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI_117 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI_118 fill:#6366f1,stroke:#000,stroke-width:2.5px
+    style WI_119 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI_01 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_02 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_03 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2

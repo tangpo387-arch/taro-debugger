@@ -29,11 +29,17 @@
   font-weight: var(--weight-medium);
   border-bottom: 1px solid var(--mat-sys-outline-variant);
   z-index: 10;
+  white-space: nowrap;
+  overflow: hidden;
 
   .symbol-name {
     color: var(--mat-sys-primary);
     font-weight: var(--weight-bold);
     margin-left: 4px;
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 

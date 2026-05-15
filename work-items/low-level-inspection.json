@@ -524,6 +524,26 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-15"
       }
+    },
+    {
+      "id": "WI-119",
+      "title": "Fix Assembly Header Symbol Overflow",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "none",
+        "dependencies": []
+      },
+      "description": "Resolve vertical overflow and overlapping text in the sticky function header caused by long C++ symbols.",
+      "details": [
+        "AC-1: Relocate CppSignaturePipe to ui-shared. AC-2: Apply pipe to assembly header. AC-3: Single-line enforcement with ellipsis. AC-4: Full mangled name in tooltip."
+      ],
+      "timeline": {
+        "created": "2026-05-15",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-15"
+      }
     }
   ]
 }

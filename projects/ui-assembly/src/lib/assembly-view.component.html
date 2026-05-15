@@ -1,7 +1,11 @@
 <div class="assembly-container">
   <!-- Sticky Function Header -->
   <div *ngIf="activeSymbol && instructions.length > 0" class="function-header">
-    Dump of assembler code for function <span class="symbol-name">{{ activeSymbol }}</span>:
+    Dump of assembler code for function 
+    <span class="symbol-name" 
+          [matTooltip]="activeSymbol" 
+          matTooltipPosition="below"
+          matTooltipShowDelay="400">{{ activeSymbol | cppSignature }}</span>:
   </div>
 
   <cdk-virtual-scroll-viewport [itemSize]="rowHeight()" minBufferPx="200" maxBufferPx="400" class="assembly-viewport">

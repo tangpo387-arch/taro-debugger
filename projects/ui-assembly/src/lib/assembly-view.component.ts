@@ -11,13 +11,13 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { input, effect, signal } from '@angular/core';
 
 import { DapAssemblyCacheService, DapDisassembledInstruction, DapSessionService } from '@taro/dap-core';
-import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent } from '@taro/ui-shared';
+import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent, CppSignaturePipe } from '@taro/ui-shared';
 import { JumpToAddressDialogComponent } from './jump-to-address-dialog/jump-to-address-dialog.component';
 
 @Component({
   selector: 'app-assembly-view',
   standalone: true,
-  imports: [CommonModule, ScrollingModule, MatIconModule, MatButtonModule, MatTooltipModule, MatDialogModule, TaroEmptyStateComponent],
+  imports: [CommonModule, ScrollingModule, MatIconModule, MatButtonModule, MatTooltipModule, MatDialogModule, TaroEmptyStateComponent, CppSignaturePipe],
   templateUrl: './assembly-view.component.html',
   styleUrls: ['./assembly-view.component.scss']
 })

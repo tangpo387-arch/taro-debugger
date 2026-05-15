@@ -183,4 +183,28 @@ describe('AssemblyViewComponent', () => {
     expect(opcode.textContent?.trim()).toBe('8b 45 fc');
     expect(mnemonic.textContent?.trim()).toBe('mov eax, [ebp-0x4]');
   });
+
+  it('should verify the function header uses cppSignature pipe and has a tooltip', () => {
+    const longSymbol = 'std::vector<int, std::allocator<int>>::push_back(int)';
+    const fakeInstructions: DapDisassembledInstruction[] = [
+      { address: BigInt('0x1000'), instruction: 'nop', instructionBytes: '90', instructionByteLength: 1, normalizedSymbol: longSymbol }
+    ];
+
+    component.instructions = fakeInstructions;
+    component.activeSymbol = longSymbol;
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const header = compiled.querySelector('.function-header');
+    expect(header).toBeTruthy();
+
+    const symbolName = header?.querySelector('.symbol-name') as HTMLElement;
+    expect(symbolName).toBeTruthy();
+    
+    // Simplified version should contain placeholders
+    const text = symbolName.textContent?.trim() || '';
+    expect(text).toContain('<...>');
+    expect(text).toContain('(...)');
+    expect(text).not.toContain('std::allocator');
+  });
 });

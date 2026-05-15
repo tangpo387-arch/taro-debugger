@@ -324,7 +324,11 @@ export class DapAssemblyCacheService implements OnDestroy {
       const addr = inst.address;
       // Strip angle brackets, operator suffixes, and offset component.
       let parsedOffset: number | undefined;
-      let normalized = rawSymbol.replace(/<|>|\+.*$/g, '').trim();
+      let normalized = rawSymbol.replace(/\+((0x)?[0-9a-fA-F]+)/g, '').trim();
+      // Remove wrapping brackets if they exist (standard GDB/LLVM disassembly format)
+      if (normalized.startsWith('<') && normalized.endsWith('>')) {
+        normalized = normalized.substring(1, normalized.length - 1);
+      }
 
       const offsetMatch = rawSymbol.match(/\+((?:0x)?[0-9a-fA-F]+)>?$/);
       if (offsetMatch) {

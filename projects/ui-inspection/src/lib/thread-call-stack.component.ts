@@ -5,10 +5,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DapSessionService, DapThread, DapStackFrame, DapConfigService, ExecutionState } from '@taro/dap-core';
-import { TaroEmptyStateComponent } from '@taro/ui-shared';
+import { TaroEmptyStateComponent, CppSignaturePipe } from '@taro/ui-shared';
 import { Subscription, combineLatest, BehaviorSubject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
-import { CppSignaturePipe } from './cpp-signature.pipe';
 
 /** 
  * Hierarchical tree node for execution context. 
