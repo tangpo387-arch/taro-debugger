@@ -4,7 +4,7 @@ import { filter, timeout } from 'rxjs/operators';
 import { DapTransportService } from '../transport/dap-transport.service';
 import { TransportFactoryService } from '../transport/transport-factory.service';
 import { DapConfigService } from './dap-config.service';
-import { DapRequest, DapResponse, DapEvent, DisassembleArguments, StepArguments, DapDisassemblyResponse } from '../dap.types';
+import { DapRequest, DapResponse, DapEvent, DisassembleArguments, StepArguments, DapDisassemblyResponse, ReadMemoryArguments, ReadMemoryResponse, WriteMemoryArguments, WriteMemoryResponse } from '../dap.types';
 
 /** Error thrown when an evaluate request is cancelled or times out */
 export class EvaluateCancelledError extends Error {
@@ -808,6 +808,26 @@ export class DapSessionService {
     }
 
     return response as DapDisassemblyResponse;
+  }
+
+  /**
+   * Reads memory from the debuggee.
+   * @param args readMemory arguments
+   */
+  public async readMemory(args: ReadMemoryArguments): Promise<ReadMemoryResponse> {
+    this.ensureStopped();
+    const response = await this.sendRequest('readMemory', args);
+    return response as ReadMemoryResponse;
+  }
+
+  /**
+   * Writes memory to the debuggee.
+   * @param args writeMemory arguments
+   */
+  public async writeMemory(args: WriteMemoryArguments): Promise<WriteMemoryResponse> {
+    this.ensureStopped();
+    const response = await this.sendRequest('writeMemory', args);
+    return response as WriteMemoryResponse;
   }
 
   /**

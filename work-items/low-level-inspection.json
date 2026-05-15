@@ -173,7 +173,7 @@
       "title": "DAP Memory Protocol & Service",
       "featureGroup": "Low-Level Inspection",
       "metadata": {
-        "status": "proposed",
+        "status": "accepted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": []
@@ -188,7 +188,8 @@
       ],
       "timeline": {
         "created": "2026-05-01",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-15"
       }
     },
     {
@@ -196,7 +197,7 @@
       "title": "Memory Hex Dump Component",
       "featureGroup": "Low-Level Inspection",
       "metadata": {
-        "status": "proposed",
+        "status": "accepted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": [
@@ -213,7 +214,8 @@
       ],
       "timeline": {
         "created": "2026-05-01",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-15"
       }
     },
     {

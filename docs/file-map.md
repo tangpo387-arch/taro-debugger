@@ -65,6 +65,7 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | `projects/taro-debugger-frontend/src/app/dap-file-tree.service.ts` | File tree construction from `loadedSources`, source file reading via `source` request | `getTree()`, `readFile()` |
 | `projects/ui-inspection/src/lib/dap-variables.service.ts` | Derived state management for DAP scopes and variables, caching variable references | `fetchScopes()`, `getVariables()`, `scopes$` |
 | `projects/dap-core/src/lib/session/dap-assembly-cache.service.ts` | Unified caching for disassembled instructions. Instructions are embedded in self-contained `CachedRange` objects (no global Map/sortedAddresses). Merge cost $O(K+M)$; prune cost $O(1)$ per range. | `fetchInstructions()`, `clear()` |
+| `projects/dap-core/src/lib/session/dap-memory.service.ts` | High-level memory inspection service. Handles Base64/Uint8Array conversion and reactive update notifications. | `read()`, `write()`, `onMemoryUpdated$` |
 
 ## Transport Layer (Services)
 

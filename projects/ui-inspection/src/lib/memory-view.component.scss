@@ -1,0 +1,102 @@
+@use '@angular/material' as mat;
+
+:host {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font-family: var(--font-mono, 'JetBrains Mono', 'Roboto Mono', monospace);
+}
+
+.memory-view-container {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.memory-viewport {
+  height: 100%;
+  width: 100%;
+  
+  // Custom scrollbar to match global IDE style
+  &::-webkit-scrollbar {
+    width: 14px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--mat-sys-outline-variant);
+    border: 4px solid transparent;
+    background-clip: content-box;
+    border-radius: 0; // Force sharp corners per visual-design.md
+  }
+}
+
+.memory-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  box-sizing: border-box;
+  font-size: var(--text-sm); // 0.8125rem per design system
+  white-space: nowrap;
+
+  &:hover {
+    background-color: var(--mat-sys-surface-container-highest);
+  }
+}
+
+.memory-cell {
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+}
+
+.address-cell {
+  width: 160px;
+  color: var(--mat-sys-outline); // Muted color for secondary metadata
+  flex-shrink: 0;
+  border-right: 1px solid var(--mat-sys-outline-variant);
+}
+
+.hex-grid {
+  display: flex;
+  padding: 0 8px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--mat-sys-outline-variant);
+}
+
+.byte-cell {
+  width: 24px;
+  text-align: center;
+  padding: 0 4px;
+  color: var(--mat-sys-on-surface);
+  cursor: default;
+
+  &.highlighted {
+    background-color: var(--mat-sys-primary-container);
+    color: var(--mat-sys-on-primary-container);
+  }
+
+  &.empty {
+    color: var(--mat-sys-outline-variant);
+    opacity: 0.5;
+  }
+}
+
+.ascii-cell {
+  padding-left: 16px;
+  color: var(--mat-sys-outline);
+  letter-spacing: 1px;
+}
+
+.empty-memory {
+  padding: 24px;
+  text-align: center;
+  color: var(--mat-sys-outline);
+  font-family: var(--mat-sys-body-large-font);
+}

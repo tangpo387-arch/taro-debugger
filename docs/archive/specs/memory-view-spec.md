@@ -76,26 +76,58 @@ The view uses a high-density table structure powered by `cdk-virtual-scroll-view
 
 The UI must verify `capabilities.supportsReadMemoryRequest` before enabling the Memory tab. If `supportsWriteMemoryRequest` is false, editing is disabled.
 
-### 5.2 Read Memory Flow
+### 5.2 Protocol Types (`dap.types.ts`)
 
 ```typescript
-// WI-104: DapMemoryService.read()
-dapSession.request('readMemory', {
-  memoryReference: '0x12345678', 
-  offset: 0,
-  count: 1024 
-});
+export interface ReadMemoryArguments {
+  memoryReference: string;
+  offset?: number;
+  count: number;
+}
+
+export interface ReadMemoryResponse extends DapResponse {
+  body?: {
+    address: string;
+    unreadableBytes?: number;
+    data?: string; // Base64 encoded
+  };
+}
+
+export interface WriteMemoryArguments {
+  memoryReference: string;
+  offset?: number;
+  allowPartial?: boolean;
+  data: string; // Base64 encoded
+}
+
+export interface WriteMemoryResponse extends DapResponse {
+  body?: {
+    offset?: number;
+    bytesWritten?: number;
+  };
+}
 ```
 
-### 5.3 Write Memory Flow
+### 5.3 Read Memory Flow (DapMemoryService)
+
+The `DapMemoryService` will provide a high-level API that abstracts the Base64 conversion:
 
 ```typescript
-// WI-104: DapMemoryService.write()
-dapSession.request('writeMemory', {
-  memoryReference: '0x12345678',
-  offset: 0,
-  data: 'SGVsbG8=' // Base64 encoded
-});
+/**
+ * Reads memory from the debuggee.
+ * @returns Uint8Array containing the raw memory bytes.
+ */
+async read(memoryReference: string, offset: number, count: number): Promise<Uint8Array>;
+```
+
+### 5.4 Write Memory Flow (DapMemoryService)
+
+```typescript
+/**
+ * Writes memory to the debuggee.
+ * @returns The number of bytes successfully written.
+ */
+async write(memoryReference: string, offset: number, data: Uint8Array): Promise<number>;
 ```
 
 ## 6. Technical Constraints

@@ -196,6 +196,8 @@ When the user switches between call stack frames, the system enforces a **"Lates
 | `setCurrentThread(id)` | `void` | Set active thread and trigger UI context refresh. |
 | `source(args)` | `Promise<DapResponse>` | Fetch source content (semantic wrapper). |
 | `loadedSources()` | `Promise<DapResponse>` | Fetch all loaded sources (semantic wrapper). |
+| `readMemory(args)` | `Promise<ReadMemoryResponse>` | Low-level protocol memory read. |
+| `writeMemory(args)` | `Promise<WriteMemoryResponse>` | Low-level protocol memory write. |
 
 ## 9. Configuration Flow (DapConfig)
 

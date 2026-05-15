@@ -1,0 +1,33 @@
+<div class="memory-view-container">
+  <cdk-virtual-scroll-viewport [itemSize]="ROW_HEIGHT" class="memory-viewport">
+    <div *cdkVirtualFor="let row of rows; let rowIndex = index; trackBy: trackByAddress" 
+         class="memory-row" 
+         [style.height.px]="ROW_HEIGHT">
+      
+      <!-- Address Column -->
+      <div class="memory-cell address-cell">
+        {{ row.address }}
+      </div>
+
+      <!-- Hex Data Grid -->
+      <div class="hex-grid">
+        <div *ngFor="let byte of row.bytes; let byteIndex = index" 
+             class="byte-cell"
+             [class.highlighted]="isHighlighted(rowIndex, byteIndex)"
+             [class.empty]="!byte">
+          {{ byte || '..' }}
+        </div>
+      </div>
+
+      <!-- ASCII Preview -->
+      <div class="ascii-cell">
+        {{ row.ascii }}
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="rows.length === 0" class="empty-memory">
+      No memory data available.
+    </div>
+  </cdk-virtual-scroll-viewport>
+</div>

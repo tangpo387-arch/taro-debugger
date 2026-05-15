@@ -310,8 +310,8 @@ graph LR
     style WI_32 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI_66 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI_84 fill:none,stroke-dasharray:5
-    style WI_104 fill:#6366f1,stroke:#4f46e5
-    style WI_105 fill:#6366f1,stroke:#4f46e5
+    style WI_104 fill:#6366f1,stroke:#000,stroke-width:2.5px
+    style WI_105 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI_106 fill:#6366f1,stroke:#4f46e5
     style WI_107 fill:#6366f1,stroke:#4f46e5
     style WI_108 fill:#6366f1,stroke:#4f46e5

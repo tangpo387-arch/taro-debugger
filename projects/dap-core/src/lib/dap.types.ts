@@ -138,3 +138,43 @@ export interface StepArguments {
  * - 'tcp': Raw TCP socket connection.
  */
 export type TransportType = 'websocket' | 'ipc' | 'serial' | 'tcp';
+
+/**
+ * Arguments for the 'readMemory' request.
+ */
+export interface ReadMemoryArguments {
+  memoryReference: string;
+  offset?: number;
+  count: number;
+}
+
+/**
+ * Response to the 'readMemory' request.
+ */
+export interface ReadMemoryResponse extends DapResponse {
+  body?: {
+    address: string;
+    unreadableBytes?: number;
+    data?: string; // Base64 encoded
+  };
+}
+
+/**
+ * Arguments for the 'writeMemory' request.
+ */
+export interface WriteMemoryArguments {
+  memoryReference: string;
+  offset?: number;
+  allowPartial?: boolean;
+  data: string; // Base64 encoded
+}
+
+/**
+ * Response to the 'writeMemory' request.
+ */
+export interface WriteMemoryResponse extends DapResponse {
+  body?: {
+    offset?: number;
+    bytesWritten?: number;
+  };
+}

@@ -1,4 +1,4 @@
-import { CppSignaturePipe } from './cpp-signature.pipe';
+import { CppSignaturePipe } from '@taro/ui-shared';
 import { describe, it, expect } from 'vitest';
 
 describe('CppSignaturePipe', () => {

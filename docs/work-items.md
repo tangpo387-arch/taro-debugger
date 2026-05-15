@@ -24,32 +24,6 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
 
 ## Low-Level Inspection
 
-### WI-104: DAP Memory Protocol & Service
-
-- **Status**: 💡 Proposed
-- **Size**: M
-- **Description**: Define readMemory/writeMemory types and implement DapMemoryService in dap-core.
-- **Details**:
-  - Update dap.types.ts with readMemory/writeMemory schemas
-  - Implement DapMemoryService with Base64/Hex conversion
-  - Handle memoryReference resolution
-  - [Test] Unit test DapMemoryService with mock DAP session
-  - [Doc] docs/archive/specs/memory-view-spec.md
-- **Dependencies**: none
-
-### WI-105: Memory Hex Dump Component
-
-- **Status**: 💡 Proposed
-- **Size**: M
-- **Description**: Create the standalone MemoryViewComponent with hex/ASCII rendering.
-- **Details**:
-  - Create MemoryViewComponent in ui-inspection library
-  - Implement hex grid with cdk-virtual-scroll
-  - Implement ASCII character preview panel
-  - [Test] Verify hex alignment and virtual scroll performance with large buffers
-  - [Doc] docs/archive/specs/memory-view-spec.md
-- **Dependencies**: WI-104
-
 ### WI-106: Memory View Host Integration
 
 - **Status**: 💡 Proposed
