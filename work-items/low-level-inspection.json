@@ -502,6 +502,28 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-15"
       }
+    },
+    {
+      "id": "WI-118",
+      "title": "Fix Assembly View Icon Flashing during Stepping",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "accepted",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Prevent floating action icons in the Assembly View from flashing by replacing conditional rendering with persistent elements and reactive state-based disabling.",
+      "details": [
+        "Remove *ngIf='currentPc()' from AssemblyViewComponent template",
+        "Implement [disabled] logic for 'Reveal PC' button based on PC availability",
+        "[Test] Verify icons remain stable (no DOM unmounting) during rapid 'step-in' operations"
+      ],
+      "timeline": {
+        "created": "2026-05-15",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-15"
+      }
     }
   ]
 }

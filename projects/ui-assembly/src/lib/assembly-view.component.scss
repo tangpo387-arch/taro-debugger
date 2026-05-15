@@ -133,6 +133,13 @@
   font-weight: bold;
   text-shadow: 0 0 8px var(--mat-sys-primary-fixed-dim);
   user-select: none;
+  transition: opacity 0.2s ease, filter 0.2s ease;
+
+  &.is-stale {
+    opacity: 0.35;
+    filter: grayscale(1);
+    text-shadow: none;
+  }
 }
 
 .address {
@@ -241,6 +248,14 @@
   
   button {
     box-shadow: var(--mat-sys-shadow);
+    transition: background-color 0.2s ease, color 0.2s ease;
+
+    &:disabled {
+      opacity: 1 !important;
+      background-color: var(--mat-sys-surface-container-high) !important;
+      color: var(--mat-sys-on-surface-variant) !important;
+      cursor: default;
+    }
   }
 }
 

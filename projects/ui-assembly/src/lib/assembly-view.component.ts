@@ -10,7 +10,7 @@ import { map } from 'rxjs';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { input, effect, signal } from '@angular/core';
 
-import { DapAssemblyCacheService, DapDisassembledInstruction } from '@taro/dap-core';
+import { DapAssemblyCacheService, DapDisassembledInstruction, DapSessionService } from '@taro/dap-core';
 import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent } from '@taro/ui-shared';
 import { JumpToAddressDialogComponent } from './jump-to-address-dialog/jump-to-address-dialog.component';
 
@@ -28,7 +28,14 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly dapSession = inject(DapSessionService);
   private readonly dialog = inject(MatDialog);
+
+  /** Signal representing the current execution stop state */
+  public readonly isStopped = toSignal(
+    this.dapSession.executionState$.pipe(map(state => state === 'stopped')),
+    { initialValue: false }
+  );
 
   @ViewChild(CdkVirtualScrollViewport) viewport?: CdkVirtualScrollViewport;
 

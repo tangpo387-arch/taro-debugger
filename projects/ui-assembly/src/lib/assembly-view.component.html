@@ -10,7 +10,9 @@
       [style.height.px]="rowHeight()">
 
       <div class="gutter">
-        <span *ngIf="isInstructionPointer(instruction.address)" class="ip-indicator">&#10148;</span>
+        <span *ngIf="isInstructionPointer(instruction.address)" 
+              class="ip-indicator"
+              [class.is-stale]="!isStopped()">&#10148;</span>
         <div class="breakpoint-marker"></div> <!-- For future BP integration -->
       </div>
 
@@ -38,12 +40,16 @@
   </taro-empty-state>
   }
 
-  <div class="floating-actions" *ngIf="currentPc()">
-    <button mat-mini-fab color="primary" (click)="openJumpToAddressDialog()" matTooltip="Jump to address"
+  <div class="floating-actions">
+    <button mat-mini-fab color="primary" (click)="openJumpToAddressDialog()" 
+            [disabled]="!isStopped()"
+            matTooltip="Jump to address"
       aria-label="Jump to address">
       <mat-icon>pin_drop</mat-icon>
     </button>
-    <button mat-mini-fab color="primary" (click)="revealPc()" matTooltip="Reveal current execution point"
+    <button mat-mini-fab color="primary" (click)="revealPc()" 
+            [disabled]="!currentPc() || !isStopped()"
+            matTooltip="Reveal current execution point"
       aria-label="Reveal PC">
       <mat-icon>my_location</mat-icon>
     </button>

@@ -1,7 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AssemblyViewComponent } from './assembly-view.component';
-import { DapDisassembledInstruction } from '@taro/dap-core';
-import { DapAssemblyCacheService } from '@taro/dap-core';
+import { DapAssemblyCacheService, DapSessionService, DapDisassembledInstruction } from '@taro/dap-core';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { CommonModule } from '@angular/common';
 import { of } from 'rxjs';
@@ -13,6 +12,7 @@ describe('AssemblyViewComponent', () => {
   let component: AssemblyViewComponent;
   let fixture: ComponentFixture<AssemblyViewComponent>;
   let mockCacheService: any;
+  let mockSessionService: any;
   let mockDialog: any;
 
   beforeEach(async () => {
@@ -26,10 +26,15 @@ describe('AssemblyViewComponent', () => {
       })
     };
 
+    mockSessionService = {
+      executionState$: of('stopped'),
+    };
+
     await TestBed.configureTestingModule({
       imports: [AssemblyViewComponent, CommonModule, ScrollingModule],
       providers: [
         { provide: DapAssemblyCacheService, useValue: mockCacheService },
+        { provide: DapSessionService, useValue: mockSessionService },
         { provide: MatDialog, useValue: mockDialog }
       ]
     })
@@ -37,6 +42,7 @@ describe('AssemblyViewComponent', () => {
         set: {
           providers: [
             { provide: DapAssemblyCacheService, useValue: mockCacheService },
+            { provide: DapSessionService, useValue: mockSessionService },
             { provide: MatDialog, useValue: mockDialog }
           ]
         }
