@@ -13,6 +13,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { MatMenuModule } from '@angular/material/menu';
 import { Output, EventEmitter } from '@angular/core';
+import { DapSessionService } from '@taro/dap-core';
 
 // ── Data Model ────────────────────────────────────────────────────────
 
@@ -61,7 +62,14 @@ const INDENT_PX = 20;
 export class VariablesComponent implements OnInit, OnDestroy {
   private readonly variablesService = inject(DapVariablesService);
   private readonly breakpointObserver = inject(BreakpointObserver);
+  private readonly dapSession = inject(DapSessionService);
   private readonly cdr = inject(ChangeDetectorRef);
+
+  /** Signal representing the current session connection status */
+  public readonly isConnected = toSignal(
+    this.dapSession.connectionStatus$,
+    { initialValue: false }
+  );
 
   /** Emitted when the user selects 'Inspect Memory' from the context menu. */
   @Output() public readonly inspectMemoryRequest = new EventEmitter<string>();

@@ -215,34 +215,6 @@
   z-index: 10;
 }
 
-.empty-state {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--mat-sys-on-surface-variant);
-  background-color: var(--mat-sys-surface-container-low);
-  gap: 16px;
-  z-index: 5;
-
-  mat-icon {
-    font-size: 48px;
-    width: 48px;
-    height: 48px;
-    opacity: 0.5;
-  }
-
-  p {
-    margin: 0;
-    font-size: var(--text-sm);
-    font-weight: var(--weight-medium);
-  }
-}
 .floating-actions {
   position: absolute;
   bottom: 24px;

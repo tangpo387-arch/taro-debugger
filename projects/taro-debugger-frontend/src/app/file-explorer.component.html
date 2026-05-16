@@ -1,46 +1,54 @@
 <div class="scroll-container">
 @if (fileTreeSupported) {
-<!-- Dynamic File Tree -->
-<mat-tree
-  #tree="matTree"
-  [dataSource]="fileDataSource"
-  [childrenAccessor]="childrenAccessor"
-  class="file-tree"
->
-  <!-- File node -->
-  <mat-tree-node *matTreeNodeDef="let node" class="tree-node file-node"
-    role="treeitem"
-    tabindex="0"
-    [class.active-node]="node.path === activeFilePath"
-    (click)="onNodeClick(node)"
-    (keydown.enter)="onNodeClick(node); $event.preventDefault()">
-    <div class="indent-spacer" matTreeNodePadding [matTreeNodePaddingIndent]="indentSize()"></div>
-    <mat-icon class="file-icon">description</mat-icon>
-    <div class="node-content" [title]="node.path">
-      <span class="node-text">{{ node.name }}</span>
-    </div>
-  </mat-tree-node>
+  @if (isConnected() && fileDataSource.length > 0) {
+    <!-- Dynamic File Tree -->
+    <mat-tree
+      #tree="matTree"
+      [dataSource]="fileDataSource"
+      [childrenAccessor]="childrenAccessor"
+      class="file-tree"
+    >
+      <!-- File node -->
+      <mat-tree-node *matTreeNodeDef="let node" class="tree-node file-node"
+        role="treeitem"
+        tabindex="0"
+        [class.active-node]="node.path === activeFilePath"
+        (click)="onNodeClick(node)"
+        (keydown.enter)="onNodeClick(node); $event.preventDefault()">
+        <div class="indent-spacer" matTreeNodePadding [matTreeNodePaddingIndent]="indentSize()"></div>
+        <mat-icon class="file-icon">description</mat-icon>
+        <div class="node-content" [title]="node.path">
+          <span class="node-text">{{ node.name }}</span>
+        </div>
+      </mat-tree-node>
 
-  <!-- Directory node -->
-  <mat-tree-node *matTreeNodeDef="let node; when: hasChild" class="tree-node directory-node"
-    role="treeitem"
-    tabindex="0"
-    [attr.aria-expanded]="tree.isExpanded(node)"
-    (click)="tree.toggle(node)"
-    (keydown.enter)="tree.toggle(node); $event.preventDefault()"
-    (keydown.space)="tree.toggle(node); $event.preventDefault()">
-    <div class="indent-spacer" matTreeNodePadding [matTreeNodePaddingIndent]="indentSize()"></div>
-    <div class="node-toggle-btn" aria-hidden="true">
-      <mat-icon class="mat-icon-rtl-mirror">
-        {{ tree.isExpanded(node) ? 'expand_more' : 'chevron_right' }}
-      </mat-icon>
-    </div>
-    <mat-icon class="folder-icon">folder</mat-icon>
-    <div class="node-content" [title]="node.path">
-      <span class="node-text">{{ node.name }}</span>
-    </div>
-  </mat-tree-node>
-</mat-tree>
+      <!-- Directory node -->
+      <mat-tree-node *matTreeNodeDef="let node; when: hasChild" class="tree-node directory-node"
+        role="treeitem"
+        tabindex="0"
+        [attr.aria-expanded]="tree.isExpanded(node)"
+        (click)="tree.toggle(node)"
+        (keydown.enter)="tree.toggle(node); $event.preventDefault()"
+        (keydown.space)="tree.toggle(node); $event.preventDefault()">
+        <div class="indent-spacer" matTreeNodePadding [matTreeNodePaddingIndent]="indentSize()"></div>
+        <div class="node-toggle-btn" aria-hidden="true">
+          <mat-icon class="mat-icon-rtl-mirror">
+            {{ tree.isExpanded(node) ? 'expand_more' : 'chevron_right' }}
+          </mat-icon>
+        </div>
+        <mat-icon class="folder-icon">folder</mat-icon>
+        <div class="node-content" [title]="node.path">
+          <span class="node-text">{{ node.name }}</span>
+        </div>
+      </mat-tree-node>
+    </mat-tree>
+  } @else {
+    <taro-empty-state 
+      [icon]="!isConnected() ? 'link_off' : 'folder_off'" 
+      [message]="!isConnected() ? 'No active session' : 'No project sources loaded'" 
+      [description]="!isConnected() ? 'Start a debug session to see sources.' : 'The debug adapter did not report any loaded sources.'">
+    </taro-empty-state>
+  }
 } @else {
   <taro-empty-state 
     message="File tree cannot be displayed" 

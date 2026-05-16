@@ -107,6 +107,12 @@ export class FileExplorerComponent implements OnInit, OnChanges {
     { initialValue: 16 }
   );
 
+  /** Signal representing the current session connection status */
+  public readonly isConnected = toSignal(
+    this.dapSession.connectionStatus$,
+    { initialValue: false }
+  );
+
   /** Whether the connected DAP adapter supports `loadedSources`. */
   public fileTreeSupported: boolean = true;
 

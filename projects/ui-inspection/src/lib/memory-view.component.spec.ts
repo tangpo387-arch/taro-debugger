@@ -6,6 +6,7 @@ import { SimpleChange } from '@angular/core';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { of } from 'rxjs';
 import { JumpToAddressDialogComponent } from '@taro/ui-shared';
+import { DapSessionService } from '@taro/dap-core';
 
 describe('MemoryViewComponent', () => {
   let component: MemoryViewComponent;
@@ -22,7 +23,13 @@ describe('MemoryViewComponent', () => {
     await TestBed.configureTestingModule({
       imports: [MemoryViewComponent, ScrollingModule, MatDialogModule],
       providers: [
-        { provide: MatDialog, useValue: mockDialog }
+        { provide: MatDialog, useValue: mockDialog },
+        { 
+          provide: DapSessionService, 
+          useValue: { 
+            connectionStatus$: of(true) 
+          } 
+        }
       ]
     }).compileComponents();
 

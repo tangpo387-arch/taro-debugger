@@ -49,8 +49,16 @@
       </ng-template>
     </mat-menu>
   </cdk-virtual-scroll-viewport>
-} @else {<taro-empty-state 
-    message="No variables available" 
-    icon="inventory_2"
-    description="Try pausing execution to inspect local variables.">
-  </taro-empty-state>}
+} @else {
+  @if (!isConnected()) {
+    <taro-empty-state message="No active session" icon="link_off"
+      description="Start a debug session to see variables.">
+    </taro-empty-state>
+  } @else {
+    <taro-empty-state 
+      message="No variables available" 
+      icon="inventory_2"
+      description="Try pausing execution to inspect local variables.">
+    </taro-empty-state>
+  }
+}

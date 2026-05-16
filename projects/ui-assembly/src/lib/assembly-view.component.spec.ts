@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 import { of } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { vi } from 'vitest';
-import { JumpToAddressDialogComponent } from './jump-to-address-dialog/jump-to-address-dialog.component';
+import { JumpToAddressDialogComponent } from '@taro/ui-shared';
 
 describe('AssemblyViewComponent', () => {
   let component: AssemblyViewComponent;
@@ -28,6 +28,7 @@ describe('AssemblyViewComponent', () => {
 
     mockSessionService = {
       executionState$: of('stopped'),
+      connectionStatus$: of(true),
     };
 
     await TestBed.configureTestingModule({
@@ -131,7 +132,14 @@ describe('AssemblyViewComponent', () => {
       jumpButton.click();
 
       // Assert
-      expect(mockDialog.open).toHaveBeenCalledWith(JumpToAddressDialogComponent, { width: '350px' });
+      expect(mockDialog.open).toHaveBeenCalledWith(JumpToAddressDialogComponent, {
+        width: '350px',
+        data: {
+          title: 'Jump to Address',
+          placeholder: 'Address / Symbol',
+          description: 'Enter a numeric address or a function symbol to disassemble.'
+        }
+      });
     });
 
     it('should set viewAnchor when the dialog is confirmed with an address', () => {

@@ -111,7 +111,10 @@
         <mat-tab-group [selectedIndex]="activeTabIndex" (selectedIndexChange)="activeTabIndex = $event"
           animationDuration="0ms">
           <mat-tab label="Source">
-            @if (activeFilePath) {
+            @if (!isConnected()) {
+              <taro-empty-state message="No active session" icon="link_off"
+                description="Start a debug session to see source code." [centered]="true" />
+            } @else if (activeFilePath) {
               <app-editor class="monaco-editor-instance" [code]="currentCode" [filename]="activeFilePath"
                 [activeLine]="activeFilePath === activeLineFilePath ? activeLine : null"
                 [revealTrigger]="fileRevealTrigger" />
@@ -138,7 +141,10 @@
           </mat-tab>
           <mat-tab label="Memory">
             <div class="memory-tab-content">
-              @if (activeMemoryAddress) {
+              @if (!isConnected()) {
+                <taro-empty-state message="No active session" icon="link_off"
+                  description="Start a debug session to inspect memory." [centered]="true" />
+              } @else if (activeMemoryAddress) {
                 <app-memory-view 
                   [data]="activeMemoryData" 
                   [baseAddress]="activeMemoryAddress"

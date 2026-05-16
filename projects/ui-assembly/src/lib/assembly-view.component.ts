@@ -30,6 +30,12 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
   private readonly dapSession = inject(DapSessionService);
   private readonly dialog = inject(MatDialog);
 
+  /** Signal representing the current session connection status */
+  public readonly isConnected = toSignal(
+    this.dapSession.connectionStatus$,
+    { initialValue: false }
+  );
+
   /** Signal representing the current execution stop state */
   public readonly isStopped = toSignal(
     this.dapSession.executionState$.pipe(map(state => state === 'stopped')),
@@ -168,6 +174,17 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
           this.onViewportScroll(index, visibleCount);
         }
       });
+
+    // Clear instructions on connection loss
+    this.dapSession.connectionStatus$.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(connected => {
+      if (!connected) {
+        this.instructions = [];
+        this.activeSymbol = null;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   private updateStickyHeader(index: number): void {

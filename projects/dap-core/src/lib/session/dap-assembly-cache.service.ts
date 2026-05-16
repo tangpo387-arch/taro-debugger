@@ -40,7 +40,7 @@ export class DapAssemblyCacheService implements OnDestroy {
    *  and avoid continuous small requests during scrolling. */
   private static readonly MAX_CACHE_HIT_DISCOUNT = 1000;
 
-  private sessionSubscription?: Subscription;
+  private readonly subscriptions: Subscription[] = [];
 
   constructor() {
     this.initSessionSync();
@@ -53,15 +53,28 @@ export class DapAssemblyCacheService implements OnDestroy {
   }
 
   private initSessionSync(): void {
-    this.sessionSubscription = this.sessionService.onEvent().subscribe(event => {
-      if (event.event === 'terminated' || event.event === 'exited' || event.event === 'module') {
-        this.clear();
-      }
-    });
+    // Clear on session events
+    this.subscriptions.push(
+      this.sessionService.onEvent().subscribe(event => {
+        if (event.event === 'terminated' || event.event === 'exited' || event.event === 'module') {
+          this.clear();
+        }
+      })
+    );
+
+    // Clear on connection loss (e.g. transport failure or manual disconnect)
+    this.subscriptions.push(
+      this.sessionService.connectionStatus$.subscribe(connected => {
+        if (!connected) {
+          this.clear();
+        }
+      })
+    );
   }
 
   ngOnDestroy(): void {
-    this.sessionSubscription?.unsubscribe();
+    this.subscriptions.forEach(s => s.unsubscribe());
+    this.subscriptions.length = 0;
   }
 
   // ── Public API ───────────────────────────────────────────────────────────

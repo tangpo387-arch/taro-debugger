@@ -520,7 +520,7 @@ describe('DebuggerComponent — Memory View Integration (WI-106)', () => {
     component.ngOnInit(); // Re-initialize to subscribe
 
     // Act
-    stateSubject.next('running');
+    stateSubject.next('idle');
 
     // Assert
     expect(component.activeMemoryAddress).toBeNull();

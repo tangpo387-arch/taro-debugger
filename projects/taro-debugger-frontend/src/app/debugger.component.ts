@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, ViewChild, DestroyRef, ElementRef } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription, Observable, firstValueFrom, Subject, from, of, forkJoin } from 'rxjs';
@@ -109,6 +109,12 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
   /** Bind execution state */
   public readonly executionState$: Observable<ExecutionState> = this.dapSession.executionState$;
+
+  /** Signal representing the current session connection status */
+  public readonly isConnected = toSignal(
+    this.dapSession.connectionStatus$,
+    { initialValue: false }
+  );
 
   private eventSubscription?: Subscription;
   private stateSubscription?: Subscription;

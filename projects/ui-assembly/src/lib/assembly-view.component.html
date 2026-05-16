@@ -40,8 +40,13 @@
   </div>
 
   @if (!isLoading() && instructions.length === 0) {
-  <taro-empty-state icon="terminal" message="No assembly instructions loaded.">
-  </taro-empty-state>
+    @if (!isConnected()) {
+      <taro-empty-state icon="link_off" message="No active session" description="Start a debug session to see disassembly.">
+      </taro-empty-state>
+    } @else {
+      <taro-empty-state icon="terminal" message="No assembly instructions loaded.">
+      </taro-empty-state>
+    }
   }
 
   <div class="floating-actions">

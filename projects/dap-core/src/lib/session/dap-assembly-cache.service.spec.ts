@@ -27,6 +27,7 @@ describe('DapAssemblyCacheService', () => {
     mockDapSession = {
       disassemble: vi.fn(),
       onEvent: vi.fn().mockReturnValue(new Subject().asObservable()),
+      connectionStatus$: new BehaviorSubject<boolean>(true).asObservable(),
     };
 
     TestBed.configureTestingModule({

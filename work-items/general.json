@@ -457,6 +457,33 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-01"
       }
+    },
+    {
+      "id": "WI-122",
+      "title": "Fix Disconnected State Display Inconsistency",
+      "featureGroup": "General",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Synchronize file-tree and assembly-view behavior on debugger disconnect to ensure stale data is cleared and consistent empty states are shown.",
+      "details": [
+        "DapAssemblyCacheService: Listen to connectionStatus$ and clear on disconnect",
+        "AssemblyViewComponent: Clear instructions array and show 'No active session' on disconnect",
+        "MemoryViewComponent: Clear rows and show 'No active session' on disconnect",
+        "EditorComponent: Show 'No active session' empty state when disconnected",
+        "VariablesComponent: Show 'No active session' empty state when disconnected",
+        "FileExplorerComponent: Ensure consistent empty state display when disconnected",
+        "[Doc] docs/archive/specs/disconnected-state-fix.md",
+        "[Test] Verify all session-dependent views transition to 'No active session' state"
+      ],
+      "timeline": {
+        "created": "2026-05-16",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-16"
+      }
     }
   ]
 }

@@ -1,4 +1,6 @@
-import { Component, Input, OnChanges, SimpleChanges, ViewEncapsulation, ChangeDetectionStrategy, Output, EventEmitter, inject, ViewChild, AfterViewInit, OnDestroy, DestroyRef } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, ViewEncapsulation, ChangeDetectionStrategy, Output, EventEmitter, inject, ViewChild, AfterViewInit, OnDestroy, DestroyRef, OnInit, ChangeDetectorRef } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { DapSessionService } from '@taro/dap-core';
 import { CommonModule } from '@angular/common';
 import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
 import { MatIconModule } from '@angular/material/icon';
@@ -26,6 +28,14 @@ export interface MemoryRow {
 export class MemoryViewComponent implements OnChanges, AfterViewInit, OnDestroy {
   private readonly dialog = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly dapSession = inject(DapSessionService);
+
+  /** Signal representing the current session connection status */
+  public readonly isConnected = toSignal(
+    this.dapSession.connectionStatus$,
+    { initialValue: false }
+  );
 
   @ViewChild(CdkVirtualScrollViewport) private viewport?: CdkVirtualScrollViewport;
 
@@ -51,6 +61,15 @@ export class MemoryViewComponent implements OnChanges, AfterViewInit, OnDestroy 
 
   private resizeObserver?: ResizeObserver;
   private viewportCheckTimeout?: ReturnType<typeof setTimeout>;
+
+  public ngOnInit(): void {
+    this.dapSession.connectionStatus$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(connected => {
+      if (!connected) {
+        this.rows = [];
+        this.cdr.detectChanges();
+      }
+    });
+  }
 
   public ngOnChanges(changes: SimpleChanges): void {
     if (changes['data'] || changes['baseAddress']) {
