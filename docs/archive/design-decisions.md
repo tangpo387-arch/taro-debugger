@@ -5,7 +5,7 @@ audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Rev
 last_updated: 2026-04-14
 related:
   - docs/architecture.md
-  - docs/system-specification.md
+  - docs/project/system-specification.md
   - docs/dap-integration-faq.md
 ---
 

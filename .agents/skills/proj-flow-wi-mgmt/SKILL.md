@@ -43,7 +43,7 @@ As the **Product_Architect**, you must initiate these procedures when:
 ### 1.2 Shared Visibility (Role Responsibilities)
 
 - **Product_Architect**: Responsible for maintaining accurate mappings, executing creation scripts, and declaring Feature Group Stabilization.
-- **Lead_Engineer**: May optionally read `docs/project-roadmap.md` if the WI's metadata is insufficient to determine implementation sequence. Not required if dependencies are clear.
+- **Lead_Engineer**: May optionally read `docs/project/project-roadmap.md` if the WI's metadata is insufficient to determine implementation sequence. Not required if dependencies are clear.
 - **Quality_Control_Reviewer**: Uses the backlog to identify regression boundaries when a WI impacts multiple Feature Groups.
 
 ---
@@ -185,7 +185,7 @@ node scripts/manage-wi.js show WI-38 details
 
 ### Step 5 — Verification
 
-After any `add` or `edit`, verify that the item appears correctly in `docs/work-items.md` and the Mermaid graph in `docs/project-roadmap.md` has been updated.
+After any `add` or `edit`, verify that the item appears correctly in `docs/project/work-items.md` and the Mermaid graph in `docs/project/project-roadmap.md` has been updated.
 
 ---
 
@@ -308,7 +308,7 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
 **Goal**: Freeze feature development and begin integration testing.
 
 **Prerequisites**:
-- [ ] No `⏳ Pending` items in `docs/work-items.md`.
+- [ ] No `⏳ Pending` items in `docs/project/work-items.md`.
 - [ ] `npm run test -- --watch=false` passes with 0 failures.
 
 **Steps**:

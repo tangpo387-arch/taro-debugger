@@ -1,7 +1,7 @@
 ---
 title: Centralize Assembly PC & Window Logic
 scope: Low-Level Inspection
-audience: [Human Engineer, Agent Role Play]
+audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
 related:
   - work-items.md
 ---

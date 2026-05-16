@@ -175,7 +175,7 @@ If you encounter an existing file or a specification using a `WI-XXX` identifier
 | Resource | Purpose |
 | :--- | :--- |
 | `examples/transport-mock.example.ts` | Subject-based mock for testing `DapSessionService` via raw DAP message injection |
-| `docs/test-plan.md` | Master index of all spec-plan files |
+| `docs/tests/test-plan-index.md` | Master index of all spec-plan files |
 | `docs/tests/*.spec-plan.md` | Per-module test case specifications |
 
 ---

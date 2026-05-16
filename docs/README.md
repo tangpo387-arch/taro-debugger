@@ -19,6 +19,8 @@ The project documentation is organized into functional tiers to separate permane
 | `architecture/` | **The Laws**. Permanent design rules, layer responsibilities, and system-level specs. |
 | `project/` | **Governance**. Project management, roadmaps, and documentation standards. |
 | `guides/` | **Knowledge**. Procedural guides, FAQs, and developer resources. |
+| `tests/` | **Verification**. Test plans and module coverage specs. |
+| `research/` | **Exploration**. Exploratory design and feature proposals. |
 | `archive/` | **History & Reviews**. Technical blueprints (`specs/`) and QCR handoff documents (`reviews/`). |
 
 ## 2. Core Navigation
@@ -26,22 +28,22 @@ The project documentation is organized into functional tiers to separate permane
 ### System Design & Architecture
 
 - 📄 **[System Architecture (architecture.md)](architecture.md)**: The master index for all sub-system architecture documents.
-- 📄 **[System Specification (system-specification.md)](system-specification.md)**: Global functional requirements and DAP feature matrix.
+- 📄 **[System Specification (project/system-specification.md)](project/system-specification.md)**: Global functional requirements and DAP feature matrix.
 - 📄 **[Source File Responsibility Map (file-map.md)](file-map.md)**: Quick-reference for locating code by feature area.
 
 ### Engineering & Quality
 
-- 📄 **[Work Items (work-items.md)](work-items.md)**: Current active backlog and ticket status.
-- 📄 **[Test Plan (test-plan.md)](test-plan.md)**: Test pyramid strategy and coverage standards.
+- 📄 **[Work Items (project/work-items.md)](project/work-items.md)**: Current active backlog and ticket status.
+- 📄 **[Test Plan (tests/test-plan-index.md)](tests/test-plan-index.md)**: Test pyramid strategy and coverage standards.
 - 📄 **[Documentation Standards (project/documentation-standards.md)](project/documentation-standards.md)**: Rules for writing and verifying project docs.
 
 ### Strategic Planning
 
-- 📄 **[Project Roadmap (project-roadmap.md)](project-roadmap.md)**: Milestone tracking and feature dependency visualization.
+- 📄 **[Project Roadmap (project/project-roadmap.md)](project/project-roadmap.md)**: Milestone tracking and feature dependency visualization.
 - 📄 **[Future Roadmap (project/future-roadmap.md)](project/future-roadmap.md)**: Post-v1.0 backlog and long-term vision.
 
 ## 3. Getting Started
 
 1. **New Developers**: Read the **[System Architecture](architecture.md)** to understand the Three-Layer Pattern (Transport, Session, UI).
-2. **Implementing Features**: Check the **[Work Items](work-items.md)** for your assigned ticket and review the related spec in `docs/architecture/`.
+2. **Implementing Features**: Check the **[Work Items](project/work-items.md)** for your assigned ticket and review the related spec in `docs/architecture/`.
 3. **Submitting Code**: Follow the **[Project Management Guide](project/project-management.md)** to move your WI to `done` and create a Review Package.

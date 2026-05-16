@@ -5,7 +5,7 @@ audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Rev
 last_updated: 2026-04-26
 related:
   - ../ui-layer.md
-  - ../../system-specification.md
+  - ../../project/system-specification.md
   - assembly-view-spec.md
 ---
 

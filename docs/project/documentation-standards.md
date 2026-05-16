@@ -13,6 +13,10 @@ This document defines the mandatory standards and automated protocols for all do
 
 ## 1. Core Principles
 
+> [!IMPORTANT]
+> **Governance Hierarchy**: This document serves as the **top-level guiding standard** for all human engineers and documentation processes.
+> The AI-specific rule implementation is located in the **[\[DEV:DOCS\] Documentation Standards](../../.agents/skills/dev-docs-standards/SKILL.md)** skill file. The AI skill file acts as an enforcer for AI models and MUST NOT violate the principles defined here.
+
 - **US English Only**: All documentation MUST be written in US English.
 - **Audience Declaration**: Every file must declare its `audience` (e.g., `Human Engineer`, `Lead_Engineer`) in the YAML frontmatter.
 - **Kebab-Case Naming**: All filenames must use `kebab-case` (e.g., `system-specification.md`).

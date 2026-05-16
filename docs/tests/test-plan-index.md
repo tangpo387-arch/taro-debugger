@@ -4,8 +4,8 @@ scope: testing, vitest, unit-tests, integration-tests, e2e, coverage
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-05-14
 related:
-  - docs/work-items.md
-  - docs/system-specification.md
+  - docs/project/work-items.md
+  - docs/project/system-specification.md
 ---
 
 # DAP Debugger Frontend — Test Plan (Index)

@@ -4,7 +4,7 @@ scope: testing, unit, dap-core, assembly-cache
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-05-14
 related:
-  - docs/test-plan.md
+  - docs/tests/test-plan-index.md
   - docs/archive/specs/assembly-cache-range-refactor.md
   - docs/archive/specs/assembly-cache-spec.md
 ---

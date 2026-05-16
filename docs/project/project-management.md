@@ -4,9 +4,9 @@ scope: process, work-items, lifecycle, naming, feature-groups
 audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-04-12
 related:
-  - docs/work-items.md
+  - docs/project/work-items.md
   - docs/archive/design-decisions.md
-  - docs/test-plan.md
+  - docs/tests/test-plan-index.md
 ---
 
 # Project Management Guide
@@ -60,7 +60,7 @@ Every implementation or test file associated with a work item **must** include i
 ```typescript
 /**
  * WI-05 — Implement WebSocket Transport Layer
- * ref: docs/work-items.md, docs/test-plan.md §2.2
+ * ref: docs/project/work-items.md, docs/tests/test-plan-index.md §2.2
  */
 ```
 
@@ -84,7 +84,7 @@ To maintain the **Capability Delivery Map**'s clarity, we distinguish between tw
 
 ### 1.3 Feature Groups
 
-A **Feature Group** is a named domain category that groups related `WI-##` items by functional area. Feature Groups appear as `## Heading` sections in `docs/work-items.md`. The Feature Group provides the "Where" (the structural domain boundary), while the Work Item Type provides the "What" (the specific action).
+A **Feature Group** is a named domain category that groups related `WI-##` items by functional area. Feature Groups appear as `## Heading` sections in `docs/project/work-items.md`. The Feature Group provides the "Where" (the structural domain boundary), while the Work Item Type provides the "What" (the specific action).
 
 How the 6 canonical work item types relate to their parent Feature Group:
 
@@ -160,7 +160,7 @@ stateDiagram-v2
 | State | Symbol | Location | Description |
 | :--- | :--- | :--- | :--- |
 | **Proposed** | 💡 | JSON SSOT | Idea raised; not yet formally scoped. Roadmap entry: milestone required. |
-| **Pending** | ⏳ | `docs/work-items.md` | Scoped & approved; spec written if needed; ready for implementation. |
+| **Pending** | ⏳ | `docs/project/work-items.md` | Scoped & approved; spec written if needed; ready for implementation. |
 | **Done** | 🔍 | JSON SSOT | Implementation complete; awaiting Quality Control Review (QCR). |
 | **Rework** | 🛠️ | JSON SSOT | Review failed; item returned to Lead_Engineer for fixes. |
 | **Accepted** | ✅ | JSON SSOT | Formally approved by QCR; archived in changelog, reflected in roadmap. |
@@ -327,7 +327,7 @@ The project follows strict Semantic Versioning (SemVer) using pre-release suffix
 **Goal**: Freeze feature development and begin integration testing.
 
 **Prerequisites**:
-- [ ] All `⏳ Pending` items in `docs/work-items.md` are `✅ Accepted`.
+- [ ] All `⏳ Pending` items in `docs/project/work-items.md` are `✅ Accepted`.
 - [ ] `npm run test -- --watch=false` passes with 0 failures.
 
 **Steps**:
@@ -355,8 +355,8 @@ The project follows strict Semantic Versioning (SemVer) using pre-release suffix
 
 | Document | Purpose |
 | :--- | :--- |
-| [`docs/work-items.md`](work-items.md) | Active backlog of pending and in-progress work items |
+| [`docs/project/work-items.md`](project/work-items.md) | Active backlog of pending and in-progress work items |
 | [`docs/archive/design-decisions.md`](design-decisions.md) | Architecture Decision Records (ADRs) for non-obvious implementation choices |
-| [`docs/test-plan.md`](test-plan.md) | Detailed test strategy and TI scope definitions |
-| [`docs/system-specification.md`](system-specification.md) | Feature requirements each WI must satisfy |
+| [`docs/tests/test-plan-index.md`](tests/test-plan-index.md) | Detailed test strategy and TI scope definitions |
+| [`docs/project/system-specification.md`](project/system-specification.md) | Feature requirements each WI must satisfy |
 | [`.agents/project-context.md`](../.agents/project-context.md) | Agent navigation index — links to this document |

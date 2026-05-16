@@ -254,8 +254,8 @@ function cmdListGroupItems(args) {
 function syncDocs() {
   console.log('🔄 Syncing all views...');
   const views = {
-    backlog: 'docs/work-items.md',
-    roadmap: 'docs/project-roadmap.md',
+    backlog: 'docs/project/work-items.md',
+    roadmap: 'docs/project/project-roadmap.md',
     future: 'docs/project/future-roadmap.md',
   };
   try {

@@ -5,12 +5,12 @@ audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-04-06
 related:
   - ../architecture.md
-  - ../system-specification.md
+  - ../project/system-specification.md
 ---
 
 # Error Handling Architecture
 
-This document corresponds to System Specification [§7.1](../system-specification.md#71-connection-error-handling) and [§7.2](../system-specification.md#72-dap-server-error-handling) error handling requirements, describing the responsibility division and event transmission mechanism across layers.
+This document corresponds to System Specification [§7.1](../project/system-specification.md#71-connection-error-handling) and [§7.2](../project/system-specification.md#72-dap-server-error-handling) error handling requirements, describing the responsibility division and event transmission mechanism across layers.
 
 ## 1. Connection Error Handling
 

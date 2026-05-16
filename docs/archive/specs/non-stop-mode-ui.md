@@ -2,7 +2,7 @@
 title: Non-Stop Mode UI Integration
 scope: Execution Context Inspection
 milestone: v1.1
-audience: [Human Engineer, Agent Role Play]
+audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
 related:
   - work-items.md
 ---

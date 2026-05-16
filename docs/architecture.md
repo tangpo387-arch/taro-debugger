@@ -4,7 +4,7 @@ scope: architecture, layers, state-machine, data-flow, error-handling
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-05-01
 related:
-  - docs/system-specification.md
+  - docs/project/system-specification.md
   - docs/dap-integration-faq.md
   - .agents/skills/dap-implementation/dap-protocol-specs.md
   - .agents/skills/state-management/state-management.md

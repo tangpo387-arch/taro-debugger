@@ -1,7 +1,7 @@
 ---
 title: Assembly Cache Range Refactor — Remove sortedAddresses
 scope: Low-Level Inspection
-audience: [Human Engineer, Agent Role Play]
+audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-05-14
 related:
   - work-items.md

@@ -5,7 +5,7 @@ audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-03-28
 related:
   - docs/architecture.md
-  - docs/system-specification.md
+  - docs/project/system-specification.md
   - .agents/rules/dap-protocol-specs.md
 ---
 

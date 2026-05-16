@@ -5,7 +5,7 @@ audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer, Human Eng
 last_updated: 2026-05-01
 status: Implemented
 related:
-  - docs/system-specification.md
+  - docs/project/system-specification.md
   - docs/architecture/ui-components/inspection.md
 ---
 

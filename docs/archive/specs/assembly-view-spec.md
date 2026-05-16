@@ -5,7 +5,7 @@ audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-04-12
 related:
   - ../ui-layer.md
-  - ../../system-specification.md
+  - ../../project/system-specification.md
 ---
 
 # Specification: Assembly View (Disassembly)

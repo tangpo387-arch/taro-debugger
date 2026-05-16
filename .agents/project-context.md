@@ -60,8 +60,8 @@ This document is purely an index and terminology outline. You are STRICTLY FORBI
 | Modify service reactive state | **Session** | `Lead_Engineer` | Load **Skill: `[DEV:STATE] Reactive State Flows`** |
 | Implement or fix DAP protocol logic | **Session / Transport** | `Lead_Engineer` | Load **Skill: `[DEV:DAP] Protocol Implementation`** |
 | Add a new transport type | **Transport** | `Lead_Engineer` | Load **Skill: `[DEV:DAP] Protocol Implementation`** |
-| Write tests | — | `Lead_Engineer` | Read `../docs/test-plan.md` + Load **Skill: `[DEV:TEST] Test Case Writing`** |
-| What's next to build? | — | `Product_Architect` | Read `../docs/work-items.md` |
+| Write tests | — | `Lead_Engineer` | Read `../docs/tests/test-plan-index.md` + Load **Skill: `[DEV:TEST] Test Case Writing`** |
+| What's next to build? | — | `Product_Architect` | Read `../docs/project/work-items.md` |
 | Manage work item lifecycle | — | `Product_Architect`, `Quality_Control_Reviewer` | Load **Skill: `[PROJ:FLOW] Work Item Management`** |
 | Check v1.0 scope boundary | — | All Agents | Read `../docs/project/future-roadmap.md` |
 | Understand the state machine | **Session** | `Lead_Engineer` | Load **Skill: `[DEV:STATE] Reactive State Flows`** |
@@ -111,7 +111,7 @@ This document is purely an index and terminology outline. You are STRICTLY FORBI
 
 <critical-instruction>
 
-* **Architectural Guidance**: You are STRICTLY FORBIDDEN from pre-reading `docs/architecture.md` or `docs/system-specification.md`. For architectural, layout, or component boundary questions, you MUST load **Skill: `[DEV:ARCH] System Architecture`**.
+* **Architectural Guidance**: You are STRICTLY FORBIDDEN from pre-reading `docs/architecture.md` or `docs/project/system-specification.md`. For architectural, layout, or component boundary questions, you MUST load **Skill: `[DEV:ARCH] System Architecture`**.
 * **Locating Files**: You MUST use `docs/file-map.md` as an index ONLY to locate specific features or source files.
 * **Testing Protocol Enforcement**: Executing test binaries directly (e.g. `npx vitest`) is an ARCHITECTURAL VIOLATION. You MUST use the project's standard `npm run test` commands defined in the table above.
 Before implementing any test, you MUST load the **Skill: `[DEV:TEST] Test Case Writing`**.

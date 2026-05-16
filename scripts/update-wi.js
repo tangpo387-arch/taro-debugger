@@ -47,8 +47,8 @@ function update() {
     console.log('🔄 Syncing all views...');
     try {
         const views = {
-            'backlog': 'docs/work-items.md',
-            'roadmap': 'docs/project-roadmap.md',
+            'backlog': 'docs/project/work-items.md',
+            'roadmap': 'docs/project/project-roadmap.md',
             'future': 'docs/project/future-roadmap.md'
         };
         Object.entries(views).forEach(([view, path]) => {

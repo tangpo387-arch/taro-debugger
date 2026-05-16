@@ -1,7 +1,7 @@
 ---
 title: Assembly View - Address-Based Navigation
 scope: Low-Level Inspection
-audience: [Human Engineer, Agent Role Play]
+audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
 wi: WI-113
 related:
   - ../reviews/WI-112.review-package.md

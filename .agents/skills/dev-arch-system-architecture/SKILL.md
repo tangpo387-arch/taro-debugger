@@ -28,6 +28,6 @@ description: "Core system architecture, UI layout rules, and component hierarchi
 
 Consult these files via `view_file` **only** when deep context is strictly required:
 
-- 👉 **`docs/system-specification.md`**: Component behavior, Web/Electron deployment modes, UI Layout boundaries, and supported DAP subsets.
+- 👉 **`docs/project/system-specification.md`**: Component behavior, Web/Electron deployment modes, UI Layout boundaries, and supported DAP subsets.
 - 👉 **`docs/architecture.md`**: Master architecture index (Mermaid diagrams) and routing to specific layer-behaviors (error-handling, command-serialization).
 - 👉 **`docs/file-map.md`**: Source of truth for locating features, components, and module structures.

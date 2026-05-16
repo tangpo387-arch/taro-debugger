@@ -1,7 +1,7 @@
 ---
 title: DAP Protocol Inspector (3-Tab Support)
 scope: Console & Status Bar
-audience: [Human Engineer, Agent Role Play]
+audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
 related:
   - work-items.md
 ---

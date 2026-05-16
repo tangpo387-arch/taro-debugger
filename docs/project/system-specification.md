@@ -5,8 +5,8 @@ audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer, "Human En
 last_updated: 2026-03-29
 related:
   - docs/architecture.md
-  - docs/work-items.md
-  - docs/test-plan.md
+  - docs/project/work-items.md
+  - docs/tests/test-plan-index.md
 ---
 
 # DAP Debugger Frontend — System Specification (v1.0)

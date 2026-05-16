@@ -1,7 +1,7 @@
 ---
 title: Refactor DapSessionService Encapsulation
 scope: DAP Transport Layer
-audience: [Human Engineer, Agent Role Play]
+audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
 related:
   - work-items.md
 ---
@@ -9,7 +9,7 @@ related:
 # Refactor DapSessionService Encapsulation (WI-89)
 
 > [!NOTE]
-> **Source Work Item**: [WI-89](file:///root/taro-debugger/docs/work-items.md)
+> **Source Work Item**: [WI-89](file:///root/taro-debugger/docs/project/work-items.md)
 > **Description**: Make `sendRequest` private, expose high-level methods for `loadedSources` and `source`, and unify execution state access via `executionState$`.
 
 ## Overview
