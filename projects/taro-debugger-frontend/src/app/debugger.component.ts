@@ -24,6 +24,7 @@ import {
   ThreadCallStackComponent,
   DapVariablesService,
   BreakpointsComponent,
+  MemoryViewComponent,
 } from '@taro/ui-inspection';
 import { PanelComponent, PanelGroupComponent, ErrorDialog, ErrorDialogData, TaroEmptyStateComponent } from '@taro/ui-shared';
 import { LogViewerComponent } from '@taro/ui-console';
@@ -35,6 +36,7 @@ import { DapLogService } from '@taro/ui-console';
 import { DebugControlGroupComponent } from './debug-control-group.component';
 import { AssemblyViewComponent } from '@taro/ui-assembly';
 import { DapAssemblyCacheService } from '@taro/dap-core';
+import { DapMemoryService } from '@taro/dap-core';
 import { KeyboardShortcutService, ActionID } from './keyboard-shortcut.service';
 import { DapFileTreeService } from './dap-file-tree.service';
 
@@ -63,6 +65,7 @@ import { DapFileTreeService } from './dap-file-tree.service';
     PanelGroupComponent,
     PanelComponent,
     BreakpointsComponent,
+    MemoryViewComponent,
     TaroEmptyStateComponent,
   ],
   providers: [
@@ -71,6 +74,7 @@ import { DapFileTreeService } from './dap-file-tree.service';
     DapVariablesService,
     DapLogService,
     DapAssemblyCacheService,
+    DapMemoryService,
   ],
   templateUrl: './debugger.component.html',
   styleUrls: ['./debugger.component.scss']
@@ -87,6 +91,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly shortcutService = inject(KeyboardShortcutService);
   private readonly fileTreeService = inject(DapFileTreeService);
+  private readonly memoryService = inject(DapMemoryService);
   private readonly destroyRef = inject(DestroyRef);
 
   /** Access the editor component for programmatic breakpoint updates */
@@ -177,6 +182,11 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public leftVisible: boolean = true;
   /** Current active tab in the main content area (0: Source, 1: Disassembly) */
   public activeTabIndex: number = 0;
+  
+  // ── Memory State ──────────────────────────────────────────────────────────
+  public activeMemoryAddress: string | null = null;
+  public activeMemoryData: Uint8Array = new Uint8Array(0);
+  public isMemoryLoading: boolean = false;
 
   public rightVisible: boolean = true;
   public consoleVisible: boolean = true;
@@ -212,8 +222,10 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         this.clearExecutionState();
       }
 
-      // Clear open file state on fatal error or session termination to ensure clean slate
+      // Clear all persistent view state on fatal error or session termination
       if (state === 'error' || state === 'idle') {
+        this.activeMemoryAddress = null;
+        this.activeMemoryData = new Uint8Array(0);
         this.currentCode = '';
         this.activeFilePath = null;
       }
@@ -305,7 +317,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         if (sizes.consoleVisible !== undefined) {
           this.consoleVisible = !!sizes.consoleVisible;
         }
-      } catch (e) {
+      } catch (e: any) {
         console.warn('Failed to parse persisted layout sizes', e);
       }
     }
@@ -490,6 +502,9 @@ export class DebuggerComponent implements OnInit, OnDestroy {
           this.fileTreeReloadTrigger++;
         }
         this.loadCallStack(event.body?.threadId);
+        if (this.activeMemoryAddress) {
+          this.refreshMemory();
+        }
         break;
       case 'continued':
         this.clearExecutionState();
@@ -640,19 +655,46 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Refreshes the currently active memory block.
+   */
+  private async refreshMemory(): Promise<void> {
+    if (!this.activeMemoryAddress || this.executionState !== 'stopped') return;
+
+    this.isMemoryLoading = true;
+    this.cdr.detectChanges();
 
     try {
-      // DapSessionService.setBreakpoints now updates the SSOT internally.
-      // The global subscription in ngOnInit will handle updating the editor.
-      await this.dapSession.setBreakpoints(filePath, lines);
-
-      this.logService.consoleLog(
-        `Sync requested for ${lines.length} breakpoints in ${filePath}`,
-        'info',
-        'system'
-      );
+      const data = await this.memoryService.read(this.activeMemoryAddress, 0, 1024);
+      this.activeMemoryData = data;
     } catch (e: any) {
-      // Handled globally by synthetic DAP events
+      this.logService.consoleLog(`Failed to refresh memory: ${e.message}`, 'error', 'system');
+    } finally {
+      this.isMemoryLoading = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  /**
+   * Handles memory inspection request from Variables component or manual input.
+   */
+  public async onInspectMemory(addressOrRef: string): Promise<void> {
+    if (!addressOrRef) return;
+
+    this.activeMemoryAddress = addressOrRef;
+    this.activeTabIndex = 2; // Switch to Memory tab
+    this.isMemoryLoading = true;
+    this.activeMemoryData = new Uint8Array(0);
+    this.cdr.detectChanges();
+
+    try {
+      // Read 1KB of memory by default
+      const data = await this.memoryService.read(addressOrRef, 0, 1024);
+      this.activeMemoryData = data;
+    } catch (e: any) {
+      this.logService.consoleLog(`Failed to read memory at ${addressOrRef}: ${e.message}`, 'error', 'system');
+    } finally {
+      this.isMemoryLoading = false;
+      this.cdr.detectChanges();
     }
   }
 

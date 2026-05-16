@@ -3,7 +3,9 @@
                                minBufferPx="200" maxBufferPx="400">
     <div *cdkVirtualFor="let flatNode of flatNodes; trackBy: trackByNode"
          class="variable-row"
-         [style.--level-padding.px]="flatNode.level * INDENT_PX">
+         [style.--level-padding.px]="flatNode.level * INDENT_PX"
+         [matMenuTriggerFor]="varMenu"
+         [matMenuTriggerData]="{ node: flatNode.source }">
 
       <!-- Expand/Collapse toggle (only for expandable nodes) -->
       @if (flatNode.expandable) {
@@ -36,6 +38,16 @@
         <span class="var-value"> = {{ flatNode.source.value }}</span>
       }
     </div>
+
+    <!-- Context Menu for Variables -->
+    <mat-menu #varMenu="matMenu">
+      <ng-template matMenuContent let-node="node">
+        <button mat-menu-item (click)="onInspectMemory(node.memoryReference)" [disabled]="!node.memoryReference">
+          <mat-icon>memory</mat-icon>
+          <span>Inspect Memory</span>
+        </button>
+      </ng-template>
+    </mat-menu>
   </cdk-virtual-scroll-viewport>
 } @else {<taro-empty-state 
     message="No variables available" 

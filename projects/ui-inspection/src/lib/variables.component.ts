@@ -11,6 +11,8 @@ import { BreakpointObserver } from '@angular/cdk/layout';
 import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent } from '@taro/ui-shared';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
+import { MatMenuModule } from '@angular/material/menu';
+import { Output, EventEmitter } from '@angular/core';
 
 // ── Data Model ────────────────────────────────────────────────────────
 
@@ -20,6 +22,8 @@ export interface VariableNode {
   type?: string;
   value: string;
   variablesReference: number;
+  /** Optional memory reference for pointers/arrays. */
+  memoryReference?: string;
   children?: VariableNode[];
   expanded?: boolean;
   isLoading?: boolean;
@@ -47,6 +51,7 @@ const INDENT_PX = 20;
     CommonModule,
     MatIconModule,
     MatButtonModule,
+    MatMenuModule,
     ScrollingModule,
     TaroEmptyStateComponent,
   ],
@@ -57,6 +62,9 @@ export class VariablesComponent implements OnInit, OnDestroy {
   private readonly variablesService = inject(DapVariablesService);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly cdr = inject(ChangeDetectorRef);
+
+  /** Emitted when the user selects 'Inspect Memory' from the context menu. */
+  @Output() public readonly inspectMemoryRequest = new EventEmitter<string>();
 
   /** Responsive row height for cdk-virtual-scroll itemSize */
   public rowHeight = toSignal(
@@ -89,6 +97,7 @@ export class VariablesComponent implements OnInit, OnDestroy {
         value: '',
         type: 'Scope',
         variablesReference: scope.variablesReference,
+        memoryReference: scope.memoryReference,
         expanded: false,
       }));
       this.rebuildFlatList();
@@ -131,6 +140,7 @@ export class VariablesComponent implements OnInit, OnDestroy {
           value: v.value,
           type: v.type,
           variablesReference: v.variablesReference,
+          memoryReference: v.memoryReference,
           expanded: false,
         }));
       } catch (e) {
@@ -143,6 +153,13 @@ export class VariablesComponent implements OnInit, OnDestroy {
 
     node.expanded = true;
     this.rebuildFlatList();
+  }
+
+  /** Request to inspect memory at a specific address or reference. */
+  public onInspectMemory(memoryReference: string): void {
+    if (memoryReference) {
+      this.inspectMemoryRequest.emit(memoryReference);
+    }
   }
 
   /** TrackBy function for *cdkVirtualFor performance. */

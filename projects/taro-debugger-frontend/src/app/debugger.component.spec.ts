@@ -10,6 +10,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ChangeDetectorRef, Injector, DestroyRef, NO_ERRORS_SCHEMA } from '@angular/core';
 import { KeyboardShortcutService, ActionID } from './keyboard-shortcut.service';
 import { DapFileTreeService } from './dap-file-tree.service';
+import { DapMemoryService } from '@taro/dap-core';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { Subject, BehaviorSubject, EMPTY, of } from 'rxjs';
 
@@ -72,6 +73,7 @@ describe('DebuggerComponent — onStepInstructionTab()', () => {
         { provide: ChangeDetectorRef, useValue: mockCdr },
         { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
         { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false }) } },
+        { provide: DapMemoryService, useValue: { read: vi.fn(), write: vi.fn() } },
       ],
       schemas: [NO_ERRORS_SCHEMA]
     }).overrideComponent(DebuggerComponent, {
@@ -150,9 +152,14 @@ describe('DebuggerComponent — Keyboard Shortcut Integration', () => {
         { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
         { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: ChangeDetectorRef, useValue: mockCdr },
+        { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
+        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
+        { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
         { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
         { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false }) } },
+        { provide: DapMemoryService, useValue: { read: vi.fn(), write: vi.fn() } },
       ],
       schemas: [NO_ERRORS_SCHEMA]
     }).overrideComponent(DebuggerComponent, {
@@ -247,6 +254,7 @@ describe('DebuggerComponent — Reveal Logic', () => {
         { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } },
         { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
         { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false }) } },
+        { provide: DapMemoryService, useValue: { read: vi.fn(), write: vi.fn() } },
       ],
       schemas: [NO_ERRORS_SCHEMA]
     }).overrideComponent(DebuggerComponent, {
@@ -305,6 +313,7 @@ describe('DebuggerComponent — State Cleanup (WI-83)', () => {
         { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } },
         { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
         { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false }) } },
+        { provide: DapMemoryService, useValue: { read: vi.fn(), write: vi.fn() } },
       ],
       schemas: [NO_ERRORS_SCHEMA]
     }).overrideComponent(DebuggerComponent, {
@@ -405,6 +414,7 @@ describe('DebuggerComponent — No-Source Frame UX (WI-100)', () => {
         { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } },
         { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
         { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false }) } },
+        { provide: DapMemoryService, useValue: { read: vi.fn(), write: vi.fn() } },
       ],
       schemas: [NO_ERRORS_SCHEMA]
     }).overrideComponent(DebuggerComponent, {
@@ -447,5 +457,73 @@ describe('DebuggerComponent — No-Source Frame UX (WI-100)', () => {
 
     // Assert
     expect(component.activeTabIndex).toBe(1);
+  });
+});
+
+/**
+ * Unit tests for Memory View Integration (WI-106)
+ */
+describe('DebuggerComponent — Memory View Integration (WI-106)', () => {
+  let component: DebuggerComponent;
+  let mockMemoryService: any;
+
+  beforeEach(() => {
+    mockMemoryService = {
+      read: vi.fn().mockResolvedValue(new Uint8Array([0xDE, 0xAD, 0xBE, 0xEF])),
+      onMemoryUpdated$: EMPTY
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        DebuggerComponent,
+        { provide: DapMemoryService, useValue: mockMemoryService },
+        { provide: DapSessionService, useValue: { connectionStatus$: EMPTY, executionState$: EMPTY, onEvent: () => EMPTY, onTraffic$: EMPTY, disconnect: vi.fn() } },
+        { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
+        { provide: DapLogService, useValue: { consoleLog: vi.fn() } },
+        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
+        { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
+        { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } },
+        { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
+        { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false }) } },
+      ],
+      schemas: [NO_ERRORS_SCHEMA]
+    }).overrideComponent(DebuggerComponent, {
+      set: { providers: [] }
+    });
+    component = TestBed.inject(DebuggerComponent);
+  });
+
+  it('should switch to Memory tab and load data when onInspectMemory is called', async () => {
+    // Arrange
+    const address = '0x7fffffff0000';
+    component.activeTabIndex = 0;
+
+    // Act
+    await component.onInspectMemory(address);
+
+    // Assert
+    expect(component.activeTabIndex).toBe(2);
+    expect(component.activeMemoryAddress).toBe(address);
+    expect(mockMemoryService.read).toHaveBeenCalledWith(address, 0, 1024);
+    expect(component.activeMemoryData[0]).toBe(0xDE);
+  });
+
+  it('should clear memory state when execution transitions out of stopped', () => {
+    // Arrange
+    component.activeMemoryAddress = '0x1234';
+    component.activeMemoryData = new Uint8Array([0xAA]);
+    
+    // Simulating the state change subscription behavior
+    const stateSubject = new BehaviorSubject<string>('stopped');
+    (component as any).dapSession.executionState$ = stateSubject.asObservable();
+    component.ngOnInit(); // Re-initialize to subscribe
+
+    // Act
+    stateSubject.next('running');
+
+    // Assert
+    expect(component.activeMemoryAddress).toBeNull();
+    expect(component.activeMemoryData.length).toBe(0);
   });
 });

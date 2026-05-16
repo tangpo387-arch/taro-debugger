@@ -223,7 +223,7 @@
       "title": "Memory View Host Integration",
       "featureGroup": "Low-Level Inspection",
       "metadata": {
-        "status": "proposed",
+        "status": "accepted",
         "size": "S",
         "milestone": "v1.0",
         "dependencies": [
@@ -240,7 +240,8 @@
       ],
       "timeline": {
         "created": "2026-05-01",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-16"
       }
     },
     {
@@ -545,6 +546,56 @@
         "created": "2026-05-15",
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-15"
+      }
+    },
+    {
+      "id": "WI-120",
+      "title": "Memory Layout Visualization & Probing",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "proposed",
+        "size": "L",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-106"
+        ]
+      },
+      "description": "Implement the 'Advanced UX' features from Section 7 of the memory-view-spec.md, including struct layout overlays and member probing.",
+      "details": [
+        "Implement member probing strategy in DapMemoryService using evaluate requests",
+        "Enhance MemoryViewComponent to support multi-color member shading",
+        "Add floating labels for struct member names in hex dump",
+        "Implement alignment padding detection and [padding] labeling",
+        "[Doc] docs/archive/specs/memory-view-spec.md",
+        "[Test] Verify struct layout visualization for a nested C++ object"
+      ],
+      "timeline": {
+        "created": "2026-05-16",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-121",
+      "title": "Inline Memory Editing Support",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "proposed",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-106"
+        ]
+      },
+      "description": "Enable users to modify memory contents directly from the Hex Dump interface.",
+      "details": [
+        "Implement interactive byte cells with focus/edit states in MemoryViewComponent",
+        "Wire cell updates to DapMemoryService.write()",
+        "Implement 'supportsWriteMemoryRequest' capability check to enable/disable editing",
+        "[Test] Verify memory write reflects in debuggee and triggers UI refresh"
+      ],
+      "timeline": {
+        "created": "2026-05-16",
+        "created_by": "Antigravity-Agent"
       }
     }
   ]

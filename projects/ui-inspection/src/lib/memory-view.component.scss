@@ -9,16 +9,37 @@
   font-family: var(--font-mono, 'JetBrains Mono', 'Roboto Mono', monospace);
 }
 
-.memory-view-container {
+.memory-container {
   height: 100%;
   width: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+.memory-header {
+  height: 28px;
+  line-height: 28px;
+  background-color: var(--mat-sys-surface-container);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  padding: 0 12px;
+  font-size: var(--text-xs);
+  color: var(--mat-sys-on-surface-variant);
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  .address-val {
+    color: var(--mat-sys-primary);
+    font-weight: var(--weight-bold);
+    font-family: var(--font-mono);
+  }
 }
 
 .memory-viewport {
-  height: 100%;
+  flex: 1;
   width: 100%;
   
   // Custom scrollbar to match global IDE style
@@ -34,6 +55,16 @@
     background-clip: content-box;
     border-radius: 0; // Force sharp corners per visual-design.md
   }
+}
+
+.floating-actions {
+  position: absolute;
+  bottom: 16px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 10;
 }
 
 .memory-row {
@@ -91,7 +122,9 @@
 .ascii-cell {
   padding-left: 16px;
   color: var(--mat-sys-outline);
-  letter-spacing: 1px;
+  font-family: var(--font-mono);
+  letter-spacing: 2px;
+  white-space: pre;
 }
 
 .empty-memory {

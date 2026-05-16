@@ -1,4 +1,9 @@
-<div class="memory-view-container">
+<div class="memory-container">
+  <!-- Sticky Header (Disassembly-style) -->
+  <div *ngIf="rows.length > 0" class="memory-header">
+    Dump of memory at <span class="address-val">{{ baseAddress }}</span>:
+  </div>
+
   <cdk-virtual-scroll-viewport [itemSize]="ROW_HEIGHT" class="memory-viewport">
     <div *cdkVirtualFor="let row of rows; let rowIndex = index; trackBy: trackByAddress" 
          class="memory-row" 
@@ -30,4 +35,15 @@
       No memory data available.
     </div>
   </cdk-virtual-scroll-viewport>
+
+  <!-- Floating Actions (Disassembly-style) -->
+  <div class="floating-actions">
+    <button mat-mini-fab color="primary" 
+            (click)="openJumpDialog()" 
+            [disabled]="!isStopped"
+            matTooltip="Jump to address"
+            aria-label="Jump to address">
+      <mat-icon>pin_drop</mat-icon>
+    </button>
+  </div>
 </div>

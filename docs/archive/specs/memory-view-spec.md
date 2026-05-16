@@ -67,8 +67,9 @@ The view uses a high-density table structure powered by `cdk-virtual-scroll-view
 ### 4.3 Entry Points & Interaction (WI-106)
 
 - **Contextual**: Right-click a pointer variable in the **Variables** panel -> Select **"Open Memory View"**.
-- **Manual**: Direct address input in the Memory View toolbar.
-- **Modification**: Inline byte editing (sends `writeMemory` via `DapMemoryService`).
+- **Jump FAB**: A floating action button in the bottom-right of the Memory View triggers the **Jump to Address Dialog**.
+- **Manual Dialog**: A shared Material dialog (`JumpToAddressDialogComponent`) allows entering numeric addresses, symbols, or DAP memory references.
+- **Modification**: Inline byte editing (sends `writeMemory` via `DapMemoryService`) — [Planned for Future WI].
 
 ## 5. DAP Protocol Integration (WI-104)
 
@@ -173,8 +174,8 @@ Since standard DAP `variables` responses may lack explicit memory offsets, the s
 
 ## 8. Acceptance Criteria
 
-- [ ] **WI-104**: `DapMemoryService` successfully converts DAP Base64 responses to `Uint8Array`.
-- [ ] **WI-105**: `MemoryViewComponent` renders 1KB of memory with zero layout shift during virtual scrolling.
-- [ ] **WI-106**: Right-clicking a pointer in the Variables tree correctly switches the tab and populates the Memory View.
-- [ ] **Layout Mode**: Members of a struct are visually delineated with distinct colors and labels per Section 7.2.
-- [ ] **Padding Detection**: Alignment gaps are correctly identified and labeled as `[padding]`.
+- [x] **WI-104**: `DapMemoryService` successfully converts DAP Base64 responses to `Uint8Array`.
+- [x] **WI-105**: `MemoryViewComponent` renders 1KB of memory with zero layout shift during virtual scrolling.
+- [x] **WI-106**: Right-clicking a pointer in the Variables tree correctly switches the tab and populates the Memory View.
+- [ ] **Layout Mode**: Members of a struct are visually delineated with distinct colors and labels per Section 7.2 (Tracked in WI-120).
+- [ ] **Padding Detection**: Alignment gaps are correctly identified and labeled as `[padding]` (Tracked in WI-120).

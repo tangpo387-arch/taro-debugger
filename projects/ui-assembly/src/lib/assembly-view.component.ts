@@ -11,8 +11,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { input, effect, signal } from '@angular/core';
 
 import { DapAssemblyCacheService, DapDisassembledInstruction, DapSessionService } from '@taro/dap-core';
-import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent, CppSignaturePipe } from '@taro/ui-shared';
-import { JumpToAddressDialogComponent } from './jump-to-address-dialog/jump-to-address-dialog.component';
+import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent, CppSignaturePipe, JumpToAddressDialogComponent } from '@taro/ui-shared';
 
 @Component({
   selector: 'app-assembly-view',
@@ -201,7 +200,12 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
 
   public openJumpToAddressDialog(): void {
     const dialogRef = this.dialog.open(JumpToAddressDialogComponent, {
-      width: '350px'
+      width: '350px',
+      data: {
+        title: 'Jump to Address',
+        placeholder: 'Address / Symbol',
+        description: 'Enter a numeric address or a function symbol to disassemble.'
+      }
     });
 
     dialogRef.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {

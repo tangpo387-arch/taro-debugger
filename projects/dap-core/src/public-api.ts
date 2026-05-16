@@ -13,6 +13,7 @@ export * from './lib/session/dap-session.service';
 export * from './lib/session/dap-config.service';
 export * from './lib/session/assembly.types';
 export * from './lib/session/dap-assembly-cache.service';
+export * from './lib/session/dap-memory.service';
 
 // Re-export error types that might be needed by consumers
 export { EvaluateCancelledError, DapFatalException } from './lib/session/dap-session.service';

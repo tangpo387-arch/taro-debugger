@@ -3,13 +3,27 @@ import { MemoryViewComponent } from './memory-view.component';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { SimpleChange } from '@angular/core';
 
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { of } from 'rxjs';
+import { JumpToAddressDialogComponent } from '@taro/ui-shared';
+
 describe('MemoryViewComponent', () => {
   let component: MemoryViewComponent;
   let fixture: ComponentFixture<MemoryViewComponent>;
+  let mockDialog: any;
 
   beforeEach(async () => {
+    mockDialog = {
+      open: vi.fn().mockReturnValue({
+        afterClosed: () => of(null)
+      })
+    };
+
     await TestBed.configureTestingModule({
-      imports: [MemoryViewComponent, ScrollingModule]
+      imports: [MemoryViewComponent, ScrollingModule, MatDialogModule],
+      providers: [
+        { provide: MatDialog, useValue: mockDialog }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(MemoryViewComponent);

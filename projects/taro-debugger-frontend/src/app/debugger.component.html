@@ -92,7 +92,7 @@
         <!-- Variables Panel -->
         <taro-panel #variablesPanel label="Variables"
           [resizable]="variablesPanel.expanded && (callStackPanel?.expanded ?? false)" [minExpandedHeight]="150">
-          <app-variables></app-variables>
+          <app-variables (inspectMemoryRequest)="onInspectMemory($event)"></app-variables>
         </taro-panel>
 
         <!-- Call Stack Panel -->
@@ -135,6 +135,32 @@
           </mat-tab>
           <mat-tab label="Disassembly">
             <app-assembly-view [currentPc]="activeInstructionPointer"></app-assembly-view>
+          </mat-tab>
+          <mat-tab label="Memory">
+            <div class="memory-tab-content">
+              @if (activeMemoryAddress) {
+                <app-memory-view 
+                  [data]="activeMemoryData" 
+                  [baseAddress]="activeMemoryAddress"
+                  [isStopped]="executionState === 'stopped'"
+                  (jumpToAddress)="onInspectMemory($event)" />
+              } @else {
+                <div class="memory-empty-state">
+                  <taro-empty-state 
+                    message="No memory selected" 
+                    icon="memory"
+                    description="Right-click a pointer variable to inspect memory, or use the jump button."
+                    [centered]="true">
+                    <button mat-flat-button color="primary" (click)="memoryView.openJumpDialog()" #memoryViewWrapper>
+                      <mat-icon>pin_drop</mat-icon>
+                      Jump to Address
+                    </button>
+                    <!-- Invisible component for dialog access when empty -->
+                    <app-memory-view #memoryView style="display: none;" (jumpToAddress)="onInspectMemory($event)" />
+                  </taro-empty-state>
+                </div>
+              }
+            </div>
           </mat-tab>
         </mat-tab-group>
       </div>

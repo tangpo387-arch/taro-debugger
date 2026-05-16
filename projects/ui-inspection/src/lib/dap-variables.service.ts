@@ -7,6 +7,8 @@ export interface DapScope {
   name: string;
   variablesReference: number;
   expensive: boolean;
+  /** Optional memory reference for the scope itself (rarely used but supported by DAP). */
+  memoryReference?: string;
 }
 
 /** A single local variable returned by the DAP adapter. */
@@ -15,6 +17,8 @@ export interface DapVariable {
   value: string;
   type?: string;
   variablesReference: number;
+  /** Optional memory reference for the variable's value (e.g. for pointers or arrays). */
+  memoryReference?: string;
 }
 
 /**

@@ -1,6 +1,12 @@
-import { Component, Input, OnChanges, SimpleChanges, ViewEncapsulation, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, ViewEncapsulation, ChangeDetectionStrategy, Output, EventEmitter, inject, ViewChild, AfterViewInit, OnDestroy, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ScrollingModule } from '@angular/cdk/scrolling';
+import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { JumpToAddressDialogComponent } from '@taro/ui-shared';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 export interface MemoryRow {
   address: string;
@@ -11,13 +17,18 @@ export interface MemoryRow {
 @Component({
   selector: 'app-memory-view',
   standalone: true,
-  imports: [CommonModule, ScrollingModule],
+  imports: [CommonModule, ScrollingModule, MatIconModule, MatButtonModule, MatTooltipModule, MatDialogModule],
   templateUrl: './memory-view.component.html',
   styleUrls: ['./memory-view.component.scss'],
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MemoryViewComponent implements OnChanges {
+export class MemoryViewComponent implements OnChanges, AfterViewInit, OnDestroy {
+  private readonly dialog = inject(MatDialog);
+  private readonly destroyRef = inject(DestroyRef);
+
+  @ViewChild(CdkVirtualScrollViewport) private viewport?: CdkVirtualScrollViewport;
+
   /** The raw memory bytes to display. */
   @Input() public data: Uint8Array = new Uint8Array(0);
 
@@ -27,14 +38,49 @@ export class MemoryViewComponent implements OnChanges {
   /** Optional range to highlight for object layout visualization. */
   @Input() public highlightedRange?: { start: number; length: number };
 
+  /** Whether the debugger is currently stopped (enables jump actions). */
+  @Input() public isStopped: boolean = false;
+
+  /** Emitted when the user requests a jump to a new address. */
+  @Output() public readonly jumpToAddress = new EventEmitter<string>();
+
   public rows: MemoryRow[] = [];
   public readonly BYTES_PER_ROW = 16;
   /** Fixed height per row for virtual scroll optimization (synced with SCSS). */
   public readonly ROW_HEIGHT = 24;
 
+  private resizeObserver?: ResizeObserver;
+  private viewportCheckTimeout?: ReturnType<typeof setTimeout>;
+
   public ngOnChanges(changes: SimpleChanges): void {
     if (changes['data'] || changes['baseAddress']) {
       this.processData();
+    }
+  }
+
+  public ngAfterViewInit(): void {
+    // Attach a ResizeObserver to the virtual scroll viewport.
+    // This is required because the component is rendered inside a <mat-tab>,
+    // which starts out with 0 height. Without this, the viewport may fail to
+    // calculate its true size when the tab becomes active, leading to blank space.
+    if (this.viewport && this.viewport.elementRef.nativeElement && typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        if (this.viewportCheckTimeout) {
+          clearTimeout(this.viewportCheckTimeout);
+        }
+        this.viewportCheckTimeout = setTimeout(() => {
+          this.viewport?.checkViewportSize();
+          this.viewportCheckTimeout = undefined;
+        }, 50);
+      });
+      this.resizeObserver.observe(this.viewport.elementRef.nativeElement);
+    }
+  }
+
+  public ngOnDestroy(): void {
+    this.resizeObserver?.disconnect();
+    if (this.viewportCheckTimeout) {
+      clearTimeout(this.viewportCheckTimeout);
     }
   }
 
@@ -50,7 +96,7 @@ export class MemoryViewComponent implements OnChanges {
     for (let i = 0; i < this.data.length; i += this.BYTES_PER_ROW) {
       const rowBytes = this.data.slice(i, i + this.BYTES_PER_ROW);
       const rowAddr = (baseAddr + BigInt(i)).toString(16).toUpperCase().padStart(16, '0');
-      
+
       const bytes: string[] = [];
       let ascii = '';
 
@@ -83,11 +129,31 @@ export class MemoryViewComponent implements OnChanges {
   public isHighlighted(rowIndex: number, byteIndex: number): boolean {
     if (!this.highlightedRange) return false;
     const absoluteIndex = rowIndex * this.BYTES_PER_ROW + byteIndex;
-    return absoluteIndex >= this.highlightedRange.start && 
-           absoluteIndex < (this.highlightedRange.start + this.highlightedRange.length);
+    return absoluteIndex >= this.highlightedRange.start &&
+      absoluteIndex < (this.highlightedRange.start + this.highlightedRange.length);
   }
 
   public trackByAddress(_index: number, row: MemoryRow): string {
     return row.address;
+  }
+
+  /**
+   * Opens the Jump to Address dialog.
+   */
+  public openJumpDialog(): void {
+    const dialogRef = this.dialog.open(JumpToAddressDialogComponent, {
+      width: '350px',
+      data: {
+        title: 'Jump to Address',
+        placeholder: 'Address / Reference',
+        description: 'Enter a memory address (e.g. 0x4000) or a variable reference.'
+      }
+    });
+
+    dialogRef.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
+      if (result) {
+        this.jumpToAddress.emit(result);
+      }
+    });
   }
 }

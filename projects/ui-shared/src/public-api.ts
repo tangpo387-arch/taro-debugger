@@ -9,4 +9,5 @@ export * from './lib/empty-state/taro-empty-state.component';
 export * from './lib/panel-group/panel-group.component';
 export * from './lib/ui-error';
 export * from './lib/pipes/cpp-signature.pipe';
+export * from './lib/dialogs/jump-to-address-dialog/jump-to-address-dialog.component';
 

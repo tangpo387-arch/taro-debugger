@@ -24,19 +24,6 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
 
 ## Low-Level Inspection
 
-### WI-106: Memory View Host Integration
-
-- **Status**: 💡 Proposed
-- **Size**: S
-- **Description**: Integrate Memory View into the center tabs and Variables context menu.
-- **Details**:
-  - Add 'Memory' tab to DebuggerComponent center panel
-  - Implement 'Inspect Memory' context menu in Variables tree
-  - Wire address bar navigation and manual input
-  - [Test] Verify end-to-end flow from Variables right-click to Memory view render
-  - [Doc] docs/archive/specs/memory-view-spec.md
-- **Dependencies**: WI-105
-
 ### WI-107: DapRegisterService Implementation
 
 - **Status**: ⏳ Pending
@@ -75,3 +62,29 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - [Doc] docs/archive/specs/assembly-registers-integration.md
   - [Test] Verify resizable split layout and panel visibility toggling
 - **Dependencies**: WI-108
+
+### WI-120: Memory Layout Visualization & Probing
+
+- **Status**: 💡 Proposed
+- **Size**: L
+- **Description**: Implement the 'Advanced UX' features from Section 7 of the memory-view-spec.md, including struct layout overlays and member probing.
+- **Details**:
+  - Implement member probing strategy in DapMemoryService using evaluate requests
+  - Enhance MemoryViewComponent to support multi-color member shading
+  - Add floating labels for struct member names in hex dump
+  - Implement alignment padding detection and [padding] labeling
+  - [Doc] docs/archive/specs/memory-view-spec.md
+  - [Test] Verify struct layout visualization for a nested C++ object
+- **Dependencies**: WI-106
+
+### WI-121: Inline Memory Editing Support
+
+- **Status**: 💡 Proposed
+- **Size**: M
+- **Description**: Enable users to modify memory contents directly from the Hex Dump interface.
+- **Details**:
+  - Implement interactive byte cells with focus/edit states in MemoryViewComponent
+  - Wire cell updates to DapMemoryService.write()
+  - Implement 'supportsWriteMemoryRequest' capability check to enable/disable editing
+  - [Test] Verify memory write reflects in debuggee and triggers UI refresh
+- **Dependencies**: WI-106

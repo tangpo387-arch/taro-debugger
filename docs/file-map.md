@@ -45,6 +45,7 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | `projects/ui-inspection/src/lib/thread-call-stack.component.ts` | **Unified Context Panel**: Displays process, threads, and call stacks in a flat 3-level tree; manages active thread/frame selection | `@Input() activeFrameId`, `@Output() frameSelected` | `thread-call-stack.component.html`, `thread-call-stack.component.scss` |
 | `projects/ui-inspection/src/lib/cpp-signature.pipe.ts` | Formats extra-long C++ function signatures by parsing and safely collapsing templates/parameters into shorthand | `transform()` | `cpp-signature.pipe.spec.ts` |
 | `projects/ui-inspection/src/lib/breakpoints.component.ts` | Right sidebar breakpoints view: displays and manages user breakpoints | subscribes `breakpoints$` | `breakpoints.component.html`, `breakpoints.component.scss` |
+| `projects/ui-inspection/src/lib/memory-view.component.ts` | Memory dump view: hex/ASCII grid with virtual scrolling and sticky header | `@Input() data`, `@Input() baseAddress`, `@Output() jumpToAddress` | `memory-view.component.html`, `memory-view.component.scss` |
 
 > **Note on Dialogs:** Subdirectories like `error-dialog/` contain a cohesive set of files (e.g. `error-dialog.ts`, `error-dialog.html`, `error-dialog.css`) implementing a generic dialog service.
 
@@ -84,6 +85,7 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | `projects/ui-shared/src/lib/panel-group/panel-group.component.ts` | Layout orchestrator for projecting and managing sibling taro-panels (flex-basis redistribution, dynamic height clamping) | `PanelGroupComponent` (selector: `taro-panel-group`) |
 | `projects/ui-shared/src/lib/panel/panel.component.ts` | Generic collapsible/resizable panel container | `PanelComponent` (selector: `taro-panel`) |
 | `projects/ui-shared/src/lib/dialogs/error-dialog/error-dialog.ts` | Reusable error/retry dialog | `ErrorDialog`, `ErrorDialogData` |
+| `projects/ui-shared/src/lib/dialogs/jump-to-address-dialog/jump-to-address-dialog.component.ts` | Shared dialog for address/symbol/reference input; used by Assembly and Memory views | `JumpToAddressDialogComponent`, `JumpToAddressData` |
 | `projects/ui-shared/src/lib/empty-state/taro-empty-state.component.ts` | Centralized visual presentation for empty/inactive panels | `TaroEmptyStateComponent` (selector: `taro-empty-state`) |
 | `projects/ui-shared/src/lib/layout.config.ts` | Shared layout dimension tokens (breakpoints, MQ) | `LAYOUT_COMPACT_MQ` |
 | `projects/ui-shared/src/lib/styles/_tokens.scss` | Centralized SCSS tokens and density mixins | - |
