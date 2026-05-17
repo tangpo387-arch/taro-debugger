@@ -21,7 +21,10 @@ function makeMockDapSession(overrides: any = {}) {
 
 function makeMockConfigService(overrides: any = {}) {
   return {
-    getConfig: vi.fn().mockReturnValue({ sourcePath: '/root/project' }),
+    getConfig: vi.fn().mockReturnValue({ 
+      sourcePath: '/root/project',
+      stopOnEntry: true
+    }),
     ...overrides,
   };
 }

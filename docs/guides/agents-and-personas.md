@@ -1,3 +1,10 @@
+---
+title: Guide - Agents and Personas
+scope: workflow, agents, roles
+audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
+last_updated: 2026-05-17
+---
+
 # Agents and Personas Guide
 
 This guide explains how to effectively use the AI agents in the Taro Debugger project. Whether you are using the Gemini CLI's technical features or following our project-specific development roles, this document will help you understand "who" you are talking to and "how" to call them.

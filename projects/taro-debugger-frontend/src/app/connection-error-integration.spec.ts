@@ -106,7 +106,8 @@ describe('TI-05 — Connection Error & Intent Detection', () => {
               serverAddress: 'ws://localhost:4711',
               transportType: 'websocket',
               launchMode: 'launch',
-              executablePath: '/usr/bin/target'
+              executablePath: '/usr/bin/target',
+              stopOnEntry: true
             })
           }
         },

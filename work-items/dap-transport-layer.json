@@ -456,6 +456,32 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-01"
       }
+    },
+    {
+      "id": "WI-123",
+      "title": "Stop at Main via DAP Function Breakpoints",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Standardize 'stop at main' behavior across all DAP adapters using explicit function breakpoints during initialization.",
+      "details": [
+        "Update DapConfig to include stopOnEntry",
+        "Implement setFunctionBreakpoints in DapSessionService",
+        "Auto-set main breakpoint during startup",
+        "Expose stopOnEntry toggle in Setup UI",
+        "Merge docs/architecture relate files with docs/archive/specs/stop-at-main.md",
+        "[Test] Verify stop on main with gdb/lldb-dap",
+        "[Doc] docs/archive/specs/stop-at-main.md"
+      ],
+      "timeline": {
+        "created": "2026-05-17",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-17"
+      }
     }
   ]
 }

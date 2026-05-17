@@ -100,7 +100,7 @@ Taro is fully compatible with the **DAP** standard. It supports core debugging o
 Taro communicates with GDB/LLDB via WebSockets. Use `websocketd` to bridge the gap:
 
 ```bash
-websocketd --port 4711 --binary /usr/bin/gdb -i=dap
+websocketd --port 4711 --binary /usr/bin/gdb ex "set debug dap-log-file <path>/dap.log" -ex "set debug dap-log-level 2" -i=dap
 ```
 
 ### 3. Start the Frontend

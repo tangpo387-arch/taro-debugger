@@ -59,6 +59,13 @@ export class DapSessionService {
    * Keyed by absolute file path. 
    */
   private readonly breakpointsMap = new Map<string, VerifiedBreakpoint[]>();
+
+  /** 
+   * Tracks IDs of system-injected breakpoints (e.g., stop-on-entry) 
+   * to distinguish them from user-defined breakpoints during 'stopped' events.
+   */
+  private readonly systemBreakpointIds = new Set<number>();
+
   /** Reactive stream of the current breakpoint state. */
   private readonly breakpointsSubject = new BehaviorSubject<Map<string, VerifiedBreakpoint[]>>(new Map(this.breakpointsMap));
   public readonly breakpoints$ = this.breakpointsSubject.asObservable();
@@ -206,10 +213,15 @@ export class DapSessionService {
     // Step 4: Send all stored breakpoints before configurationDone (DAP spec § Configuration)
     await this.resyncAllBreakpointsInternal();
 
-    // Step 5: Send configurationDone
+    // Step 5: Handle stop-on-entry via function breakpoints if requested
+    if (config.stopOnEntry) {
+      await this.setFunctionBreakpoints([{ name: 'main' }], true);
+    }
+
+    // Step 6: Send configurationDone
     await this.sendRequest('configurationDone');
 
-    // Step 5: Wait for launch/attach response (the Server will reply at this point)
+    // Step 7: Wait for launch/attach response (the Server will reply at this point)
     const launchResponse = await launchPromise;
     this.executionStateSubject.next('running');
     void this.fetchThreads();
@@ -229,8 +241,7 @@ export class DapSessionService {
     const args = {
       program: config.executablePath,
       cwd: config.sourcePath || undefined,
-      args: argsArray,
-      stopAtBeginningOfMainSubprogram: true
+      args: argsArray
     };
 
     return this.sendRequest(command, args);
@@ -597,6 +608,32 @@ export class DapSessionService {
         }
       }
     }
+  }
+
+  /**
+   * Sets function breakpoints (symbolic breakpoints).
+   * @param breakpoints Array of function names or objects with name/condition
+   * @param isSystem Whether these are system-managed breakpoints (e.g., main entry)
+   */
+  public async setFunctionBreakpoints(breakpoints: { name: string; condition?: string }[], isSystem = false): Promise<any[]> {
+    const response = await this.sendRequest('setFunctionBreakpoints', {
+      breakpoints: breakpoints.map(bp => ({
+        name: bp.name,
+        condition: bp.condition
+      }))
+    });
+
+    const results = response.body?.breakpoints || [];
+
+    if (isSystem) {
+      results.forEach((bp: any) => {
+        if (bp.id !== undefined) {
+          this.systemBreakpointIds.add(bp.id);
+        }
+      });
+    }
+
+    return results;
   }
 
   /**
@@ -1132,7 +1169,15 @@ export class DapSessionService {
           // Fallback: auto-select the first stopped thread if none is active
           this.activeThreadIdSubject.next(Array.from(currentStopped)[0]);
         }
-        const stopReason = event.body?.description || event.body?.reason || 'paused';
+
+        const hitBps = event.body?.hitBreakpointIds || [];
+        const isSystemStop = hitBps.some((id: number) => this.systemBreakpointIds.has(id));
+
+        let stopReason = event.body?.description || event.body?.reason || 'paused';
+        if (isSystemStop) {
+          stopReason = 'Paused at entry (main)';
+        }
+
         this.stopReasonSubject.next(stopReason);
         // Update per-thread reason map
         const updatedReasons = new Map(this.threadStopReasonsSubject.value);
@@ -1195,6 +1240,12 @@ export class DapSessionService {
       case 'breakpoint': {
         const bp = event.body?.breakpoint;
         if (bp && bp.source?.path && bp.line !== undefined) {
+          // If this is a system-managed breakpoint (e.g. stop-on-entry), ignore it here
+          // to prevent it from appearing in the user's breakpoint list (WI-123).
+          if (bp.id !== undefined && this.systemBreakpointIds.has(bp.id)) {
+            break;
+          }
+
           const filePath = bp.source.path;
           const currentBps = this.breakpointsMap.get(filePath) || [];
 

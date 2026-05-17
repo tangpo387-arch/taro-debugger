@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DebuggerComponent } from './debugger.component';
 import { DebugControlGroupComponent } from './debug-control-group.component';
 import { KeyboardShortcutService, ActionID } from './keyboard-shortcut.service';
-import { DapSessionService, DapConfigService } from '@taro/dap-core';
+import { DapSessionService, DapConfigService, DapMemoryService } from '@taro/dap-core';
 import { DapLogService } from '@taro/ui-console';
 import { DapVariablesService } from '@taro/ui-inspection';
 import { AssemblyViewComponent } from '@taro/ui-assembly';
@@ -64,10 +64,11 @@ describe('WI-81: Application Frame & Global Controls Integration', () => {
           DebuggerComponent,
           { provide: KeyboardShortcutService, useValue: mockShortcutService },
           { provide: DapSessionService, useValue: mockDapSession },
-          { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
+          { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe', stopOnEntry: true }) } },
           { provide: DapLogService, useValue: { consoleLog: vi.fn(), appendDapLog: vi.fn(), consoleLogs$: EMPTY, programLogs$: EMPTY, dapLogs$: EMPTY } },
           { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
           { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
+          { provide: DapMemoryService, useValue: { read: vi.fn(), write: vi.fn() } },
           { provide: Router, useValue: { navigate: vi.fn() } },
           { provide: MatSnackBar, useValue: { open: vi.fn() } },
           { provide: MatDialog, useValue: mockDialog },
@@ -85,6 +86,7 @@ describe('WI-81: Application Frame & Global Controls Integration', () => {
             { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
             { provide: DapLogService, useValue: { consoleLog: vi.fn(), appendDapLog: vi.fn(), consoleLogs$: EMPTY, programLogs$: EMPTY, dapLogs$: EMPTY } },
             { provide: DapAssemblyCacheService, useValue: { fetchInstructions: () => of([]), clear: vi.fn() } },
+            { provide: DapMemoryService, useValue: { read: vi.fn(), write: vi.fn() } },
           ]
         }
       });

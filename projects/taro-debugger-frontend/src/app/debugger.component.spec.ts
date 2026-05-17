@@ -54,7 +54,7 @@ describe('DebuggerComponent — onStepInstructionTab()', () => {
     };
 
     const mockConfigService = {
-      getConfig: () => ({ executablePath: '/path/to/exe', transportType: 'websocket' })
+      getConfig: () => ({ executablePath: '/path/to/exe', transportType: 'websocket', stopOnEntry: true })
     };
 
     const mockCdr = { detectChanges: vi.fn(), markForCheck: vi.fn() };
@@ -150,11 +150,11 @@ describe('DebuggerComponent — Keyboard Shortcut Integration', () => {
         { provide: DapLogService, useValue: mockLogService },
         { provide: ChangeDetectorRef, useValue: mockCdr },
         { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
-        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
+        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe', stopOnEntry: true }) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: ChangeDetectorRef, useValue: mockCdr },
         { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
-        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
+        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe', stopOnEntry: true }) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
         { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
@@ -248,7 +248,7 @@ describe('DebuggerComponent — Reveal Logic', () => {
           }
         },
         { provide: DapLogService, useValue: { consoleLog: vi.fn() } },
-        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
+        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe', stopOnEntry: true }) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
         { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } },
@@ -307,7 +307,7 @@ describe('DebuggerComponent — State Cleanup (WI-83)', () => {
         { provide: DapSessionService, useValue: mockDapSession },
         { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
         { provide: DapLogService, useValue: { consoleLog: vi.fn() } },
-        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
+        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe', stopOnEntry: true }) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
         { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } },
@@ -408,7 +408,7 @@ describe('DebuggerComponent — No-Source Frame UX (WI-100)', () => {
         { provide: DapSessionService, useValue: mockDapSession },
         { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn().mockResolvedValue(undefined) } },
         { provide: DapLogService, useValue: { consoleLog: vi.fn() } },
-        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
+        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe', stopOnEntry: true }) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
         { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } },
@@ -480,7 +480,7 @@ describe('DebuggerComponent — Memory View Integration (WI-106)', () => {
         { provide: DapSessionService, useValue: { connectionStatus$: EMPTY, executionState$: EMPTY, onEvent: () => EMPTY, onTraffic$: EMPTY, disconnect: vi.fn() } },
         { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
         { provide: DapLogService, useValue: { consoleLog: vi.fn() } },
-        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
+        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe', stopOnEntry: true }) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
         { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } },

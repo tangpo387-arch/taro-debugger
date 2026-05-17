@@ -11,7 +11,8 @@ describe('DapConfigService', () => {
     launchMode: 'attach',
     executablePath: '/path/to/exe',
     sourcePath: '/path/to/src',
-    programArgs: '--help'
+    programArgs: '--help',
+    stopOnEntry: false
   };
 
   // Suppress console.log emitted by setConfig() to keep CI output clean (QCR §7)
@@ -35,6 +36,7 @@ describe('DapConfigService', () => {
     expect(config.serverAddress).toBe('localhost:4711');
     expect(config.transportType).toBe('websocket');
     expect(config.launchMode).toBe('launch');
+    expect(config.stopOnEntry).toBe(true);
   });
 
   it('should set and get config correctly', () => {

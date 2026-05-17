@@ -12,7 +12,7 @@
 
         <div class="mode-selector-wrapper">
           <span class="mode-label">Launch Mode</span>
-          <mat-button-toggle-group formControlName="launchMode" id="launchModeToggleElectron"
+          <mat-button-toggle-group formControlName="launchMode" id="launchModeToggle"
                                    class="mode-toggle" aria-label="Launch Mode">
             <mat-button-toggle value="launch">
               <mat-icon>play_arrow</mat-icon>
@@ -28,6 +28,14 @@
           } @else {
             <p class="mode-hint">Attach to an already running process</p>
           }
+        </div>
+
+        <!-- Stop on Entry Toggle -->
+        <div class="stop-entry-wrapper">
+          <mat-checkbox formControlName="stopOnEntry" id="stopOnEntryToggle">
+            Stop at main entry point
+          </mat-checkbox>
+          <p class="mode-hint">Automatically halt execution when the program reaches 'main'</p>
         </div>
 
         <mat-divider class="section-divider"></mat-divider>

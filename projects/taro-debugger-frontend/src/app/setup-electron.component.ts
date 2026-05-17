@@ -11,6 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 import { DapConfigService } from '@taro/dap-core';
 
@@ -27,6 +28,7 @@ import { DapConfigService } from '@taro/dap-core';
     MatIconModule,
     MatButtonToggleModule,
     MatDividerModule,
+    MatCheckboxModule,
   ],
   templateUrl: './setup-electron.component.html',
   styleUrls: ['./setup-electron.component.scss']
@@ -42,7 +44,8 @@ export class SetupElectronComponent implements OnInit, OnDestroy {
       validators: Validators.required
     }),
     sourcePath: new FormControl('', { nonNullable: true }),
-    programArgs: new FormControl('', { nonNullable: true })
+    programArgs: new FormControl('', { nonNullable: true }),
+    stopOnEntry: new FormControl(true, { nonNullable: true })
   });
 
   private readonly router = inject(Router);
@@ -55,7 +58,8 @@ export class SetupElectronComponent implements OnInit, OnDestroy {
       launchMode: existingConfig.launchMode,
       executablePath: existingConfig.executablePath,
       sourcePath: existingConfig.sourcePath,
-      programArgs: existingConfig.programArgs
+      programArgs: existingConfig.programArgs,
+      stopOnEntry: existingConfig.stopOnEntry
     });
 
     this.updateExecPathValidator(existingConfig.launchMode);

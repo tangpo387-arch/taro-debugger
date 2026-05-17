@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { DebuggerComponent } from './debugger.component';
-import { DapSessionService } from '@taro/dap-core';
-import { DapConfigService } from '@taro/dap-core';
+import { DapSessionService, DapMemoryService, DapConfigService } from '@taro/dap-core';
 import { DapVariablesService } from '@taro/ui-inspection';
 import { DapLogService } from '@taro/ui-console';
 import { NGX_MONACO_EDITOR_CONFIG } from 'ngx-monaco-editor-v2';
@@ -48,7 +47,11 @@ describe('DebuggerComponent — State Cleanup Logic', () => {
     };
 
     const mockConfigService = {
-      getConfig: () => ({ executablePath: '/path/to/exe', transportType: 'websocket' })
+      getConfig: () => ({ 
+        executablePath: '/path/to/exe', 
+        transportType: 'websocket',
+        stopOnEntry: true
+      })
     };
 
     const mockCdr = { detectChanges: vi.fn(), markForCheck: vi.fn() };
@@ -60,6 +63,7 @@ describe('DebuggerComponent — State Cleanup Logic', () => {
         { provide: DapVariablesService, useValue: mockVariablesService },
         { provide: DapLogService, useValue: mockLogService },
         { provide: DapConfigService, useValue: mockConfigService },
+        { provide: DapMemoryService, useValue: { read: vi.fn(), write: vi.fn() } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: { baseUrl: 'assets/monaco' } },
         { provide: ChangeDetectorRef, useValue: mockCdr },

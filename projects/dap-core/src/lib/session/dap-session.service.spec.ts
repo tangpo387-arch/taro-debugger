@@ -35,7 +35,8 @@ describe('DapSessionService', () => {
         serverAddress: 'ws://localhost:8080',
         transportType: 'websocket',
         launchMode: 'launch',
-        executablePath: '/path/to/exe'
+        executablePath: '/path/to/exe',
+        stopOnEntry: true
       })
     };
 
@@ -156,7 +157,242 @@ describe('DapSessionService', () => {
     });
   });
 
-  describe('Execution State Transitions', () => {
+  describe('Stop on Entry (WI-123)', () => {
+    it('should send setFunctionBreakpoints(main) during session start if stopOnEntry is true', async () => {
+      configService.getConfig.mockReturnValue({
+        serverAddress: 'ws://localhost:8080',
+        transportType: 'websocket',
+        launchMode: 'launch',
+        executablePath: '/path/to/exe',
+        stopOnEntry: true
+      });
+
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          (service as any).handleIncomingMessage({
+            type: 'response',
+            request_seq: req.seq,
+            success: true,
+            command: req.command,
+            body: req.command === 'initialize' ? { supportsFunctionBreakpoints: true } : {}
+          });
+        }, 0);
+      });
+
+      const sessionPromise = service.startSession();
+
+      // Simulate initialized event
+      setTimeout(() => {
+        (service as any).handleIncomingMessage({ type: 'event', event: 'initialized', seq: 100 });
+      }, 10);
+
+      await vi.runAllTimersAsync();
+      await sessionPromise;
+
+      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+        command: 'setFunctionBreakpoints',
+        arguments: {
+          breakpoints: [{ name: 'main', condition: undefined }]
+        }
+      }));
+    });
+
+    it('should NOT send setFunctionBreakpoints if stopOnEntry is false', async () => {
+      configService.getConfig.mockReturnValue({
+        serverAddress: 'ws://localhost:8080',
+        transportType: 'websocket',
+        launchMode: 'launch',
+        executablePath: '/path/to/exe',
+        stopOnEntry: false
+      });
+
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          (service as any).handleIncomingMessage({
+            type: 'response',
+            request_seq: req.seq,
+            success: true,
+            command: req.command,
+            body: {}
+          });
+        }, 0);
+      });
+
+      const sessionPromise = service.startSession();
+
+      setTimeout(() => {
+        (service as any).handleIncomingMessage({ type: 'event', event: 'initialized', seq: 100 });
+      }, 10);
+
+      await vi.runAllTimersAsync();
+      await sessionPromise;
+
+      expect(mockTransport.sendRequest).not.toHaveBeenCalledWith(expect.objectContaining({
+        command: 'setFunctionBreakpoints'
+      }));
+    });
+
+    it('should remove stopAtBeginningOfMainSubprogram from launch arguments', async () => {
+      configService.getConfig.mockReturnValue({
+        serverAddress: 'ws://localhost:8080',
+        transportType: 'websocket',
+        launchMode: 'launch',
+        executablePath: '/path/to/exe',
+        stopOnEntry: true
+      });
+
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          (service as any).handleIncomingMessage({
+            type: 'response',
+            request_seq: req.seq,
+            success: true,
+            command: req.command,
+            body: {}
+          });
+        }, 0);
+      });
+
+      const sessionPromise = service.startSession();
+
+      setTimeout(() => {
+        (service as any).handleIncomingMessage({ type: 'event', event: 'initialized', seq: 100 });
+      }, 10);
+
+      await vi.runAllTimersAsync();
+      await sessionPromise;
+
+      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+        command: 'launch',
+        arguments: expect.not.objectContaining({
+          stopAtBeginningOfMainSubprogram: true
+        })
+      }));
+    });
+
+    it('should track system breakpoint IDs and update stop reason', async () => {
+      (service as any).transport = mockTransport;
+
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          (service as any).handleIncomingMessage({
+            type: 'response',
+            request_seq: req.seq,
+            success: true,
+            command: req.command,
+            body: { breakpoints: [{ id: 500, verified: true }] }
+          });
+        }, 0);
+      });
+
+      const promise = service.setFunctionBreakpoints([{ name: 'main' }], true);
+      vi.advanceTimersByTime(10);
+      await promise;
+
+      expect((service as any).systemBreakpointIds.has(500)).toBe(true);
+
+      // 2. Simulate stop at this ID
+      (service as any).handleIncomingMessage({
+        type: 'event',
+        event: 'stopped',
+        body: {
+          threadId: 1,
+          reason: 'breakpoint',
+          hitBreakpointIds: [500]
+        }
+      });
+
+      expect((service as any).stopReasonSubject.value).toBe('Paused at entry (main)');
+    });
+
+    it('should ignore "breakpoint" events for system-managed breakpoints', async () => {
+      (service as any).transport = mockTransport;
+
+      // 1. Setup system breakpoint ID 500
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          (service as any).handleIncomingMessage({
+            type: 'response',
+            request_seq: req.seq,
+            success: true,
+            command: req.command,
+            body: { breakpoints: [{ id: 500, verified: true }] }
+          });
+        }, 0);
+      });
+
+      const promise = service.setFunctionBreakpoints([{ name: 'main' }], true);
+      await vi.runAllTimersAsync();
+      await promise;
+
+      expect((service as any).systemBreakpointIds.has(500)).toBe(true);
+
+      // 2. Simulate "breakpoint" event from adapter for ID 500
+      // This often happens when symbolic breakpoints are bound to a line
+      (service as any).handleIncomingMessage({
+        type: 'event',
+        event: 'breakpoint',
+        body: {
+          reason: 'changed',
+          breakpoint: {
+            id: 500,
+            verified: true,
+            line: 10,
+            source: { path: '/src/main.c' }
+          }
+        }
+      });
+
+      // 3. Verify it is NOT in the public breakpoints observable
+      const currentBps = (service as any).breakpointsSubject.value;
+      expect(currentBps.has('/src/main.c')).toBe(false);
+    });
+
+    it('should ignore "breakpoint" events for system breakpoints even if they were initially unverified', async () => {
+      (service as any).transport = mockTransport;
+
+      // 1. Setup system breakpoint ID 600, initially UNVERIFIED
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          (service as any).handleIncomingMessage({
+            type: 'response',
+            request_seq: req.seq,
+            success: true,
+            command: req.command,
+            body: { breakpoints: [{ id: 600, verified: false }] } // Initially unverified
+          });
+        }, 0);
+      });
+
+      const promise = service.setFunctionBreakpoints([{ name: 'main' }], true);
+      await vi.runAllTimersAsync();
+      await promise;
+
+      // Ensure ID was tracked despite being unverified
+      expect((service as any).systemBreakpointIds.has(600)).toBe(true);
+
+      // 2. Simulate "breakpoint" event where it becomes VERIFIED
+      (service as any).handleIncomingMessage({
+        type: 'event',
+        event: 'breakpoint',
+        body: {
+          reason: 'changed',
+          breakpoint: {
+            id: 600,
+            verified: true,
+            line: 25,
+            source: { path: '/src/init.c' }
+          }
+        }
+      });
+
+      // 3. Verify it is still hidden
+      const currentBps = (service as any).breakpointsSubject.value;
+      expect(currentBps.has('/src/init.c')).toBe(false);
+    });
+  });
+
+  describe('Execution States', () => {
     it('should start with idle state', () => {
       expect((service as any).executionStateSubject.value).toBe('idle');
     });

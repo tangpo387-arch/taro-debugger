@@ -109,14 +109,21 @@ This document is purely an index and terminology outline. You are STRICTLY FORBI
 
 </workflow>
 
-## 5. Agent Context Sources & Knowledge Acquisition
+## 6. Context Hierarchy & Memory Management
 
-<critical-instruction>
+To prevent context bloat and fact duplication, all information MUST be routed to exactly one tier.
 
-* **Architectural Guidance**: You are STRICTLY FORBIDDEN from pre-reading `docs/architecture.md` or `docs/project/system-specification.md`. For architectural, layout, or component boundary questions, you MUST load **Skill: `[DEV:ARCH] System Architecture`**.
-* **DAP Ground Truth**: For core protocol logic and serialization rules, refer to `docs/architecture/core/dap-core.md`.
-* **Locating Files**: You MUST use `docs/file-map.md` as an index ONLY to locate specific features or source files.
-* **Testing Protocol Enforcement**: Executing test binaries directly (e.g. `npx vitest`) is an ARCHITECTURAL VIOLATION. You MUST use the project's standard `npm run test` commands defined in the table above.
-Before implementing any test, you MUST load the **Skill: `[DEV:TEST] Test Case Writing`**.
+| Tier | File | Scope | Strategy |
+| :--- | :--- | :--- | :--- |
+| **1. Technical Laws** | `GEMINI.md` | Global / Static | Architectural "Constitution" and top-level navigation. |
+| **2. AI Personas** | `AGENTS.md` | Behavioral | Role selection, goals, and behavioral constraints. |
+| **3. Operational Manual** | `.agents/project-context.md` | Functional / Shared | **Source of Truth** for commands, terminology, and DAP specs. |
+| **4. Private Memory** | `MEMORY.md` | Local / Transient | Private notes and machine-specific paths (**NOT committed**). |
 
-</critical-instruction>
+<constraints>
+
+- **Precedence**: GEMINI.md > AGENTS.md > project-context.md.
+- **NEVER** duplicate facts across tiers (e.g., do not put standard build commands in MEMORY.md).
+- **Reloading**: Use `/memory reload` to refresh these sources in an active session.
+
+</constraints>

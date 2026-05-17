@@ -131,7 +131,8 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     launchMode: 'launch',
     executablePath: '',
     sourcePath: '',
-    programArgs: ''
+    programArgs: '',
+    stopOnEntry: true
   };
 
   /** Current execution state (used for non-async pipe scenarios) */

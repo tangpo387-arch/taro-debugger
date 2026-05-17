@@ -1,6 +1,6 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { DebuggerComponent } from './debugger.component';
-import { DapSessionService } from '@taro/dap-core';
+import { DapSessionService, DapMemoryService } from '@taro/dap-core';
 import { DapVariablesService } from '@taro/ui-inspection';
 import { DapFileTreeService } from './dap-file-tree.service';
 import { DapLogService } from '@taro/ui-console';
@@ -62,7 +62,8 @@ describe('Frame Switch Integration', () => {
         { provide: DapVariablesService, useValue: mockVariablesService },
         { provide: DapFileTreeService, useValue: mockFileTreeService },
         { provide: DapLogService, useValue: { consoleLog: vi.fn(), appendDapLog: vi.fn() } },
-        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe' }) } },
+        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe', stopOnEntry: true }) } },
+        { provide: DapMemoryService, useValue: { read: vi.fn(), write: vi.fn() } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
         { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn() } },

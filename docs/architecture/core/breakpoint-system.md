@@ -42,7 +42,22 @@ DAP's `setBreakpoints` expects the latest state. To prevent race conditions or o
 
 ---
 
-## 5. Performance Verification (AC)
+## 5. Function Breakpoints (WI-123)
+
+While Source Breakpoints are tied to file/line pairs, the system also supports symbolic **Function Breakpoints**:
+
+### 5.1 System-Managed Stops (Stop on Entry)
+To ensure broad compatibility with adapters like `lldb-dap` and `gdb`, the system uses function breakpoints for "Stop on Entry" logic:
+- **Automatic Injection**: During the session handshake, a function breakpoint for `main` is injected if `stopOnEntry` is enabled in the configuration.
+- **Protocol Distinction**: These use the `setFunctionBreakpoints` request, keeping them logically separate from user-initiated source breakpoints.
+- **Reporting**: These are identified as "System" breakpoints and reported with specialized UI stop reasons (e.g., "Paused at entry").
+
+### 5.2 User-Defined Function Breakpoints (Future)
+Future support for user-defined function breakpoints will leverage the same `setFunctionBreakpoints` logic, merging system-managed symbols with user-requested ones.
+
+---
+
+## 6. Performance Verification (AC)
 
 - **Debounce**: 5 clicks in 100ms on the same file = 1 protocol request.
 - **Parallelism**: A slow response from `file_a.cpp` must not block a request for `file_b.cpp`.

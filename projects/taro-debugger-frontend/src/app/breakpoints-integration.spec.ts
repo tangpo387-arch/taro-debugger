@@ -1,6 +1,6 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { DebuggerComponent } from './debugger.component';
-import { DapSessionService, VerifiedBreakpoint } from '@taro/dap-core';
+import { DapSessionService, VerifiedBreakpoint, DapMemoryService } from '@taro/dap-core';
 import { BehaviorSubject, of, EMPTY, Subject } from 'rxjs';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ChangeDetectorRef, Injector, DestroyRef } from '@angular/core';
@@ -52,9 +52,10 @@ describe('Breakpoint Integration', () => {
       providers: [
         DebuggerComponent,
         { provide: DapSessionService, useValue: mockDapSession },
-        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: '/path/to/exe' }) } },
+        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: '/path/to/exe', stopOnEntry: true }) } },
         { provide: DapVariablesService, useValue: { fetchScopes: vi.fn().mockResolvedValue(undefined) } },
         { provide: DapLogService, useValue: mockLogService },
+        { provide: DapMemoryService, useValue: { read: vi.fn(), write: vi.fn() } },
         { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: MatSnackBar, useValue: { open: vi.fn() } },
         { provide: MatDialog, useValue: { open: vi.fn() } },

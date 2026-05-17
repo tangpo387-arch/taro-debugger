@@ -24,6 +24,9 @@ export interface DapConfig {
 
   /** Command-line arguments passed to the debuggee (optional) */
   programArgs: string;
+
+  /** Whether the debugger should automatically stop at the program entry point (main) */
+  stopOnEntry: boolean;
 }
 
 /**
@@ -44,7 +47,8 @@ export class DapConfigService {
     launchMode: 'launch',
     executablePath: '',
     sourcePath: '',
-    programArgs: ''
+    programArgs: '',
+    stopOnEntry: true
   };
 
   constructor() {

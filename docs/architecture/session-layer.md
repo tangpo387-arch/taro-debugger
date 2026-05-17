@@ -132,7 +132,15 @@ Transport instances are **lazily created** via `TransportFactoryService` during 
 
 The Session layer maintains a global map of verified breakpoints (`breakpointsMap`) which serves as the Single Source of Truth for the entire application.
 
-### 6.1 Per-File Serialization (R-CS4)
+### 6.1 System Breakpoints (WI-123)
+
+To facilitate standardized "Stop on Entry" behavior, the Session layer manages **System Breakpoints**:
+- **Mechanism**: Symbolic breakpoints set via `setFunctionBreakpoints` (e.g., for `main`).
+- **Isolation**: Verified IDs for these breakpoints are stored in a private `systemBreakpointIds` set.
+- **Stop Reasoning**: When execution stops at a system breakpoint, the Session layer overrides the generic stop reason with a specific description (e.g., "Paused at entry (main)").
+- **UI Filtering**: These breakpoints are intentionally excluded from the user-facing `breakpointsMap` to prevent cluttering the UI with infrastructure-level stops.
+
+### 6.2 Per-File Serialization (R-CS4)
 
 To prevent race conditions when the user rapidly toggles breakpoints, the Session implements **last-write-wins serialization** per file:
 - If a `setBreakpoints` request is in-flight for `file_A.c`, subsequent requests for the same file are queued.
@@ -193,6 +201,7 @@ When the user switches between call stack frames, the system enforces a **"Lates
 | `nextInstruction()` | `Promise<DapResponse>` | Instruction-level step over. |
 | `setBreakpoints(p, l)` | `Promise<VerifiedBreakpoint[]>` | Sync breakpoints with serialization logic. |
 | `toggleBreakpointEnabled()` | `Promise<void>` | Toggle local state and re-sync with adapter. |
+| `setFunctionBreakpoints(b)` | `Promise<any[]>` | Sync symbolic breakpoints with the adapter. |
 | `setCurrentThread(id)` | `void` | Set active thread and trigger UI context refresh. |
 | `source(args)` | `Promise<DapResponse>` | Fetch source content (semantic wrapper). |
 | `loadedSources()` | `Promise<DapResponse>` | Fetch all loaded sources (semantic wrapper). |
