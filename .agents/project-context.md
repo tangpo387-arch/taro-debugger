@@ -42,6 +42,8 @@ This document is purely an index and terminology outline. You are STRICTLY FORBI
 | :--- | :--- |
 | **Execution State** | The session lifecycle (Inactive, Launching, Running, Paused) managed by `DapSessionService`. |
 | **Standalone Unit** | The mandatory Angular component pattern (Angular 21+); strictly forbidden from using `NgModule`. |
+| **Review Package** | A structured handoff doc (`docs/reviews/WI-<ID>.review-package.md`) required before QC review. |
+| **Complexity Gate** | A criteria-based check (Load Skill: `[PROJ:FLOW]`) for non-obvious or large architectural changes. |
 
 ## 3. Agent Navigation
 
@@ -112,6 +114,7 @@ This document is purely an index and terminology outline. You are STRICTLY FORBI
 <critical-instruction>
 
 * **Architectural Guidance**: You are STRICTLY FORBIDDEN from pre-reading `docs/architecture.md` or `docs/project/system-specification.md`. For architectural, layout, or component boundary questions, you MUST load **Skill: `[DEV:ARCH] System Architecture`**.
+* **DAP Ground Truth**: For core protocol logic and serialization rules, refer to `docs/architecture/core/dap-core.md`.
 * **Locating Files**: You MUST use `docs/file-map.md` as an index ONLY to locate specific features or source files.
 * **Testing Protocol Enforcement**: Executing test binaries directly (e.g. `npx vitest`) is an ARCHITECTURAL VIOLATION. You MUST use the project's standard `npm run test` commands defined in the table above.
 Before implementing any test, you MUST load the **Skill: `[DEV:TEST] Test Case Writing`**.

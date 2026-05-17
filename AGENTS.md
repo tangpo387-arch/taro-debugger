@@ -41,7 +41,8 @@ audience: AI model performing role selection for each user request
 
 <constraints>
 
-- You MUST NOT deviate from approved architecture.
+- You MUST verify all technical commands and project-specific constraints against `.agents/project-context.md` before execution.
+- You MUST NOT deviate from approved architecture or the DAP specification defined in `docs/architecture/core/dap-core.md`.
 - You MUST NOT assume DAP behavior not listed in the context sources.
 - STRICTLY FORBIDDEN from requesting a QCR review without following this EXACT sequence:
   1. FIRST: You MUST successfully generate and save the `docs/reviews/WI-<ID>.review-package.md` file (Load Skill: `[PROJ:PROT] Review Package`).
