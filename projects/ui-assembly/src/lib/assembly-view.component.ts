@@ -11,7 +11,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { input, effect, signal } from '@angular/core';
 
 import { DapAssemblyCacheService, DapDisassembledInstruction, DapSessionService } from '@taro/dap-core';
-import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent, CppSignaturePipe, JumpToAddressDialogComponent } from '@taro/ui-shared';
+import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent, CppSignaturePipe, JumpToAddressDialogComponent, JumpToAddressData } from '@taro/ui-shared';
 
 @Component({
   selector: 'app-assembly-view',
@@ -216,7 +216,7 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
   }
 
   public openJumpToAddressDialog(): void {
-    const dialogRef = this.dialog.open(JumpToAddressDialogComponent, {
+    const dialogRef = this.dialog.open<JumpToAddressDialogComponent, JumpToAddressData, bigint>(JumpToAddressDialogComponent, {
       width: '350px',
       data: {
         title: 'Jump to Address',
@@ -226,12 +226,11 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
     });
 
     dialogRef.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
-      if (result) {
-        const addr = BigInt(result);
+      if (result !== undefined) {
         if (this.DEBUG_SCROLL && isDevMode()) {
-          console.log(`[openJumpToAddressDialog] Updating viewAnchor to ${addr.toString(16)}`);
+          console.log(`[openJumpToAddressDialog] Updating viewAnchor to ${result.toString(16)}`);
         }
-        this.viewAnchor.set(addr);
+        this.viewAnchor.set(result);
       }
     });
   }

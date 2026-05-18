@@ -1,0 +1,20 @@
+<h2 mat-dialog-title>{{ data.title || 'Jump to Address' }}</h2>
+<mat-dialog-content>
+  <p>{{ data.description || 'Enter a target memory address, symbol, or reference.' }}</p>
+  <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+    <mat-label>{{ data.placeholder || 'Address / Reference' }}</mat-label>
+    <input matInput [formControl]="addressControl" 
+           [errorStateMatcher]="errorMatcher"
+           [placeholder]="data.placeholder || 'e.g. 0x7fffffffdc00'" 
+           (keyup.enter)="onJump()" 
+           autofocus>
+    <mat-error *ngIf="addressControl.hasError('required')">Address is required</mat-error>
+    <mat-error *ngIf="addressControl.hasError('invalidAddress')" style="white-space: normal; padding-top: 4px;">
+      Invalid address format (hex or decimal required)
+    </mat-error>
+  </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-flat-button color="primary" [disabled]="addressControl.invalid" (click)="onJump()">Jump</button>
+</mat-dialog-actions>

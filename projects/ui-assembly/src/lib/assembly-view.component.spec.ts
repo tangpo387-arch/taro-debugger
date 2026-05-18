@@ -22,7 +22,7 @@ describe('AssemblyViewComponent', () => {
 
     mockDialog = {
       open: vi.fn().mockReturnValue({
-        afterClosed: () => of('0x401234')
+        afterClosed: () => of(0x401234n)
       })
     };
 
@@ -153,18 +153,18 @@ describe('AssemblyViewComponent', () => {
     it('should sync currentPc to viewAnchor when currentPc updates', () => {
       fixture.componentRef.setInput('currentPc', BigInt('0x2000'));
       fixture.detectChanges();
-      
+
       expect(component.viewAnchor()).toBe(BigInt('0x2000'));
     });
 
     it('should verify Jump to Address does not reset to PC on tab switch', () => {
       fixture.componentRef.setInput('currentPc', BigInt('0x1000'));
       fixture.detectChanges();
-      
+
       // User jumps to 0x401234
       component.openJumpToAddressDialog();
       expect(component.viewAnchor()).toBe(BigInt('0x401234'));
-      
+
       // We verify that viewAnchor remains at the jumped address,
       // representing the SSOT for the ResizeObserver's becameVisible logic.
       expect(component.viewAnchor()).not.toBe(BigInt('0x1000'));
@@ -173,11 +173,11 @@ describe('AssemblyViewComponent', () => {
 
   it('should verify opcode and mnemonic elements have title attributes for tooltips', () => {
     const fakeInstructions: DapDisassembledInstruction[] = [
-      { 
-        address: BigInt('0x1000'), 
-        instruction: 'mov eax, [ebp-0x4]', 
-        instructionBytes: '8b 45 fc', 
-        instructionByteLength: 3 
+      {
+        address: 0x1000n,
+        instruction: 'mov eax, [ebp-0x4]',
+        instructionBytes: '8b 45 fc',
+        instructionByteLength: 3
       }
     ];
 
@@ -208,7 +208,7 @@ describe('AssemblyViewComponent', () => {
 
     const symbolName = header?.querySelector('.symbol-name') as HTMLElement;
     expect(symbolName).toBeTruthy();
-    
+
     // Simplified version should contain placeholders
     const text = symbolName.textContent?.trim() || '';
     expect(text).toContain('<...>');

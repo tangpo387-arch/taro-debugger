@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { JumpToAddressDialogComponent } from '@taro/ui-shared';
+import { JumpToAddressDialogComponent, JumpToAddressData } from '@taro/ui-shared';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 export interface MemoryRow {
@@ -160,7 +160,7 @@ export class MemoryViewComponent implements OnChanges, AfterViewInit, OnDestroy 
    * Opens the Jump to Address dialog.
    */
   public openJumpDialog(): void {
-    const dialogRef = this.dialog.open(JumpToAddressDialogComponent, {
+    const dialogRef = this.dialog.open<JumpToAddressDialogComponent, JumpToAddressData, bigint>(JumpToAddressDialogComponent, {
       width: '350px',
       data: {
         title: 'Jump to Address',
@@ -170,13 +170,8 @@ export class MemoryViewComponent implements OnChanges, AfterViewInit, OnDestroy 
     });
 
     dialogRef.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
-      if (result) {
-        try {
-          const address = BigInt(result);
-          this.jumpToAddress.emit(address);
-        } catch (e) {
-          console.error('Failed to parse address from dialog:', result);
-        }
+      if (result !== undefined) {
+        this.jumpToAddress.emit(result);
       }
     });
   }
