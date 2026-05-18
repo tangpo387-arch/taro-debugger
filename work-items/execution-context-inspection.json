@@ -435,6 +435,32 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-01"
       }
+    },
+    {
+      "id": "WI-124",
+      "title": "Refine Variables Tree UX: Hover-to-Reveal Memory Inspection",
+      "featureGroup": "Execution Context Inspection",
+      "metadata": {
+        "status": "accepted",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-56"
+        ]
+      },
+      "description": "Refactor the variables panel to improve visual density and eliminate disruptiveness. Replaces the click-to-open context menu on variable rows with a clean hover-to-reveal inline 'Inspect Memory' shortcut button. Normal clicks will only expand/collapse tree nodes or select the variable.",
+      "details": [
+        "Remove [matMenuTriggerFor] click trigger from variable row container in HTML",
+        "Add conditional inline icon button for 'Inspect Memory' visible only when row is hovered",
+        "Implement hover fade-in style transitions for row action buttons",
+        "Ensure normal left-clicks only expand/collapse nodes or select rows without opening menus",
+        "[Test] Update variables.component.spec.ts unit tests to verify new interaction patterns"
+      ],
+      "timeline": {
+        "created": "2026-05-17",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-18"
+      }
     }
   ]
 }

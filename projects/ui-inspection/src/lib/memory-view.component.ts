@@ -42,8 +42,8 @@ export class MemoryViewComponent implements OnChanges, AfterViewInit, OnDestroy 
   /** The raw memory bytes to display. */
   @Input() public data: Uint8Array = new Uint8Array(0);
 
-  /** The starting hex address string (e.g. "0x00007FFFFFFFDC00"). */
-  @Input() public baseAddress: string = '0x0';
+  /** The starting hex address (e.g. 0x00007FFFFFFFDC00n). */
+  @Input() public baseAddress: bigint = 0n;
 
   /** Optional range to highlight for object layout visualization. */
   @Input() public highlightedRange?: { start: number; length: number };
@@ -52,7 +52,7 @@ export class MemoryViewComponent implements OnChanges, AfterViewInit, OnDestroy 
   @Input() public isStopped: boolean = false;
 
   /** Emitted when the user requests a jump to a new address. */
-  @Output() public readonly jumpToAddress = new EventEmitter<string>();
+  @Output() public readonly jumpToAddress = new EventEmitter<bigint>();
 
   public rows: MemoryRow[] = [];
   public readonly BYTES_PER_ROW = 16;
@@ -110,7 +110,7 @@ export class MemoryViewComponent implements OnChanges, AfterViewInit, OnDestroy 
     }
 
     const rows: MemoryRow[] = [];
-    const baseAddr = BigInt(this.baseAddress);
+    const baseAddr = this.baseAddress;
 
     for (let i = 0; i < this.data.length; i += this.BYTES_PER_ROW) {
       const rowBytes = this.data.slice(i, i + this.BYTES_PER_ROW);
@@ -171,7 +171,12 @@ export class MemoryViewComponent implements OnChanges, AfterViewInit, OnDestroy 
 
     dialogRef.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
       if (result) {
-        this.jumpToAddress.emit(result);
+        try {
+          const address = BigInt(result);
+          this.jumpToAddress.emit(address);
+        } catch (e) {
+          console.error('Failed to parse address from dialog:', result);
+        }
       }
     });
   }

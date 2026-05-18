@@ -57,7 +57,7 @@ describe('MemoryViewComponent', () => {
 
     it('should calculate addresses correctly using BigInt', () => {
       // Arrange
-      const baseAddress = '0x00007FFFFFFFDC00';
+      const baseAddress = 0x00007FFFFFFFDC00n;
       const data = new Uint8Array(32).fill(0);
       component.baseAddress = baseAddress;
       component.data = data;

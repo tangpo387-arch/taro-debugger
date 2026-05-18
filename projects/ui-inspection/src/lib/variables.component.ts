@@ -8,10 +8,10 @@ import { Subscription } from 'rxjs';
 
 import { DapVariablesService, DapScope } from './dap-variables.service';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent } from '@taro/ui-shared';
+import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent, UiFatalException } from '@taro/ui-shared';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
-import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Output, EventEmitter } from '@angular/core';
 import { DapSessionService } from '@taro/dap-core';
 
@@ -52,7 +52,7 @@ const INDENT_PX = 20;
     CommonModule,
     MatIconModule,
     MatButtonModule,
-    MatMenuModule,
+    MatTooltipModule,
     ScrollingModule,
     TaroEmptyStateComponent,
   ],
@@ -72,7 +72,7 @@ export class VariablesComponent implements OnInit, OnDestroy {
   );
 
   /** Emitted when the user selects 'Inspect Memory' from the context menu. */
-  @Output() public readonly inspectMemoryRequest = new EventEmitter<string>();
+  @Output() public readonly inspectMemoryRequest = new EventEmitter<bigint>();
 
   /** Responsive row height for cdk-virtual-scroll itemSize */
   public rowHeight = toSignal(
@@ -166,7 +166,12 @@ export class VariablesComponent implements OnInit, OnDestroy {
   /** Request to inspect memory at a specific address or reference. */
   public onInspectMemory(memoryReference: string): void {
     if (memoryReference) {
-      this.inspectMemoryRequest.emit(memoryReference);
+      try {
+        const address = BigInt(memoryReference);
+        this.inspectMemoryRequest.emit(address);
+      } catch (e) {
+        throw new UiFatalException(`Failed to parse memoryReference to bigint: ${memoryReference}`);
+      }
     }
   }
 

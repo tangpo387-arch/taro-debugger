@@ -37,7 +37,7 @@ describe('DapMemoryService', () => {
       });
 
       // Act
-      const result = await service.read('0x100', 0, 5);
+      const result = await service.read(0x100n, 0, 5);
 
       // Assert
       expect(result).toEqual(new Uint8Array([72, 101, 108, 108, 111]));
@@ -56,7 +56,7 @@ describe('DapMemoryService', () => {
       });
 
       // Act
-      const result = await service.read('0x100', 0, 5);
+      const result = await service.read(0x100n, 0, 5);
 
       // Assert
       expect(result).toEqual(new Uint8Array(0));
@@ -70,7 +70,7 @@ describe('DapMemoryService', () => {
       });
 
       // Act
-      const result = await service.read('0x100', 0, 5);
+      const result = await service.read(0x100n, 0, 5);
 
       // Assert
       expect(result).toEqual(new Uint8Array(0));

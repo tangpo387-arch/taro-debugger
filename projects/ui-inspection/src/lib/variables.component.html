@@ -4,8 +4,7 @@
     <div *cdkVirtualFor="let flatNode of flatNodes; trackBy: trackByNode"
          class="variable-row"
          [style.--level-padding.px]="flatNode.level * INDENT_PX"
-         [matMenuTriggerFor]="varMenu"
-         [matMenuTriggerData]="{ node: flatNode.source }">
+         (click)="flatNode.expandable && toggleNode(flatNode)">
 
       <!-- Expand/Collapse toggle (only for expandable nodes) -->
       @if (flatNode.expandable) {
@@ -37,17 +36,16 @@
       @if (flatNode.source.value) {
         <span class="var-value"> = {{ flatNode.source.value }}</span>
       }
-    </div>
 
-    <!-- Context Menu for Variables -->
-    <mat-menu #varMenu="matMenu">
-      <ng-template matMenuContent let-node="node">
-        <button mat-menu-item (click)="onInspectMemory(node.memoryReference)" [disabled]="!node.memoryReference">
+      <!-- Hover action shortcut for memory-inspectable pointers/variables -->
+      @if (flatNode.source.memoryReference) {
+        <button mat-icon-button class="row-action-btn"
+                (click)="$event.stopPropagation(); onInspectMemory(flatNode.source.memoryReference)"
+                matTooltip="Inspect Memory">
           <mat-icon>memory</mat-icon>
-          <span>Inspect Memory</span>
         </button>
-      </ng-template>
-    </mat-menu>
+      }
+    </div>
   </cdk-virtual-scroll-viewport>
 } @else {
   @if (!isConnected()) {

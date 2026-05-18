@@ -189,9 +189,9 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public leftVisible: boolean = true;
   /** Current active tab in the main content area (0: Source, 1: Disassembly) */
   public activeTabIndex: number = 0;
-  
+
   // ── Memory State ──────────────────────────────────────────────────────────
-  public activeMemoryAddress: string | null = null;
+  public activeMemoryAddress: bigint | null = null;
   public activeMemoryData: Uint8Array = new Uint8Array(0);
   public isMemoryLoading: boolean = false;
 
@@ -684,7 +684,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   /**
    * Handles memory inspection request from Variables component or manual input.
    */
-  public async onInspectMemory(addressOrRef: string): Promise<void> {
+  public async onInspectMemory(addressOrRef: bigint): Promise<void> {
     if (!addressOrRef) return;
 
     this.activeMemoryAddress = addressOrRef;

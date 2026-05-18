@@ -2,7 +2,7 @@
 title: Project Roadmap & Dependency Map
 scope: milestones, dependencies, architecture-tracking
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer, Human Engineer]
-last_updated: 2026-05-17
+last_updated: 2026-05-18
 ---
 
 # Project Roadmap & Dependency Map
@@ -71,6 +71,7 @@ graph LR
     WI_100["WI-100 Improve No-Source Frame UX"]
     WI_102["WI-102 Refine Thread Interaction & Auto-Expansion"]
     WI_103["WI-103 Refactor: Centralize Breakpoint State Management"]
+    WI_124["WI-124 Refine Variables Tree UX: Hover-to-Reveal Memory Inspection"]
     WI_15["WI-15 File Tree Service Abstraction (`FileTreeService`)"]
     WI_16["WI-16 Left Sidenav File Tree UI"]
     WI_33["WI-33 Implement Source Content LRU Cache"]
@@ -186,6 +187,7 @@ graph LR
     WI_94 --> WI_95
     WI_93 --> WI_96
     WI_95 --> WI_96
+    WI_56 --> WI_124
     WI_15 --> WI_16
     WI_15 --> WI_33
     WI_33 --> WI_34
@@ -288,6 +290,7 @@ graph LR
     style WI_100 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_102 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_103 fill:#f472b6,stroke:#000,stroke-width:2.5px
+    style WI_124 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_15 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_16 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_33 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2

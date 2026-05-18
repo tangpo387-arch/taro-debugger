@@ -5,8 +5,8 @@
   <mat-toolbar class="top-toolbar">
     <div class="toolbar-section toolbar-left">
       @if (!isElectron) {
-        <span class="brand-title">Taro</span>
-        <div class="divider-vertical"></div>
+      <span class="brand-title">Taro</span>
+      <div class="divider-vertical"></div>
       }
       <!-- 
         Show current loaded executable path from configuration.
@@ -28,22 +28,22 @@
 
     <div class="toolbar-section toolbar-right">
       @if (!isElectron) {
-        <button mat-icon-button (click)="toggleLeftSidenav()" [title]="(leftVisible ? 'Hide' : 'Show') + ' File Explorer'"
-          [class.active-toggle]="leftVisible">
-          <mat-icon>menu</mat-icon>
-        </button>
-        <button mat-icon-button (click)="toggleRightSidenav()"
-          [title]="(rightVisible ? 'Hide' : 'Show') + ' Inspection Panels'" [class.active-toggle]="rightVisible">
-          <mat-icon>vertical_split</mat-icon>
-        </button>
-        <button mat-icon-button (click)="toggleConsole()" [title]="(consoleVisible ? 'Hide' : 'Show') + ' Console'"
-          [class.active-toggle]="consoleVisible">
-          <mat-icon>terminal</mat-icon>
-        </button>
-        <div class="divider-vertical"></div>
-        <button mat-icon-button (click)="goBack()" title="End Session (Return to Setup)">
-          <mat-icon>logout</mat-icon>
-        </button>
+      <button mat-icon-button (click)="toggleLeftSidenav()" [title]="(leftVisible ? 'Hide' : 'Show') + ' File Explorer'"
+        [class.active-toggle]="leftVisible">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <button mat-icon-button (click)="toggleRightSidenav()"
+        [title]="(rightVisible ? 'Hide' : 'Show') + ' Inspection Panels'" [class.active-toggle]="rightVisible">
+        <mat-icon>vertical_split</mat-icon>
+      </button>
+      <button mat-icon-button (click)="toggleConsole()" [title]="(consoleVisible ? 'Hide' : 'Show') + ' Console'"
+        [class.active-toggle]="consoleVisible">
+        <mat-icon>terminal</mat-icon>
+      </button>
+      <div class="divider-vertical"></div>
+      <button mat-icon-button (click)="goBack()" title="End Session (Return to Setup)">
+        <mat-icon>logout</mat-icon>
+      </button>
       }
     </div>
   </mat-toolbar>
@@ -112,28 +112,28 @@
           animationDuration="0ms">
           <mat-tab label="Source">
             @if (!isConnected()) {
-              <taro-empty-state message="No active session" icon="link_off"
-                description="Start a debug session to see source code." [centered]="true" />
+            <taro-empty-state message="No active session" icon="link_off"
+              description="Start a debug session to see source code." [centered]="true" />
             } @else if (activeFilePath) {
-              <app-editor class="monaco-editor-instance" [code]="currentCode" [filename]="activeFilePath"
-                [activeLine]="activeFilePath === activeLineFilePath ? activeLine : null"
-                [revealTrigger]="fileRevealTrigger" />
+            <app-editor class="monaco-editor-instance" [code]="currentCode" [filename]="activeFilePath"
+              [activeLine]="activeFilePath === activeLineFilePath ? activeLine : null"
+              [revealTrigger]="fileRevealTrigger" />
             } @else {
-              @if (activeFrameId !== null) {
-                <taro-empty-state message="Source code not available" icon="source"
-                  description="This frame does not have associated source file information." [centered]="true">
-                  @if (activeInstructionPointer) {
-                    <button mat-flat-button color="primary" (click)="onSwitchToDisassembly()">
-                      <mat-icon>memory</mat-icon>
-                      View Disassembly
-                    </button>
-                  }
-                </taro-empty-state>
-              } @else {
-                <taro-empty-state message="No file selected" icon="source" description="start debugging to see source code."
-                  [centered]="true">
-                </taro-empty-state>
+            @if (activeFrameId !== null) {
+            <taro-empty-state message="Source code not available" icon="source"
+              description="This frame does not have associated source file information." [centered]="true">
+              @if (activeInstructionPointer) {
+              <button mat-flat-button color="primary" (click)="onSwitchToDisassembly()">
+                <mat-icon>memory</mat-icon>
+                View Disassembly
+              </button>
               }
+            </taro-empty-state>
+            } @else {
+            <taro-empty-state message="No file selected" icon="source" description="start debugging to see source code."
+              [centered]="true">
+            </taro-empty-state>
+            }
             }
           </mat-tab>
           <mat-tab label="Disassembly">
@@ -142,29 +142,24 @@
           <mat-tab label="Memory">
             <div class="memory-tab-content">
               @if (!isConnected()) {
-                <taro-empty-state message="No active session" icon="link_off"
-                  description="Start a debug session to inspect memory." [centered]="true" />
+              <taro-empty-state message="No active session" icon="link_off"
+                description="Start a debug session to inspect memory." [centered]="true" />
               } @else if (activeMemoryAddress) {
-                <app-memory-view 
-                  [data]="activeMemoryData" 
-                  [baseAddress]="activeMemoryAddress"
-                  [isStopped]="executionState === 'stopped'"
-                  (jumpToAddress)="onInspectMemory($event)" />
+              <app-memory-view [data]="activeMemoryData" [baseAddress]="activeMemoryAddress"
+                [isStopped]="executionState === 'stopped'" (jumpToAddress)="onInspectMemory($event)" />
               } @else {
-                <div class="memory-empty-state">
-                  <taro-empty-state 
-                    message="No memory selected" 
-                    icon="memory"
-                    description="Right-click a pointer variable to inspect memory, or use the jump button."
-                    [centered]="true">
-                    <button mat-flat-button color="primary" (click)="memoryView.openJumpDialog()" #memoryViewWrapper>
-                      <mat-icon>pin_drop</mat-icon>
-                      Jump to Address
-                    </button>
-                    <!-- Invisible component for dialog access when empty -->
-                    <app-memory-view #memoryView style="display: none;" (jumpToAddress)="onInspectMemory($event)" />
-                  </taro-empty-state>
-                </div>
+              <div class="memory-empty-state">
+                <taro-empty-state message="No memory selected" icon="memory"
+                  description="Right-click a pointer variable to inspect memory, or use the jump button."
+                  [centered]="true">
+                  <button mat-flat-button color="primary" (click)="memoryView.openJumpDialog()" #memoryViewWrapper>
+                    <mat-icon>pin_drop</mat-icon>
+                    Jump to Address
+                  </button>
+                  <!-- Invisible component for dialog access when empty -->
+                  <app-memory-view #memoryView style="display: none;" (jumpToAddress)="onInspectMemory($event)" />
+                </taro-empty-state>
+              </div>
               }
             </div>
           </mat-tab>
@@ -173,11 +168,11 @@
 
       <!-- Bottom Consoles Area — rendered by LogViewerComponent -->
       @if (consoleVisible) {
-        <div class="consoles-container" [style.height.px]="consoleHeight">
-          <!-- Bottom Resize Handle -->
-          <div class="resize-handle resize-handle-bottom" (mousedown)="onResizeStart($event, 'bottom')"></div>
-          <taro-log-viewer></taro-log-viewer>
-        </div>
+      <div class="consoles-container" [style.height.px]="consoleHeight">
+        <!-- Bottom Resize Handle -->
+        <div class="resize-handle resize-handle-bottom" (mousedown)="onResizeStart($event, 'bottom')"></div>
+        <taro-log-viewer></taro-log-viewer>
+      </div>
       }
 
       <!-- Bottom Status Bar -->
@@ -187,9 +182,9 @@
           <span class="indicator" [ngClass]="(connectionStatus$ | async) ? 'online' : 'offline'"></span>
           <span>{{ (connectionStatus$ | async) ? 'Connected' : 'Disconnected' }}</span>
           @if (currentConfig.serverAddress) {
-            <span class="server-address">
-              ({{ currentConfig.serverAddress }})
-            </span>
+          <span class="server-address">
+            ({{ currentConfig.serverAddress }})
+          </span>
           }
         </div>
         <span class="spacer"></span>

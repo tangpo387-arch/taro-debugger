@@ -496,7 +496,7 @@ describe('DebuggerComponent — Memory View Integration (WI-106)', () => {
 
   it('should switch to Memory tab and load data when onInspectMemory is called', async () => {
     // Arrange
-    const address = '0x7fffffff0000';
+    const address = 0x7fffffff0000n;
     component.activeTabIndex = 0;
 
     // Act
@@ -511,9 +511,9 @@ describe('DebuggerComponent — Memory View Integration (WI-106)', () => {
 
   it('should clear memory state when execution transitions out of stopped', () => {
     // Arrange
-    component.activeMemoryAddress = '0x1234';
+    component.activeMemoryAddress = 0x1234n;
     component.activeMemoryData = new Uint8Array([0xAA]);
-    
+
     // Simulating the state change subscription behavior
     const stateSubject = new BehaviorSubject<string>('stopped');
     (component as any).dapSession.executionState$ = stateSubject.asObservable();

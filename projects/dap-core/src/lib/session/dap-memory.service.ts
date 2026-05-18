@@ -13,9 +13,9 @@ export class DapMemoryService {
   /**
    * Reads memory from the debuggee and converts it from Base64 to Uint8Array.
    */
-  public async read(memoryReference: string, offset: number, count: number): Promise<Uint8Array> {
-    const response = await this.dapSession.readMemory({ memoryReference, offset, count });
-    
+  public async read(memoryReference: bigint, offset: number, count: number): Promise<Uint8Array> {
+    const response = await this.dapSession.readMemory({ memoryReference: `0x${memoryReference.toString(16)}`, offset, count });
+
     if (!response.success || !response.body?.data) {
       return new Uint8Array(0);
     }

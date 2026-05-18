@@ -199,7 +199,8 @@ export class DapSessionService {
       columnsStartAt1: true,
       supportsVariableType: true,
       supportsVariablePaging: true,
-      supportsRunInTerminalRequest: false
+      supportsRunInTerminalRequest: false,
+      supportsMemoryReferences: true
     });
     this.capabilities = initResponse.body || {};
 
