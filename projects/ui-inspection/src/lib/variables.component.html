@@ -24,27 +24,34 @@
         <span class="toggle-spacer"></span>
       }
 
-      <!-- Variable name -->
-      <span class="var-name">{{ flatNode.source.name }}</span>
+      <!-- Variable info wrapper -->
+      <div class="var-info">
+        <span class="var-name">{{ flatNode.source.name }}</span>
+        @if (flatNode.source.value) {
+          <span class="var-value"> = {{ flatNode.source.value }}</span>
+        }
+      </div>
 
-      <!-- Type annotation -->
-      @if (flatNode.source.type) {
-        <span class="var-type">: {{ flatNode.source.type }}</span>
-      }
-
-      <!-- Value (skip for scope-level nodes with empty value) -->
-      @if (flatNode.source.value) {
-        <span class="var-value"> = {{ flatNode.source.value }}</span>
-      }
-
-      <!-- Hover action shortcut for memory-inspectable pointers/variables -->
-      @if (flatNode.source.memoryReference) {
-        <button mat-icon-button class="row-action-btn"
-                (click)="$event.stopPropagation(); onInspectMemory(flatNode.source.memoryReference)"
-                matTooltip="Inspect Memory">
-          <mat-icon>memory</mat-icon>
-        </button>
-      }
+      <!-- Row actions: always on the right side -->
+      <div class="row-actions">
+        @if (flatNode.source.type) {
+          <button mat-icon-button class="row-action-btn"
+                  cdkOverlayOrigin #typeOrigin="cdkOverlayOrigin"
+                  (click)="$event.stopPropagation(); onToggleTypeOverlay(flatNode, typeOrigin)"
+                  matTooltip="Show type"
+                  aria-label="Show type">
+            <mat-icon>info_outline</mat-icon>
+          </button>
+        }
+        @if (flatNode.source.memoryReference) {
+          <button mat-icon-button class="row-action-btn"
+                  (click)="$event.stopPropagation(); onInspectMemory(flatNode.source.memoryReference)"
+                  matTooltip="Inspect Memory"
+                  aria-label="Inspect Memory">
+            <mat-icon>memory</mat-icon>
+          </button>
+        }
+      </div>
     </div>
   </cdk-virtual-scroll-viewport>
 } @else {
@@ -60,3 +67,23 @@
     </taro-empty-state>
   }
 }
+
+<!-- Type Info Overlay (click-based, anchored to the info button) -->
+<ng-template cdkConnectedOverlay
+             [cdkConnectedOverlayOrigin]="activeOrigin!"
+             [cdkConnectedOverlayOpen]="!!activeNode"
+             [cdkConnectedOverlayPositions]="overlayPositions"
+             (overlayOutsideClick)="closeTypeOverlay()">
+  <div class="type-overlay">
+    <div class="type-content">
+      @if (isTypeExpanded) {
+        {{ activeNode?.source?.type }}
+      } @else {
+        {{ activeNode?.source?.type | cppSignature }}
+      }
+    </div>
+    <button mat-icon-button class="type-expand-btn" (click)="toggleTypeExpand()" aria-label="Toggle full type">
+      <mat-icon>{{ isTypeExpanded ? 'unfold_less' : 'unfold_more' }}</mat-icon>
+    </button>
+  </div>
+</ng-template>

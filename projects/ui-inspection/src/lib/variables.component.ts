@@ -8,12 +8,13 @@ import { Subscription } from 'rxjs';
 
 import { DapVariablesService, DapScope } from './dap-variables.service';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent, UiFatalException } from '@taro/ui-shared';
+import { LAYOUT_COMPACT_MQ, TaroEmptyStateComponent, UiFatalException, CppSignaturePipe } from '@taro/ui-shared';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Output, EventEmitter } from '@angular/core';
 import { DapSessionService } from '@taro/dap-core';
+import { OverlayModule, CdkOverlayOrigin, ConnectionPositionPair, CdkConnectedOverlay } from '@angular/cdk/overlay';
 
 // ── Data Model ────────────────────────────────────────────────────────
 
@@ -55,6 +56,8 @@ const INDENT_PX = 20;
     MatTooltipModule,
     ScrollingModule,
     TaroEmptyStateComponent,
+    OverlayModule,
+    CppSignaturePipe,
   ],
   templateUrl: './variables.component.html',
   styleUrls: ['./variables.component.scss']
@@ -93,6 +96,27 @@ export class VariablesComponent implements OnInit, OnDestroy {
 
   private scopesSubscription?: Subscription;
 
+  // ── Overlay State ─────────────────────────────────────────────────────
+
+  public activeOrigin: CdkOverlayOrigin | null = null;
+  public activeNode: FlatVariableNode | null = null;
+  public isTypeExpanded = false;
+
+  public overlayPositions = [
+    // 1. Below, expanding left (right-anchored buttons)
+    new ConnectionPositionPair(
+      { originX: 'end', originY: 'bottom' },
+      { overlayX: 'end', overlayY: 'top' },
+      0, 4
+    ),
+    // 2. Above, expanding left
+    new ConnectionPositionPair(
+      { originX: 'end', originY: 'top' },
+      { overlayX: 'end', overlayY: 'bottom' },
+      0, -4
+    )
+  ];
+
   // ── Lifecycle ─────────────────────────────────────────────────────────
 
   public ngOnInit(): void {
@@ -100,7 +124,9 @@ export class VariablesComponent implements OnInit, OnDestroy {
     // SSOT compliance: R_SM1 (DapVariablesService is the source of truth),
     // R_SM5 (service clears scopes automatically when execution leaves 'stopped').
     this.scopesSubscription = this.variablesService.scopes$.subscribe((scopes: DapScope[]) => {
-      this.treeData = scopes.map(scope => ({
+      this.treeData = scopes
+        .filter(scope => !/^(registers?)$/i.test(scope.name))
+        .map(scope => ({
         name: scope.name,
         value: '',
         type: 'Scope',
@@ -124,6 +150,32 @@ export class VariablesComponent implements OnInit, OnDestroy {
   }
 
   // ── Public Template Helpers ───────────────────────────────────────────
+
+  /**
+   * Toggles the type info overlay for a given node.
+   * If the same node's overlay is already open, it closes it (toggle behaviour).
+   */
+  public onToggleTypeOverlay(node: FlatVariableNode, origin: CdkOverlayOrigin): void {
+    if (!node.source.type) return;
+    if (this.activeNode === node) {
+      this.closeTypeOverlay();
+      return;
+    }
+    this.activeOrigin = origin;
+    this.activeNode = node;
+    this.isTypeExpanded = false;
+  }
+
+  /** Closes the type info overlay. */
+  public closeTypeOverlay(): void {
+    this.activeOrigin = null;
+    this.activeNode = null;
+    this.isTypeExpanded = false;
+  }
+
+  public toggleTypeExpand(): void {
+    this.isTypeExpanded = !this.isTypeExpanded;
+  }
 
   /** Toggle expand/collapse of a node. Lazy-loads children on first expand. */
   public async toggleNode(flatNode: FlatVariableNode): Promise<void> {

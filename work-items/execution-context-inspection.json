@@ -461,6 +461,32 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-18"
       }
+    },
+    {
+      "id": "WI-125",
+      "title": "Refine Variables Panel UX: Tooltips, Filtering, and Layout",
+      "featureGroup": "Execution Context Inspection",
+      "metadata": {
+        "status": "accepted",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Show simplified type on hover with CppSignaturePipe, including an expand button for full details, and omit 'Registers' scope.",
+      "details": [
+        "Replace matTooltip with interactive CDK Overlay for type hover",
+        "Apply CppSignaturePipe to simplify the displayed type in the overlay",
+        "Add an expand/collapse toggle button inside the overlay to show full type details",
+        "Filter out 'Registers' scope from the variables tree",
+        "Align 'Inspect Memory' icon strictly to the right side",
+        "[Test] Verify type simplifies via pipe",
+        "[Test] Verify expand toggle reveals full type"
+      ],
+      "timeline": {
+        "created": "2026-05-18",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-18"
+      }
     }
   ]
 }

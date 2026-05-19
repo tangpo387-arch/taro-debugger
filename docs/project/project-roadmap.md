@@ -72,6 +72,7 @@ graph LR
     WI_102["WI-102 Refine Thread Interaction & Auto-Expansion"]
     WI_103["WI-103 Refactor: Centralize Breakpoint State Management"]
     WI_124["WI-124 Refine Variables Tree UX: Hover-to-Reveal Memory Inspection"]
+    WI_125["WI-125 Refine Variables Panel UX: Tooltips, Filtering, and Layout"]
     WI_15["WI-15 File Tree Service Abstraction (`FileTreeService`)"]
     WI_16["WI-16 Left Sidenav File Tree UI"]
     WI_33["WI-33 Implement Source Content LRU Cache"]
@@ -291,6 +292,7 @@ graph LR
     style WI_102 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_103 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_124 fill:#f472b6,stroke:#000,stroke-width:2.5px
+    style WI_125 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_15 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_16 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_33 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2

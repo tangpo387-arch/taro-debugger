@@ -2,7 +2,7 @@
 title: Source File Responsibility Map
 scope: file-map, navigation, ownership, layers
 audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-05-14
+last_updated: 2026-05-19
 related:
   - docs/architecture.md
   - .agents/project-context.md
@@ -41,7 +41,7 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | `projects/ui-editor/src/lib/editor.component.ts` | Monaco Editor wrapper: source display, line highlight, breakpoint glyph margin | `openFile()`, `highlightLine()`, `clearHighlight()` | `editor.component.html`, `editor.component.scss` |
 | `projects/ui-assembly/src/lib/assembly-view.component.ts` | Disassembly panel: renders DAP instruction list via virtual scroll, sticky function header, GDB-style offset column, and dual-state Instruction Pointer (PC) vs Viewport (viewAnchor) anchoring | `@Input() currentPc`, `viewAnchor`, `relocateWindow()`, `scrollToAddress()` | `assembly-view.component.html`, `assembly-view.component.scss` |
 | `projects/ui-console/src/lib/log-viewer/log-viewer.ts` | Bottom panel log viewer: console/program streams, auto-scroll, expression evaluation | subscribes `consoleLogs$`, `programLogs$`; `evaluateCommand()` | `log-viewer.html`, `log-viewer.scss` |
-| `projects/ui-inspection/src/lib/variables.component.ts` | Right sidebar variables view: tree display for DAP scopes and local variables | subscribes `scopes$`; `toggleNode()` | `variables.component.html`, `variables.component.scss` |
+| `projects/ui-inspection/src/lib/variables.component.ts` | Right sidebar variables view: virtual-scroll tree for DAP scopes and variables; scope filtering (`Registers` excluded); click-to-reveal type-info overlay (`CdkConnectedOverlay`) with `CppSignaturePipe` simplification; sticky row-actions for type-info and memory inspection | `@Output() inspectMemoryRequest`, `toggleNode()`, `onToggleTypeOverlay()`, `onInspectMemory()` | `variables.component.html`, `variables.component.scss` |
 | `projects/ui-inspection/src/lib/thread-call-stack.component.ts` | **Unified Context Panel**: Displays process, threads, and call stacks in a flat 3-level tree; manages active thread/frame selection | `@Input() activeFrameId`, `@Output() frameSelected` | `thread-call-stack.component.html`, `thread-call-stack.component.scss` |
 | `projects/ui-inspection/src/lib/cpp-signature.pipe.ts` | Formats extra-long C++ function signatures by parsing and safely collapsing templates/parameters into shorthand | `transform()` | `cpp-signature.pipe.spec.ts` |
 | `projects/ui-inspection/src/lib/breakpoints.component.ts` | Right sidebar breakpoints view: displays and manages user breakpoints | subscribes `breakpoints$` | `breakpoints.component.html`, `breakpoints.component.scss` |

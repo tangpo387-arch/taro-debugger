@@ -79,7 +79,7 @@ describe('VariablesComponent', () => {
     });
   });
 
-  describe('Hover-to-Reveal Inline Actions', () => {
+  describe('Row Action Buttons', () => {
     it('should render the memory icon button ONLY for rows with a valid memoryReference', async () => {
       // Arrange
       const scopes: DapScope[] = [
@@ -102,15 +102,15 @@ describe('VariablesComponent', () => {
       // Assert tree is expanded
       expect(component.flatNodes.length).toBe(3); // Locals scope (0), i (1), ptr (2)
 
-      // Query action buttons
+      // Query action buttons – use aria-label to identify the memory button specifically
       const rows = fixture.debugElement.queryAll(By.css('.variable-row'));
-      const row1Btn = rows[1].query(By.css('.row-action-btn')); // row for 'i' (no memoryReference)
-      const row2Btn = rows[2].query(By.css('.row-action-btn')); // row for 'ptr' (has memoryReference)
+      const row1MemBtn = rows[1].query(By.css('[aria-label="Inspect Memory"]')); // 'i' has no memRef
+      const row2MemBtn = rows[2].query(By.css('[aria-label="Inspect Memory"]')); // 'ptr' has memRef
 
       // Assert presence / absence
-      expect(row1Btn).toBeNull();
-      expect(row2Btn).not.toBeNull();
-      expect(row2Btn.nativeElement.innerHTML).toContain('memory');
+      expect(row1MemBtn).toBeNull();
+      expect(row2MemBtn).not.toBeNull();
+      expect(row2MemBtn.nativeElement.innerHTML).toContain('memory');
     });
 
     it('should emit inspectMemoryRequest when the memory icon button is clicked', async () => {
@@ -132,13 +132,13 @@ describe('VariablesComponent', () => {
 
       const emitSpy = vi.spyOn(component.inspectMemoryRequest, 'emit');
 
-      // Query action button on the second row (ptr variable)
+      // Query the memory action button on the second row (ptr variable)
       const rows = fixture.debugElement.queryAll(By.css('.variable-row'));
-      const actionBtn = rows[1].query(By.css('.row-action-btn'));
-      expect(actionBtn).not.toBeNull();
+      const memBtn = rows[1].query(By.css('[aria-label="Inspect Memory"]'));
+      expect(memBtn).not.toBeNull();
 
       // Act
-      actionBtn.nativeElement.click();
+      memBtn.nativeElement.click();
       fixture.detectChanges();
 
       // Assert
@@ -147,6 +147,75 @@ describe('VariablesComponent', () => {
 
     it('should throw a UiFatalException when the memoryReference is invalid', () => {
       expect(() => component.onInspectMemory('invalid-ref')).toThrow(UiFatalException);
+    });
+  });
+
+  describe('Scope Filtering', () => {
+    it('should filter out the "Registers" scope', () => {
+      const scopes: DapScope[] = [
+        { name: 'Locals', variablesReference: 100, expensive: false },
+        { name: 'Registers', variablesReference: 101, expensive: true },
+        { name: 'register', variablesReference: 102, expensive: true },
+        { name: 'Globals', variablesReference: 103, expensive: false }
+      ];
+      mockVariablesService.scopes$.next(scopes);
+      fixture.detectChanges();
+      
+      const flatNodeNames = component.flatNodes.map(n => n.source.name);
+      expect(flatNodeNames).toContain('Locals');
+      expect(flatNodeNames).toContain('Globals');
+      expect(flatNodeNames).not.toContain('Registers');
+      expect(flatNodeNames).not.toContain('register');
+    });
+  });
+
+  describe('Interactive Type Overlay', () => {
+    it('should not show overlay if variable has no type', () => {
+      const node = { source: { name: 'test', type: undefined }, level: 0, expandable: false } as any;
+      const origin = {} as any;
+      component.onToggleTypeOverlay(node, origin);
+      // Node has no type, so activeNode should not be set
+      expect(component.activeNode).toBeNull();
+    });
+
+    it('should set active node and origin when toggling type overlay open', () => {
+      const node = { source: { name: 'test', type: 'int' }, level: 0, expandable: false } as any;
+      const origin = {} as any;
+      component.isTypeExpanded = true;
+      component.onToggleTypeOverlay(node, origin);
+      expect(component.activeNode).toBe(node);
+      expect(component.activeOrigin).toBe(origin);
+      expect(component.isTypeExpanded).toBe(false);
+    });
+
+    it('should close the overlay when toggling the same node again', () => {
+      const node = { source: { name: 'test', type: 'int' }, level: 0, expandable: false } as any;
+      const origin = {} as any;
+      component.onToggleTypeOverlay(node, origin);
+      expect(component.activeNode).toBe(node);
+      // Toggle same node again - should close
+      component.onToggleTypeOverlay(node, origin);
+      expect(component.activeNode).toBeNull();
+      expect(component.activeOrigin).toBeNull();
+    });
+
+    it('should reset isTypeExpanded when the overlay is closed', () => {
+      const node = { source: { name: 'test', type: 'int' }, level: 0, expandable: false } as any;
+      const origin = {} as any;
+      component.onToggleTypeOverlay(node, origin);
+      component.isTypeExpanded = true;
+      // Close via outside-click path
+      component.closeTypeOverlay();
+      expect(component.activeNode).toBeNull();
+      expect(component.isTypeExpanded).toBe(false);
+    });
+
+    it('should toggle type expansion state', () => {
+      component.isTypeExpanded = false;
+      component.toggleTypeExpand();
+      expect(component.isTypeExpanded).toBe(true);
+      component.toggleTypeExpand();
+      expect(component.isTypeExpanded).toBe(false);
     });
   });
 });

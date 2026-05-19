@@ -24,8 +24,6 @@
   font-family: var(--font-mono);
   font-size: var(--text-base);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   cursor: default;
 
   // Combine base sidebar padding (§9.2) with dynamic tree indentation
@@ -73,16 +71,18 @@
 
   // ── Variable Segments ───────────────────────────────────────────────
 
+  .var-info {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+  }
+
   .var-name {
     color: var(--mat-sys-on-surface); /* Name: primary foreground for readability (§9.5) */
     font-weight: var(--weight-medium);
     flex-shrink: 0;
-  }
-
-  .var-type {
-    color: var(--mat-sys-tertiary);
-    margin: 0 2px;
-    flex-shrink: 0;
+    // Allow name to shrink if needed, but primarily let it push if there's horizontal scroll
   }
 
   .var-value {
@@ -95,10 +95,73 @@
     min-width: 0;
   }
 
-  // Hover Action Button Container
-  .row-action-btn {
+  // Row action buttons container
+  .row-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
     opacity: 0;
     transition: opacity 0.15s ease-in-out;
+    flex-shrink: 0;
+    
+    // Ensure buttons are always visible on the right side
+    position: sticky;
+    right: 4px;
+    background-color: var(--mat-sys-surface-container-highest);
+    z-index: 2;
+  }
+
+  .row-action-btn {
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    padding: 0;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      line-height: 16px;
+    }
+  }
+
+  // Reveal inline actions on hover
+  &:hover {
+    .row-actions {
+      opacity: 1;
+    }
+  }
+}
+
+// ── Empty State ───────────────────────────────────────────────────────
+
+
+// ── Type Overlay ──────────────────────────────────────────────────────
+
+.type-overlay {
+  background-color: var(--mat-sys-surface-container-highest);
+  color: var(--mat-sys-on-surface);
+  padding: 8px 12px;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  display: flex;
+  align-items: flex-start;
+  width: max-content;
+  min-width: 150px;
+  max-width: 400px;
+  border: 1px solid var(--mat-sys-outline-variant);
+
+  .type-content {
+    flex: 1;
+    word-break: break-all;
+    white-space: pre-wrap;
+    padding-top: 4px; // Align text with icon button if needed
+  }
+
+  .type-expand-btn {
     width: 24px;
     height: 24px;
     line-height: 24px;
@@ -113,17 +176,7 @@
       line-height: 16px;
     }
   }
-
-  // Reveal inline actions on hover
-  &:hover {
-    .row-action-btn {
-      opacity: 1;
-    }
-  }
 }
-
-// ── Empty State ───────────────────────────────────────────────────────
-
 
 // ── Keyframes ─────────────────────────────────────────────────────────
 
