@@ -3,6 +3,12 @@ import { Observable, Subscription, catchError, from, map, throwError, tap, share
 import { FileNode, FileTreeService } from './file-tree.service';
 import { DapSessionService } from '@taro/dap-core';
 
+/** GCC/Clang pseudo-source filenames are always wrapped in angle-brackets.
+ * GDB exposes them in `loadedSources` but its own `source` handler crashes
+ * with FileNotFoundError when they are requested (GDB bug: sources.py:97).
+ * Real filesystem paths never contain `<` or `>`, so this pattern is safe. */
+const PSEUDO_SOURCE_RE = /<[^>]+>/;
+
 @Injectable()
 export class DapFileTreeService extends FileTreeService {
   private readonly dapSession = inject(DapSessionService);
@@ -176,6 +182,9 @@ export class DapFileTreeService extends FileTreeService {
       const p = source.path as string;
       const ref = source.sourceReference as number;
       if (!p && !ref) continue;
+      // Skip compiler pseudo-sources (e.g. <built-in>, <command-line>, <stdin>).
+      // GDB includes these in loadedSources but cannot serve them via `source`.
+      if (p && PSEUDO_SOURCE_RE.test(p)) continue;
 
       const isInsideRoot = p && rootPath && p.startsWith(rootPath);
       const displayPath = p || `virtual://${ref}`;
