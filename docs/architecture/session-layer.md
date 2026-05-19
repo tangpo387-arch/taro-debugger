@@ -164,7 +164,7 @@ The Session layer automates thread and context management to simplify UI impleme
 - **Automatic Thread Refresh**: On every `stopped` event, the Session queries the adapter's threads and updates `threadsSubject` with batch-instantiated `DapThreadSession` objects.
 - **Active Thread Selection**: If the `stopped` event contains a `threadId`, the corresponding `DapThreadSession` is automatically set as the `activeThread`.
 - **Contextual Stop Reason**: The Session extracts `description` or `reason` from the `stopped` event body and exposes it via `stopReason$`.
-- **Manual Selection**: `setCurrentThread(id)` allows the user to switch inspection context, triggering a synthetic `stopped` event to force UI components to reload their stacks.
+- **Manual Selection**: `setCurrentThread(thread)` allows the user to switch inspection context, triggering a synthetic `stopped` event to force UI components to reload their stacks.
 - **Cache Invalidation**: Upon any stepping command (`next`, `continue`, `stepIn`, `stepOut`) or receiving a `'continued'` event, the Session automatically clears the transient caches of all active `DapThreadSession` objects.
 
 > [!NOTE]
@@ -205,8 +205,7 @@ When the user switches between call stack frames, the system enforces a **"Lates
 | `setBreakpoints(p, l)` | `Promise<VerifiedBreakpoint[]>` | Sync breakpoints with serialization logic. |
 | `toggleBreakpointEnabled()` | `Promise<void>` | Toggle local state and re-sync with adapter. |
 | `setFunctionBreakpoints(b)` | `Promise<any[]>` | Sync symbolic breakpoints with the adapter. |
-| `setCurrentThread(id)` | `void` | Set active thread and trigger UI context refresh. |
-| `getOrCreateThreadObject(t)` | `DapThreadSession` | Look up or construct a cached `DapThreadSession` wrapper. |
+| `setCurrentThread(thread)` | `void` | Set active thread and trigger UI context refresh. |
 | `clearAllThreadCaches()` | `void` | Force eviction of transient cached frames on all threads. |
 | `source(args)` | `Promise<DapResponse>` | Fetch source content (semantic wrapper). |
 | `loadedSources()` | `Promise<DapResponse>` | Fetch all loaded sources (semantic wrapper). |

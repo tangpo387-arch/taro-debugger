@@ -63,7 +63,7 @@
         <div class="node-spacer"></div>
 
         @if (node.type === 'thread' && !node.isActive) {
-        <button mat-icon-button class="focus-button" (click)="onSelectThread(node.thread?.id!); $event.stopPropagation()"
+        <button mat-icon-button class="focus-button" (click)="dapSession.setCurrentThread(node.thread!); $event.stopPropagation()"
           matTooltip="Set as Active Thread">
           <mat-icon>my_location</mat-icon>
         </button>

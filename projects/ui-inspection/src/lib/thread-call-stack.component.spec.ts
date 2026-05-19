@@ -120,7 +120,7 @@ describe('ThreadCallStackComponent', () => {
       focusButtons[0].nativeElement.click();
 
       // Assert
-      expect(mockSession.setCurrentThread).toHaveBeenCalledWith(2);
+      expect(mockSession.setCurrentThread).toHaveBeenCalledWith(threads[1]);
     });
 
     it('should NOT show Focus button for the currently active thread', async () => {

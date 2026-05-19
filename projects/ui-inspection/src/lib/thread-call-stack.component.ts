@@ -311,13 +311,6 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Updates the session's active thread. 
-   * Triggered by explicit "Focus" button.
-   */
-  public onSelectThread(threadId: number): void {
-    this.dapSession.setCurrentThread(threadId);
-  }
 
   /**
    * Handles user selection of a stack frame.

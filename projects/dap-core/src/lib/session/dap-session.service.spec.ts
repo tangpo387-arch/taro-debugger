@@ -507,8 +507,8 @@ describe('DapSessionService', () => {
 
     it('should remove thread IDs on per-thread continued event', () => {
       // Setup: two threads stopped
-      const t1 = service.getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
-      const t2 = service.getOrCreateThreadObject({ id: 2, name: 'Thread 2' });
+      const t1 = (service as any).getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
+      const t2 = (service as any).getOrCreateThreadObject({ id: 2, name: 'Thread 2' });
       (service as any).stoppedThreadsSubject.next(new Set([t1, t2]));
       (service as any).executionStateSubject.next('stopped');
 
@@ -525,8 +525,8 @@ describe('DapSessionService', () => {
     });
 
     it('should clear all threads on allThreadsContinued event', () => {
-      const t1 = service.getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
-      const t2 = service.getOrCreateThreadObject({ id: 2, name: 'Thread 2' });
+      const t1 = (service as any).getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
+      const t2 = (service as any).getOrCreateThreadObject({ id: 2, name: 'Thread 2' });
       (service as any).stoppedThreadsSubject.next(new Set([t1, t2]));
       (service as any).allThreadsStoppedSubject.next(true);
 
@@ -542,7 +542,7 @@ describe('DapSessionService', () => {
     });
 
     it('should transition to running if last stopped thread is continued', () => {
-      const t1 = service.getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
+      const t1 = (service as any).getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
       (service as any).stoppedThreadsSubject.next(new Set([t1]));
       (service as any).executionStateSubject.next('stopped');
 
@@ -588,7 +588,7 @@ describe('DapSessionService', () => {
 
     it('should transition to running when the last stopped thread exits (D2 regression)', () => {
       // Setup: one stopped thread
-      const t1 = service.getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
+      const t1 = (service as any).getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
       (service as any).stoppedThreadsSubject.next(new Set([t1]));
       (service as any).executionStateSubject.next('stopped');
       (service as any).threadsSubject.next([t1]);
@@ -641,7 +641,7 @@ describe('DapSessionService', () => {
     });
 
     it('should coalesce concurrent parallel stackTrace requests on the same thread', async () => {
-      const threadObj = service.getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
+      const threadObj = (service as any).getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
 
       mockTransport.sendRequest.mockImplementation((req: any) => {
         setTimeout(() => {
@@ -670,7 +670,7 @@ describe('DapSessionService', () => {
     });
 
     it('should cache stackTrace results and return them instantly on subsequent calls', async () => {
-      const threadObj = service.getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
+      const threadObj = (service as any).getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
 
       mockTransport.sendRequest.mockImplementation((req: any) => {
         setTimeout(() => {
@@ -700,7 +700,7 @@ describe('DapSessionService', () => {
     });
 
     it('should invalidate cache when stepping or resumption occurs', async () => {
-      const threadObj = service.getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
+      const threadObj = (service as any).getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
 
       mockTransport.sendRequest.mockImplementation((req: any) => {
         setTimeout(() => {
@@ -1382,9 +1382,9 @@ describe('DapSessionService', () => {
       (service as any).activeThreadSubject.next(null);
 
       // Simulate allThreadsStopped with multiple stopped threads but no explicit threadId
-      const t5 = service.getOrCreateThreadObject({ id: 5, name: 'Thread 5' });
-      const t7 = service.getOrCreateThreadObject({ id: 7, name: 'Thread 7' });
-      const t9 = service.getOrCreateThreadObject({ id: 9, name: 'Thread 9' });
+      const t5 = (service as any).getOrCreateThreadObject({ id: 5, name: 'Thread 5' });
+      const t7 = (service as any).getOrCreateThreadObject({ id: 7, name: 'Thread 7' });
+      const t9 = (service as any).getOrCreateThreadObject({ id: 9, name: 'Thread 9' });
       (service as any).stoppedThreadsSubject.next(new Set([t5, t7, t9]));
 
       // Act: stopped event with allThreadsStopped=true but no threadId
@@ -1400,10 +1400,10 @@ describe('DapSessionService', () => {
 
     it('should not override an existing active thread when stopped event omits threadId', () => {
       // Arrange: active thread is already set to 7
-      (service as any).activeThreadSubject.next(service.getOrCreateThreadObject({ id: 7, name: 'Thread 7' }));
-      const t5 = service.getOrCreateThreadObject({ id: 5, name: 'Thread 5' });
-      const t7 = service.getOrCreateThreadObject({ id: 7, name: 'Thread 7' });
-      const t9 = service.getOrCreateThreadObject({ id: 9, name: 'Thread 9' });
+      (service as any).activeThreadSubject.next((service as any).getOrCreateThreadObject({ id: 7, name: 'Thread 7' }));
+      const t5 = (service as any).getOrCreateThreadObject({ id: 5, name: 'Thread 5' });
+      const t7 = (service as any).getOrCreateThreadObject({ id: 7, name: 'Thread 7' });
+      const t9 = (service as any).getOrCreateThreadObject({ id: 9, name: 'Thread 9' });
       (service as any).stoppedThreadsSubject.next(new Set([t5, t7, t9]));
 
       // Act: stopped event with no explicit threadId
@@ -1418,7 +1418,7 @@ describe('DapSessionService', () => {
 
     it('should update activeThreadId to the specified threadId in a stopped event', () => {
       // Arrange
-      (service as any).activeThreadSubject.next(service.getOrCreateThreadObject({ id: 1, name: 'Thread 1' }));
+      (service as any).activeThreadSubject.next((service as any).getOrCreateThreadObject({ id: 1, name: 'Thread 1' }));
 
       // Act: stopped event with explicit threadId=12
       (service as any).handleTransportEvent({

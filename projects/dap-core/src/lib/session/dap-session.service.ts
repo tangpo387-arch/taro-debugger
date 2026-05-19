@@ -782,7 +782,7 @@ export class DapSessionService {
   /**
    * Returns or creates the rich ThreadObject for the raw thread payload.
    */
-  public getOrCreateThreadObject(thread: import('../dap.types').DapThread): DapThreadSession {
+  private getOrCreateThreadObject(thread: import('../dap.types').DapThread): DapThreadSession {
     let obj = this.threadObjects.get(thread.id);
     if (!obj) {
       obj = new DapThreadSession(this, thread);
@@ -808,18 +808,17 @@ export class DapSessionService {
   /**
    * Set the current active thread and trigger a stackTrace refresh
    */
-  public setCurrentThread(threadId: number): void {
-    if (this.activeThreadSubject.value?.id === threadId) {
+  public setCurrentThread(thread: DapThreadSession): void {
+    if (this.activeThreadSubject.value?.id === thread.id) {
       return;
     }
-    const threadObj = this.getThreadById(threadId) || this.getOrCreateThreadObject({ id: threadId, name: `Thread ${threadId}` });
-    this.activeThreadSubject.next(threadObj);
+    this.activeThreadSubject.next(thread);
     // Emitting a synthetic stopped event to trigger debugger.component.ts to reload the call stack
     this.eventSubject.next({
       seq: 0,
       type: 'event',
       event: 'stopped',
-      body: { threadId }
+      body: { threadId: thread.id }
     });
   }
 
