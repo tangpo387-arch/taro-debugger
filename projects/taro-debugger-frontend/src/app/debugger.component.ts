@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, ViewChild, DestroyRef, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, ViewChild, DestroyRef, ElementRef, NgZone } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -93,6 +93,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   private readonly fileTreeService = inject(DapFileTreeService);
   private readonly memoryService = inject(DapMemoryService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly ngZone = inject(NgZone);
 
   /** Access the editor component for programmatic breakpoint updates */
   @ViewChild(EditorComponent) private editorComponent?: EditorComponent;
@@ -299,9 +300,16 @@ export class DebuggerComponent implements OnInit, OnDestroy {
         // 2. Load Scopes (Variable Inspector)
         tasks.push(
           from(this.variablesService.fetchScopes(frame.id)).pipe(
-            catchError(() => of(null))
+            catchError((e) => {
+              // The error is now explicitly emitted by variablesService.scopesError$
+              return of(null);
+            })
           )
         );
+
+        if (tasks.length === 0) {
+          return of([]);
+        }
 
         return forkJoin(tasks);
       })
@@ -354,30 +362,59 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public onResizeStart(event: MouseEvent, direction: 'left' | 'right' | 'bottom'): void {
     event.preventDefault();
 
-    // Add global listeners
-    const mouseMove = (e: MouseEvent) => {
-      if (direction === 'left') {
-        this.leftWidth = Math.max(150, Math.min(600, e.clientX));
-      } else if (direction === 'right') {
-        const windowWidth = window.innerWidth;
-        this.rightWidth = Math.max(200, Math.min(600, windowWidth - e.clientX));
-      } else if (direction === 'bottom') {
-        const windowHeight = window.innerHeight;
-        // Resolve the status bar height dynamically from CSS tokens
-        const statusBarHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sys-density-header-height')) || 32;
-        this.consoleHeight = Math.max(100, Math.min(windowHeight - 150, windowHeight - e.clientY - statusBarHeight));
-      }
-      this.cdr.detectChanges();
-    };
+    this.ngZone.runOutsideAngular(() => {
+      let animationFrameId: number;
 
-    const mouseUp = () => {
-      this.savePersistedSizes();
-      window.removeEventListener('mousemove', mouseMove);
-      window.removeEventListener('mouseup', mouseUp);
-    };
+      const mouseMove = (e: MouseEvent) => {
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+        }
 
-    window.addEventListener('mousemove', mouseMove);
-    window.addEventListener('mouseup', mouseUp);
+        animationFrameId = requestAnimationFrame(() => {
+          let updated = false;
+          if (direction === 'left') {
+            const nextWidth = Math.max(150, Math.min(600, e.clientX));
+            if (this.leftWidth !== nextWidth) {
+              this.leftWidth = nextWidth;
+              updated = true;
+            }
+          } else if (direction === 'right') {
+            const windowWidth = window.innerWidth;
+            const nextWidth = Math.max(200, Math.min(600, windowWidth - e.clientX));
+            if (this.rightWidth !== nextWidth) {
+              this.rightWidth = nextWidth;
+              updated = true;
+            }
+          } else if (direction === 'bottom') {
+            const windowHeight = window.innerHeight;
+            const statusBarHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sys-density-header-height')) || 32;
+            const nextHeight = Math.max(100, Math.min(windowHeight - 150, windowHeight - e.clientY - statusBarHeight));
+            if (this.consoleHeight !== nextHeight) {
+              this.consoleHeight = nextHeight;
+              updated = true;
+            }
+          }
+          
+          if (updated) {
+            this.cdr.detectChanges();
+          }
+        });
+      };
+
+      const mouseUp = () => {
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+        }
+        this.ngZone.run(() => {
+          this.savePersistedSizes();
+        });
+        window.removeEventListener('mousemove', mouseMove);
+        window.removeEventListener('mouseup', mouseUp);
+      };
+
+      window.addEventListener('mousemove', mouseMove);
+      window.addEventListener('mouseup', mouseUp);
+    });
   }
 
   /**

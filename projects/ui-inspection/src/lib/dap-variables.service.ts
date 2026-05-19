@@ -34,6 +34,9 @@ export class DapVariablesService implements OnDestroy {
   private readonly scopesSubject = new BehaviorSubject<DapScope[]>([]);
   public readonly scopes$: Observable<DapScope[]> = this.scopesSubject.asObservable();
 
+  private readonly scopesErrorSubject = new BehaviorSubject<string | null>(null);
+  public readonly scopesError$: Observable<string | null> = this.scopesErrorSubject.asObservable();
+
   private readonly variablesCache = new Map<number, DapVariable[]>();
   private readonly stateSubscription: Subscription;
 
@@ -58,11 +61,13 @@ export class DapVariablesService implements OnDestroy {
     if (frameId < 0) {
       console.warn(`fetchScopes called with invalid frameId: ${frameId}`);
       this.scopesSubject.next([]);
+      this.scopesErrorSubject.next('Invalid frame ID');
       return;
     }
 
     this.lastRequestedFrameId = frameId;
     this.variablesCache.clear();
+    this.scopesErrorSubject.next(null);
 
     try {
       const response = await this.dapSession.scopes(frameId);
@@ -76,10 +81,12 @@ export class DapVariablesService implements OnDestroy {
         this.scopesSubject.next(response.body.scopes);
       } else {
         this.scopesSubject.next([]);
+        this.scopesErrorSubject.next('No scopes returned from debug adapter');
       }
-    } catch (e) {
+    } catch (e: any) {
       if (this.lastRequestedFrameId === frameId) {
         this.scopesSubject.next([]);
+        this.scopesErrorSubject.next(e.message || 'Failed to fetch scopes');
       }
       throw e;
     }
@@ -123,6 +130,7 @@ export class DapVariablesService implements OnDestroy {
     if (this.scopesSubject.value.length > 0) {
       this.scopesSubject.next([]);
     }
+    this.scopesErrorSubject.next(null);
     this.variablesCache.clear();
   }
 
