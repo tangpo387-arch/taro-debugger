@@ -3,8 +3,8 @@ title: DapSessionService — Unit Spec Plan
 scope: unit-test
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 target-file: projects/dap-core/src/lib/session/dap-session.service.ts
-related-wi: [WI-41, WI-86, WI-89, WI-93]
-last_updated: 2026-05-01
+related-wi: [WI-41, WI-86, WI-89, WI-93, WI-126]
+last_updated: 2026-05-19
 ---
 
 # DapSessionService — Unit Spec Plan
@@ -68,3 +68,9 @@ Fully isolated tests for `DapSessionService`. Focuses on DAP session lifecycle, 
   * Verify that `stoppedThreads$` (Set) correctly adds thread IDs on `stopped` events.
   * Verify that `stoppedThreads$` removes thread IDs on `continued` events (per-thread or all).
   * Verify that `allThreadsStopped$` correctly reflects the state when the DAP `allThreadsStopped` property is present in the event.
+
+* **ThreadObject Caching, Coalescing & Debouncing (WI-126)**
+  * Verify that thread started/exited events are debounced over a 50ms temporal window.
+  * Verify that concurrent parallel `stackTrace()` queries on the same ThreadObject are coalesced into a single active transport request.
+  * Verify that `stackTrace()` results are cached and served instantly on subsequent queries.
+  * Verify that stepping resumptions (`next`, `continue`, `stepIn`, `stepOut`) and `continued` events invalidate all active thread caches.

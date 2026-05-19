@@ -476,9 +476,9 @@ describe('DapSessionService', () => {
     it('should recover from error state to idle via disconnect() without sending DAP request', async () => {
       (service as any).executionStateSubject.next('error');
       (service as any).transport = mockTransport;
-      
+
       await service.disconnect();
-      
+
       expect((service as any).executionStateSubject.value).toBe('idle');
       expect(mockTransport.sendRequest).not.toHaveBeenCalled();
     });
@@ -491,7 +491,8 @@ describe('DapSessionService', () => {
         event: 'stopped',
         body: { threadId: 1, reason: 'breakpoint' }
       });
-      expect((service as any).stoppedThreadsSubject.value.has(1)).toBe(true);
+      const getStoppedIds = () => Array.from((service as any).stoppedThreadsSubject.value as Set<any>).map(t => t.id);
+      expect(getStoppedIds()).toContain(1);
       expect((service as any).allThreadsStoppedSubject.value).toBe(false);
 
       (service as any).handleTransportEvent({
@@ -499,29 +500,34 @@ describe('DapSessionService', () => {
         event: 'stopped',
         body: { threadId: 2, reason: 'step', allThreadsStopped: true }
       });
-      expect((service as any).stoppedThreadsSubject.value.has(1)).toBe(true);
-      expect((service as any).stoppedThreadsSubject.value.has(2)).toBe(true);
+      expect(getStoppedIds()).toContain(1);
+      expect(getStoppedIds()).toContain(2);
       expect((service as any).allThreadsStoppedSubject.value).toBe(true);
     });
 
     it('should remove thread IDs on per-thread continued event', () => {
       // Setup: two threads stopped
-      (service as any).stoppedThreadsSubject.next(new Set([1, 2]));
+      const t1 = service.getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
+      const t2 = service.getOrCreateThreadObject({ id: 2, name: 'Thread 2' });
+      (service as any).stoppedThreadsSubject.next(new Set([t1, t2]));
       (service as any).executionStateSubject.next('stopped');
-      
+
       (service as any).handleTransportEvent({
         type: 'event',
         event: 'continued',
         body: { threadId: 1, allThreadsContinued: false }
       });
-      
-      expect((service as any).stoppedThreadsSubject.value.has(1)).toBe(false);
-      expect((service as any).stoppedThreadsSubject.value.has(2)).toBe(true);
+
+      const stoppedIds = Array.from((service as any).stoppedThreadsSubject.value as Set<any>).map(t => t.id);
+      expect(stoppedIds).not.toContain(1);
+      expect(stoppedIds).toContain(2);
       expect((service as any).executionStateSubject.value).toBe('stopped');
     });
 
     it('should clear all threads on allThreadsContinued event', () => {
-      (service as any).stoppedThreadsSubject.next(new Set([1, 2]));
+      const t1 = service.getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
+      const t2 = service.getOrCreateThreadObject({ id: 2, name: 'Thread 2' });
+      (service as any).stoppedThreadsSubject.next(new Set([t1, t2]));
       (service as any).allThreadsStoppedSubject.next(true);
 
       (service as any).handleTransportEvent({
@@ -536,7 +542,8 @@ describe('DapSessionService', () => {
     });
 
     it('should transition to running if last stopped thread is continued', () => {
-      (service as any).stoppedThreadsSubject.next(new Set([1]));
+      const t1 = service.getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
+      (service as any).stoppedThreadsSubject.next(new Set([t1]));
       (service as any).executionStateSubject.next('stopped');
 
       (service as any).handleTransportEvent({
@@ -581,9 +588,10 @@ describe('DapSessionService', () => {
 
     it('should transition to running when the last stopped thread exits (D2 regression)', () => {
       // Setup: one stopped thread
-      (service as any).stoppedThreadsSubject.next(new Set([1]));
+      const t1 = service.getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
+      (service as any).stoppedThreadsSubject.next(new Set([t1]));
       (service as any).executionStateSubject.next('stopped');
-      (service as any).threadsSubject.next([{ id: 1, name: 'Thread 1' }]);
+      (service as any).threadsSubject.next([t1]);
 
       // A 'thread exited' event fires instead of 'continued'
       (service as any).handleTransportEvent({
@@ -592,6 +600,9 @@ describe('DapSessionService', () => {
         body: { threadId: 1, reason: 'exited' }
       });
 
+      // Advance virtual clock by 50ms to flush buffered thread events
+      vi.advanceTimersByTime(50);
+
       // Thread removed from list
       expect((service as any).threadsSubject.value).toHaveLength(0);
       // stoppedThreads$ cleared
@@ -599,6 +610,154 @@ describe('DapSessionService', () => {
       // Execution state must NOT remain stuck in 'stopped'
       expect((service as any).executionStateSubject.value).toBe('running');
       expect((service as any).allThreadsStoppedSubject.value).toBe(false);
+    });
+  });
+
+  describe('ThreadObject Caching, Coalescing & Debouncing (WI-126)', () => {
+    beforeEach(() => {
+      (service as any).transport = mockTransport;
+      (service as any).executionStateSubject.next('stopped');
+    });
+
+    it('should debounce thread started/exited events over a 50ms window', () => {
+      // Fire multiple thread started events
+      (service as any).handleTransportEvent({ type: 'event', event: 'thread', body: { threadId: 1, reason: 'started' } });
+      (service as any).handleTransportEvent({ type: 'event', event: 'thread', body: { threadId: 2, reason: 'started' } });
+      (service as any).handleTransportEvent({ type: 'event', event: 'thread', body: { threadId: 3, reason: 'started' } });
+
+      // Verify no synchronous push
+      expect((service as any).threadsSubject.value).toHaveLength(0);
+
+      // Advance by 25ms, still no flush
+      vi.advanceTimersByTime(25);
+      expect((service as any).threadsSubject.value).toHaveLength(0);
+
+      // Advance by remaining 25ms (50ms total), it flushes at once
+      vi.advanceTimersByTime(25);
+      expect((service as any).threadsSubject.value).toHaveLength(3);
+      expect((service as any).threadsSubject.value[0].id).toBe(1);
+      expect((service as any).threadsSubject.value[1].id).toBe(2);
+      expect((service as any).threadsSubject.value[2].id).toBe(3);
+    });
+
+    it('should coalesce concurrent parallel stackTrace requests on the same thread', async () => {
+      const threadObj = service.getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
+
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          (service as any).handleIncomingMessage({
+            type: 'response',
+            request_seq: req.seq,
+            success: true,
+            command: 'stackTrace',
+            body: { stackFrames: [{ id: 100, name: 'frame1' }] }
+          });
+        }, 10);
+      });
+
+      // Issue parallel calls
+      const p1 = threadObj.stackTrace();
+      const p2 = threadObj.stackTrace();
+
+      vi.advanceTimersByTime(10);
+
+      const [res1, res2] = await Promise.all([p1, p2]);
+
+      // Assert: only one transport request sent
+      expect(mockTransport.sendRequest).toHaveBeenCalledTimes(1);
+      expect(res1[0].name).toBe('frame1');
+      expect(res2[0].name).toBe('frame1');
+    });
+
+    it('should cache stackTrace results and return them instantly on subsequent calls', async () => {
+      const threadObj = service.getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
+
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          (service as any).handleIncomingMessage({
+            type: 'response',
+            request_seq: req.seq,
+            success: true,
+            command: 'stackTrace',
+            body: { stackFrames: [{ id: 100, name: 'frame1' }] }
+          });
+        }, 10);
+      });
+
+      // Call 1: fetches from network
+      const p1 = threadObj.stackTrace();
+      vi.advanceTimersByTime(10);
+      const res1 = await p1;
+
+      expect(mockTransport.sendRequest).toHaveBeenCalledTimes(1);
+
+      // Call 2: instant hit
+      mockTransport.sendRequest.mockClear();
+      const res2 = await threadObj.stackTrace();
+
+      expect(mockTransport.sendRequest).not.toHaveBeenCalled();
+      expect(res2[0].name).toBe('frame1');
+    });
+
+    it('should invalidate cache when stepping or resumption occurs', async () => {
+      const threadObj = service.getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
+
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          (service as any).handleIncomingMessage({
+            type: 'response',
+            request_seq: req.seq,
+            success: true,
+            command: 'stackTrace',
+            body: { stackFrames: [{ id: 100, name: 'frame1' }] }
+          });
+        }, 10);
+      });
+
+      // Populate cache
+      const p1 = threadObj.stackTrace();
+      vi.advanceTimersByTime(10);
+      await p1;
+
+      expect(mockTransport.sendRequest).toHaveBeenCalledTimes(1);
+      mockTransport.sendRequest.mockClear();
+
+      // Trigger target step resumption
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          (service as any).handleIncomingMessage({
+            type: 'response',
+            request_seq: req.seq,
+            success: true,
+            command: 'next'
+          });
+        }, 10);
+      });
+      const pNext = service.next();
+      vi.advanceTimersByTime(10);
+      await pNext;
+
+      // Mock stackTrace response again for the next stop
+      mockTransport.sendRequest.mockClear();
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          (service as any).handleIncomingMessage({
+            type: 'response',
+            request_seq: req.seq,
+            success: true,
+            command: 'stackTrace',
+            body: { stackFrames: [{ id: 200, name: 'frame2' }] }
+          });
+        }, 10);
+      });
+
+      // Now query stackTrace again
+      const p2 = threadObj.stackTrace();
+      vi.advanceTimersByTime(10);
+      const res2 = await p2;
+
+      expect(mockTransport.sendRequest).toHaveBeenCalledTimes(1);
+      expect(res2[0].name).toBe('frame2');
     });
   });
 
@@ -918,9 +1077,9 @@ describe('DapSessionService', () => {
     describe('stop()', () => {
       it('should send terminate request if supported', async () => {
         (service as any).capabilities = { supportsTerminateRequest: true };
-        
+
         const promise = service.stop();
-        
+
         expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
           command: 'terminate'
         }));
@@ -937,9 +1096,9 @@ describe('DapSessionService', () => {
 
       it('should fallback to disconnect if terminate is NOT supported', async () => {
         (service as any).capabilities = { supportsTerminateRequest: false };
-        
+
         const promise = service.stop();
-        
+
         // Should NOT send terminate
         expect(mockTransport.sendRequest).not.toHaveBeenCalledWith(expect.objectContaining({
           command: 'terminate'
@@ -963,9 +1122,9 @@ describe('DapSessionService', () => {
 
       it('should fallback to disconnect if terminate fails', async () => {
         (service as any).capabilities = { supportsTerminateRequest: true };
-        
+
         const promise = service.stop();
-        
+
         expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
           command: 'terminate'
         }));
@@ -1008,9 +1167,9 @@ describe('DapSessionService', () => {
     describe('restart()', () => {
       it('should send restart request if supported', async () => {
         (service as any).capabilities = { supportsRestartRequest: true };
-        
+
         const promise = service.restart();
-        
+
         expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
           command: 'restart'
         }));
@@ -1029,9 +1188,9 @@ describe('DapSessionService', () => {
       it('should NOT allow restart from idle state (Run is preferred)', async () => {
         (service as any).executionStateSubject.next('idle');
         const startSessionSpy = vi.spyOn(service, 'startSession').mockResolvedValue({} as any);
-        
+
         await service.restart();
-        
+
         expect(startSessionSpy).not.toHaveBeenCalled();
       });
 
@@ -1145,7 +1304,7 @@ describe('DapSessionService', () => {
       service.onEvent().subscribe(e => emittedEvents.push(e));
 
       // Stub sendRequest to return a never-resolving promise (simulates adapter silent drop)
-      vi.spyOn(service as any, 'sendRequest').mockReturnValue(new Promise(() => {}));
+      vi.spyOn(service as any, 'sendRequest').mockReturnValue(new Promise(() => { }));
 
       // Act: trigger next() — this arms the state transition guard
       service.next();
@@ -1164,7 +1323,7 @@ describe('DapSessionService', () => {
 
     it('should clear the transition guard when a stopped event arrives before timeout', async () => {
       // Arrange: stub sendRequest so next() doesn't create a conflicting timer
-      vi.spyOn(service as any, 'sendRequest').mockReturnValue(new Promise(() => {}));
+      vi.spyOn(service as any, 'sendRequest').mockReturnValue(new Promise(() => { }));
       // Stub fetchThreads so the stopped event doesn't attempt a real request
       vi.spyOn(service as any, 'fetchThreads').mockResolvedValue(undefined);
 
@@ -1194,7 +1353,7 @@ describe('DapSessionService', () => {
     it('should immediately transition to running when continue() response has allThreadsContinued: true', async () => {
       // Arrange: mock the private sendRequest to simulate an adapter responding with allThreadsContinued
       (service as any).executionStateSubject.next('stopped');
-      (service as any).activeThreadIdSubject.next(3);
+      (service as any).activeThreadSubject.next({ id: 3 } as any);
 
       let resolveRequest!: (v: any) => void;
       vi.spyOn(service as any, 'sendRequest').mockReturnValue(
@@ -1220,10 +1379,13 @@ describe('DapSessionService', () => {
   describe('Active Thread Auto-Selection', () => {
     it('should auto-select first stopped thread when stopped event omits threadId and no thread is active', () => {
       // Arrange: no active thread set
-      (service as any).activeThreadIdSubject.next(null);
+      (service as any).activeThreadSubject.next(null);
 
       // Simulate allThreadsStopped with multiple stopped threads but no explicit threadId
-      (service as any).stoppedThreadsSubject.next(new Set([5, 7, 9]));
+      const t5 = service.getOrCreateThreadObject({ id: 5, name: 'Thread 5' });
+      const t7 = service.getOrCreateThreadObject({ id: 7, name: 'Thread 7' });
+      const t9 = service.getOrCreateThreadObject({ id: 9, name: 'Thread 9' });
+      (service as any).stoppedThreadsSubject.next(new Set([t5, t7, t9]));
 
       // Act: stopped event with allThreadsStopped=true but no threadId
       (service as any).handleTransportEvent({
@@ -1232,14 +1394,17 @@ describe('DapSessionService', () => {
       });
 
       // Assert: first thread from the set was auto-selected
-      const activeId = (service as any).activeThreadIdSubject.value;
+      const activeId = (service as any).activeThreadSubject.value?.id;
       expect([5, 7, 9]).toContain(activeId);
     });
 
     it('should not override an existing active thread when stopped event omits threadId', () => {
       // Arrange: active thread is already set to 7
-      (service as any).activeThreadIdSubject.next(7);
-      (service as any).stoppedThreadsSubject.next(new Set([5, 7, 9]));
+      (service as any).activeThreadSubject.next(service.getOrCreateThreadObject({ id: 7, name: 'Thread 7' }));
+      const t5 = service.getOrCreateThreadObject({ id: 5, name: 'Thread 5' });
+      const t7 = service.getOrCreateThreadObject({ id: 7, name: 'Thread 7' });
+      const t9 = service.getOrCreateThreadObject({ id: 9, name: 'Thread 9' });
+      (service as any).stoppedThreadsSubject.next(new Set([t5, t7, t9]));
 
       // Act: stopped event with no explicit threadId
       (service as any).handleTransportEvent({
@@ -1248,12 +1413,12 @@ describe('DapSessionService', () => {
       });
 
       // Assert: original active thread preserved
-      expect((service as any).activeThreadIdSubject.value).toBe(7);
+      expect((service as any).activeThreadSubject.value?.id).toBe(7);
     });
 
     it('should update activeThreadId to the specified threadId in a stopped event', () => {
       // Arrange
-      (service as any).activeThreadIdSubject.next(1);
+      (service as any).activeThreadSubject.next(service.getOrCreateThreadObject({ id: 1, name: 'Thread 1' }));
 
       // Act: stopped event with explicit threadId=12
       (service as any).handleTransportEvent({
@@ -1262,7 +1427,7 @@ describe('DapSessionService', () => {
       });
 
       // Assert: active thread updated to the one reported by the adapter
-      expect((service as any).activeThreadIdSubject.value).toBe(12);
+      expect((service as any).activeThreadSubject.value?.id).toBe(12);
     });
   });
 });

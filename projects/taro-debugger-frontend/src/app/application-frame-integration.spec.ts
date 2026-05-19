@@ -37,7 +37,7 @@ describe('WI-81: Application Frame & Global Controls Integration', () => {
         executionState$: new BehaviorSubject('idle').asObservable(),
         processInfo$: EMPTY,
         threads$: EMPTY,
-        activeThreadId$: EMPTY,
+        activeThread$: EMPTY,
         stoppedThreads$: EMPTY,
         allThreadsStopped$: EMPTY,
         stopReason$: EMPTY,

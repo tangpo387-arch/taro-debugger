@@ -482,6 +482,35 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-17"
       }
+    },
+    {
+      "id": "WI-126",
+      "title": "Implement execution-scoped stackTrace cache and request coalescing in DapSessionService",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-06"
+        ]
+      },
+      "description": "Optimize DAP stackTrace communication by coalescing concurrent in-flight requests and introducing an execution-scoped transient cache cleared on stepping or resumption.",
+      "details": [
+        "Implement transient stackTrace cache via ThreadObjects (DapThreadSession)",
+        "Restrict DapSessionService to exclusively expose DapThreadSession[] via threads$",
+        "Coalesce parallel concurrent stackTrace calls in DapThreadSession into a single active GDB request",
+        "Implement temporal buffering (50ms) in DapSessionService to debounce high-frequency started/exited thread events",
+        "Refactor DebuggerComponent and ThreadCallStackComponent to consume stackTrace via thread objects",
+        "[Test] Verify concurrent stackTrace calls on a thread object only trigger 1 adapter request",
+        "[Test] Verify 20 high-frequency thread events are debounced into 1 threads$ stream update",
+        "[Doc] docs/archive/specs/dap-stacktrace-cache.md"
+      ],
+      "timeline": {
+        "created": "2026-05-19",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-19"
+      }
     }
   ]
 }

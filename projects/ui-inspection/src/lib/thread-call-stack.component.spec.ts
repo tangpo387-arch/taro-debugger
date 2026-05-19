@@ -5,10 +5,25 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ThreadCallStackComponent, ExecutionNode } from './thread-call-stack.component';
 import { DapSessionService, DapThread, DapStackFrame, DapConfigService } from '@taro/dap-core';
 
+function makeMockThreadSession(id: number, name: string, frames: DapStackFrame[] = [], startWithCache = false) {
+  return {
+    id,
+    name,
+    cachedFrames: startWithCache ? frames : undefined as any[] | undefined,
+    isLoadingStackTrace: false,
+    stackTrace: vi.fn().mockImplementation(async function(this: any) {
+      this.isLoadingStackTrace = true;
+      this.cachedFrames = frames;
+      this.isLoadingStackTrace = false;
+      return frames;
+    })
+  };
+}
+
 function makeMockDapSession(overrides: Partial<DapSessionService> = {}) {
-  const threads$ = new BehaviorSubject<DapThread[]>([]);
-  const activeThreadId$ = new BehaviorSubject<number | null>(null);
-  const stoppedThreads$ = new BehaviorSubject<Set<number>>(new Set());
+  const threads$ = new BehaviorSubject<any[]>([]);
+  const activeThread$ = new BehaviorSubject<any>(null);
+  const stoppedThreads$ = new BehaviorSubject<Set<any>>(new Set());
   const allThreadsStopped$ = new BehaviorSubject<boolean>(false);
   const executionState$ = new BehaviorSubject<string>('idle');
   const processInfo$ = new BehaviorSubject<any>(null);
@@ -17,7 +32,7 @@ function makeMockDapSession(overrides: Partial<DapSessionService> = {}) {
 
   return {
     threads$,
-    activeThreadId$,
+    activeThread$,
     stoppedThreads$,
     allThreadsStopped$,
     executionState$,
@@ -69,7 +84,7 @@ describe('ThreadCallStackComponent', () => {
   describe('Explicit Thread Selection', () => {
     it('should NOT call setCurrentThread when a thread row label is clicked', async () => {
       // Arrange
-      const threads = [{ id: 1, name: 'Main' }];
+      const threads = [makeMockThreadSession(1, 'Main')];
       mockSession.threads$.next(threads);
       mockSession.executionState$.next('stopped');
       fixture.detectChanges();
@@ -89,9 +104,9 @@ describe('ThreadCallStackComponent', () => {
 
     it('should call setCurrentThread when the Focus button is clicked', async () => {
       // Arrange
-      const threads = [{ id: 1, name: 'Main' }, { id: 2, name: 'Worker' }];
+      const threads = [makeMockThreadSession(1, 'Main'), makeMockThreadSession(2, 'Worker')];
       mockSession.threads$.next(threads);
-      mockSession.activeThreadId$.next(1); // Thread 1 is active
+      mockSession.activeThread$.next({ id: 1 } as any); // Thread 1 is active
       mockSession.executionState$.next('stopped');
       fixture.detectChanges();
       await new Promise(r => setTimeout(r, 20));
@@ -110,9 +125,9 @@ describe('ThreadCallStackComponent', () => {
 
     it('should NOT show Focus button for the currently active thread', async () => {
       // Arrange
-      const threads = [{ id: 1, name: 'Main' }];
+      const threads = [makeMockThreadSession(1, 'Main')];
       mockSession.threads$.next(threads);
-      mockSession.activeThreadId$.next(1);
+      mockSession.activeThread$.next({ id: 1 } as any);
       mockSession.executionState$.next('stopped');
       fixture.detectChanges();
       await new Promise(r => setTimeout(r, 20));
@@ -131,11 +146,10 @@ describe('ThreadCallStackComponent', () => {
   describe('Auto-Expansion on Stop', () => {
     it('should automatically expand the active thread and fetch frames on stopped event', async () => {
       // Arrange
-      const threads = [{ id: 1, name: 'Main' }];
       const frames = [{ id: 10, name: 'main()' } as any];
+      const threads = [makeMockThreadSession(1, 'Main', frames)];
       mockSession.threads$.next(threads);
-      mockSession.activeThreadId$.next(1);
-      mockSession.stackTrace.mockResolvedValue({ success: true, body: { stackFrames: frames } });
+      mockSession.activeThread$.next({ id: 1 } as any);
       
       // Act - simulate stop
       mockSession.executionState$.next('stopped');
@@ -144,7 +158,7 @@ describe('ThreadCallStackComponent', () => {
       fixture.detectChanges();
 
       // Assert
-      expect(mockSession.stackTrace).toHaveBeenCalledWith(1);
+      expect(threads[0].stackTrace).toHaveBeenCalled();
       
       // Verify tree expansion via component state
       const threadNode = component.dataSource[0].children?.[0];
@@ -154,11 +168,10 @@ describe('ThreadCallStackComponent', () => {
 
     it('should expand the active thread even if frames were already cached (override manual collapse)', async () => {
       // Arrange - setup cached frames
-      const threads = [{ id: 1, name: 'Main' }];
       const frames = [{ id: 10, name: 'main()' } as any];
+      const threads = [makeMockThreadSession(1, 'Main', frames)];
       mockSession.threads$.next(threads);
-      mockSession.activeThreadId$.next(1);
-      mockSession.stackTrace.mockResolvedValue({ success: true, body: { stackFrames: frames } });
+      mockSession.activeThread$.next({ id: 1 } as any);
       
       // First stop to populate cache
       mockSession.executionState$.next('stopped');
@@ -190,11 +203,10 @@ describe('ThreadCallStackComponent', () => {
   describe('Frame Interaction', () => {
     it('should emit frameSelected when a frame node is clicked', async () => {
       // Arrange
-      const threads = [{ id: 1, name: 'Main' }];
       const frames = [{ id: 10, name: 'main()' } as any];
+      const threads = [makeMockThreadSession(1, 'Main', frames)];
       mockSession.threads$.next(threads);
-      mockSession.activeThreadId$.next(1);
-      mockSession.stackTrace.mockResolvedValue({ success: true, body: { stackFrames: frames } });
+      mockSession.activeThread$.next({ id: 1 } as any);
       
       mockSession.executionState$.next('stopped');
       fixture.detectChanges();

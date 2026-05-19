@@ -159,10 +159,13 @@ The Session layer automates thread and context management to simplify UI impleme
 
 ### 7.1 Thread Selection
 
-- **Automatic Thread Refresh**: On every `stopped` event, the Session automatically calls `threads()` and updates `threadsSubject`.
-- **Active Thread Selection**: If the `stopped` event contains a `threadId`, it is automatically set as the `activeThreadId`.
+- **DapThreadSession Object Representation**: Injected threads are managed as rich `DapThreadSession` instances. Each instance encapsulates its own thread identity, in-flight request coalescing promise, and transient stack frame cache to prevent redundant traffic.
+- **Thread Event Storm Mitigation**: On multi-threaded targets, GDB can flood the adapter with rapid thread `started` / `exited` event waves. `DapSessionService` buffers these event storms over a **50ms temporal window** and flushes them to the UI in a single reactive transaction, preventing DOM thrashing.
+- **Automatic Thread Refresh**: On every `stopped` event, the Session queries the adapter's threads and updates `threadsSubject` with batch-instantiated `DapThreadSession` objects.
+- **Active Thread Selection**: If the `stopped` event contains a `threadId`, the corresponding `DapThreadSession` is automatically set as the `activeThread`.
 - **Contextual Stop Reason**: The Session extracts `description` or `reason` from the `stopped` event body and exposes it via `stopReason$`.
 - **Manual Selection**: `setCurrentThread(id)` allows the user to switch inspection context, triggering a synthetic `stopped` event to force UI components to reload their stacks.
+- **Cache Invalidation**: Upon any stepping command (`next`, `continue`, `stepIn`, `stepOut`) or receiving a `'continued'` event, the Session automatically clears the transient caches of all active `DapThreadSession` objects.
 
 > [!NOTE]
 > **Multi-Threaded Execution (Non-Stop Mode)**: While the Session layer is designed to track multiple threads, advanced Non-Stop mode behavior (independent thread control) is currently a planned feature. See [Non-Stop Mode UI Integration](../archive/specs/non-stop-mode-ui.md) for the design specification.
@@ -182,8 +185,8 @@ When the user switches between call stack frames, the system enforces a **"Lates
 | `connectionStatus$` | `Observable<boolean>` | Connection status (defaults to `false`). |
 | `executionState$` | `Observable<ExecutionState>` | Current debug execution state. |
 | `breakpoints$` | `Observable<Map<string, VerifiedBreakpoint[]>>` | SSOT for verified breakpoints. |
-| `threads$` | `Observable<DapThread[]>` | List of threads available in the adapter. |
-| `activeThreadId$` | `Observable<number \| null>` | The thread currently selected for inspection. |
+| `threads$` | `Observable<DapThreadSession[]>` | List of rich `DapThreadSession` objects available. |
+| `activeThread$` | `Observable<DapThreadSession \| null>` | The thread currently active/selected for inspection. |
 | `stopReason$` | `Observable<string \| null>` | Reason for the current stop (e.g., "breakpoint"). |
 | `onEvent()` | `Observable<DapEvent>` | Processed event stream (includes synthetic events). |
 | `onTraffic$` | `Observable<any>` | Raw diagnostic DAP traffic. |
@@ -203,6 +206,8 @@ When the user switches between call stack frames, the system enforces a **"Lates
 | `toggleBreakpointEnabled()` | `Promise<void>` | Toggle local state and re-sync with adapter. |
 | `setFunctionBreakpoints(b)` | `Promise<any[]>` | Sync symbolic breakpoints with the adapter. |
 | `setCurrentThread(id)` | `void` | Set active thread and trigger UI context refresh. |
+| `getOrCreateThreadObject(t)` | `DapThreadSession` | Look up or construct a cached `DapThreadSession` wrapper. |
+| `clearAllThreadCaches()` | `void` | Force eviction of transient cached frames on all threads. |
 | `source(args)` | `Promise<DapResponse>` | Fetch source content (semantic wrapper). |
 | `loadedSources()` | `Promise<DapResponse>` | Fetch all loaded sources (semantic wrapper). |
 | `readMemory(args)` | `Promise<ReadMemoryResponse>` | Low-level protocol memory read. |

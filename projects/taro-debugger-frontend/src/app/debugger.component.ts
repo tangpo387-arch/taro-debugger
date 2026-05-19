@@ -29,7 +29,7 @@ import {
 import { PanelComponent, PanelGroupComponent, ErrorDialog, ErrorDialogData, TaroEmptyStateComponent } from '@taro/ui-shared';
 import { LogViewerComponent } from '@taro/ui-console';
 import { DapConfigService, DapConfig } from '@taro/dap-core';
-import { DapSessionService, ExecutionState, VerifiedBreakpoint } from '@taro/dap-core';
+import { DapSessionService, DapThreadSession, ExecutionState, VerifiedBreakpoint } from '@taro/dap-core';
 import { DapEvent, DapStackFrame } from '@taro/dap-core';
 import { FileNode } from './file-tree.service';
 import { DapLogService } from '@taro/ui-console';
@@ -176,7 +176,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   // ── Call Stack State ──────────────────────────────────────────────────────
 
   /** Call stack state */
-  public stackFrames: DapStackFrame[] = [];
   public activeFrameId: number | null = null;
   public activeLine: number | null = null;
   public activeLineFilePath: string | null = null;
@@ -239,6 +238,14 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
       this.cdr.detectChanges();
     });
+
+    this.dapSession.activeThread$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(async (thread) => {
+        if (thread && this.executionState === 'stopped') {
+          await this.autoSelectTopFrame(thread);
+        }
+      });
 
     this.eventSubscription = this.dapSession.onEvent().subscribe((event) => {
       this.handleDapEvent(event);
@@ -508,7 +515,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
           this.initialSourcesLoaded = true;
           this.fileTreeReloadTrigger++;
         }
-        this.loadCallStack(event.body?.threadId);
         if (this.activeMemoryAddress) {
           this.refreshMemory();
         }
@@ -579,42 +585,27 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Refetches call stack when stopped
+   * Automatically selects the top stack frame of the active thread when the debugger is paused.
+   * This guarantees that GDB's stop location is immediately shown in the Editor & Scopes views.
    */
-  private async loadCallStack(threadId?: number): Promise<void> {
+  private async autoSelectTopFrame(thread: DapThreadSession): Promise<void> {
     try {
-      let targetThreadId = threadId;
-      // Get all threads and use the first one if threadId is not provided
-      if (!targetThreadId) {
-        const threadsRes = await this.dapSession.threads();
-        const threads = threadsRes.body?.threads || [];
-        if (threads.length > 0) {
-          targetThreadId = threads[0].id;
-        }
+      const stackFrames = await thread.stackTrace();
+
+      // Race condition guard: If the process resumed while the request was in flight,
+      // discard the results to prevent stale data from appearing in the UI.
+      if (this.executionState !== 'stopped') {
+        return;
       }
 
-      if (targetThreadId) {
-        const stackRes = await this.dapSession.stackTrace(targetThreadId);
+      this.cdr.detectChanges();
 
-        // Race condition guard: If the process resumed while the request was in flight,
-        // discard the results to prevent stale data from appearing in the UI.
-        if (this.executionState !== 'stopped') {
-          return;
-        }
-
-        this.stackFrames = stackRes.body?.stackFrames || [];
-
-        // Render the stack panel immediately before loading source + scopes.
-        this.cdr.detectChanges();
-
-        // Load the top frame to show source code by default after success
-        if (this.stackFrames.length > 0) {
-          await this.onFrameClick(this.stackFrames[0]);
-        }
+      // Load the top frame to show source code by default after success
+      if (stackFrames.length > 0) {
+        await this.onFrameClick(stackFrames[0]);
       }
     } catch (e: any) {
       // Clear stale data on failure (Error log handled globally)
-      this.stackFrames = [];
       this.cdr.detectChanges();
     }
   }
@@ -813,7 +804,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
   /** Clear UI state related to the current execution point (stacks, current line, etc.) */
   private clearExecutionState(): void {
-    this.stackFrames = [];
     this.activeFrameId = null;
     this.activeLine = null;
     this.activeLineFilePath = null;

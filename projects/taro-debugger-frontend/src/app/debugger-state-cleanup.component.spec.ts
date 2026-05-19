@@ -29,6 +29,7 @@ describe('DebuggerComponent — State Cleanup Logic', () => {
       startSession: vi.fn().mockResolvedValue({}),
       disconnect: vi.fn(),
       breakpoints$: new BehaviorSubject<Map<string, any>>(new Map()).asObservable(),
+      activeThread$: EMPTY,
     };
 
     const mockVariablesService = {
@@ -77,43 +78,36 @@ describe('DebuggerComponent — State Cleanup Logic', () => {
     component.ngOnInit();
   });
 
-  it('should clear stackFrames when executionState transitions to running', () => {
+  it('should clear activeFrameId when executionState transitions to running', () => {
     // Arrange
-    component.stackFrames = [{ id: 1, name: 'main', line: 10 } as any];
     component.activeFrameId = 1;
-    expect(component.stackFrames.length).toBe(1);
 
     // Act
     executionStateSubject.next('running');
 
     // Assert
-    expect(component.stackFrames.length).toBe(0);
     expect(component.activeFrameId).toBeNull();
   });
 
-  it('should clear stackFrames when executionState transitions to error', () => {
+  it('should clear activeFrameId when executionState transitions to error', () => {
     // Arrange
-    component.stackFrames = [{ id: 1, name: 'main', line: 10 } as any];
     component.activeFrameId = 1;
 
     // Act
     executionStateSubject.next('error');
 
     // Assert
-    expect(component.stackFrames.length).toBe(0);
     expect(component.activeFrameId).toBeNull();
   });
 
-  it('should NOT clear stackFrames when executionState transitions to stopped', () => {
+  it('should NOT clear activeFrameId when executionState transitions to stopped', () => {
     // Arrange
-    component.stackFrames = [{ id: 1, name: 'main', line: 10 } as any];
     component.activeFrameId = 1;
 
     // Act
     executionStateSubject.next('stopped');
 
     // Assert
-    expect(component.stackFrames.length).toBe(1);
     expect(component.activeFrameId).toBe(1);
   });
 });

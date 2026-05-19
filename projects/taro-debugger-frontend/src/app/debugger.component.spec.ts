@@ -232,6 +232,12 @@ describe('DebuggerComponent — Reveal Logic', () => {
           useValue: {
             connectionStatus$: EMPTY,
             executionState$: EMPTY,
+            processInfo$: EMPTY,
+            threads$: EMPTY,
+            activeThread$: EMPTY,
+            stoppedThreads$: EMPTY,
+            allThreadsStopped$: EMPTY,
+            threadStopReasons$: EMPTY,
             onEvent: () => EMPTY,
             onTraffic$: EMPTY,
             disconnect: vi.fn(),
@@ -299,6 +305,7 @@ describe('DebuggerComponent — State Cleanup (WI-83)', () => {
       breakpoints$: EMPTY,
       startSession: vi.fn().mockResolvedValue({}),
       disconnect: vi.fn(),
+      activeThread$: EMPTY,
     };
 
     TestBed.configureTestingModule({
@@ -325,64 +332,64 @@ describe('DebuggerComponent — State Cleanup (WI-83)', () => {
     component.ngOnInit();
   });
 
-  it('should clear stackFrames when executionState transitions to running', () => {
+  it('should clear activeFrameId when executionState transitions to running', () => {
     // Arrange
-    component.stackFrames = [{ id: 1, name: 'main', line: 10, column: 1 } as any];
-    expect(component.stackFrames.length).toBe(1);
+    component.activeFrameId = 1;
+    expect(component.activeFrameId).toBe(1);
 
     // Act
     executionStateSubject.next('running');
 
     // Assert
-    expect(component.stackFrames.length).toBe(0);
+    expect(component.activeFrameId).toBeNull();
   });
 
-  it('should clear stackFrames when executionState transitions to error', () => {
+  it('should clear activeFrameId when executionState transitions to error', () => {
     // Arrange
-    component.stackFrames = [{ id: 1, name: 'main', line: 10, column: 1 } as any];
-    expect(component.stackFrames.length).toBe(1);
+    component.activeFrameId = 1;
+    expect(component.activeFrameId).toBe(1);
 
     // Act
     executionStateSubject.next('error');
 
     // Assert
-    expect(component.stackFrames.length).toBe(0);
+    expect(component.activeFrameId).toBeNull();
   });
 
-  it('should clear stackFrames and editor state when executionState transitions to idle', () => {
+  it('should clear activeFrameId and editor state when executionState transitions to idle', () => {
     // Arrange
-    component.stackFrames = [{ id: 1, name: 'main', line: 10, column: 1 } as any];
+    component.activeFrameId = 1;
     component.activeFilePath = '/path/to/source.cpp';
     component.currentCode = 'void main() {}';
-    expect(component.stackFrames.length).toBe(1);
+    expect(component.activeFrameId).toBe(1);
     expect(component.activeFilePath).toBe('/path/to/source.cpp');
 
     // Act
     executionStateSubject.next('idle');
 
     // Assert
-    expect(component.stackFrames.length).toBe(0);
+    expect(component.activeFrameId).toBeNull();
     expect(component.activeFilePath).toBeNull();
     expect(component.currentCode).toBe('');
   });
 
-  it('should discard stackFrames if executionState is no longer stopped after stackTrace returns (Race Guard)', async () => {
+  it('should discard auto-selected frame if executionState is no longer stopped after stackTrace returns (Race Guard)', async () => {
     // Arrange
-    const stackRes = { body: { stackFrames: [{ id: 1, name: 'stale' } as any] } };
-    (component as any).dapSession.stackTrace = vi.fn().mockImplementation(async () => {
-      // Simulate state change while request is in flight
-      component.executionState = 'running';
-      return stackRes;
-    });
-
-    component.stackFrames = [];
+    const spy = vi.spyOn(component, 'onFrameClick');
+    const mockThread = {
+      stackTrace: vi.fn().mockImplementation(async () => {
+        component.executionState = 'running';
+        return [{ id: 1, name: 'stale' } as any];
+      })
+    };
+    (component as any).dapSession.getOrCreateThreadObject = vi.fn().mockReturnValue(mockThread);
     component.executionState = 'stopped';
 
     // Act
-    await (component as any).loadCallStack(1);
+    await (component as any).autoSelectTopFrame(1);
 
     // Assert
-    expect(component.stackFrames.length).toBe(0);
+    expect(spy).not.toHaveBeenCalled();
   });
 });
 
@@ -477,7 +484,7 @@ describe('DebuggerComponent — Memory View Integration (WI-106)', () => {
       providers: [
         DebuggerComponent,
         { provide: DapMemoryService, useValue: mockMemoryService },
-        { provide: DapSessionService, useValue: { connectionStatus$: EMPTY, executionState$: EMPTY, onEvent: () => EMPTY, onTraffic$: EMPTY, disconnect: vi.fn() } },
+        { provide: DapSessionService, useValue: { connectionStatus$: EMPTY, executionState$: EMPTY, processInfo$: EMPTY, threads$: EMPTY, activeThread$: EMPTY, stoppedThreads$: EMPTY, allThreadsStopped$: EMPTY, threadStopReasons$: EMPTY, onEvent: () => EMPTY, onTraffic$: EMPTY, disconnect: vi.fn() } },
         { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
         { provide: DapLogService, useValue: { consoleLog: vi.fn() } },
         { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe', stopOnEntry: true }) } },

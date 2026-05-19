@@ -44,7 +44,7 @@
         <span class="active-badge">ACTIVE</span>
         }
         @if (node.type === 'thread') {
-        <span class="thread-id-badge">[{{node.threadId}}]</span>
+        <span class="thread-id-badge">[{{node.thread?.id}}]</span>
         }
         {{node.label}}
         @if (node.status) {
@@ -63,7 +63,7 @@
         <div class="node-spacer"></div>
 
         @if (node.type === 'thread' && !node.isActive) {
-        <button mat-icon-button class="focus-button" (click)="onSelectThread(node.threadId); $event.stopPropagation()"
+        <button mat-icon-button class="focus-button" (click)="onSelectThread(node.thread?.id!); $event.stopPropagation()"
           matTooltip="Set as Active Thread">
           <mat-icon>my_location</mat-icon>
         </button>

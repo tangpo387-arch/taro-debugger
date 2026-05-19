@@ -4,7 +4,7 @@ import { MatTreeModule, MatTree } from '@angular/material/tree';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { DapSessionService, DapThread, DapStackFrame, DapConfigService, ExecutionState } from '@taro/dap-core';
+import { DapSessionService, DapThread, DapStackFrame, DapConfigService, ExecutionState, DapThreadSession } from '@taro/dap-core';
 import { TaroEmptyStateComponent, CppSignaturePipe } from '@taro/ui-shared';
 import { Subscription, combineLatest, BehaviorSubject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
@@ -23,7 +23,7 @@ export interface ExecutionNode {
   children?: ExecutionNode[];
 
   // Data associations
-  threadId?: number;
+  thread?: DapThreadSession;
   isActive?: boolean;
   frame?: DapStackFrame;
   isStopped?: boolean;
@@ -66,8 +66,8 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
   /** The hierarchical data source for the mat-tree. */
   public dataSource: ExecutionNode[] = [];
 
-  /** Current active thread ID from the session. */
-  public activeThreadId: number | null = null;
+  /** Current active thread session from the session. */
+  public activeThread: DapThreadSession | null = null;
 
   /** Accessors for MatTree API. */
   public readonly childrenAccessor = (node: ExecutionNode): ExecutionNode[] => node.children ?? [];
@@ -79,11 +79,7 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
   }
 
   private subscription = new Subscription();
-  /** 
-   * Local cache for stack frames and loading state per thread to avoid redundant 
-   * DAP requests and race conditions during UI rebuilds.
-   */
-  private frameCache = new Map<number, { frames?: ExecutionNode[], loading?: boolean }>();
+  private currentThreads: any[] = [];
 
   /** Triggered whenever the frame cache is updated to refresh the tree. */
   private cacheUpdate$ = new BehaviorSubject<void>(undefined);
@@ -92,7 +88,7 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
    * Tracking for auto-expansion logic to avoid "fighting" the user's manual 
    * collapse actions during the same stop session.
    */
-  private lastAutoExpandedThreadId: number | null = null;
+  private lastAutoExpandedThread: DapThreadSession | null = null;
   private lastExecState: ExecutionState = 'idle';
 
   /** 
@@ -107,24 +103,16 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
       combineLatest([
         this.dapSession.processInfo$,
         this.dapSession.threads$,
-        this.dapSession.activeThreadId$,
+        this.dapSession.activeThread$,
         this.dapSession.stoppedThreads$,
         this.dapSession.allThreadsStopped$,
         this.dapSession.executionState$,
         this.dapSession.threadStopReasons$,
         this.cacheUpdate$
-      ]).pipe(debounceTime(10)).subscribe(([processInfo, threads, activeThreadId, stoppedThreads, allThreadsStopped, execState, threadStopReasons]) => {
-        this.activeThreadId = activeThreadId;
-        this.updateTree(processInfo, threads, activeThreadId, stoppedThreads, allThreadsStopped, execState, threadStopReasons);
-      })
-    );
-
-    // Immediate cache invalidation on execution events (not affected by debounce)
-    this.subscription.add(
-      this.dapSession.onEvent().subscribe(event => {
-        if (event.event === 'continued' || event.event === 'stopped') {
-          this.frameCache.clear();
-        }
+      ]).pipe(debounceTime(10)).subscribe(([processInfo, threads, activeThread, stoppedThreads, allThreadsStopped, execState, threadStopReasons]) => {
+        this.activeThread = activeThread;
+        this.currentThreads = threads;
+        this.updateTree(processInfo, threads, activeThread, stoppedThreads, allThreadsStopped, execState, threadStopReasons);
       })
     );
   }
@@ -139,16 +127,15 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
    */
   private updateTree(
     processInfo: { name: string; systemProcessId?: number } | null,
-    threads: DapThread[],
-    activeThreadId: number | null,
-    stoppedThreads: Set<number>,
+    threads: DapThreadSession[],
+    activeThread: DapThreadSession | null,
+    stoppedThreads: Set<DapThreadSession>,
     allThreadsStopped: boolean,
     execState: ExecutionState,
     threadStopReasons: Map<number, string>
   ): void {
     if (execState === 'idle') {
       this.dataSource = [];
-      this.frameCache.clear();
       this.cdr.detectChanges();
       return;
     }
@@ -159,21 +146,21 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
     // We use autoExpandedActiveThread as a sticky flag to prevent the tree from 
     // collapsing during asynchronous data refreshes (e.g. frame loading), 
     // while still allowing the user to manually collapse it.
-    if (activeThreadId !== null && execState === 'stopped') {
+    if (activeThread !== null && execState === 'stopped') {
       const isNewStop = execState !== this.lastExecState;
-      const isNewThread = activeThreadId !== this.lastAutoExpandedThreadId;
+      const isNewThread = activeThread !== this.lastAutoExpandedThread;
 
       if (isNewStop || isNewThread) {
-        expandedIds.add(`thread-${activeThreadId}`);
-        this.lastAutoExpandedThreadId = activeThreadId;
+        expandedIds.add(`thread-${activeThread.id}`);
+        this.lastAutoExpandedThread = activeThread;
         this.autoExpandedActiveThread = true;
       } else if (this.autoExpandedActiveThread) {
         // Sticky expansion: keep it expanded even if getExpandedIds() missed it 
         // due to object identity reconciliation, unless the user manually collapsed it.
-        expandedIds.add(`thread-${activeThreadId}`);
+        expandedIds.add(`thread-${activeThread.id}`);
       }
     } else if (execState !== 'stopped') {
-      this.lastAutoExpandedThreadId = null;
+      this.lastAutoExpandedThread = null;
       this.autoExpandedActiveThread = false;
     }
     this.lastExecState = execState;
@@ -196,19 +183,27 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
       label: `${processName}${processId}`,
       status: execState === 'stopped' ? 'Paused' : (execState.charAt(0).toUpperCase() + execState.slice(1)),
       children: threads.map(t => {
-        const cache = this.frameCache.get(t.id);
-        const isStopped = allThreadsStopped || stoppedThreads.has(t.id) || (execState === 'stopped' && threads.length === 1);
+        const isStopped = allThreadsStopped || Array.from(stoppedThreads).some(st => st.id === t.id) || (execState === 'stopped' && threads.length === 1);
+        const cachedFrames = t.cachedFrames;
+        const children = isStopped && cachedFrames ? cachedFrames.map((f: DapStackFrame) => ({
+          type: 'frame',
+          id: `frame-${t.id}-${f.id}`,
+          label: f.name,
+          thread: t,
+          frame: f
+        } as ExecutionNode)) : undefined;
+
         const threadNode: ExecutionNode = {
           type: 'thread',
           id: `thread-${t.id}`,
           label: t.name || `Thread ${t.id}`,
-          threadId: t.id,
-          isActive: t.id === activeThreadId,
+          thread: t,
+          isActive: t.id === (activeThread?.id ?? null),
           isStopped: isStopped,
           stopReason: threadStopReasons.get(t.id),
           status: isStopped ? 'Paused' : 'Running',
-          isLoading: cache?.loading || false,
-          children: isStopped ? cache?.frames : undefined
+          isLoading: t.isLoadingStackTrace || false,
+          children: children
         };
         return threadNode;
       })
@@ -226,8 +221,8 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
     }
 
     // Auto-fetch frames for the active thread if it's stopped and we don't have them yet.
-    if (activeThreadId !== null && execState === 'stopped') {
-      const threadNode = rootNode.children?.find(c => c.threadId === activeThreadId);
+    if (activeThread !== null && execState === 'stopped') {
+      const threadNode = rootNode.children?.find(c => c.thread?.id === activeThread.id);
       if (threadNode && !threadNode.children) {
         // fetchFrames will run async and trigger a cacheUpdate$ which rebuilding the tree
         this.fetchFrames(threadNode).catch(err => {
@@ -288,7 +283,7 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
       // User collapsed the node. 
       // If it's the active thread, we must clear the sticky auto-expansion flag 
       // so we don't fight the user's manual collapse.
-      if (node.id === `thread-${this.activeThreadId}`) {
+      if (node.id === `thread-${this.activeThread?.id ?? ''}`) {
         this.autoExpandedActiveThread = false;
       }
     }
@@ -298,44 +293,21 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
    * Fetches stack frames for a given thread via DAP and updates the local cache.
    */
   private async fetchFrames(node: ExecutionNode): Promise<void> {
-    const threadId = node.threadId!;
-    let cache = this.frameCache.get(threadId);
+    const threadSession = node.thread;
 
-    if (cache?.loading) return;
+    if (threadSession) {
+      if (threadSession.isLoadingStackTrace) return;
 
-    if (!cache) {
-      cache = { loading: true };
-      this.frameCache.set(threadId, cache);
-    } else {
-      cache.loading = true;
-    }
-
-    this.cdr.detectChanges();
-
-    try {
-      const response = await this.dapSession.stackTrace(threadId);
-      if (response.success && response.body?.stackFrames) {
-        cache.frames = response.body.stackFrames.map((f: DapStackFrame) => ({
-          type: 'frame',
-          id: `frame-${threadId}-${f.id}`,
-          label: f.name,
-          threadId: threadId,
-          frame: f
-        } as ExecutionNode));
-      } else {
-        // If successful but no frames, initialize to empty array to prevent infinite refetch
-        cache.frames = [];
-      }
-    } catch (e) {
-      console.warn('ThreadCallStackComponent: Failed to fetch stack frames', e);
-      // Fallback to empty array to ensure !threadNode.children evaluates to false and avoids loops
-      if (cache) cache.frames = [];
-    } finally {
-      // single canonical cleanup point — always reset loading state
-      // and trigger a tree rebuild regardless of success or failure.
-      if (cache) cache.loading = false;
-      this.cacheUpdate$.next();
       this.cdr.detectChanges();
+
+      try {
+        await threadSession.stackTrace();
+      } catch (e) {
+        console.warn('ThreadCallStackComponent: Failed to fetch stack frames', e);
+      } finally {
+        this.cacheUpdate$.next();
+        this.cdr.detectChanges();
+      }
     }
   }
 

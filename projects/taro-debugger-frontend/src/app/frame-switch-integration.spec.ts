@@ -27,6 +27,7 @@ describe('Frame Switch Integration', () => {
       disconnect: vi.fn(),
       threads: vi.fn().mockResolvedValue({ body: { threads: [] } }),
       breakpoints$: new BehaviorSubject(new Map()).asObservable(),
+      activeThread$: EMPTY,
     };
 
     // We use a real-ish BehaviorSubject for scopes to verify updates

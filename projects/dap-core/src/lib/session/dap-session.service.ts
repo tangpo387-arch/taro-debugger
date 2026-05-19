@@ -5,6 +5,7 @@ import { DapTransportService } from '../transport/dap-transport.service';
 import { TransportFactoryService } from '../transport/transport-factory.service';
 import { DapConfigService } from './dap-config.service';
 import { DapRequest, DapResponse, DapEvent, DisassembleArguments, StepArguments, DapDisassemblyResponse, ReadMemoryArguments, ReadMemoryResponse, WriteMemoryArguments, WriteMemoryResponse } from '../dap.types';
+import { DapThreadSession } from './dap-thread';
 
 /** Error thrown when an evaluate request is cancelled or times out */
 export class EvaluateCancelledError extends Error {
@@ -70,13 +71,17 @@ export class DapSessionService {
   private readonly breakpointsSubject = new BehaviorSubject<Map<string, VerifiedBreakpoint[]>>(new Map(this.breakpointsMap));
   public readonly breakpoints$ = this.breakpointsSubject.asObservable();
 
-  private readonly threadsSubject = new BehaviorSubject<import('../dap.types').DapThread[]>([]);
+  private readonly threadsSubject = new BehaviorSubject<DapThreadSession[]>([]);
   public readonly threads$ = this.threadsSubject.asObservable();
 
-  private readonly activeThreadIdSubject = new BehaviorSubject<number | null>(null);
-  public readonly activeThreadId$ = this.activeThreadIdSubject.asObservable();
+  private readonly threadObjects = new Map<number, DapThreadSession>();
+  private threadEventsBuffer: any[] = [];
+  private threadEventTimeout: any = null;
 
-  private readonly stoppedThreadsSubject = new BehaviorSubject<Set<number>>(new Set());
+  private readonly activeThreadSubject = new BehaviorSubject<DapThreadSession | null>(null);
+  public readonly activeThread$ = this.activeThreadSubject.asObservable();
+
+  private readonly stoppedThreadsSubject = new BehaviorSubject<Set<DapThreadSession>>(new Set());
   public readonly stoppedThreads$ = this.stoppedThreadsSubject.asObservable();
 
   private readonly allThreadsStoppedSubject = new BehaviorSubject<boolean>(false);
@@ -378,7 +383,7 @@ export class DapSessionService {
     this.commandInFlightSubject.next(true);
     this.startStateTransitionGuard('continue');
     try {
-      const threadId = this.activeThreadIdSubject.value || 1;
+      const threadId = this.activeThreadSubject.value?.id || 1;
       const response = await this.sendRequest('continue', { threadId });
       if (response.success) {
         // DAP Spec: If allThreadsContinued is missing, assume true.
@@ -405,7 +410,7 @@ export class DapSessionService {
     this.commandInFlightSubject.next(true);
     this.startStateTransitionGuard('next');
     try {
-      const threadId = this.activeThreadIdSubject.value || 1;
+      const threadId = this.activeThreadSubject.value?.id || 1;
       const response = await this.sendRequest('next', { threadId });
       if (response.success) {
         this.handleResumptionState(false, threadId);
@@ -431,7 +436,7 @@ export class DapSessionService {
     this.commandInFlightSubject.next(true);
     this.startStateTransitionGuard('stepIn');
     try {
-      const threadId = this.activeThreadIdSubject.value || 1;
+      const threadId = this.activeThreadSubject.value?.id || 1;
       const response = await this.sendRequest('stepIn', { threadId });
       if (response.success) {
         this.handleResumptionState(false, threadId);
@@ -457,7 +462,7 @@ export class DapSessionService {
     this.commandInFlightSubject.next(true);
     this.startStateTransitionGuard('stepOut');
     try {
-      const threadId = this.activeThreadIdSubject.value || 1;
+      const threadId = this.activeThreadSubject.value?.id || 1;
       const response = await this.sendRequest('stepOut', { threadId });
       if (response.success) {
         this.handleResumptionState(false, threadId);
@@ -483,7 +488,7 @@ export class DapSessionService {
     this.commandInFlightSubject.next(true);
     this.startStateTransitionGuard('nextInstruction');
     try {
-      const threadId = this.activeThreadIdSubject.value || 1;
+      const threadId = this.activeThreadSubject.value?.id || 1;
       const args: StepArguments = { threadId, granularity: 'instruction' };
       const response = await this.sendRequest('next', args);
       if (response.success) {
@@ -510,7 +515,7 @@ export class DapSessionService {
     this.commandInFlightSubject.next(true);
     this.startStateTransitionGuard('stepInInstruction');
     try {
-      const threadId = this.activeThreadIdSubject.value || 1;
+      const threadId = this.activeThreadSubject.value?.id || 1;
       const args: StepArguments = { threadId, granularity: 'instruction' };
       const response = await this.sendRequest('stepIn', args);
       if (response.success) {
@@ -734,7 +739,7 @@ export class DapSessionService {
     }
     this.commandInFlightSubject.next(true);
     try {
-      const threadId = this.activeThreadIdSubject.value || 1;
+      const threadId = this.activeThreadSubject.value?.id || 1;
       const response = await this.sendRequest('pause', { threadId });
       if (!response.success) {
         this.commandInFlightSubject.next(false);
@@ -756,15 +761,16 @@ export class DapSessionService {
   /**
    * Fetch threads and update the subjects. Called internally on 'stopped'.
    */
-  public async fetchThreads(): Promise<void> {
+  private async fetchThreads(): Promise<void> {
     try {
       const response = await this.threads();
       if (response.success && response.body?.threads) {
-        this.threadsSubject.next(response.body.threads);
-        const currentActive = this.activeThreadIdSubject.value;
+        const mapped = response.body.threads.map((t: any) => this.getOrCreateThreadObject(t));
+        this.threadsSubject.next(mapped);
+        const currentActive = this.activeThreadSubject.value;
         const threadsList = response.body.threads;
-        if (threadsList.length > 0 && (currentActive === null || !threadsList.some((t: any) => t.id === currentActive))) {
-          this.activeThreadIdSubject.next(threadsList[0].id);
+        if (threadsList.length > 0 && (currentActive === null || !threadsList.some((t: any) => t.id === currentActive.id))) {
+          this.activeThreadSubject.next(mapped[0]);
         }
       }
     } catch (err) {
@@ -774,13 +780,40 @@ export class DapSessionService {
   }
 
   /**
+   * Returns or creates the rich ThreadObject for the raw thread payload.
+   */
+  public getOrCreateThreadObject(thread: import('../dap.types').DapThread): DapThreadSession {
+    let obj = this.threadObjects.get(thread.id);
+    if (!obj) {
+      obj = new DapThreadSession(this, thread);
+      this.threadObjects.set(thread.id, obj);
+    }
+    return obj;
+  }
+
+  /**
+   * Convenience lookup by raw threadId
+   */
+  private getThreadById(threadId: number): DapThreadSession | undefined {
+    return this.threadObjects.get(threadId);
+  }
+
+  /**
+   * Clears the execution-scoped stackTrace cache for all registered ThreadObjects.
+   */
+  public clearAllThreadCaches(): void {
+    this.threadObjects.forEach((thread) => thread.clearCache());
+  }
+
+  /**
    * Set the current active thread and trigger a stackTrace refresh
    */
   public setCurrentThread(threadId: number): void {
-    if (this.activeThreadIdSubject.value === threadId) {
+    if (this.activeThreadSubject.value?.id === threadId) {
       return;
     }
-    this.activeThreadIdSubject.next(threadId);
+    const threadObj = this.getThreadById(threadId) || this.getOrCreateThreadObject({ id: threadId, name: `Thread ${threadId}` });
+    this.activeThreadSubject.next(threadObj);
     // Emitting a synthetic stopped event to trigger debugger.component.ts to reload the call stack
     this.eventSubject.next({
       seq: 0,
@@ -790,14 +823,6 @@ export class DapSessionService {
     });
   }
 
-  /**
-   * Get stack trace of a specific thread
-   * @param threadId Thread ID
-   */
-  public async stackTrace(threadId: number): Promise<DapResponse> {
-    this.ensureStopped();
-    return this.sendRequest('stackTrace', { threadId });
-  }
 
   /**
    * Get scopes for a specific stack frame
@@ -937,7 +962,7 @@ export class DapSessionService {
    * @param args DAP command arguments (optional)
    * @param timeoutMs Timeout in milliseconds (default 5000ms)
    */
-  private sendRequest(command: string, args?: any, timeoutMs: number = 500000, silentError: boolean = false): Promise<DapResponse> {
+  public sendRequest(command: string, args?: any, timeoutMs: number = 500000, silentError: boolean = false): Promise<DapResponse> {
     const transport = this.transport;
     if (!transport) {
       return Promise.reject(new Error('Transport not initialized. Call startSession() first.'));
@@ -1085,8 +1110,14 @@ export class DapSessionService {
   }
 
   private clearSessionData(): void {
+    if (this.threadEventTimeout) {
+      clearTimeout(this.threadEventTimeout);
+      this.threadEventTimeout = null;
+    }
+    this.threadEventsBuffer = [];
+    this.threadObjects.clear();
     this.threadsSubject.next([]);
-    this.activeThreadIdSubject.next(null);
+    this.activeThreadSubject.next(null);
     this.stoppedThreadsSubject.next(new Set());
     this.allThreadsStoppedSubject.next(false);
     this.stopReasonSubject.next(null);
@@ -1102,6 +1133,7 @@ export class DapSessionService {
    * Synchronizes execution state, stopped thread tracking, and reason maps.
    */
   private handleResumptionState(allThreads: boolean, threadId?: number): void {
+    this.clearAllThreadCaches();
     if (allThreads) {
       this.executionStateSubject.next('running');
       this.allThreadsStoppedSubject.next(false);
@@ -1116,7 +1148,14 @@ export class DapSessionService {
 
     if (threadId !== undefined) {
       const updatedStopped = new Set(this.stoppedThreadsSubject.value);
-      if (updatedStopped.delete(threadId)) {
+      let foundThread: DapThreadSession | null = null;
+      for (const t of updatedStopped) {
+        if (t.id === threadId) {
+          foundThread = t;
+          break;
+        }
+      }
+      if (foundThread && updatedStopped.delete(foundThread)) {
         this.stoppedThreadsSubject.next(updatedStopped);
       }
 
@@ -1155,20 +1194,45 @@ export class DapSessionService {
         const allThreadsStopped = event.body?.allThreadsStopped ?? false;
 
         const currentStopped = new Set(this.stoppedThreadsSubject.value);
+        let stoppedThreadObj: DapThreadSession | undefined;
+        if (stoppedThreadId !== undefined) {
+          stoppedThreadObj = this.getThreadById(stoppedThreadId) || this.getOrCreateThreadObject({ id: stoppedThreadId, name: `Thread ${stoppedThreadId}` });
+        }
+
         if (allThreadsStopped) {
           this.allThreadsStoppedSubject.next(true);
-          // If all stopped, we'll rely on the flag, but can also add the known ID
-          if (stoppedThreadId !== undefined) currentStopped.add(stoppedThreadId);
-        } else if (stoppedThreadId !== undefined) {
-          currentStopped.add(stoppedThreadId);
+          if (stoppedThreadObj) {
+            let alreadyExists = false;
+            for (const t of currentStopped) {
+              if (t.id === stoppedThreadObj.id) {
+                alreadyExists = true;
+                break;
+              }
+            }
+            if (!alreadyExists) {
+              currentStopped.add(stoppedThreadObj);
+            }
+          }
+        } else if (stoppedThreadObj) {
+          let alreadyExists = false;
+          for (const t of currentStopped) {
+            if (t.id === stoppedThreadObj.id) {
+              alreadyExists = true;
+              break;
+            }
+          }
+          if (!alreadyExists) {
+            currentStopped.add(stoppedThreadObj);
+          }
         }
         this.stoppedThreadsSubject.next(currentStopped);
 
-        if (stoppedThreadId !== undefined) {
-          this.activeThreadIdSubject.next(stoppedThreadId);
-        } else if (this.activeThreadIdSubject.value === null && currentStopped.size > 0) {
+        if (stoppedThreadObj) {
+          this.activeThreadSubject.next(stoppedThreadObj);
+        } else if (this.activeThreadSubject.value === null && currentStopped.size > 0) {
           // Fallback: auto-select the first stopped thread if none is active
-          this.activeThreadIdSubject.next(Array.from(currentStopped)[0]);
+          const firstStopped = Array.from(currentStopped)[0];
+          this.activeThreadSubject.next(firstStopped);
         }
 
         const hitBps = event.body?.hitBreakpointIds || [];
@@ -1197,32 +1261,7 @@ export class DapSessionService {
         break;
 
       case 'thread': {
-        const reason = event.body?.reason;
-        const threadId = event.body?.threadId;
-        if (threadId !== undefined) {
-          const currentThreads = [...this.threadsSubject.value];
-          if (reason === 'started') {
-            if (!currentThreads.some(t => t.id === threadId)) {
-              currentThreads.push({ id: threadId, name: `Thread ${threadId}` });
-              this.threadsSubject.next(currentThreads);
-            }
-          } else if (reason === 'exited') {
-            const filtered = currentThreads.filter(t => t.id !== threadId);
-            this.threadsSubject.next(filtered);
-            const stopped = new Set(this.stoppedThreadsSubject.value);
-            if (stopped.delete(threadId)) {
-              this.stoppedThreadsSubject.next(stopped);
-              // D2 fix: if the exiting thread was the last stopped thread,
-              // release the paused execution state. A 'continued' event is
-              // never fired for an exiting thread, so we must handle this here.
-              if (stopped.size === 0) {
-                this.executionStateSubject.next('running');
-                this.allThreadsStoppedSubject.next(false);
-              }
-            }
-          }
-
-        }
+        this.handleThreadEvent(event.body);
         break;
       }
 
@@ -1326,6 +1365,64 @@ export class DapSessionService {
     if (this.stateTransitionTimer) {
       clearTimeout(this.stateTransitionTimer);
       this.stateTransitionTimer = undefined;
+    }
+  }
+
+  /**
+   * Handles incoming DAP 'thread' events by buffering them.
+   */
+  private handleThreadEvent(eventBody: any): void {
+    this.threadEventsBuffer.push(eventBody);
+
+    if (!this.threadEventTimeout) {
+      this.threadEventTimeout = setTimeout(() => {
+        this.flushThreadEventsBuffer();
+      }, 50); // 50ms buffering window
+    }
+  }
+
+  private flushThreadEventsBuffer(): void {
+    this.threadEventTimeout = null;
+    const events = [...this.threadEventsBuffer];
+    this.threadEventsBuffer = [];
+
+    let currentThreads = [...this.threadsSubject.value];
+    const stopped = new Set(this.stoppedThreadsSubject.value);
+    let stoppedChanged = false;
+
+    for (const body of events) {
+      const reason = body.reason;
+      const threadId = body.threadId;
+      if (threadId === undefined) continue;
+
+      if (reason === 'started') {
+        if (!currentThreads.some(t => t.id === threadId)) {
+          const threadObj = this.getOrCreateThreadObject({ id: threadId, name: `Thread ${threadId}` });
+          currentThreads.push(threadObj);
+        }
+      } else if (reason === 'exited') {
+        currentThreads = currentThreads.filter(t => t.id !== threadId);
+        this.threadObjects.delete(threadId);
+        let foundStopped: DapThreadSession | null = null;
+        for (const t of stopped) {
+          if (t.id === threadId) {
+            foundStopped = t;
+            break;
+          }
+        }
+        if (foundStopped && stopped.delete(foundStopped)) {
+          stoppedChanged = true;
+        }
+      }
+    }
+
+    this.threadsSubject.next(currentThreads);
+    if (stoppedChanged) {
+      this.stoppedThreadsSubject.next(stopped);
+      if (stopped.size === 0) {
+        this.executionStateSubject.next('running');
+        this.allThreadsStoppedSubject.next(false);
+      }
     }
   }
 }

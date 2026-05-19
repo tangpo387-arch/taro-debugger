@@ -2,7 +2,7 @@
 title: Project Roadmap & Dependency Map
 scope: milestones, dependencies, architecture-tracking
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer, Human Engineer]
-last_updated: 2026-05-18
+last_updated: 2026-05-19
 ---
 
 # Project Roadmap & Dependency Map
@@ -35,6 +35,7 @@ graph LR
     WI_90["WI-90 Encapsulate DapSessionService Reset Logic"]
     WI_94["WI-94 DapSessionManager Core Implementation"]
     WI_123["WI-123 Stop at Main via DAP Function Breakpoints"]
+    WI_126["WI-126 Implement execution-scoped stackTrace cache and request coalescing in DapSessionService"]
     WI_10["WI-10 Debug Control Button Functionality"]
     WI_11["WI-11 DAP Event Handling & State Management"]
     WI_39["WI-39 Command Serialization: Control Button In-Flight Guard"]
@@ -154,6 +155,7 @@ graph LR
     WI_59 --> WI_60
     WI_60 --> WI_61
     WI_61 --> WI_62
+    WI_06 --> WI_126
     WI_07 --> WI_10
     WI_07 --> WI_11
     WI_10 --> WI_39
@@ -255,6 +257,7 @@ graph LR
     style WI_90 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_94 fill:none,stroke-dasharray:5
     style WI_123 fill:#4ade80,stroke:#000,stroke-width:2.5px
+    style WI_126 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_10 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_11 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_39 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
