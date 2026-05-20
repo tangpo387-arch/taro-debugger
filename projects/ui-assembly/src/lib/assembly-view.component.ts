@@ -52,8 +52,8 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
 
   // ── Sliding Window Config ────────────────────────────────────────────────
   private static readonly AUTO_FETCH_THRESHOLD = 20;
-  private static readonly ASSEMBLY_WINDOW_SIZE = 2001;
-  private static readonly ASSEMBLY_WINDOW_OFFSET = -1000;
+  private static readonly ASSEMBLY_WINDOW_SIZE = 201;
+  private static readonly ASSEMBLY_WINDOW_OFFSET = -100;
 
   constructor() {
     const pcSyncEffect = effect(() => {

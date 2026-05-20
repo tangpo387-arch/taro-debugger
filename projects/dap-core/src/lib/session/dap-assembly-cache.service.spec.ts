@@ -73,16 +73,16 @@ describe('DapAssemblyCacheService', () => {
     it('should perform gap filling (partial cache hit)', async () => {
       // 1. Fetch first 2 instructions
       mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse([
-        { address: BigInt('0x1000'), instruction: 'inst 1' },
-        { address: BigInt('0x1004'), instruction: 'inst 2' },
+        { address: BigInt('0x1000'), instruction: 'inst 1', instructionBytes: '90909090' },
+        { address: BigInt('0x1004'), instruction: 'inst 2', instructionBytes: '90909090' },
       ]));
       await service.fetchInstructions(BigInt('0x1000'), 2, 0);
 
       // 2. Request 4 instructions starting at 0x1000.
       // It should fetch 2 more starting from the end of the cached block.
       mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse([
-        { address: BigInt('0x1008'), instruction: 'inst 3' },
-        { address: BigInt('0x100c'), instruction: 'inst 4' },
+        { address: BigInt('0x1008'), instruction: 'inst 3', instructionBytes: '90909090' },
+        { address: BigInt('0x100c'), instruction: 'inst 4', instructionBytes: '90909090' },
       ]));
 
       const result = await service.fetchInstructions(BigInt('0x1000'), 4, 0);
@@ -90,11 +90,11 @@ describe('DapAssemblyCacheService', () => {
       // Should have called DAP twice total
       expect(mockDapSession.disassemble).toHaveBeenCalledTimes(2);
 
-      // Second call should have offset: 2, count: 2 (gap-fill)
+      // Second call should have offset: 2, count: 50 (gap-fill with preloading)
       expect(mockDapSession.disassemble).toHaveBeenLastCalledWith(expect.objectContaining({
         memoryReference: '0x1000',
         instructionOffset: 2,
-        instructionCount: 2
+        instructionCount: 50
       }), true);
 
       expect(result.length).toBe(4);
@@ -236,7 +236,7 @@ describe('DapAssemblyCacheService', () => {
       const count = 4;
 
       mockDapSession.disassemble.mockImplementation(async (args: any) => {
-        if (args.memoryReference === '0xfde') {
+        if (args.memoryReference === '0xfde' || args.memoryReference === '0xfba') {
           // Negative fetch base
           return makeDisassembleResponse([
             { address: BigInt('0x0ff0'), instruction: 'neg1' }, // Length 15
@@ -509,6 +509,120 @@ describe('DapAssemblyCacheService', () => {
       const ranges = (service as any).cachedRanges;
       expect(ranges.some((r: any) => r.start === BigInt(0x1000))).toBe(true);
       expect(ranges.some((r: any) => r.start === BigInt(0x2000))).toBe(false);
+    });
+  });
+
+  // ── WI-127 Tests ─────────────────────────────────────────────────────────
+
+  describe('WI-127: Cache & Disassembly Efficiency', () => {
+    it('UT-1: should verify partial cache hit returns slice from correct range when requested window boundaries exceed the cached range', async () => {
+      const cached = Array.from({ length: 11 }, (_, i) => ({
+        address: BigInt(0x1010 + i),
+        instruction: `inst ${i}`,
+        instructionByteLength: 1
+      }));
+      (service as any).mergeBatchIntoRanges(cached);
+
+      const result = (service as any).getFromCache(BigInt(0x1015), 10, -10);
+      expect(result.length).toBe(5);
+      expect(result[0].address).toBe(BigInt(0x1010));
+      expect(result[4].address).toBe(BigInt(0x1014));
+    });
+
+    it('UT-2: should verify that disassembly fetching uses guessBytes = BigInt(negCount * 6 + 64) and disassembles with a margin of negCount + 20', async () => {
+      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse([
+        { address: BigInt(0x1000), instruction: 'nop' }
+      ]));
+
+      await service.fetchInstructions(BigInt(0x1000), 20, -10);
+
+      expect(mockDapSession.disassemble).toHaveBeenCalledWith(expect.objectContaining({
+        memoryReference: '0xf84',
+        instructionCount: 30,
+        instructionOffset: 0
+      }), true);
+    });
+
+    it('UT-3: should verify gap-filling for prefix misses fetches only the missing address slice', async () => {
+      const cached = Array.from({ length: 11 }, (_, i) => ({
+        address: BigInt(0x1010 + i),
+        instruction: `inst ${i}`,
+        instructionByteLength: 1
+      }));
+      (service as any).mergeBatchIntoRanges(cached);
+
+      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse(
+        Array.from({ length: 50 }, (_, i) => ({
+          address: BigInt(0x0fde + i),
+          instruction: `new ${i}`,
+          instructionByteLength: 1
+        }))
+      ));
+
+      const result = await service.fetchInstructions(BigInt(0x1010), 10, -5);
+
+      expect(mockDapSession.disassemble).toHaveBeenCalledTimes(1);
+      expect(mockDapSession.disassemble).toHaveBeenCalledWith(expect.objectContaining({
+        memoryReference: '0xea4',
+        instructionCount: 70,
+        instructionOffset: 0
+      }), true);
+
+      expect(result.length).toBe(10);
+      expect(result[0].address).toBe(BigInt(0x100b));
+      expect(result[9].address).toBe(BigInt(0x1014));
+    });
+
+    it('UT-5: should verify that when the suffix gap is smaller than 50, the cache service fetches a preloaded window of 50 instructions forward', async () => {
+      const cached = Array.from({ length: 10 }, (_, i) => ({
+        address: BigInt(0x1010 + i),
+        instruction: `inst ${i}`,
+        instructionByteLength: 1
+      }));
+      (service as any).mergeBatchIntoRanges(cached);
+
+      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse(
+        Array.from({ length: 50 }, (_, i) => ({
+          address: BigInt(0x101a + i),
+          instruction: `new ${i}`,
+          instructionByteLength: 1
+        }))
+      ));
+
+      await service.fetchInstructions(BigInt(0x1010), 11, 0);
+
+      expect(mockDapSession.disassemble).toHaveBeenCalledTimes(1);
+      expect(mockDapSession.disassemble).toHaveBeenCalledWith(expect.objectContaining({
+        memoryReference: '0x1010',
+        instructionCount: 50,
+        instructionOffset: 10
+      }), true);
+    });
+
+    it('UT-6: should verify that when the prefix gap is smaller than 50, the cache service fetches a preloaded window of 50 instructions backward using an adjusted negative offset', async () => {
+      const cached = Array.from({ length: 10 }, (_, i) => ({
+        address: BigInt(0x1010 + i),
+        instruction: `inst ${i}`,
+        instructionByteLength: 1
+      }));
+      (service as any).mergeBatchIntoRanges(cached);
+
+      mockDapSession.disassemble.mockResolvedValue(makeDisassembleResponse(
+        Array.from({ length: 50 }, (_, i) => ({
+          address: BigInt(0x0fde + i),
+          instruction: `new ${i}`,
+          instructionByteLength: 1
+        }))
+      ));
+
+      await service.fetchInstructions(BigInt(0x1010), 11, -1);
+
+      expect(mockDapSession.disassemble).toHaveBeenCalledTimes(1);
+      expect(mockDapSession.disassemble).toHaveBeenCalledWith(expect.objectContaining({
+        memoryReference: '0xea4',
+        instructionCount: 70,
+        instructionOffset: 0
+      }), true);
     });
   });
 

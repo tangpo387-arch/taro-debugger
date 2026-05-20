@@ -1513,4 +1513,35 @@ describe('DapSessionService', () => {
       expect((service as any).activeThreadSubject.value?.id).toBe(12);
     });
   });
+
+  describe('Threads Query Coalescing', () => {
+    it('UT-4: should coalesce concurrent parallel threads queries into a single in-flight DAP request', async () => {
+      (service as any).transport = mockTransport;
+
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          (service as any).handleIncomingMessage({
+            type: 'response',
+            request_seq: req.seq,
+            success: true,
+            command: 'threads',
+            body: { threads: [{ id: 1, name: 'Thread 1' }] }
+          });
+        }, 10);
+      });
+
+      const p1 = service.fetchThreads();
+      const p2 = service.fetchThreads();
+
+      vi.advanceTimersByTime(10);
+
+      await Promise.all([p1, p2]);
+
+      expect(mockTransport.sendRequest).toHaveBeenCalledTimes(1);
+      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
+        command: 'threads'
+      }));
+    });
+  });
+
 });

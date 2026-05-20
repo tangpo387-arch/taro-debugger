@@ -35,10 +35,9 @@ export class DapAssemblyCacheService implements OnDestroy {
   private CACHE_LIMIT = 20000;
   private WATERMARK = 15000;
 
-  /** Maximum number of cached instructions to "discount" from a new fetch request.
-   *  Capping this ensures we always over-fetch a minimum amount to fill the cache
-   *  and avoid continuous small requests during scrolling. */
-  private static readonly MAX_CACHE_HIT_DISCOUNT = 1000;
+  /** Minimum number of instructions to fetch when filling gaps, to preload subsequent
+   *  execution stepping states. */
+  private static readonly MIN_GAP_FETCH_SIZE = 50;
 
   private readonly subscriptions: Subscription[] = [];
 
@@ -101,18 +100,58 @@ export class DapAssemblyCacheService implements OnDestroy {
   ): Promise<DapDisassembledInstruction[]> {
 
     this.currentIpRef = startAddr;
-    const memRefStr = `0x${startAddr.toString(16)}`;
 
     // Cache check: try to satisfy the full request from local store.
-    let cachedInstructions: DapDisassembledInstruction[] = [];
-    cachedInstructions = this.getFromCache(startAddr, instructionCount, instructionOffset);
+    let cachedInstructions = this.getFromCache(startAddr, instructionCount, instructionOffset);
     if (cachedInstructions.length === instructionCount) {
       return cachedInstructions;
     }
 
-    // Partial / miss: fetch only the gap from the DAP adapter.
-    const actualOffset = instructionOffset + cachedInstructions.length;
-    const actualCount = instructionCount - Math.min(DapAssemblyCacheService.MAX_CACHE_HIT_DISCOUNT, cachedInstructions.length);
+    const range = this.findRange(startAddr);
+    if (cachedInstructions.length > 0 && range) {
+      const idx = this.binarySearchInstructions(range.instructions, startAddr);
+      if (idx !== -1) {
+        const startIdx = idx + instructionOffset;
+        const missingPrefixCount = startIdx < 0 ? -startIdx : 0;
+        const missingSuffixCount = (startIdx + instructionCount) > range.instructions.length
+          ? (startIdx + instructionCount) - range.instructions.length
+          : 0;
+
+        if (missingPrefixCount > 0) {
+          // Fetch preceding gap with preloading buffer
+          const safePrefixCount = Math.max(DapAssemblyCacheService.MIN_GAP_FETCH_SIZE, missingPrefixCount);
+          const adjustedOffset = instructionOffset - (safePrefixCount - missingPrefixCount);
+          await this.fetchInstructionsDirect(startAddr, safePrefixCount, adjustedOffset);
+        }
+
+        if (missingSuffixCount > 0) {
+          // Fetch succeeding gap with preloading buffer
+          const safeSuffixCount = Math.max(DapAssemblyCacheService.MIN_GAP_FETCH_SIZE, missingSuffixCount);
+          await this.fetchInstructionsDirect(startAddr, safeSuffixCount, range.instructions.length - idx);
+        }
+
+        // Now that the cache is filled, retrieve the full range
+        return this.getFromCache(startAddr, instructionCount, instructionOffset);
+      }
+    }
+
+    // Total miss: fetch the entire requested window.
+    await this.fetchInstructionsDirect(startAddr, instructionCount, instructionOffset);
+    return this.getFromCache(startAddr, instructionCount, instructionOffset);
+  }
+
+  /**
+   * Direct fetch from DAP adapter without consulting the cache.
+   */
+  private async fetchInstructionsDirect(
+    startAddr: bigint,
+    instructionCount: number,
+    instructionOffset: number
+  ): Promise<DapDisassembledInstruction[]> {
+    const memRefStr = `0x${startAddr.toString(16)}`;
+
+    const actualOffset = instructionOffset;
+    const actualCount = instructionCount;
 
     let negInstructions: DapDisassembledInstruction[] = [];
     let gapInstructions: DapDisassembledInstruction[] = [];
@@ -129,12 +168,12 @@ export class DapAssemblyCacheService implements OnDestroy {
       // Virtual base address for placeholder rows: walk back negCount slots from PC.
       const negVirtualBase = startAddr - BigInt(negCount);
       try {
-        // Assume max ~4 bytes per instruction + padding, over-fetch slightly
-        const guessBytes = BigInt(negCount * 4 + 32);
+        // Assume max ~6 bytes per instruction + padding, over-fetch slightly
+        const guessBytes = BigInt(negCount * 6 + 64);
         const fallbackRef = `0x${(startAddr - guessBytes).toString(16)}`;
         const negRes = await this.sessionService.disassemble({
           memoryReference: fallbackRef,
-          instructionCount: negCount + 10, // over-fetch to ensure overlap with PC
+          instructionCount: negCount + 20, // over-fetch to ensure overlap with PC
           instructionOffset: 0,
           resolveSymbols: true
         }, true);
@@ -251,25 +290,7 @@ export class DapAssemblyCacheService implements OnDestroy {
     this.mergeBatchIntoRanges(uniqueEnhanced);
     this.pruneCache();
 
-    // Combine and enforce strictly ascending order to ensure a clean continuous stream for the UI.
-    // cachedInstructions is already a fresh array from getFromCache, so we can use it as our base.
-    const finalResults = cachedInstructions;
-    let maxFinalAddr = finalResults.length > 0
-      ? (finalResults[finalResults.length - 1].address ?? BigInt(-1))
-      : BigInt(-1);
-
-    for (const inst of uniqueEnhanced) {
-      if (inst.address > maxFinalAddr) {
-        maxFinalAddr = inst.address;
-        finalResults.push(inst);
-      }
-    }
-    let centralIndex = finalResults.findIndex(inst => inst.address === startAddr);
-    if (centralIndex === -1) {
-      return finalResults.slice(0, instructionCount);
-    }
-    const startIndex = Math.max(0, instructionOffset + centralIndex);
-    return finalResults.slice(startIndex, startIndex + instructionCount);
+    return uniqueEnhanced;
   }
 
   /**
@@ -395,9 +416,12 @@ export class DapAssemblyCacheService implements OnDestroy {
     if (idx === -1) return [];
 
     const startIdx = idx + instructionOffset;
-    if (startIdx < 0 || startIdx >= range.instructions.length) return [];
+    const sliceStart = Math.max(0, startIdx);
+    const sliceEnd = Math.min(range.instructions.length, Math.max(0, startIdx + count));
 
-    return range.instructions.slice(startIdx, startIdx + count);
+    if (sliceStart >= sliceEnd) return [];
+
+    return range.instructions.slice(sliceStart, sliceEnd);
   }
 
   /**

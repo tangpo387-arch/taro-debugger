@@ -2,7 +2,7 @@
 title: Project Roadmap & Dependency Map
 scope: milestones, dependencies, architecture-tracking
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer, Human Engineer]
-last_updated: 2026-05-19
+last_updated: 2026-05-20
 ---
 
 # Project Roadmap & Dependency Map
@@ -121,6 +121,7 @@ graph LR
     WI_119["WI-119 Fix Assembly Header Symbol Overflow"]
     WI_120["WI-120 Memory Layout Visualization & Probing"]
     WI_121["WI-121 Inline Memory Editing Support"]
+    WI_127["WI-127 Assembly View: Optimize Cache Hits & DAP Communication Efficiency"]
     WI_01["WI-01 Extend `GdbConfigService` Configuration Model"]
     WI_02["WI-02 Setup Form Field Completion"]
     WI_03["WI-03 Setup Form Validation"]
@@ -343,6 +344,7 @@ graph LR
     style WI_119 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI_120 fill:#6366f1,stroke:#4f46e5
     style WI_121 fill:#6366f1,stroke:#4f46e5
+    style WI_127 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI_01 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_02 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_03 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2

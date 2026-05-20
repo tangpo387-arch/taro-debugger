@@ -77,6 +77,7 @@ export class DapSessionService {
   private readonly threadObjects = new Map<number, DapThreadSession>();
   private threadEventsBuffer: any[] = [];
   private threadEventTimeout: any = null;
+  private threadsQueryInFlight: Promise<void> | null = null;
 
   private readonly activeThreadSubject = new BehaviorSubject<DapThreadSession | null>(null);
   public readonly activeThread$ = this.activeThreadSubject.asObservable();
@@ -767,22 +768,32 @@ export class DapSessionService {
   /**
    * Fetch threads and update the subjects. Called internally on 'stopped'.
    */
-  private async fetchThreads(): Promise<void> {
-    try {
-      const response = await this.sendRequest('threads');
-      if (response.success && response.body?.threads) {
-        const mapped = response.body.threads.map((t: any) => this.getOrCreateThreadObject(t));
-        this.threadsSubject.next(mapped);
-        const currentActive = this.activeThreadSubject.value;
-        const threadsList = response.body.threads;
-        if (threadsList.length > 0 && (currentActive === null || !threadsList.some((t: any) => t.id === currentActive.id))) {
-          this.activeThreadSubject.next(mapped[0]);
-        }
-      }
-    } catch (err) {
-      console.warn('Failed to fetch threads', err);
-      this.threadsSubject.next([]);
+  public async fetchThreads(): Promise<void> {
+    if (this.threadsQueryInFlight) {
+      return this.threadsQueryInFlight;
     }
+
+    this.threadsQueryInFlight = (async () => {
+      try {
+        const response = await this.sendRequest('threads');
+        if (response.success && response.body?.threads) {
+          const mapped = response.body.threads.map((t: any) => this.getOrCreateThreadObject(t));
+          this.threadsSubject.next(mapped);
+          const currentActive = this.activeThreadSubject.value;
+          const threadsList = response.body.threads;
+          if (threadsList.length > 0 && (currentActive === null || !threadsList.some((t: any) => t.id === currentActive.id))) {
+            this.activeThreadSubject.next(mapped[0]);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch threads', err);
+        this.threadsSubject.next([]);
+      } finally {
+        this.threadsQueryInFlight = null;
+      }
+    })();
+
+    return this.threadsQueryInFlight;
   }
 
   /**

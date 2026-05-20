@@ -597,6 +597,34 @@
         "created": "2026-05-16",
         "created_by": "Antigravity-Agent"
       }
+    },
+    {
+      "id": "WI-127",
+      "title": "Assembly View: Optimize Cache Hits & DAP Communication Efficiency",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Optimize disassembly caching logic and thread stopped queries to eliminate redundant DAP requests, prevent cache-miss loops, and improve stepping performance.",
+      "details": [
+        "Optimize address range calculation in DapAssemblyCacheService to prevent immediate cache eviction during stepping",
+        "Implement partial cache hit logic in getFromCache to retrieve only available instruction ranges instead of returning empty array",
+        "Reduce ASSEMBLY_WINDOW_SIZE in AssemblyViewComponent to a reasonable viewport size to minimize transfer payload",
+        "Consolidate duplicate thread stopped queries using dynamic multicast or RxJS shareReplay in DapSessionService",
+        "[Doc] docs/archive/specs/assembly-communication-efficiency.md",
+        "[Test] Verify partial cache hit returns slice from correct range when boundaries exceed cached range",
+        "[Test] Verify optimized guessBytes formula and safe count margin calculation for negative offset disassemblies",
+        "[Test] Verify gap-filling for prefix misses by fetching only the missing address slice",
+        "[Test] Verify concurrent thread queries coalesce into a single in-flight DAP command"
+      ],
+      "timeline": {
+        "created": "2026-05-20",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-20"
+      }
     }
   ]
 }
