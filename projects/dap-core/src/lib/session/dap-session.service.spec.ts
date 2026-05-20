@@ -398,8 +398,20 @@ describe('DapSessionService', () => {
     });
 
     it('should transition through states based on events', () => {
+      // Provide a transport so fetchThreads() (triggered by the 'stopped' event) can run cleanly.
+      (service as any).transport = mockTransport;
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          (service as any).handleIncomingMessage({
+            type: 'response', request_seq: req.seq, success: true, command: req.command, body: { threads: [] }
+          });
+        }, 0);
+      });
+
       (service as any).handleTransportEvent({ type: 'event', event: 'stopped', seq: 1 });
       expect((service as any).executionStateSubject.value).toBe('stopped');
+      // Flush the pending fetchThreads response before proceeding, so reset() does not reject it.
+      vi.advanceTimersByTime(1);
 
       (service as any).handleTransportEvent({ type: 'event', event: 'continued', seq: 2 });
       expect((service as any).executionStateSubject.value).toBe('running');
@@ -485,6 +497,18 @@ describe('DapSessionService', () => {
   });
 
   describe('Multi-Thread State Tracking', () => {
+    beforeEach(() => {
+      // Provide a transport so fetchThreads() (triggered by 'stopped' events) resolves cleanly.
+      (service as any).transport = mockTransport;
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          (service as any).handleIncomingMessage({
+            type: 'response', request_seq: req.seq, success: true, command: req.command, body: { threads: [] }
+          });
+        }, 0);
+      });
+    });
+
     it('should track stopped threads in a Set', () => {
       (service as any).handleTransportEvent({
         type: 'event',
@@ -610,6 +634,53 @@ describe('DapSessionService', () => {
       // Execution state must NOT remain stuck in 'stopped'
       expect((service as any).executionStateSubject.value).toBe('running');
       expect((service as any).allThreadsStoppedSubject.value).toBe(false);
+    });
+
+    it('should dynamically evaluate thread status like running/stopped/exited', () => {
+      const t1 = (service as any).getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
+      const t2 = (service as any).getOrCreateThreadObject({ id: 2, name: 'Thread 2' });
+
+      // Initially, let both be active in threadsList
+      (service as any).threadsSubject.next([t1, t2]);
+
+      // 1. Idle/Running execution state -> both should report 'running'
+      (service as any).handleTransportEvent({
+        type: 'event',
+        event: 'continued',
+        body: { allThreadsContinued: true }
+      });
+      expect(t1.status).toBe('running');
+      expect(t2.status).toBe('running');
+
+      // 2. State stops t1 (non-stop mode stopped event)
+      (service as any).handleTransportEvent({
+        type: 'event',
+        event: 'stopped',
+        body: { threadId: 1, reason: 'breakpoint' }
+      });
+      expect(t1.status).toBe('stopped');
+      expect(t2.status).toBe('running');
+
+      // 3. allThreadsStopped is true -> both should report 'stopped'
+      (service as any).handleTransportEvent({
+        type: 'event',
+        event: 'stopped',
+        body: { threadId: 2, reason: 'step', allThreadsStopped: true }
+      });
+      expect(t1.status).toBe('stopped');
+      expect(t2.status).toBe('stopped');
+
+      // 4. Thread t2 exits -> it is removed from active threadsList
+      (service as any).handleTransportEvent({
+        type: 'event',
+        event: 'thread',
+        body: { threadId: 2, reason: 'exited' }
+      });
+      // Flush buffered thread events
+      vi.advanceTimersByTime(50);
+
+      expect(t1.status).toBe('stopped');
+      expect(t2.status).toBe('exited');
     });
   });
 
@@ -1377,6 +1448,18 @@ describe('DapSessionService', () => {
   });
 
   describe('Active Thread Auto-Selection', () => {
+    beforeEach(() => {
+      // Provide a transport so fetchThreads() (triggered by 'stopped' events) resolves cleanly.
+      (service as any).transport = mockTransport;
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          (service as any).handleIncomingMessage({
+            type: 'response', request_seq: req.seq, success: true, command: req.command, body: { threads: [] }
+          });
+        }, 0);
+      });
+    });
+
     it('should auto-select first stopped thread when stopped event omits threadId and no thread is active', () => {
       // Arrange: no active thread set
       (service as any).activeThreadSubject.next(null);

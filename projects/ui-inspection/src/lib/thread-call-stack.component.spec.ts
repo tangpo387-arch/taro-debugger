@@ -6,18 +6,19 @@ import { ThreadCallStackComponent, ExecutionNode } from './thread-call-stack.com
 import { DapSessionService, DapThread, DapStackFrame, DapConfigService } from '@taro/dap-core';
 
 function makeMockThreadSession(id: number, name: string, frames: DapStackFrame[] = [], startWithCache = false) {
-  return {
+  const thread: any = {
     id,
     name,
-    cachedFrames: startWithCache ? frames : undefined as any[] | undefined,
+    cachedFrames: startWithCache ? frames : undefined,
     isLoadingStackTrace: false,
-    stackTrace: vi.fn().mockImplementation(async function(this: any) {
-      this.isLoadingStackTrace = true;
-      this.cachedFrames = frames;
-      this.isLoadingStackTrace = false;
-      return frames;
-    })
   };
+  thread.stackTrace = vi.fn().mockImplementation(async () => {
+    thread.isLoadingStackTrace = true;
+    thread.cachedFrames = frames;
+    thread.isLoadingStackTrace = false;
+    return frames;
+  });
+  return thread;
 }
 
 function makeMockDapSession(overrides: Partial<DapSessionService> = {}) {
@@ -60,6 +61,7 @@ describe('ThreadCallStackComponent', () => {
   let mockConfig: any;
 
   beforeEach(async () => {
+    vi.useFakeTimers();
     mockSession = makeMockDapSession();
     mockConfig = makeMockConfigService();
 
@@ -77,6 +79,7 @@ describe('ThreadCallStackComponent', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     fixture.destroy();
     TestBed.resetTestingModule();
   });
@@ -88,7 +91,7 @@ describe('ThreadCallStackComponent', () => {
       mockSession.threads$.next(threads);
       mockSession.executionState$.next('stopped');
       fixture.detectChanges();
-      await new Promise(r => setTimeout(r, 20));
+      await vi.advanceTimersByTimeAsync(10); // Wait for debounceTime(10)
       fixture.detectChanges();
 
       const threadRows = fixture.debugElement.queryAll(By.css('.mat-tree-node'));
@@ -109,7 +112,7 @@ describe('ThreadCallStackComponent', () => {
       mockSession.activeThread$.next({ id: 1 } as any); // Thread 1 is active
       mockSession.executionState$.next('stopped');
       fixture.detectChanges();
-      await new Promise(r => setTimeout(r, 20));
+      await vi.advanceTimersByTimeAsync(10); // Wait for debounceTime(10)
       fixture.detectChanges();
 
       // Find Focus button for Thread 2 (it should be visible because it's not active)
@@ -130,7 +133,7 @@ describe('ThreadCallStackComponent', () => {
       mockSession.activeThread$.next({ id: 1 } as any);
       mockSession.executionState$.next('stopped');
       fixture.detectChanges();
-      await new Promise(r => setTimeout(r, 20));
+      await vi.advanceTimersByTimeAsync(10); // Wait for debounceTime(10)
       fixture.detectChanges();
 
       // Assert
@@ -154,7 +157,13 @@ describe('ThreadCallStackComponent', () => {
       // Act - simulate stop
       mockSession.executionState$.next('stopped');
       fixture.detectChanges();
-      await new Promise(r => setTimeout(r, 50)); // Wait for debounce + fetchFrames promise
+      await vi.advanceTimersByTimeAsync(10); // Wait for debounceTime(10)
+      fixture.detectChanges();
+      
+      await vi.advanceTimersByTimeAsync(1); // Flush the stackTrace promise microtask queue
+      fixture.detectChanges();
+      
+      await vi.advanceTimersByTimeAsync(10); // Wait for cache update debounceTime(10)
       fixture.detectChanges();
 
       // Assert
@@ -176,7 +185,13 @@ describe('ThreadCallStackComponent', () => {
       // First stop to populate cache
       mockSession.executionState$.next('stopped');
       fixture.detectChanges();
-      await new Promise(r => setTimeout(r, 50));
+      await vi.advanceTimersByTimeAsync(10); // Wait for debounceTime(10)
+      fixture.detectChanges();
+      
+      await vi.advanceTimersByTimeAsync(1); // Flush fetchFrames microtask
+      fixture.detectChanges();
+      
+      await vi.advanceTimersByTimeAsync(10); // Wait for cache update debounceTime(10)
       fixture.detectChanges();
 
       // Manually collapse the thread node (simulated via tree API)
@@ -188,10 +203,12 @@ describe('ThreadCallStackComponent', () => {
       // Act - trigger another "stop" via transition (not just a re-push)
       mockSession.executionState$.next('running');
       fixture.detectChanges();
-      await new Promise(r => setTimeout(r, 20)); // Wait for debounce
+      await vi.advanceTimersByTimeAsync(10); // Wait for debounceTime(10)
+      fixture.detectChanges();
+      
       mockSession.executionState$.next('stopped');
       fixture.detectChanges();
-      await new Promise(r => setTimeout(r, 50)); // Wait for auto-expansion
+      await vi.advanceTimersByTimeAsync(10); // Wait for debounceTime(10)
       fixture.detectChanges();
 
       // Assert - should be expanded again
@@ -210,9 +227,13 @@ describe('ThreadCallStackComponent', () => {
       
       mockSession.executionState$.next('stopped');
       fixture.detectChanges();
-      await new Promise(r => setTimeout(r, 20)); // Wait for debounce
+      await vi.advanceTimersByTimeAsync(10); // Wait for debounceTime(10)
       fixture.detectChanges();
-      await new Promise(r => setTimeout(r, 50)); // Wait for fetchFrames
+      
+      await vi.advanceTimersByTimeAsync(1); // Flush fetchFrames microtask
+      fixture.detectChanges();
+      
+      await vi.advanceTimersByTimeAsync(10); // Wait for cache update debounceTime(10)
       fixture.detectChanges();
 
       const emitSpy = vi.spyOn(component.frameSelected, 'emit');

@@ -1,5 +1,7 @@
 import { DapThread, DapResponse, DapStackFrame } from '../dap.types';
-import { DapSessionService } from './dap-session.service';
+import { DapSessionService, ExecutionState } from './dap-session.service';
+
+export type DapThreadStatus = 'running' | 'stopped' | 'exited';
 
 /**
  * Rich, object-oriented representation of a thread in the debug session.
@@ -10,6 +12,22 @@ export class DapThreadSession implements DapThread {
   public readonly id: number;
   public readonly name: string;
 
+  private _status: DapThreadStatus = 'running';
+
+  /**
+   * Get the current status of the thread ('running' | 'stopped' | 'exited').
+   */
+  public get status(): DapThreadStatus {
+    return this._status;
+  }
+
+  /**
+   * Updates the thread status.
+   */
+  public setStatus(status: DapThreadStatus): void {
+    this._status = status;
+  }
+
   private stackTraceCache: DapResponse | null = null;
   private stackTracePromise: Promise<DapResponse> | null = null;
 
@@ -19,6 +37,10 @@ export class DapThreadSession implements DapThread {
   ) {
     this.id = thread.id;
     this.name = thread.name;
+
+    // Initialize status based on current session state
+    const isStopped = this.session.allThreadsStopped || Array.from(this.session.stoppedThreads).some(st => st.id === this.id);
+    this._status = isStopped ? 'stopped' : 'running';
   }
 
   public get cachedFrames(): DapStackFrame[] | undefined {
