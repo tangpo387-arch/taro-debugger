@@ -13,6 +13,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  background-color: var(--mat-sys-surface-container);
 }
 
 .file-group {
@@ -65,7 +66,10 @@
   }
 
   &.disabled {
-    .breakpoint-icon, .breakpoint-label-group, .location-badge {
+
+    .breakpoint-icon,
+    .breakpoint-label-group,
+    .location-badge {
       opacity: 0.5;
     }
   }
@@ -101,7 +105,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   &.verified {
     color: var(--mat-sys-error);
   }
@@ -198,7 +202,7 @@
     align-items: center !important;
     justify-content: center !important;
   }
-  
+
   // Force all internal layers to share the exact same center point
   .mdc-checkbox__native-control,
   .mdc-checkbox__background,

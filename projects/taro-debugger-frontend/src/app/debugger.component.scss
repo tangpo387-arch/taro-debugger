@@ -377,7 +377,7 @@ app-inspection-panel + app-inspection-panel {
 /* --- Console panel area style --- */
 .consoles-container {
   flex-shrink: 0;
-  background-color: var(--mat-sys-surface-container-high);
+  background-color: var(--mat-sys-surface-container);
   /* P2 Fix: Explicit top border to match all other panel separators (§9.5) */
   border-top: 1px solid var(--mat-sys-outline-variant);
   // position:relative is required so app-log-viewer can use position:absolute inset:0

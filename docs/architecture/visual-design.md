@@ -95,6 +95,7 @@ All panel boundaries and section dividers must use **Material Design system toke
 | Rule | Required Token / Spec |
 | :--- | :--- |
 | **Sidebar Shapes** | `border-radius: 0 !important` (Enforce sharp IDE geometries) |
+| **Panel Background** | `var(--mat-sys-surface-container)` for regular panels (explorer, inspectors, console viewport) |
 | **Section Dividers** | `1px solid var(--mat-sys-outline-variant)` |
 | **Tool Window Headers** | `surface-container-high` background, Uppercase typography |
 | **Unified Highlight** | `primary-container` background + `4px primary` left accent |
@@ -239,8 +240,8 @@ The **active tab** must visually "fuse" with its content area by matching the co
 
 | Context | Active Tab Background | Content Area Background |
 | :--- | :--- | :--- |
-| **Main Editor** (Source / Disassembly) | `var(--mat-sys-surface)` | Monaco Editor / Assembly View background |
-| **Console / Output** | `var(--mat-sys-surface-container-low)` | `.console-viewport` background |
+| **Main Editor** (Source / Disassembly / Memory) | `var(--mat-sys-surface)` | Monaco Editor / Assembly View / Memory View background |
+| **Console / Output** | `var(--mat-sys-surface-container)` | `.console-viewport` background |
 
 ### 6.6 Empty States
 
