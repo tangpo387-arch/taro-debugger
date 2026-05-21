@@ -24,7 +24,8 @@
 
     <!-- Branch node: Process or Thread -->
     <mat-tree-node *matTreeNodeDef="let node; when: hasChild" class="mat-tree-node"
-      [class.active-node]="node.type === 'thread' && node.isActive">
+      [class.active-node]="node.type === 'thread' && node.isActive"
+      (click)="tree.toggle(node); onToggle(node)">
       <div class="indent-spacer" matTreeNodePadding [matTreeNodePaddingIndent]="20"></div>
       <button mat-icon-button matTreeNodeToggle class="tree-toggle-button" [attr.aria-label]="'Toggle ' + node.label"
         (click)="onToggle(node); $event.stopPropagation()">

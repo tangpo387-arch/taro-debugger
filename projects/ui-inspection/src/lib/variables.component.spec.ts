@@ -77,6 +77,30 @@ describe('VariablesComponent', () => {
       expect(inspectMemorySpy).not.toHaveBeenCalled();
       expect(component.flatNodes[0].source.expanded).toBe(false);
     });
+
+    it('should toggle expansion exactly once when the chevron button is clicked', async () => {
+      // Arrange
+      const scopes: DapScope[] = [
+        { name: 'Locals', variablesReference: 100, expensive: false }
+      ];
+      mockVariablesService.scopes$.next(scopes);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const toggleNodeSpy = vi.spyOn(component, 'toggleNode');
+
+      const chevronBtn = fixture.debugElement.query(By.css('.toggle-btn'));
+      expect(chevronBtn).not.toBeNull();
+
+      // Act - Click the chevron button
+      chevronBtn.nativeElement.click();
+      fixture.detectChanges();
+
+      // Assert
+      expect(toggleNodeSpy).toHaveBeenCalledTimes(1);
+      expect(component.flatNodes[0].source.expanded).toBe(false);
+    });
   });
 
   describe('Row Action Buttons', () => {

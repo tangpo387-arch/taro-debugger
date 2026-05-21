@@ -259,6 +259,28 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-12"
       }
+    },
+    {
+      "id": "WI-128",
+      "title": "Unify Tree Node Expansion Behavior",
+      "featureGroup": "UI System Design",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Unify mouse click node expansion behavior across variables, thread & call stack, and file explorer panels, and update the visual design document.",
+      "details": [
+        "Unify node expansion click behavior on variables, threads, and file tree rows",
+        "[Doc] docs/archive/specs/unify-tree-expansion.md",
+        "[Test] Verify node toggle expands and collapses on click anywhere on the row"
+      ],
+      "timeline": {
+        "created": "2026-05-21",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-21"
+      }
     }
   ]
 }

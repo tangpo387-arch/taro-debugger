@@ -2,7 +2,7 @@
 title: Project Roadmap & Dependency Map
 scope: milestones, dependencies, architecture-tracking
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer, Human Engineer]
-last_updated: 2026-05-20
+last_updated: 2026-05-21
 ---
 
 # Project Roadmap & Dependency Map
@@ -135,6 +135,7 @@ graph LR
     WI_85["WI-85 Consolidate Debug Panels to Left Sidenav"]
     WI_88["WI-88 Extract panel group layout component"]
     WI_115["WI-115 Implement Dual-Layer Fatal Error Handling"]
+    WI_128["WI-128 Unify Tree Node Expansion Behavior"]
     WI_11 --> WI_19
     WI_05 --> WI_20
     WI_39 --> WI_38
@@ -358,6 +359,7 @@ graph LR
     style WI_85 fill:none,stroke-dasharray:5
     style WI_88 fill:#cbd5e1,stroke:#000,stroke-width:2.5px
     style WI_115 fill:#cbd5e1,stroke:#000,stroke-width:2.5px
+    style WI_128 fill:#cbd5e1,stroke:#000,stroke-width:2.5px
 ```
 
 ## Feature Groups

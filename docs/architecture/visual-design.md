@@ -2,7 +2,7 @@
 title: Architecture - Visual Design
 scope: architecture, visual-design, css, density, typography
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-12
+last_updated: 2026-05-21
 related:
   - ../architecture.md
   - ui-layer.md
@@ -159,6 +159,8 @@ These rules govern the Monaco Editor integration in `EditorComponent`.
 | **Auto-Revelation** | The file tree MUST automatically expand parent nodes and `scrollIntoView` the active file on every execution stop or manual frame click. |
 | **Highlight Strategy** | Use `border-left` directly on the item container. Using `::before` pseudo-elements is discouraged for MDC-based components to avoid layering conflicts. |
 | **Transition** | `background-color 0.2s ease` on hover/active states for smooth visual feedback. |
+| **Node Expansion** | Clicking anywhere on an expandable tree node row (Process, Thread, Directory, Scope, or expandable Variable) MUST toggle its expansion state. |
+| **Propagation Prevention** | Sub-interactive elements (e.g. Focus thread button, Type Info button, Memory View button, chevron button click handlers) MUST prevent event bubbling (using `$event.stopPropagation()`) to avoid double-toggling or duplicate events. |
 
 ### 6.5 Status Bar Layout Rules
 

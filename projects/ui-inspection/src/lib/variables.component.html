@@ -9,7 +9,7 @@
       <!-- Expand/Collapse toggle (only for expandable nodes) -->
       @if (flatNode.expandable) {
         <button mat-icon-button class="toggle-btn"
-                (click)="toggleNode(flatNode)"
+                (click)="toggleNode(flatNode); $event.stopPropagation()"
                 [attr.aria-label]="'Toggle ' + flatNode.source.name">
           @if (flatNode.source.isLoading) {
             <mat-icon class="loading-spin">sync</mat-icon>
