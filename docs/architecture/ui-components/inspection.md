@@ -2,7 +2,7 @@
 title: Architecture - Inspection Panels (@taro/ui-inspection)
 scope: ui-inspection, variables, call-stack, threads, breakpoints
 audience: [Human Engineer, Lead_Engineer, Product_Architect, Quality_Control_Reviewer]
-last_updated: 2026-05-19
+last_updated: 2026-05-21
 related:
   - architecture/session-layer.md
   - architecture/ui-shared.md
@@ -23,12 +23,12 @@ The `@taro/ui-inspection` library contains the suite of panels used to inspect t
 ### 2.1 Thread Call Stack Panel
 
 Consolidates threads and stack frames into a single hierarchical flat tree view (Process > Thread > Frame) using the `childrenAccessor` API. Supports horizontal scrolling for deep nesting or long function names.
-- **Data Source**: Reactive streams from `DapSessionService` (`threads$`, `activeThread$`, `stoppedThreads$`, `allThreadsStopped$`).
+- **Data Source**: Reactive streams from `DapSessionService` (`threads$`, `activeThread$`). Thread execution status (`running` / `stopped` / `exited`) and stop reason are read directly from each `DapThreadSession` instance's `status` and `stopReason` properties, rather than separate service-level observables.
 - **Dynamic & Cached Loading**: Threads are loaded globally as rich `DapThreadSession` wrappers. Stack frames are fetched on-demand when a thread node is expanded by calling `thread.stackTrace()`. This leverages the thread-level caching and request coalescing inside `DapThreadSession` to avoid duplicate concurrent network queries to GDB.
 - **Selection Mode**: Decouples tree navigation from thread selection. Clicking a thread row label toggles expansion only. Selection (Focus) is performed via a dedicated **"Focus"** icon button, ensuring navigational clicks don't inadvertently switch the session's active thread. This button utilizes a `sticky` CSS layout to remain accessible on the right edge of the viewport even when long function names force horizontal scrolling.
 - **Signature Formatting**: Employs the `CppSignaturePipe` to automatically parse and collapse overly verbose C++ function signatures (e.g., massive template types and lambdas) into readable shorthand, while exposing the full original signature via an Angular Material tooltip.
 - **Auto-Expansion**: Automatically expands the active thread and fetches its call stack upon a *fresh* `stopped` event or active thread transition. Employs a "sticky" expansion flag to maintain state across asynchronous data reloads while explicitly respecting manual user collapse during the same debug pause.
-- **Visuals**: Displays dynamic pause icons with tooltips pulled from `stopReason$`. Active threads are prominently marked with an "ACTIVE" badge.
+- **Visuals**: Displays dynamic pause icons with tooltips for the stop reason. Active threads are prominently marked with an "ACTIVE" badge. Both status and reason are resolved from the `DapThreadSession` object directly.
 
 ### 2.3 Variables Panel
 

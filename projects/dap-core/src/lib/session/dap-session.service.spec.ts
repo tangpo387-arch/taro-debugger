@@ -515,25 +515,29 @@ describe('DapSessionService', () => {
         event: 'stopped',
         body: { threadId: 1, reason: 'breakpoint' }
       });
-      const getStoppedIds = () => Array.from((service as any).stoppedThreadsSubject.value as Set<any>).map(t => t.id);
-      expect(getStoppedIds()).toContain(1);
-      expect((service as any).allThreadsStoppedSubject.value).toBe(false);
+      const t1 = (service as any).threadObjects.get(1);
+      expect(t1).toBeDefined();
+      expect(t1.status).toBe('stopped');
+      expect(t1.stopReason).toBe('breakpoint');
 
       (service as any).handleTransportEvent({
         type: 'event',
         event: 'stopped',
         body: { threadId: 2, reason: 'step', allThreadsStopped: true }
       });
-      expect(getStoppedIds()).toContain(1);
-      expect(getStoppedIds()).toContain(2);
-      expect((service as any).allThreadsStoppedSubject.value).toBe(true);
+      const t2 = (service as any).threadObjects.get(2);
+      expect(t2).toBeDefined();
+      expect(t2.status).toBe('stopped');
+      expect(t2.stopReason).toBe('step');
+      expect(t1.status).toBe('stopped');
     });
 
     it('should remove thread IDs on per-thread continued event', () => {
       // Setup: two threads stopped
       const t1 = (service as any).getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
       const t2 = (service as any).getOrCreateThreadObject({ id: 2, name: 'Thread 2' });
-      (service as any).stoppedThreadsSubject.next(new Set([t1, t2]));
+      t1.setStatus('stopped');
+      t2.setStatus('stopped');
       (service as any).executionStateSubject.next('stopped');
 
       (service as any).handleTransportEvent({
@@ -542,17 +546,16 @@ describe('DapSessionService', () => {
         body: { threadId: 1, allThreadsContinued: false }
       });
 
-      const stoppedIds = Array.from((service as any).stoppedThreadsSubject.value as Set<any>).map(t => t.id);
-      expect(stoppedIds).not.toContain(1);
-      expect(stoppedIds).toContain(2);
+      expect(t1.status).toBe('running');
+      expect(t2.status).toBe('stopped');
       expect((service as any).executionStateSubject.value).toBe('stopped');
     });
 
     it('should clear all threads on allThreadsContinued event', () => {
       const t1 = (service as any).getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
       const t2 = (service as any).getOrCreateThreadObject({ id: 2, name: 'Thread 2' });
-      (service as any).stoppedThreadsSubject.next(new Set([t1, t2]));
-      (service as any).allThreadsStoppedSubject.next(true);
+      t1.setStatus('stopped');
+      t2.setStatus('stopped');
 
       (service as any).handleTransportEvent({
         type: 'event',
@@ -560,14 +563,14 @@ describe('DapSessionService', () => {
         body: { allThreadsContinued: true }
       });
 
-      expect((service as any).stoppedThreadsSubject.value.size).toBe(0);
-      expect((service as any).allThreadsStoppedSubject.value).toBe(false);
+      expect(t1.status).toBe('running');
+      expect(t2.status).toBe('running');
       expect((service as any).executionStateSubject.value).toBe('running');
     });
 
     it('should transition to running if last stopped thread is continued', () => {
       const t1 = (service as any).getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
-      (service as any).stoppedThreadsSubject.next(new Set([t1]));
+      t1.setStatus('stopped');
       (service as any).executionStateSubject.next('stopped');
 
       (service as any).handleTransportEvent({
@@ -576,7 +579,7 @@ describe('DapSessionService', () => {
         body: { threadId: 1, allThreadsContinued: false }
       });
 
-      expect((service as any).stoppedThreadsSubject.value.size).toBe(0);
+      expect(t1.status).toBe('running');
       expect((service as any).executionStateSubject.value).toBe('running');
     });
 
@@ -587,7 +590,8 @@ describe('DapSessionService', () => {
         body: { threadId: 1, reason: 'breakpoint', description: 'Paused on breakpoint' }
       });
 
-      expect((service as any).threadStopReasonsSubject.value.get(1)).toBe('Paused on breakpoint');
+      const t1 = (service as any).threadObjects.get(1);
+      expect(t1.stopReason).toBe('Paused on breakpoint');
 
       (service as any).handleTransportEvent({
         type: 'event',
@@ -595,11 +599,14 @@ describe('DapSessionService', () => {
         body: { threadId: 1, allThreadsContinued: false }
       });
 
-      expect((service as any).threadStopReasonsSubject.value.has(1)).toBe(false);
+      expect(t1.stopReason).toBeNull();
     });
 
     it('should clear all stop reasons on allThreadsContinued', () => {
-      (service as any).threadStopReasonsSubject.next(new Map([[1, 'reason1'], [2, 'reason2']]));
+      const t1 = (service as any).getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
+      const t2 = (service as any).getOrCreateThreadObject({ id: 2, name: 'Thread 2' });
+      t1.setStopReason('reason1');
+      t2.setStopReason('reason2');
 
       (service as any).handleTransportEvent({
         type: 'event',
@@ -607,13 +614,14 @@ describe('DapSessionService', () => {
         body: { allThreadsContinued: true }
       });
 
-      expect((service as any).threadStopReasonsSubject.value.size).toBe(0);
+      expect(t1.stopReason).toBeNull();
+      expect(t2.stopReason).toBeNull();
     });
 
     it('should transition to running when the last stopped thread exits (D2 regression)', () => {
       // Setup: one stopped thread
       const t1 = (service as any).getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
-      (service as any).stoppedThreadsSubject.next(new Set([t1]));
+      t1.setStatus('stopped');
       (service as any).executionStateSubject.next('stopped');
       (service as any).threadsSubject.next([t1]);
 
@@ -629,11 +637,11 @@ describe('DapSessionService', () => {
 
       // Thread removed from list
       expect((service as any).threadsSubject.value).toHaveLength(0);
-      // stoppedThreads$ cleared
-      expect((service as any).stoppedThreadsSubject.value.size).toBe(0);
+      // t1 marked exited and removed from cache
+      expect(t1.status).toBe('exited');
+      expect((service as any).threadObjects.get(1)).toBeUndefined();
       // Execution state must NOT remain stuck in 'stopped'
       expect((service as any).executionStateSubject.value).toBe('running');
-      expect((service as any).allThreadsStoppedSubject.value).toBe(false);
     });
 
     it('should dynamically evaluate thread status like running/stopped/exited', () => {
@@ -1440,7 +1448,6 @@ describe('DapSessionService', () => {
 
       // Assert: optimistic running state applied and UI unlocked immediately
       expect((service as any).executionStateSubject.value).toBe('running');
-      expect((service as any).stoppedThreadsSubject.value.size).toBe(0);
       expect((service as any).commandInFlightSubject.value).toBe(false);
     });
 
@@ -1468,7 +1475,9 @@ describe('DapSessionService', () => {
       const t5 = (service as any).getOrCreateThreadObject({ id: 5, name: 'Thread 5' });
       const t7 = (service as any).getOrCreateThreadObject({ id: 7, name: 'Thread 7' });
       const t9 = (service as any).getOrCreateThreadObject({ id: 9, name: 'Thread 9' });
-      (service as any).stoppedThreadsSubject.next(new Set([t5, t7, t9]));
+      t5.setStatus('stopped');
+      t7.setStatus('stopped');
+      t9.setStatus('stopped');
 
       // Act: stopped event with allThreadsStopped=true but no threadId
       (service as any).handleTransportEvent({
@@ -1487,7 +1496,9 @@ describe('DapSessionService', () => {
       const t5 = (service as any).getOrCreateThreadObject({ id: 5, name: 'Thread 5' });
       const t7 = (service as any).getOrCreateThreadObject({ id: 7, name: 'Thread 7' });
       const t9 = (service as any).getOrCreateThreadObject({ id: 9, name: 'Thread 9' });
-      (service as any).stoppedThreadsSubject.next(new Set([t5, t7, t9]));
+      t5.setStatus('stopped');
+      t7.setStatus('stopped');
+      t9.setStatus('stopped');
 
       // Act: stopped event with no explicit threadId
       (service as any).handleTransportEvent({

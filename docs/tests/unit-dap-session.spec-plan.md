@@ -4,7 +4,7 @@ scope: unit-test
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 target-file: projects/dap-core/src/lib/session/dap-session.service.ts
 related-wi: [WI-41, WI-86, WI-89, WI-93, WI-126]
-last_updated: 2026-05-19
+last_updated: 2026-05-21
 ---
 
 # DapSessionService — Unit Spec Plan
@@ -65,9 +65,10 @@ Fully isolated tests for `DapSessionService`. Focuses on DAP session lifecycle, 
   * Verify that execution state transitions occur exclusively upon receiving `continued` or `stopped` events from the transport.
 
 * **Multi-Thread State Tracking (WI-93)**
-  * Verify that `stoppedThreads$` (Set) correctly adds thread IDs on `stopped` events.
-  * Verify that `stoppedThreads$` removes thread IDs on `continued` events (per-thread or all).
-  * Verify that `allThreadsStopped$` correctly reflects the state when the DAP `allThreadsStopped` property is present in the event.
+  * Verify that `DapThreadSession.status` transitions to `'stopped'` when that thread's ID appears in a `stopped` event.
+  * Verify that `DapThreadSession.status` transitions back to `'running'` on a matching `continued` event (per-thread or all-threads).
+  * Verify that `DapThreadSession.status` transitions to `'exited'` when a `thread exited` event is received.
+  * Verify that `DapThreadSession.stopReason` is set on a `stopped` event and cleared (to `null`) on resumption.
 
 * **ThreadObject Caching, Coalescing & Debouncing (WI-126)**
   * Verify that thread started/exited events are debounced over a 50ms temporal window.

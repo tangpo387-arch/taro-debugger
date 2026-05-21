@@ -104,15 +104,12 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
         this.dapSession.processInfo$,
         this.dapSession.threads$,
         this.dapSession.activeThread$,
-        this.dapSession.stoppedThreads$,
-        this.dapSession.allThreadsStopped$,
         this.dapSession.executionState$,
-        this.dapSession.threadStopReasons$,
         this.cacheUpdate$
-      ]).pipe(debounceTime(10)).subscribe(([processInfo, threads, activeThread, stoppedThreads, allThreadsStopped, execState, threadStopReasons]) => {
+      ]).pipe(debounceTime(10)).subscribe(([processInfo, threads, activeThread, execState]) => {
         this.activeThread = activeThread;
         this.currentThreads = threads;
-        this.updateTree(processInfo, threads, activeThread, stoppedThreads, allThreadsStopped, execState, threadStopReasons);
+        this.updateTree(processInfo, threads, activeThread, execState);
       })
     );
   }
@@ -129,10 +126,7 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
     processInfo: { name: string; systemProcessId?: number } | null,
     threads: DapThreadSession[],
     activeThread: DapThreadSession | null,
-    stoppedThreads: Set<DapThreadSession>,
-    allThreadsStopped: boolean,
-    execState: ExecutionState,
-    threadStopReasons: Map<number, string>
+    execState: ExecutionState
   ): void {
     if (execState === 'idle') {
       this.dataSource = [];
@@ -183,7 +177,7 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
       label: `${processName}${processId}`,
       status: execState === 'stopped' ? 'Paused' : (execState.charAt(0).toUpperCase() + execState.slice(1)),
       children: threads.map(t => {
-        const isStopped = allThreadsStopped || Array.from(stoppedThreads).some(st => st.id === t.id) || (execState === 'stopped' && threads.length === 1);
+        const isStopped = t.status === 'stopped';
         const cachedFrames = t.cachedFrames;
         const children = isStopped && cachedFrames ? cachedFrames.map((f: DapStackFrame) => ({
           type: 'frame',
@@ -200,7 +194,7 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
           thread: t,
           isActive: t.id === (activeThread?.id ?? null),
           isStopped: isStopped,
-          stopReason: threadStopReasons.get(t.id),
+          stopReason: t.stopReason || undefined,
           status: isStopped ? 'Paused' : 'Running',
           isLoading: t.isLoadingStackTrace || false,
           children: children

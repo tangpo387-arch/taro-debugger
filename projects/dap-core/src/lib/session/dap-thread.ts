@@ -13,6 +13,7 @@ export class DapThreadSession implements DapThread {
   public readonly name: string;
 
   private _status: DapThreadStatus = 'running';
+  private _stopReason: string | null = null;
 
   /**
    * Get the current status of the thread ('running' | 'stopped' | 'exited').
@@ -26,6 +27,23 @@ export class DapThreadSession implements DapThread {
    */
   public setStatus(status: DapThreadStatus): void {
     this._status = status;
+    if (status === 'running' || status === 'exited') {
+      this._stopReason = null;
+    }
+  }
+
+  /**
+   * Get the stop reason of the thread.
+   */
+  public get stopReason(): string | null {
+    return this._stopReason;
+  }
+
+  /**
+   * Set the stop reason of the thread.
+   */
+  public setStopReason(reason: string | null): void {
+    this._stopReason = reason;
   }
 
   private stackTraceCache: DapResponse | null = null;
@@ -39,8 +57,7 @@ export class DapThreadSession implements DapThread {
     this.name = thread.name;
 
     // Initialize status based on current session state
-    const isStopped = this.session.allThreadsStopped || Array.from(this.session.stoppedThreads).some(st => st.id === this.id);
-    this._status = isStopped ? 'stopped' : 'running';
+    this._status = this.session.executionState === 'stopped' ? 'stopped' : 'running';
   }
 
   public get cachedFrames(): DapStackFrame[] | undefined {

@@ -2,7 +2,7 @@
 title: Source File Responsibility Map
 scope: file-map, navigation, ownership, layers
 audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-05-19
+last_updated: 2026-05-21
 related:
   - docs/architecture.md
   - .agents/project-context.md
@@ -61,8 +61,8 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 
 | File | Responsibility | Key Interfaces |
 | --- | --- | --- |
-| `projects/dap-core/src/lib/session/dap-session.service.ts` | DAP session lifecycle, state machine, multi-threaded state synchronization, command serialization, request/response pairing, event processing | `startSession()`, `executionState$`, `commandInFlight$`, `stoppedThreads$`, `activeThread$`, `onEvent()` |
-| `projects/dap-core/src/lib/session/dap-thread.ts` | Rich, object-oriented representation of a thread (`DapThreadSession`) encapsulating thread-specific execution-scoped cache and request coalescing | `stackTrace()`, `clearCache()`, `id`, `name` |
+| `projects/dap-core/src/lib/session/dap-session.service.ts` | DAP session lifecycle, state machine, multi-threaded state synchronization, command serialization, request/response pairing, event processing | `startSession()`, `executionState$`, `commandInFlight$`, `activeThread$`, `threads$`, `onEvent()` |
+| `projects/dap-core/src/lib/session/dap-thread.ts` | Rich, object-oriented representation of a thread (`DapThreadSession`) encapsulating thread-specific execution-scoped cache, status tracking, and request coalescing | `stackTrace()`, `clearCache()`, `id`, `name`, `status`, `stopReason`, `setStatus()`, `setStopReason()` |
 | `projects/dap-core/src/lib/session/dap-config.service.ts` | Configuration persistence (localStorage), SSOT for DAP connection parameters | `setConfig()`, `getConfig()` |
 | `projects/taro-debugger-frontend/src/app/dap-file-tree.service.ts` | File tree construction from `loadedSources`, source file reading via `source` request | `getTree()`, `readFile()` |
 | `projects/ui-inspection/src/lib/dap-variables.service.ts` | Derived state management for DAP scopes and variables, caching variable references | `fetchScopes()`, `getVariables()`, `scopes$` |

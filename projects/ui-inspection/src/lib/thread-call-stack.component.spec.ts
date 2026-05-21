@@ -5,40 +5,18 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ThreadCallStackComponent, ExecutionNode } from './thread-call-stack.component';
 import { DapSessionService, DapThread, DapStackFrame, DapConfigService } from '@taro/dap-core';
 
-function makeMockThreadSession(id: number, name: string, frames: DapStackFrame[] = [], startWithCache = false) {
-  const thread: any = {
-    id,
-    name,
-    cachedFrames: startWithCache ? frames : undefined,
-    isLoadingStackTrace: false,
-  };
-  thread.stackTrace = vi.fn().mockImplementation(async () => {
-    thread.isLoadingStackTrace = true;
-    thread.cachedFrames = frames;
-    thread.isLoadingStackTrace = false;
-    return frames;
-  });
-  return thread;
-}
-
 function makeMockDapSession(overrides: Partial<DapSessionService> = {}) {
   const threads$ = new BehaviorSubject<any[]>([]);
   const activeThread$ = new BehaviorSubject<any>(null);
-  const stoppedThreads$ = new BehaviorSubject<Set<any>>(new Set());
-  const allThreadsStopped$ = new BehaviorSubject<boolean>(false);
   const executionState$ = new BehaviorSubject<string>('idle');
   const processInfo$ = new BehaviorSubject<any>(null);
-  const threadStopReasons$ = new BehaviorSubject<Map<number, string>>(new Map());
   const eventSubject = new Subject<any>();
 
   return {
     threads$,
     activeThread$,
-    stoppedThreads$,
-    allThreadsStopped$,
     executionState$,
     processInfo$,
-    threadStopReasons$,
     onEvent: vi.fn().mockReturnValue(eventSubject.asObservable()),
     stackTrace: vi.fn().mockResolvedValue({ success: true, body: { stackFrames: [] } }),
     setCurrentThread: vi.fn(),
@@ -59,6 +37,26 @@ describe('ThreadCallStackComponent', () => {
   let component: ThreadCallStackComponent;
   let mockSession: any;
   let mockConfig: any;
+
+  function makeMockThreadSession(id: number, name: string, frames: DapStackFrame[] = [], startWithCache = false) {
+    const thread: any = {
+      id,
+      name,
+      cachedFrames: startWithCache ? frames : undefined,
+      isLoadingStackTrace: false,
+      stopReason: null,
+      get status() {
+        return mockSession?.executionState$.value === 'stopped' ? 'stopped' : 'running';
+      }
+    };
+    thread.stackTrace = vi.fn().mockImplementation(async () => {
+      thread.isLoadingStackTrace = true;
+      thread.cachedFrames = frames;
+      thread.isLoadingStackTrace = false;
+      return frames;
+    });
+    return thread;
+  }
 
   beforeEach(async () => {
     vi.useFakeTimers();

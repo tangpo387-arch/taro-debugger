@@ -235,9 +235,6 @@ describe('DebuggerComponent — Reveal Logic', () => {
             processInfo$: EMPTY,
             threads$: EMPTY,
             activeThread$: EMPTY,
-            stoppedThreads$: EMPTY,
-            allThreadsStopped$: EMPTY,
-            threadStopReasons$: EMPTY,
             onEvent: () => EMPTY,
             onTraffic$: EMPTY,
             disconnect: vi.fn(),
@@ -484,7 +481,7 @@ describe('DebuggerComponent — Memory View Integration (WI-106)', () => {
       providers: [
         DebuggerComponent,
         { provide: DapMemoryService, useValue: mockMemoryService },
-        { provide: DapSessionService, useValue: { connectionStatus$: EMPTY, executionState$: EMPTY, processInfo$: EMPTY, threads$: EMPTY, activeThread$: EMPTY, stoppedThreads$: EMPTY, allThreadsStopped$: EMPTY, threadStopReasons$: EMPTY, onEvent: () => EMPTY, onTraffic$: EMPTY, disconnect: vi.fn() } },
+        { provide: DapSessionService, useValue: { connectionStatus$: EMPTY, executionState$: EMPTY, processInfo$: EMPTY, threads$: EMPTY, activeThread$: EMPTY, onEvent: () => EMPTY, onTraffic$: EMPTY, disconnect: vi.fn() } },
         { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
         { provide: DapLogService, useValue: { consoleLog: vi.fn() } },
         { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe', stopOnEntry: true }) } },
