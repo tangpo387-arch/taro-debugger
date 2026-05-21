@@ -82,9 +82,6 @@ export class DapSessionService {
   private readonly activeThreadSubject = new BehaviorSubject<DapThreadSession | null>(null);
   public readonly activeThread$ = this.activeThreadSubject.asObservable();
 
-  private readonly stopReasonSubject = new BehaviorSubject<string | null>(null);
-  public readonly stopReason$ = this.stopReasonSubject.asObservable();
-
   private readonly processInfoSubject = new BehaviorSubject<{ name: string; systemProcessId?: number } | null>(null);
   public readonly processInfo$ = this.processInfoSubject.asObservable();
 
@@ -1110,7 +1107,6 @@ export class DapSessionService {
     this.threadObjects.clear();
     this.threadsSubject.next([]);
     this.activeThreadSubject.next(null);
-    this.stopReasonSubject.next(null);
     this.processInfoSubject.next(null);
     this.breakpointsMap.clear();
     this.breakpointsSubject.next(new Map());
@@ -1130,7 +1126,6 @@ export class DapSessionService {
 
       this.clearStateTransitionGuard();
       this.commandInFlightSubject.next(false);
-      this.stopReasonSubject.next(null);
       this.threadsSubject.next([...this.threadsSubject.value]);
       return;
     }
@@ -1148,7 +1143,6 @@ export class DapSessionService {
 
       this.clearStateTransitionGuard();
       this.commandInFlightSubject.next(false);
-      this.stopReasonSubject.next(null);
       this.threadsSubject.next([...this.threadsSubject.value]);
     }
   }
@@ -1177,7 +1171,6 @@ export class DapSessionService {
         if (isSystemStop) {
           stopReason = 'Paused at entry (main)';
         }
-        this.stopReasonSubject.next(stopReason);
 
         let stoppedThreadObj: DapThreadSession | undefined;
         if (stoppedThreadId !== undefined) {

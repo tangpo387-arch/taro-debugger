@@ -38,7 +38,6 @@ describe('WI-81: Application Frame & Global Controls Integration', () => {
         processInfo$: EMPTY,
         threads$: EMPTY,
         activeThread$: EMPTY,
-        stopReason$: EMPTY,
         onEvent: () => EMPTY,
         onTraffic$: EMPTY,
         breakpoints$: EMPTY,

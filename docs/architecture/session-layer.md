@@ -163,7 +163,7 @@ The Session layer automates thread and context management to simplify UI impleme
 - **Thread Event Storm Mitigation**: On multi-threaded targets, GDB can flood the adapter with rapid thread `started` / `exited` event waves. `DapSessionService` buffers these event storms over a **50ms temporal window** and flushes them to the UI in a single reactive transaction, preventing DOM thrashing.
 - **Automatic Thread Refresh**: On every `stopped` event, the Session queries the adapter's threads and updates `threadsSubject` with batch-instantiated `DapThreadSession` objects.
 - **Active Thread Selection**: If the `stopped` event contains a `threadId`, the corresponding `DapThreadSession` is automatically set as the `activeThread`.
-- **Contextual Stop Reason**: The Session extracts `description` or `reason` from the `stopped` event body and exposes it via `stopReason$`.
+- **Contextual Stop Reason**: The Session extracts `description` or `reason` from the `stopped` event body and writes it to the corresponding `DapThreadSession` via `setStopReason()`. Consumers read it via the `stopReason` getter on each thread object.
 - **Manual Selection**: `setCurrentThread(thread)` allows the user to switch inspection context, triggering a synthetic `stopped` event to force UI components to reload their stacks.
 - **Cache Invalidation**: Upon any stepping command (`next`, `continue`, `stepIn`, `stepOut`) or receiving a `'continued'` event, the Session automatically clears the transient caches of all active `DapThreadSession` objects.
 
@@ -187,7 +187,6 @@ When the user switches between call stack frames, the system enforces a **"Lates
 | `breakpoints$` | `Observable<Map<string, VerifiedBreakpoint[]>>` | SSOT for verified breakpoints. |
 | `threads$` | `Observable<DapThreadSession[]>` | List of rich `DapThreadSession` objects available. |
 | `activeThread$` | `Observable<DapThreadSession \| null>` | The thread currently active/selected for inspection. |
-| `stopReason$` | `Observable<string \| null>` | Reason for the current stop (e.g., "breakpoint"). |
 | `onEvent()` | `Observable<DapEvent>` | Processed event stream (includes synthetic events). |
 | `onTraffic$` | `Observable<any>` | Raw diagnostic DAP traffic. |
 | `commandInFlight$` | `Observable<boolean>` | True while any control command is in-flight. |

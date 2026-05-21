@@ -302,7 +302,8 @@ describe('DapSessionService', () => {
         }
       });
 
-      expect((service as any).stopReasonSubject.value).toBe('Paused at entry (main)');
+      const stoppedThread = (service as any).threadObjects.get(1);
+      expect(stoppedThread.stopReason).toBe('Paused at entry (main)');
     });
 
     it('should ignore "breakpoint" events for system-managed breakpoints', async () => {
