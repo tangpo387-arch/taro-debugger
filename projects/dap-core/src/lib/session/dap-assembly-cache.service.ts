@@ -162,7 +162,14 @@ export class DapAssemblyCacheService implements OnDestroy {
     // split the request to ensure alignment at the PC reference.
     if (actualOffset < 0) {
       const negCount = Math.abs(actualOffset);
-      const posCount = actualCount > negCount ? actualCount - negCount : 0;
+      let posCount = actualCount > negCount ? actualCount - negCount : 0;
+
+      // Force an anchor at the target PC if we wouldn't otherwise fetch one.
+      // This is critical for gap filling: we need a 'firstPos' to know where 
+      // the gap ends and to connect the backward fetch up to the known range.
+      if (posCount === 0) {
+        posCount = 1;
+      }
 
       // ── Neg leg (instructions before PC) ─────────────────────────────────
       // Virtual base address for placeholder rows: walk back negCount slots from PC.
@@ -270,20 +277,22 @@ export class DapAssemblyCacheService implements OnDestroy {
     let maxAddr = BigInt(-1);
     if (negInstructions.length > 0) {
       const last = negInstructions[negInstructions.length - 1];
-      maxAddr = last.address + BigInt(last.instructionByteLength);
+      maxAddr = last.address + BigInt(last.instructionByteLength) - BigInt(1);
     }
     for (const inst of gapInstructions) {
       if (inst.address > maxAddr) {
-        maxAddr = inst.address;
+        maxAddr = inst.address + BigInt(inst.instructionByteLength) - BigInt(1);
         uniqueEnhanced.push(inst);
       }
     }
     for (const inst of posInstructions) {
       if (inst.address > maxAddr) {
-        maxAddr = inst.address;
+        maxAddr = inst.address + BigInt(inst.instructionByteLength) - BigInt(1);
         uniqueEnhanced.push(inst);
       }
     }
+
+
     this.enhanceInstructions(uniqueEnhanced);
 
     // Persist new instructions to the cache.
@@ -334,6 +343,7 @@ export class DapAssemblyCacheService implements OnDestroy {
       isFunctionStart: false,
     }));
   }
+
 
   // ── Instruction Enhancement ──────────────────────────────────────────────
 
@@ -497,10 +507,14 @@ export class DapAssemblyCacheService implements OnDestroy {
         if (next.start <= current.end + BigInt(1)) {
           // Ranges overlap or are adjacent — merge instructions and update end.
           const merged = current.instructions.slice();
-          let maxMergeAddr = merged.length > 0 ? merged[merged.length - 1].address : BigInt(-1);
+          let maxMergeAddr = BigInt(-1);
+          if (merged.length > 0) {
+            const lastMerged = merged[merged.length - 1];
+            maxMergeAddr = lastMerged.address + BigInt(lastMerged.instructionByteLength) - BigInt(1);
+          }
           for (const inst of next.instructions) {
             if (inst.address > maxMergeAddr) {
-              maxMergeAddr = inst.address;
+              maxMergeAddr = inst.address + BigInt(inst.instructionByteLength) - BigInt(1);
               merged.push(inst);
             }
           }
@@ -512,6 +526,12 @@ export class DapAssemblyCacheService implements OnDestroy {
         }
       }
       this.cachedRanges.length = writeIdx + 1;
+    }
+
+    // Find the range containing the first instruction of the merged batch and run enhanceInstructions
+    const mergedRange = this.findRange(firstInst.address);
+    if (mergedRange) {
+      this.enhanceInstructions(mergedRange.instructions);
     }
   }
 

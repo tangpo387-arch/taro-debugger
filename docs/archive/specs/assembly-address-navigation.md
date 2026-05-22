@@ -29,7 +29,7 @@ This spec defines the replacement navigation model: the scrollbar is hidden, and
 **Out of scope:**
 - A visual mini-map or gutter-based function navigator (deferred).
 - Horizontal scrollbar changes.
-- Any modification to the Assembly View toolbar or `.function-header` — the header area is intentionally unchanged.
+- Any modification to the Assembly View toolbar — the header area is intentionally unchanged.
 - Changes to `DapAssemblyService`, `DapAssemblyCacheService`, or any DAP protocol logic — `relocateWindow()` is the existing correct primitive.
 - Any modification to the "Return to PC" floating action button behavior (retained from WI-112).
 
@@ -74,34 +74,32 @@ This spec defines the replacement navigation model: the scrollbar is hidden, and
 ### B4 — Retained Navigation Affordances
 
 - The "Return to PC" `mat-mini-fab` floating action button (from WI-112) MUST remain present and functional.
-- The sticky `function-header` MUST remain present and functional.
 - The infinite-scroll auto-fetch on viewport edge MUST remain present and functional.
 
 ## UI Layout
 
 ```text
 ┌──────────────────────────────────────────────────────┐
-│ Dump of assembler code for function <symbol>:         │  ← Existing .function-header (sticky, UNCHANGED)
-├──────────────────────────────────────────────────────┤
-│ cdk-virtual-scroll-viewport (no scrollbar)            │
-│  ➤ 0x401234  <+0>  48 89 e5  push %rbp               │
-│    0x401238  <+4>  48 81 ec  sub $0x20, %rsp          │
-│    ...                                                │
-│                                         [📍 Jump FAB] │  ← New Jump-to-Address FAB (above Return-to-PC)
-│                                              [⊙ PC FAB]│  ← Existing Return-to-PC FAB
+│ cdk-virtual-scroll-viewport (no scrollbar)           │
+│    Function <symbol>:                                │  <- Inline function label
+│  > 0x401234  <+0>  48 89 e5  push %rbp               │
+│    0x401238  <+4>  48 81 ec  sub $0x20, %rsp         │
+│    ...                                               │
+│                                        [* Jump FAB]  │  <- New Jump-to-Address FAB (above Return-to-PC)
+│                                         [o PC FAB]   │  <- Existing Return-to-PC FAB
 └──────────────────────────────────────────────────────┘
 
          ┌──────────────────────────────────┐
-         │  Jump to Address                 │  ← MatDialog
+         │  Jump to Address                 │  <- MatDialog
          │  ┌────────────────────────────┐  │
-         │  │ e.g. 0x401234              │  │  ← mat-form-field (mono font)
-         │  │ ⚠ Invalid hex address      │  │  ← mat-error (conditional)
+         │  │ e.g. 0x401234              │  │  <- mat-form-field (mono font)
+         │  │ [!] Invalid hex address    │  │  <- mat-error (conditional)
          │  └────────────────────────────┘  │
          │                  [Cancel] [Jump] │
          └──────────────────────────────────┘
 ```
 
-> [Diagram: Assembly View — the toolbar and function header are unchanged. Two FABs appear at bottom-right: the new Jump-to-Address button (top) and the existing Return-to-PC button (bottom). Clicking Jump opens a MatDialog with a single hex input field, Cancel and Jump action buttons.]
+> [Diagram: Assembly View — Two FABs appear at bottom-right: the new Jump-to-Address button (top, `[*]`) and the existing Return-to-PC button (bottom, `[o]`). Clicking Jump opens a MatDialog with a single hex input field, Cancel and Jump action buttons.]
 
 ### Layout Constraints
 
@@ -142,6 +140,6 @@ This spec defines the replacement navigation model: the scrollbar is hidden, and
 | AC-7 | Pressing Enter inside the dialog input triggers the same validation and confirmation as clicking the `Jump` button. | Unit test |
 | AC-8 | Clicking `Cancel` closes the dialog without calling `relocateWindow()`. | Unit test |
 | AC-9 | The "Return to PC" FAB remains visible and functional and is not displaced by the new FAB. | Manual test |
-| AC-10 | The Assembly View toolbar and `.function-header` are visually unchanged. | Visual inspection |
-| AC-11 | The sticky function-header and infinite-scroll auto-fetch behavior are not regressed. | Existing test suite passing |
+| AC-10 | The Assembly View toolbar is visually unchanged. | Visual inspection |
+| AC-11 | The infinite-scroll auto-fetch behavior is not regressed. | Existing test suite passing |
 | AC-12 | All new SCSS uses design tokens only — no hardcoded colors. | QCR SCSS review |

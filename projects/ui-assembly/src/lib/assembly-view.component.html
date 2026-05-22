@@ -1,37 +1,41 @@
 <div class="assembly-container">
-  <!-- Sticky Function Header -->
-  <div *ngIf="activeSymbol && instructions.length > 0" class="function-header">
-    Dump of assembler code for function 
-    <span class="symbol-name" 
-          [matTooltip]="activeSymbol" 
-          matTooltipPosition="below"
-          matTooltipShowDelay="400">{{ activeSymbol | cppSignature }}</span>:
-  </div>
 
-  <cdk-virtual-scroll-viewport [itemSize]="rowHeight()" minBufferPx="200" maxBufferPx="400" class="assembly-viewport">
+  <cdk-virtual-scroll-viewport class="assembly-viewport">
     <div *cdkVirtualFor="let instruction of instructions; trackBy: trackByAddress" class="assembly-row"
       [class.is-active]="isInstructionPointer(instruction.address)" [class.is-out-of-range]="isOutOfRange(instruction)"
-      [style.height.px]="rowHeight()">
+      [style.height.px]="instruction.isFunctionStart ? rowHeight() * 2 : rowHeight()"
+      [class.has-label]="instruction.isFunctionStart">
 
-      <div class="gutter">
-        <span *ngIf="isInstructionPointer(instruction.address)" 
-              class="ip-indicator"
-              [class.is-stale]="!isStopped()">&#10148;</span>
-        <div class="breakpoint-marker"></div> <!-- For future BP integration -->
+      <!-- Inline Function Label -->
+      <div *ngIf="instruction.isFunctionStart" class="assembly-function-label" [style.height.px]="rowHeight()">
+        Function <span class="symbol-name">{{ instruction.normalizedSymbol | cppSignature }}</span>:
       </div>
 
-      <div class="address" [matTooltip]="getInstructionTooltip(instruction)" [matTooltipClass]="'assembly-tooltip'" matTooltipShowDelay="400">{{ formatAddress(instruction.address) }}</div>
+      <!-- Row Content Wrapper -->
+      <div class="row-content" [style.height.px]="rowHeight()">
+        <div class="gutter">
+          <span *ngIf="isInstructionPointer(instruction.address)" class="ip-indicator"
+            [class.is-stale]="!isStopped()">&#10148;</span>
+          <div class="breakpoint-marker"></div> <!-- For future BP integration -->
+        </div>
 
-      <!-- Offset column -->
-      <div class="offset" [matTooltip]="getInstructionTooltip(instruction)" [matTooltipClass]="'assembly-tooltip'" matTooltipShowDelay="400"><ng-container *ngIf="instruction.byteOffset !== undefined">&lt;+{{ instruction.byteOffset }}&gt;</ng-container></div>
+        <div class="address" [matTooltip]="getInstructionTooltip(instruction)" [matTooltipClass]="'assembly-tooltip'"
+          matTooltipShowDelay="400">{{ formatAddress(instruction.address) }}</div>
 
-      <div class="opcode" [matTooltip]="getInstructionTooltip(instruction)" [matTooltipClass]="'assembly-tooltip'" matTooltipShowDelay="400">
-        {{ instruction.instructionBytes || '' }}
+        <!-- Offset column -->
+        <div class="offset" [matTooltip]="getInstructionTooltip(instruction)" [matTooltipClass]="'assembly-tooltip'"
+          matTooltipShowDelay="400"><ng-container *ngIf="instruction.byteOffset !== undefined">&lt;+{{
+            instruction.byteOffset }}&gt;</ng-container></div>
+
+        <div class="opcode" [matTooltip]="getInstructionTooltip(instruction)" [matTooltipClass]="'assembly-tooltip'"
+          matTooltipShowDelay="400">
+          {{ instruction.instructionBytes || '' }}
+        </div>
+        <div class="mnemonic" [matTooltip]="getInstructionTooltip(instruction)" [matTooltipClass]="'assembly-tooltip'"
+          matTooltipShowDelay="400">
+          {{ instruction.instruction }}
+        </div>
       </div>
-      <div class="mnemonic" [matTooltip]="getInstructionTooltip(instruction)" [matTooltipClass]="'assembly-tooltip'" matTooltipShowDelay="400">
-        {{ instruction.instruction }}
-      </div>
-      <div class="annotation" *ngIf="instruction.symbol">{{ instruction.symbol }}</div>
 
     </div>
   </cdk-virtual-scroll-viewport>
@@ -40,26 +44,22 @@
   </div>
 
   @if (!isLoading() && instructions.length === 0) {
-    @if (!isConnected()) {
-      <taro-empty-state icon="link_off" message="No active session" description="Start a debug session to see disassembly.">
-      </taro-empty-state>
-    } @else {
-      <taro-empty-state icon="terminal" message="No assembly instructions loaded.">
-      </taro-empty-state>
-    }
+  @if (!isConnected()) {
+  <taro-empty-state icon="link_off" message="No active session" description="Start a debug session to see disassembly.">
+  </taro-empty-state>
+  } @else {
+  <taro-empty-state icon="terminal" message="No assembly instructions loaded.">
+  </taro-empty-state>
+  }
   }
 
   <div class="floating-actions">
-    <button mat-mini-fab color="primary" (click)="openJumpToAddressDialog()" 
-            [disabled]="!isStopped()"
-            matTooltip="Jump to address"
-      aria-label="Jump to address">
+    <button mat-mini-fab color="primary" (click)="openJumpToAddressDialog()" [disabled]="!isStopped()"
+      matTooltip="Jump to address" aria-label="Jump to address">
       <mat-icon>pin_drop</mat-icon>
     </button>
-    <button mat-mini-fab color="primary" (click)="revealPc()" 
-            [disabled]="!currentPc() || !isStopped()"
-            matTooltip="Reveal current execution point"
-      aria-label="Reveal PC">
+    <button mat-mini-fab color="primary" (click)="revealPc()" [disabled]="!currentPc() || !isStopped()"
+      matTooltip="Reveal current execution point" aria-label="Reveal PC">
       <mat-icon>my_location</mat-icon>
     </button>
   </div>

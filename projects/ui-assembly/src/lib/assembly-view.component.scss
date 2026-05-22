@@ -16,32 +16,7 @@
   position: relative;
 }
 
-.function-header {
-  flex-shrink: 0;
-  height: var(--sys-density-variable-row, 28px);
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  padding: 0 var(--sys-density-panel-padding);
-  background-color: var(--mat-sys-surface-container-high);
-  color: var(--mat-sys-on-surface-variant);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  border-bottom: 1px solid var(--mat-sys-outline-variant);
-  z-index: 10;
-  white-space: nowrap;
-  overflow: hidden;
 
-  .symbol-name {
-    color: var(--mat-sys-primary);
-    font-weight: var(--weight-bold);
-    margin-left: 4px;
-    flex: 0 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-}
 
 .assembly-viewport {
   flex: 1;
@@ -61,18 +36,13 @@
 
 .assembly-row {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   overflow: hidden;
   width: 100%;
   max-width: 100%; // CRITICAL: Prevent row from exceeding viewport width, which breaks flex-shrink
-  /* height is bound in template via [style.height.px] to match itemSize */
-  padding: 0 var(--sys-density-panel-padding);
-  font-size: var(--text-base);
-  /* Subtle row divider using the design system outline token */
   border-bottom: 1px solid var(--mat-sys-outline-variant);
   box-sizing: border-box;
-  white-space: nowrap;
-  gap: 8px; /* High-density spacing between columns */
 
   &:hover {
     background-color: var(--mat-sys-surface-container-high);
@@ -88,8 +58,7 @@
 
     .address,
     .opcode,
-    .mnemonic,
-    .annotation {
+    .mnemonic {
       color: inherit;
       font-style: normal !important;
       /* Reset italic if any */
@@ -104,6 +73,37 @@
       font-weight: var(--weight-regular);
       font-style: italic;
     }
+  }
+}
+
+.row-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0 var(--sys-density-panel-padding);
+  gap: 8px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.assembly-function-label {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--sys-density-panel-padding);
+  background-color: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  .symbol-name {
+    color: var(--mat-sys-primary);
+    font-weight: var(--weight-bold);
+    margin-left: 4px;
   }
 }
 
@@ -188,16 +188,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.annotation {
-  flex: 1 1 auto;
-  color: var(--mat-sys-tertiary);
-  font-style: italic;
-  font-size: var(--text-sm);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
 }
 
 .loading-overlay {

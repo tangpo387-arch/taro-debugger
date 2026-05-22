@@ -26,6 +26,7 @@ describe('DapAssemblyCacheService', () => {
   beforeEach(() => {
     mockDapSession = {
       disassemble: vi.fn(),
+      sendRequest: vi.fn(),
       onEvent: vi.fn().mockReturnValue(new Subject().asObservable()),
       connectionStatus$: new BehaviorSubject<boolean>(true).asObservable(),
     };
@@ -230,6 +231,32 @@ describe('DapAssemblyCacheService', () => {
   // ── Instruction Merging & Overlap Handling ───────────────────────────────
 
   describe('Instruction Merging & Overlap Handling', () => {
+    it('should perfectly merge posInstructions that start at or after the end of negInstructions without erroneously dropping them', async () => {
+      const startAddr = BigInt('0x1006');
+      const offset = -2;
+      const count = 4;
+
+      mockDapSession.disassemble.mockImplementation(async (args: any) => {
+        if (args.memoryReference === '0xfde' || args.memoryReference === '0xfba') {
+          return makeDisassembleResponse([
+            { address: BigInt('0x1000'), instruction: 'neg1', instructionBytes: '909090' },
+            { address: BigInt('0x1003'), instruction: 'neg2', instructionBytes: '909090' }
+          ]);
+        } else if (args.memoryReference === '0x1006') {
+          return makeDisassembleResponse([
+            { address: BigInt('0x1006'), instruction: 'pos1_contiguous', instructionBytes: '90' },
+            { address: BigInt('0x1007'), instruction: 'pos2', instructionBytes: '90' }
+          ]);
+        }
+        return makeDisassembleResponse([]);
+      });
+
+      const result = await service.fetchInstructions(startAddr, count, offset);
+
+      const addresses = result.map(i => Number(i.address));
+      expect(addresses).toEqual([0x1000, 0x1003, 0x1006, 0x1007]);
+    });
+
     it('should drop misaligned backward overlaps during split fetches to maintain strictly ascending addresses', async () => {
       const startAddr = BigInt('0x1006');
       const offset = -2;
@@ -561,7 +588,7 @@ describe('DapAssemblyCacheService', () => {
 
       const result = await service.fetchInstructions(BigInt(0x1010), 10, -5);
 
-      expect(mockDapSession.disassemble).toHaveBeenCalledTimes(1);
+      expect(mockDapSession.disassemble).toHaveBeenCalledTimes(2);
       expect(mockDapSession.disassemble).toHaveBeenCalledWith(expect.objectContaining({
         memoryReference: '0xea4',
         instructionCount: 70,
@@ -617,12 +644,41 @@ describe('DapAssemblyCacheService', () => {
 
       await service.fetchInstructions(BigInt(0x1010), 11, -1);
 
-      expect(mockDapSession.disassemble).toHaveBeenCalledTimes(1);
+      expect(mockDapSession.disassemble).toHaveBeenCalledTimes(2);
       expect(mockDapSession.disassemble).toHaveBeenCalledWith(expect.objectContaining({
         memoryReference: '0xea4',
         instructionCount: 70,
         instructionOffset: 0
       }), true);
+    });
+  });
+
+  describe('WI-129: Redefined Assembly View Header & Symbol Extraction', () => {
+
+    it('should propagate symbols across contiguous range after merge', async () => {
+      // 1. Prime cache with a block starting at 0x1000 (instruction lengths = 4 bytes)
+      mockDapSession.disassemble.mockResolvedValueOnce(makeDisassembleResponse([
+        { address: BigInt('0x1000'), instruction: 'mov eax, 1', symbol: '<func_prop+0>', instructionBytes: '90909090' },
+        { address: BigInt('0x1004'), instruction: 'add eax, 2', instructionBytes: '90909090' }
+      ]));
+      await service.fetchInstructions(BigInt('0x1000'), 2, 0);
+
+      // 2. Fetch a contiguous block immediately following the cached block (starts at 0x1008)
+      mockDapSession.disassemble.mockResolvedValueOnce(makeDisassembleResponse([
+        { address: BigInt('0x1008'), instruction: 'ret', instructionBytes: '90' }
+      ]));
+
+      // This will merge the new block into the cached range, and run enhanceInstructions on the merged range
+      await service.fetchInstructions(BigInt('0x1008'), 1, 0);
+
+      // Get the range from cache
+      const fullRange = await service.fetchInstructions(BigInt('0x1000'), 3, 0);
+
+      // Verify that 'func_prop' symbol flowed through to the newly merged instruction
+      expect(fullRange[2].address).toBe(BigInt('0x1008'));
+      expect(fullRange[2].normalizedSymbol).toBe('func_prop');
+      expect(fullRange[2].byteOffset).toBe(8);
+      expect(fullRange[2].isFunctionStart).toBe(false);
     });
   });
 

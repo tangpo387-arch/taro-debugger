@@ -625,6 +625,32 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-20"
       }
+    },
+    {
+      "id": "WI-129",
+      "title": "Redefine Assembly View Header & Symbol Extraction",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Remove sticky header, implement inline function labels, range-level symbol propagation, and GDB info symbol fallback.",
+      "details": [
+        "Remove sticky header from HTML/CSS",
+        "Render inline function label when instruction.isFunctionStart is true",
+        "Update DapAssemblyCacheService for range-level symbol propagation",
+        "Implement GDB CLI fallback query via evaluate request",
+        "Refactor isOutOfRange to only dim zero padding and unmapped memory blocks",
+        "[Doc] docs/archive/specs/assembly-header-redefinition.md",
+        "[Test] Add unit tests in dap-assembly-cache.service.spec.ts"
+      ],
+      "timeline": {
+        "created": "2026-05-21",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-22"
+      }
     }
   ]
 }

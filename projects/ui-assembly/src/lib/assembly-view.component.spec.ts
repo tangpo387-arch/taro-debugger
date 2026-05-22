@@ -40,7 +40,7 @@ describe('AssemblyViewComponent', () => {
       ]
     })
       .overrideComponent(AssemblyViewComponent, {
-        set: {
+        add: {
           providers: [
             { provide: DapAssemblyCacheService, useValue: mockCacheService },
             { provide: DapSessionService, useValue: mockSessionService },
@@ -71,6 +71,7 @@ describe('AssemblyViewComponent', () => {
     }
 
     component.instructions = fakeInstructions;
+    component.scrollStrategy.setConfig(fakeInstructions, 28);
     fixture.detectChanges();
 
     expect(component.instructions.length).toBe(1000);
@@ -89,6 +90,7 @@ describe('AssemblyViewComponent', () => {
     ];
 
     component.instructions = fakeInstructions;
+    component.scrollStrategy.setConfig(fakeInstructions, 28);
     fixture.componentRef.setInput('currentPc', BigInt('0x1004'));
     fixture.detectChanges();
 
@@ -112,6 +114,7 @@ describe('AssemblyViewComponent', () => {
     ];
 
     component.instructions = fakeInstructions;
+    component.scrollStrategy.setConfig(fakeInstructions, 28);
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
@@ -182,6 +185,7 @@ describe('AssemblyViewComponent', () => {
     ];
 
     component.instructions = fakeInstructions;
+    component.scrollStrategy.setConfig(fakeInstructions, 28);
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
@@ -195,15 +199,15 @@ describe('AssemblyViewComponent', () => {
   it('should verify the function header uses cppSignature pipe and has a tooltip', () => {
     const longSymbol = 'std::vector<int, std::allocator<int>>::push_back(int)';
     const fakeInstructions: DapDisassembledInstruction[] = [
-      { address: BigInt('0x1000'), instruction: 'nop', instructionBytes: '90', instructionByteLength: 1, normalizedSymbol: longSymbol }
+      { address: BigInt('0x1000'), instruction: 'nop', instructionBytes: '90', instructionByteLength: 1, normalizedSymbol: longSymbol, isFunctionStart: true }
     ];
 
     component.instructions = fakeInstructions;
-    component.activeSymbol = longSymbol;
+    component.scrollStrategy.setConfig(fakeInstructions, 28);
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    const header = compiled.querySelector('.function-header');
+    const header = compiled.querySelector('.assembly-function-label');
     expect(header).toBeTruthy();
 
     const symbolName = header?.querySelector('.symbol-name') as HTMLElement;
@@ -214,5 +218,190 @@ describe('AssemblyViewComponent', () => {
     expect(text).toContain('<...>');
     expect(text).toContain('(...)');
     expect(text).not.toContain('std::allocator');
+  });
+
+  describe('AssemblyVirtualScrollStrategy and centering calculation', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('should calculate correct target scroll offset with variable row heights', () => {
+      const fakeInstructions: DapDisassembledInstruction[] = [
+        { address: 0x1000n, instruction: 'nop', instructionBytes: '90', instructionByteLength: 1, isFunctionStart: true }, // height = rowHeight * 2
+        { address: 0x1004n, instruction: 'nop', instructionBytes: '90', instructionByteLength: 1 }, // height = rowHeight
+        { address: 0x1008n, instruction: 'nop', instructionBytes: '90', instructionByteLength: 1 }, // height = rowHeight
+        { address: 0x100cn, instruction: 'nop', instructionBytes: '90', instructionByteLength: 1, isFunctionStart: true }, // height = rowHeight * 2
+        { address: 0x1010n, instruction: 'nop', instructionBytes: '90', instructionByteLength: 1 }, // height = rowHeight (target)
+      ];
+
+      component.instructions = fakeInstructions;
+      component.scrollStrategy.setConfig(fakeInstructions, 28);
+
+      const mockViewport: any = {
+        getViewportSize: () => 100, // viewport height
+        measureScrollOffset: () => 0,
+        setTotalContentSize: vi.fn(),
+        setRenderedRange: vi.fn(),
+        setRenderedContentOffset: vi.fn(),
+        scrollToOffset: vi.fn()
+      };
+
+      component.scrollStrategy.attach(mockViewport);
+      expect(mockViewport.setTotalContentSize).toHaveBeenCalledWith(196); // 56 + 28 + 28 + 56 + 28 = 196
+
+      component.viewport = mockViewport;
+
+      // Call private scrollToAddress using bracket notation
+      (component as any).scrollToAddress(0x1010n);
+
+      // Trigger the timeout function
+      vi.runAllTimers();
+
+      // Accumulated preceding height = 56 + 28 + 28 + 56 = 168px
+      // Target instruction topOfInstructionContent = 168px
+      // centerOffsetPx = (100 / 2) - (28 / 2) = 36px
+      // targetOffset = 168 - 36 = 132px
+      expect(mockViewport.scrollToOffset).toHaveBeenCalledWith(132, 'auto');
+    });
+
+    it('should adjust scroll offset correctly when scrolling forward (items removed from top)', () => {
+      // Arrange
+      const oldInstructions: DapDisassembledInstruction[] = [];
+      for (let i = 0; i < 200; i++) {
+        oldInstructions.push({ address: BigInt(0x1000 + i * 4), instruction: 'nop', instructionBytes: '90', instructionByteLength: 4 });
+      }
+      component.instructions = oldInstructions;
+      component.scrollStrategy.setConfig(oldInstructions, 28);
+
+      const viewport = component.viewport!;
+      const getViewportSizeSpy = vi.spyOn(viewport, 'getViewportSize').mockReturnValue(200);
+      const measureScrollOffsetSpy = vi.spyOn(viewport, 'measureScrollOffset').mockReturnValue(170 * 28);
+      const scrollToOffsetSpy = vi.spyOn(viewport, 'scrollToOffset').mockImplementation(() => {});
+
+      // The target address is at oldIndex 170
+      const targetAddress = BigInt(0x1000 + 170 * 4);
+
+      // New instructions (fetched forward, starts at index 100 of old list)
+      const newInstructions: DapDisassembledInstruction[] = [];
+      for (let i = 100; i < 300; i++) {
+        newInstructions.push({ address: BigInt(0x1000 + i * 4), instruction: 'nop', instructionBytes: '90', instructionByteLength: 4 });
+      }
+
+      // Act
+      (component as any).updateInstructions(newInstructions, 'forward', targetAddress);
+
+      // Assert
+      // oldTargetOffset = 170 * 28 = 4760
+      // distance = 4760 - 4760 = 0
+      // newTargetIndex (for targetAddress in newInstructions) = 70 (since newInstructions starts at 100)
+      // newTargetOffset = 70 * 28 = 1960
+      // targetScrollOffset = 1960 - 0 = 1960
+      expect(scrollToOffsetSpy).toHaveBeenCalledWith(1960, 'auto');
+
+      // Cleanup
+      getViewportSizeSpy.mockRestore();
+      measureScrollOffsetSpy.mockRestore();
+      scrollToOffsetSpy.mockRestore();
+    });
+
+    it('should adjust scroll offset correctly when scrolling backward (items added to top)', () => {
+      // Arrange
+      const oldInstructions: DapDisassembledInstruction[] = [];
+      for (let i = 100; i < 300; i++) {
+        oldInstructions.push({ address: BigInt(0x1000 + i * 4), instruction: 'nop', instructionBytes: '90', instructionByteLength: 4 });
+      }
+      component.instructions = oldInstructions;
+      component.scrollStrategy.setConfig(oldInstructions, 28);
+
+      const viewport = component.viewport!;
+      const getViewportSizeSpy = vi.spyOn(viewport, 'getViewportSize').mockReturnValue(200);
+      const measureScrollOffsetSpy = vi.spyOn(viewport, 'measureScrollOffset').mockReturnValue(10 * 28);
+      const scrollToOffsetSpy = vi.spyOn(viewport, 'scrollToOffset').mockImplementation(() => {});
+
+      // The target address is at index 10 of oldInstructions (which is address 0x1000 + 110 * 4)
+      const targetAddress = BigInt(0x1000 + 110 * 4);
+
+      // New instructions (fetched backward, starts at index 0 of old list)
+      const newInstructions: DapDisassembledInstruction[] = [];
+      for (let i = 0; i < 200; i++) {
+        newInstructions.push({ address: BigInt(0x1000 + i * 4), instruction: 'nop', instructionBytes: '90', instructionByteLength: 4 });
+      }
+
+      // Act
+      (component as any).updateInstructions(newInstructions, 'backward', targetAddress);
+
+      // Assert
+      // oldIndex = 10, oldTargetOffset = 10 * 28 = 280
+      // distance = 280 - 280 = 0
+      // newIndex (for 110 * 4) = 110
+      // newTargetOffset = 110 * 28 = 3080
+      // targetScrollOffset = 3080 - 0 = 3080
+      expect(scrollToOffsetSpy).toHaveBeenCalledWith(3080, 'auto');
+
+      // Cleanup
+      getViewportSizeSpy.mockRestore();
+      measureScrollOffsetSpy.mockRestore();
+      scrollToOffsetSpy.mockRestore();
+    });
+
+    it('should set isAligningScroll flag during scroll alignment and suppress scroll events', () => {
+      vi.useFakeTimers();
+
+      // Arrange
+      const oldInstructions: DapDisassembledInstruction[] = [
+        { address: 0x1000n, instruction: 'nop', instructionBytes: '90', instructionByteLength: 1 }
+      ];
+      component.instructions = oldInstructions;
+      component.scrollStrategy.setConfig(oldInstructions, 28);
+
+      const viewport = component.viewport!;
+      const getViewportSizeSpy = vi.spyOn(viewport, 'getViewportSize').mockReturnValue(200);
+      let mockedOffset = 100; // start with mismatched offset
+      const measureScrollOffsetSpy = vi.spyOn(viewport, 'measureScrollOffset').mockImplementation(() => mockedOffset);
+      const scrollToOffsetSpy = vi.spyOn(viewport, 'scrollToOffset').mockImplementation(() => {});
+
+      // Act & Assert
+      const newInstructions: DapDisassembledInstruction[] = [
+        { address: 0x1000n, instruction: 'nop', instructionBytes: '90', instructionByteLength: 1 }
+      ];
+      (component as any).updateInstructions(newInstructions, 'backward', 0x1000n);
+
+      // Flag should be true immediately
+      expect((component as any).isAligningScroll).toBe(true);
+
+      // Calling onViewportScroll with mismatched offset should keep flag true and suppress fetch
+      const relocateSpy = vi.spyOn(component as any, 'relocateWindow').mockResolvedValue(undefined);
+      (component as any).onViewportScroll(0, 16);
+      expect((component as any).isAligningScroll).toBe(true);
+      expect(relocateSpy).not.toHaveBeenCalled();
+
+      // Set offset to expected (0) and call onViewportScroll: should clear flag immediately and not fetch
+      mockedOffset = 0;
+      (component as any).onViewportScroll(0, 16);
+      expect((component as any).isAligningScroll).toBe(false);
+      expect(relocateSpy).not.toHaveBeenCalled();
+
+      // Test safety fallback: trigger another alignment with mismatched offset
+      (component as any).updateInstructions(newInstructions, 'backward', 0x1000n);
+      expect((component as any).isAligningScroll).toBe(true);
+      mockedOffset = 100;
+      (component as any).onViewportScroll(0, 16);
+      expect((component as any).isAligningScroll).toBe(true);
+
+      // Advance timers by 150ms safety fallback
+      vi.advanceTimersByTime(150);
+      expect((component as any).isAligningScroll).toBe(false);
+
+      // Cleanup
+      getViewportSizeSpy.mockRestore();
+      measureScrollOffsetSpy.mockRestore();
+      scrollToOffsetSpy.mockRestore();
+      relocateSpy.mockRestore();
+      vi.useRealTimers();
+    });
   });
 });
