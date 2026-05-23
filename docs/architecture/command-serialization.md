@@ -7,7 +7,7 @@ related:
   - ../architecture.md
   - session-layer.md
   - ui-layer.md
-  - ../../.agents/skills/dap-implementation/SKILL.md
+  - ../../.agents/skills/dev-dap-protocol-impl/SKILL.md
 tech_stack:
   angular: 21
   rxjs: 7.8

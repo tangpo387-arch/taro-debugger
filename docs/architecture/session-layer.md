@@ -6,7 +6,7 @@ last_updated: 2026-05-01
 related:
   - ../architecture.md
   - command-serialization.md
-  - ../../.agents/skills/state-management/state-management.md
+  - ../../.agents/skills/dev-state-reactive-flows/SKILL.md
 ---
 
 # Session Layer Architecture

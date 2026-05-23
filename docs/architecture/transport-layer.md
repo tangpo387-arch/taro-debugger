@@ -5,7 +5,7 @@ audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-04-06
 related:
   - ../architecture.md
-  - ../../.agents/skills/dap-implementation/dap-protocol-specs.md
+  - ../../.agents/skills/dev-dap-protocol-impl/SKILL.md
 ---
 
 # Transport Layer Architecture

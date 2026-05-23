@@ -178,6 +178,6 @@ The application applies post-processing to normalize the display of function blo
 
 - **Capability Guard**: The view is disabled if the Debug Adapter does not support the `disassemble` capability.
 - **Cache Policy**: Instructions are cached in self-contained `CachedRange` objects. The cache is **preserved across thread switches** (since threads share memory) but is **invalidated on `module` events** to account for dynamic library loading.
-- **Capacity**: Maintained via a spatial pruning watermark (15,000 instructions) and a hard limit (20,000 instructions). When the limit is exceeded, the `CachedRange` farthest from the current IP is evicted atomically — no per-address iteration is required.
+- **Capacity**: Maintained via a spatial pruning watermark and hard ceiling defined in the authoritative [DapAssemblyCacheService Specification](../core/dap-core.md#23-session-layer). When the ceiling is exceeded, the `CachedRange` farthest from the current IP is evicted atomically — no per-address iteration is required.
 
 

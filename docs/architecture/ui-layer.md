@@ -146,7 +146,7 @@ Log Category definitions (corresponding to `LogCategory` type):
 | `stdout` | Debugged program standard output |
 | `stderr` | Debugged program standard error output |
 
-Log memory cap is **1 MB** (approximate); oldest records are automatically evicted when exceeded.
+Log memory capacity boundaries and eviction policies are defined in the authoritative [Log Viewer Specification](ui-components/log-viewer.md#4-performance--rendering).
 
 ### 5.1 LogEntry Structured Payload
 

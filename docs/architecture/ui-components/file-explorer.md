@@ -47,3 +47,10 @@ The explorer uses a synthetic "Super Root" to organize sources into two primary 
 - **Reactive Source**: Relies on `DapFileTreeService` for tree construction and sorting.
 - **Large Codebases**: Employs virtual scrolling (via `mat-tree`) to maintain performance when thousands of files are loaded.
 - **Unsupported State**: If the DAP server does not support `loadedSources`, the panel displays a unified `TaroEmptyStateComponent` explaining the limitation.
+
+## 5. Exclusion Boundaries
+
+> [!IMPORTANT]
+> To preserve the file tree as a read-only visual inspection channel:
+> - **No direct disk modifications**: The File Explorer component is strictly prohibited from executing direct file creation, deletion, or write operations on the local file system. All file retrieval must go through the read-only queries of `DapFileTreeService`.
+> - **No local search orchestration**: The component must not implement custom file-filtering or textual search indexing algorithms. Search and source matching are handled entirely by the Monaco Editor or secondary server-side search providers.

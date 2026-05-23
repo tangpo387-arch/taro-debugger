@@ -44,7 +44,9 @@ Manages the high-level protocol handshake and execution state machine.
   - Sequential DAP handshake (`initialize` → `launch`/`attach`).
   - Request/Response pairing and timeout management.
   - Broadcasting the `executionState$` (Inactive, Launching, Running, Paused).
-- **`DapAssemblyCacheService`**: Manages instruction-level caching for disassembly. Instructions are embedded directly in self-contained `CachedRange` objects (sorted by address) - merge cost is $O(K+M)$ per batch; pruning evicts an entire range object in $O(1)$.
+- **`DapAssemblyCacheService`**: Manages instruction-level caching for disassembly. Instructions are embedded directly in self-contained `CachedRange` objects (sorted by address).
+  - **Performance**: Merge cost is $O(K+M)$ per batch; pruning evicts an entire range object in $O(1)$.
+  - **Capacity Limits**: Standard spatial pruning watermark is **15,000 instructions** with a hard ceiling of **20,000 instructions**. When the ceiling is exceeded, the range farthest from the current IP is evicted atomically.
 - **`DapMemoryService`**: High-level API for raw memory inspection. Abstracts Base64 conversion and provides reactive update notifications for the UI.
 - **`DapConfigService`**: Manages connection settings and adapter-specific configurations.
 

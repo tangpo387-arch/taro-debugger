@@ -6,8 +6,8 @@ last_updated: 2026-05-01
 related:
   - docs/project/system-specification.md
   - docs/dap-integration-faq.md
-  - .agents/skills/dap-implementation/dap-protocol-specs.md
-  - .agents/skills/state-management/state-management.md
+  - .agents/skills/dev-dap-protocol-impl/SKILL.md
+  - .agents/skills/dev-state-reactive-flows/SKILL.md
 ---
 
 # System Architecture (Master Index)

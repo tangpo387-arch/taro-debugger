@@ -80,3 +80,10 @@ To avoid conflicts with standard DAP event names, all synthetic events generated
 | `_dapError` | DAP Response `success=false` | `{ command: string; message: string }` |
 | `_transportError` | Transport stream error / complete | `{ reason: 'error' \| 'disconnected'; message: string }` |
 | `_sessionWarning` | Session-layer internal protocol anomaly (e.g., unknown `request_seq`) | `{ message: string }` |
+
+## 3. Exclusion Boundaries
+
+> [!IMPORTANT]
+> To prevent scope creep and maintain layer boundaries during error recovery:
+> - **No custom error overlays**: UI feature components must not implement custom dialogs or overlays for network or connection-level errors; they are strictly required to use the unified `ErrorDialog` provided by `@taro/ui-shared`.
+> - **No native system dialogs**: The Renderer/Angular UI process is forbidden from calling native desktop dialogs (e.g., Electron `dialog.showErrorBox`) directly. All native alert integration is managed by the Electron main process bridge.
