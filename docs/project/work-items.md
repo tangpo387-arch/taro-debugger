@@ -70,12 +70,13 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
 - **Description**: Implement the 'Advanced UX' features from Section 7 of the memory-view-spec.md, including struct layout overlays and member probing.
 - **Details**:
   - Implement member probing strategy in DapMemoryService using evaluate requests
-  - Enhance MemoryViewComponent to support multi-color member shading
-  - Add floating labels for struct member names in hex dump
-  - Implement alignment padding detection and [padding] labeling
+  - Contextual Inspect Memory Layout action in Variables menu to load struct dimensions
+  - Struct member byte cells shaded using dedicated HSL colors matching offsets
+  - Alignment gaps visually hatched and labeled as [padding]
+  - Floating labels displaying member names rendered above starting cell
   - [Doc] docs/archive/specs/memory-view-spec.md
   - [Test] Verify struct layout visualization for a nested C++ object
-- **Dependencies**: WI-106
+- **Dependencies**: WI-130
 
 ### WI-121: Inline Memory Editing Support
 
@@ -83,8 +84,23 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
 - **Size**: M
 - **Description**: Enable users to modify memory contents directly from the Hex Dump interface.
 - **Details**:
-  - Implement interactive byte cells with focus/edit states in MemoryViewComponent
-  - Wire cell updates to DapMemoryService.write()
-  - Implement 'supportsWriteMemoryRequest' capability check to enable/disable editing
-  - [Test] Verify memory write reflects in debuggee and triggers UI refresh
+  - Double-clicking a byte cell loads a text input with strict two-character hexadecimal formatting
+  - Pressing Enter or clicking outside triggers a DAP writeMemory event
+  - Successful modifications display a temporary green highlight transition
+  - Failed modifications rollback instantly, display original data, and highlight error with red border
+  - [Doc] docs/archive/specs/memory-view-spec.md
+  - [Test] Verify memory write transaction flow and rollback on failure
+- **Dependencies**: WI-130
+
+### WI-130: Infinite Memory View Scroll & Anchoring
+
+- **Status**: 💡 Proposed
+- **Size**: M
+- **Description**: Implement dynamic paging of memory blocks on-demand during scrolling with scroll anchoring loop prevention.
+- **Details**:
+  - Implement bidirectional scroll trigger boundaries (THRESHOLD_ROWS = 10) in MemoryViewComponent
+  - Implement Scroll Anchoring in MemoryViewComponent using offset delta to prevent jumps
+  - Render greyed-out cell placeholders for unmapped memory pages
+  - [Doc] docs/archive/specs/memory-view-spec.md
+  - [Test] Verify scroll anchoring offset correction during prepend operations
 - **Dependencies**: WI-106

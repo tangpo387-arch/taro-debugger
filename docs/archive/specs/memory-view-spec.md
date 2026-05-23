@@ -1,181 +1,252 @@
 ---
-title: Specification - Memory View (Hex Dump)
+title: Specification - Memory View (Hex Dump & Layout Inspector)
 scope: architecture, ui-layer, dap-integration, memory-inspection
 audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-26
+last_updated: 2026-05-23
 related:
   - ../ui-layer.md
   - ../../project/system-specification.md
   - assembly-view-spec.md
 ---
 
-# Specification: Memory View (Hex Dump)
+# Specification: Memory View (Hex Dump & Layout Inspector)
 
-## 1. Objective
+## 1. Purpose
 
-Provide a low-level memory inspection interface (Hex Dump) to allow users to view and optionally modify raw memory contents during a debug session. This feature is implemented across three coordinated work items to ensure separation of concerns between protocol handling, UI rendering, and host integration.
+The Memory View provides low-level memory inspection (Hex Dump) and editing capabilities for debugging C/C++ applications. To support complex data structure debugging, it maps high-level object layout structures (structs/classes) onto the raw hex grid. 
 
-## 2. Work Item Mapping & Monorepo Boundaries
+To deliver a premium, fluid developer experience, this specification unifies core memory rendering with three advanced capabilities:
+1. **Infinite Scroll**: On-demand, dynamic paging of memory blocks.
+2. **Layout Visualization (WI-120)**: Interactive multi-color struct layout shading, member probing, and alignment padding detection.
+3. **Inline Memory Editing (WI-121)**: Direct, cell-by-cell binary modification.
 
-| WI ID | Responsibility | Library / Project |
+---
+
+## 2. Scope
+
+### In-Scope
+* **Address-Based Coordinate System**: Absolute 64-bit virtual address calculations (`bigint`) for memory rendering, scrolling, editing, and layout highlighting.
+* **Scroll Anchoring**: Smooth viewport offset calculations when dynamically prepending memory chunks.
+* **Object Layout Visualization**: Probing struct member layout via the DAP `evaluate` address-of (`&`) operator, detecting padding, and rendering multi-color shading.
+* **Inline Editing**: Live byte modification triggering DAP `writeMemory` requests with transaction-like rollback states.
+* **Virtualization**: CDK Virtual Scroll optimized to prevent DOM bloat during long-running exploration.
+
+### Out-of-Scope
+* **Persistent Shading Caching**: Struct layouts are tied to the execution session state; they do not persist in `localStorage` across debugger sessions.
+* **Unmapped Writes**: Modifying bytes in unmapped pages is rejected by GDB/LLDB; we do not implement synthetic memory mocking.
+* **Multi-Thread Concurrent Editing**: Editing operations assume a single target-paused thread context.
+
+---
+
+## 3. Layer Architecture & Monorepo Boundaries
+
+```mermaid
+graph TD
+    UI[ui-inspection: MemoryViewComponent] -->|Read/Write Events| SM[taro-debugger-frontend: MemoryInspectorFacade]
+    SM -->|DAP Calls| DC[dap-core: DapSessionService / DapMemoryService]
+    DC -->|WebSocket/IPC| GDB[Debugger / GDB / LLDB Target]
+```
+
+> [Diagram: Architectural flow — The Standalone UI Component in `ui-inspection` communicates via inputs/outputs with the orchestrating Host Facade, which accesses GDB/LLDB capabilities using the agnostic `dap-core` transport layer.]
+
+To satisfy monorepo isolation standards, the component structure is strictly decoupled:
+
+| Component / Layer | Project / Path | Architectural Responsibility |
 | :--- | :--- | :--- |
-| **WI-104** | Protocol Layer & Data Services | `projects/dap-core` |
-| **WI-105** | Standalone UI Component | `projects/ui-inspection` |
-| **WI-106** | UI Integration & UX Orchestration | `projects/taro-debugger-frontend` |
+| **`MemoryViewComponent`** | `projects/ui-inspection` | Pure, testable UI component. Receives raw bytes, absolute physical addresses, active selection states, and layout metadata maps. Standard standalone component using Angular 21. |
+| **`DapMemoryService`** | `projects/dap-core` | Framework-agnostic protocol wrapper. Serializes and deserializes DAP `readMemory` and `writeMemory` Base64 payloads. |
+| **`MemoryInspectorFacade`** | `projects/taro-debugger-frontend` | Host orchestration orchestrator. Listens to UI scrolling triggers, queries variables, runs member-probing flows, and updates the reactive streams. |
 
-## 3. Component Architecture
+### 3.1 Work Item Mapping
 
-### 3.1 MemoryViewComponent (`app-memory-view`)
+| WI ID | Feature Area | Responsibility | Project / Path |
+| :--- | :--- | :--- | :--- |
+| **WI-104** | Core Protocol | `DapMemoryService` | `projects/dap-core` |
+| **WI-105** | UI Component | `MemoryViewComponent` baseline | `projects/ui-inspection` |
+| **WI-106** | UI Integration | `MemoryInspectorFacade` base wiring | `projects/taro-debugger-frontend` |
+| **WI-130** | Infinite Scroll | Dynamic paging & scroll anchoring | `projects/ui-inspection` |
+| **WI-120** | Layout Visuals | Struct layout shading & member probing | `projects/ui-inspection` |
+| **WI-121** | Inline Editing | Live byte modifications & rollback transaction | `projects/ui-inspection` |
 
-- **Type**: Standalone Component.
-- **Project**: `@taro/ui-inspection`.
-- **Primary Responsibility**: Render a high-performance hex dump grid with ASCII preview and virtual scrolling.
-- **Inputs**:
-  - `data: Uint8Array`: The memory buffer to display.
-  - `baseAddress: string`: The starting address for rendering.
-  - `highlightedRange?: { start: number, length: number }`: For object layout shading.
+---
 
-### 3.2 DapMemoryService
+## 4. Behavior Specification
 
-- **Type**: Framework-agnostic Service.
-- **Project**: `@taro/dap-core`.
-- **Responsibility**:
-  - Encapsulate DAP `readMemory` and `writeMemory` request logic.
-  - Handle Base64 encoding/decoding for memory data payloads.
-  - Provide reactive streams for memory buffer updates.
+### 4.1 Address-Based Coordinate System
+To prevent layout drift, highlighting offsets, and scroll mismatches, all operations are governed by physical memory addresses (`bigint`).
 
-## 4. UI/UX Design
+1. **Cell Mapping**: Each byte in the grid is uniquely mapped by `row.address + BigInt(byteIndex)`.
+2. **Decoupled Highlighting**: Shading lookup is done via `LayoutOverlayMap` using the target cell's absolute `bigint` key. Prepending or appending data dynamically does not shift highlight positions.
 
-### 4.1 Main Content Integration
+### 4.2 Infinite Scroll & Anchoring
 
-The `DebuggerComponent` in the host application features a tabbed interface. Memory View is integrated as a primary tab:
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Developer (UI)
+    participant V as CdkVirtualScrollViewport
+    participant MF as MemoryInspectorFacade
+    participant MS as DapMemoryService
 
-1. **Source** (Monaco Editor)
-2. **Disassembly** (Assembly View)
-3. **Memory** (Memory View - WI-106)
+    User->>V: Scrolls up (near index 0)
+    V->>MF: Trigger triggerPrependBuffer()
+    MF->>MS: readMemory(baseAddress - offset, count)
+    MS-->>MF: Return Uint8Array
+    Note over MF: Prepend new rows to data array
+    Note over MF: Scroll Anchor Adjustment:<br/>Calculate delta = rowsAdded * ROW_HEIGHT
+    MF->>V: viewport.scrollToOffset(currentOffset + delta)
+    V-->>User: Visual rendering remains locked in position
+```
 
-### 4.2 Visual Layout (Hex Dump)
+> [Diagram: Infinite scroll prepend flow — When scrolling near index 0, the facade reads preceding memory blocks, prepends them, and adjusts the viewport offset dynamically to keep the user's scroll position anchored without jumping.]
 
-The view uses a high-density table structure powered by `cdk-virtual-scroll-viewport`:
+1. **Trigger Boundaries**: Trigger dynamic reads when the viewport scroll position is within `THRESHOLD_ROWS` (default: `10` rows, or `240px` at `24px` per row) of the loaded buffer's boundaries.
+2. **Anchor Equation**:
+   $$\text{Offset}_{\text{New}} = \text{Offset}_{\text{Current}} + (\text{Rows}_{\text{Added}} \times \text{RowHeight})$$
+   Applying this delta synchronously after prepending data prevents the viewport from jumping.
+3. **Unmapped Rendering**: If a DAP `readMemory` request fails or reports unreadable bytes, the view renders greyed-out `??` cells with a custom tooltip indicating `Unreadable Memory Segment`.
 
-| Column | Content | Format / Style |
-| :--- | :--- | :--- |
-| **Address** | 64-bit Hex Address | `0x00007FFFFFFFDC00` (Monospace, Muted) |
-| **Hex Data** | 16 bytes per row | `48 89 E5 ...` (Monospace, Interactive) |
-| **ASCII** | Character representation | `H . . .` (Monospace, Muted) |
+### 4.3 Struct Layout Shading & Member Probing (WI-120)
 
-### 4.3 Entry Points & Interaction (WI-106)
+To map a complex structure in memory:
+1. **Member Address Probing**:
+   Execute `evaluate` requests for the struct base address and each member path using the C++ address-of operator:
+   ```typescript
+   // Request absolute address of member
+   const baseAddr = await session.evaluate({ expression: "&obj" });
+   const memberAddr = await session.evaluate({ expression: "&obj.age" });
+   const offset = BigInt(memberAddr) - BigInt(baseAddr);
+   ```
+2. **Padding Detection Algorithm**:
+   For a sorted list of members by offset:
+   $$\text{Gap} = \text{Offset}_{[i+1]} - (\text{Offset}_{[i]} + \text{Size}_{[i]})$$
+   If $\text{Gap} > 0$, mark the address range as `[padding]` using a diagonal CSS hatch pattern.
+3. **Shading Visualization**:
+   The component binds cells to corresponding member styles using a multi-color HSL palette to clearly differentiate adjacent variables. Floating labels indicating member names (`_age`, `*ptr`) are pinned to the starting byte cell of the member span.
 
-- **Contextual**: Right-click a pointer variable in the **Variables** panel -> Select **"Open Memory View"**.
-- **Jump FAB**: A floating action button in the bottom-right of the Memory View triggers the **Jump to Address Dialog**.
-- **Manual Dialog**: A shared Material dialog (`JumpToAddressDialogComponent`) allows entering numeric addresses, symbols, or DAP memory references.
-- **Modification**: Inline byte editing (sends `writeMemory` via `DapMemoryService`) — [Planned for Future WI].
+### 4.4 Inline Memory Editing (WI-121)
 
-## 5. DAP Protocol Integration (WI-104)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Developer (UI)
+    participant MV as MemoryViewComponent
+    participant MF as MemoryInspectorFacade
+    participant MS as DapMemoryService
 
-### 5.1 Capabilities Check
+    User->>MV: Double-click byte cell
+    MV->>User: Transform cell into text input (hex mask)
+    User->>MV: Press Enter / Blur (new value: 0xFF)
+    MV->>MF: Emit cellWrite(address, 0xFF)
+    Note over MV: Apply 'pending-write' CSS class
+    MF->>MS: writeMemory(address, [0xFF])
+    alt Success
+        MS-->>MF: Bytes written = 1
+        MF->>MV: Confirm write
+        Note over MV: Flash Green -> Apply 'success-updated' style
+    else Error / Fail
+        MS-->>MF: Write Failed / Rejected
+        MF->>MV: Rollback original value
+        Note over MV: Flash Red -> Apply 'write-error' tooltip
+    end
+```
 
-The UI must verify `capabilities.supportsReadMemoryRequest` before enabling the Memory tab. If `supportsWriteMemoryRequest` is false, editing is disabled.
+> [Diagram: Inline memory editing transaction flow — Double-clicking a byte opens a hex-masked text input. Submission triggers writeMemory. Success triggers a green flash; failure rolls back to the original byte and flashes red.]
 
-### 5.2 Protocol Types (`dap.types.ts`)
+1. **Input Validation**: Text input is constrained by a regular expression mask: `/^[0-9A-Fa-f]{2}$/`.
+2. **State Transaction**: During the `writeMemory` round-trip, the cell transitions to a `pending-write` visual state (semi-transparent pulsing spinner).
+3. **Rollback Integrity**: If writing to target memory fails (due to write protections or process resumption), the local UI rolls back the cell value to the original byte and applies a temporary red failure border with a descriptive error tooltip.
+
+---
+
+## 5. API Contracts
+
+### 5.1 Dynamic Data Interfaces
 
 ```typescript
-export interface ReadMemoryArguments {
-  memoryReference: string;
-  offset?: number;
-  count: number;
+export interface MemberLayout {
+  name: string;
+  typeName: string;
+  offset: number;
+  size: number;
+  colorHex: string;
 }
 
-export interface ReadMemoryResponse extends DapResponse {
-  body?: {
-    address: string;
-    unreadableBytes?: number;
-    data?: string; // Base64 encoded
-  };
+export interface ObjectLayoutMetadata {
+  baseAddress: bigint;
+  totalSize: number;
+  members: MemberLayout[];
+  paddingRanges: { startOffset: number; length: number }[];
 }
 
-export interface WriteMemoryArguments {
-  memoryReference: string;
-  offset?: number;
-  allowPartial?: boolean;
-  data: string; // Base64 encoded
-}
-
-export interface WriteMemoryResponse extends DapResponse {
-  body?: {
-    offset?: number;
-    bytesWritten?: number;
+export interface RenderedMemoryCell {
+  address: bigint;
+  value: string; // 2-char hex or '??'
+  isPending: boolean;
+  layoutMetadata?: {
+    memberName: string;
+    isPadding: boolean;
+    colorHex: string;
+    isStartOfMember: boolean;
   };
 }
 ```
 
-### 5.3 Read Memory Flow (DapMemoryService)
-
-The `DapMemoryService` will provide a high-level API that abstracts the Base64 conversion:
+### 5.2 Facade & Service Contracts
 
 ```typescript
 /**
- * Reads memory from the debuggee.
- * @returns Uint8Array containing the raw memory bytes.
+ * DapMemoryService - Framework agnostic layer (dap-core)
  */
-async read(memoryReference: string, offset: number, count: number): Promise<Uint8Array>;
-```
+export interface IDapMemoryService {
+  read(memoryReference: string, offset: bigint, count: number): Promise<Uint8Array>;
+  write(memoryReference: string, offset: bigint, data: Uint8Array): Promise<number>;
+}
 
-### 5.4 Write Memory Flow (DapMemoryService)
-
-```typescript
 /**
- * Writes memory to the debuggee.
- * @returns The number of bytes successfully written.
+ * MemoryInspectorFacade - Orchestration Layer (taro-debugger-frontend)
  */
-async write(memoryReference: string, offset: number, data: Uint8Array): Promise<number>;
+export interface IMemoryInspectorFacade {
+  readonly visibleBytes$: Observable<RenderedMemoryCell[]>;
+  readonly currentLayout$: Observable<ObjectLayoutMetadata | null>;
+  
+  loadMemoryRange(base: bigint, size: number): void;
+  prependMemory(size: number): Promise<void>;
+  appendMemory(size: number): Promise<void>;
+  writeCell(address: bigint, newValue: number): Promise<void>;
+  probeObjectLayout(expression: string): Promise<void>;
+}
 ```
 
-## 6. Technical Constraints
+---
 
-- **Monorepo Strictness**: `MemoryViewComponent` (in `ui-inspection`) MUST NOT depend on `DapSessionService`. It should receive data via Inputs or a specialized interface to remain testable in isolation.
-- **Performance**: Virtual scrolling is mandatory for handling large memory blocks without DOM bloat.
+## 6. Technical Constraints & Performance Boundaries
 
-## 7. Object Layout Visualization (Advanced UX)
+1. **Change Detection**: The `MemoryViewComponent` must strictly use `ChangeDetectionStrategy.OnPush` with trackBy on absolute address strings (`trackBy: trackByAddress`).
+2. **Debounced Fetching**: Dynamic scroll triggers must be debounced by a minimum of `150ms` to prevent GDB bridge saturation during rapid scroll wheel actions.
+3. **Memory Limits**: The viewport must hold a maximum buffer of `16KB` (1024 rows). If prepending or appending exceeds this limit, rows furthest from the visible window must be pruned to preserve low memory footprint.
 
-To support complex C++ debugging, the Memory View provides an optional "Layout Overlay" mode that maps high-level object structures (structs/classes) onto the raw hex dump.
+---
 
-### 7.1 Triggering Layout Mode
+## 7. Acceptance Criteria
 
-Users can initiate the Object Layout Visualization through two primary methods:
+### WI-104 & WI-105 Baseline
+* [x] `MemoryViewComponent` renders the baseline hex grid and ASCII preview with zero layout shift during standard scrolling.
+* [x] Emits a clean `jumpToAddress` event when the jump FAB is triggered.
 
-1. **Contextual (Variables Panel)**:
-   - In the **Left Sidenav -> Debug Tab**, open the **Variables** expansion panel.
-   - Right-click a `struct`, `class`, or a pointer to an object.
-   - Select the new context menu option: **"Inspect Memory Layout"**.
-   - This automatically switches the center panel to the Memory tab, navigates to the object's base address, and enables the Layout Overlay.
-2. **Manual Cast (Memory Tab)**:
-   - While in the Memory tab viewing raw hex data, the user can use a **"Cast Layout"** input field (located in the Layout Inspector panel or toolbar).
-   - The user types a valid C/C++ expression or type cast (e.g., `(MyStruct*)0x12345678` or simply a variable name `player`).
-   - The system evaluates the type and address to generate the overlay.
+### Infinite Scroll (Tracked in WI-130)
+* [ ] Scrolling within `10` rows of the top successfully fetches preceding memory blocks, prepending rows seamlessly.
+* [ ] Prepending data does not cause the viewport to jump or flicker (verified via Scroll Anchoring offset adjustment).
+* [ ] Unreadable or unmapped segments display muted `??` marks with no console errors or crashed sessions.
 
-### 7.2 Visual Overlay Design
+### Struct Layout & Probing (Tracked in WI-120)
+* [ ] Contextual "Inspect Memory Layout" menu action on variables correctly loads struct dimensions.
+* [ ] Struct member byte cells are shaded using dedicated HSL colors matching the probed offsets.
+* [ ] Alignment gaps are visually hatched and labeled as `[padding]`.
+* [ ] Floating labels displaying member names (`_age`) are rendered above the starting cell of their corresponding offset.
 
-When an object layout is being inspected, the Hex Dump is enhanced with the following visual cues:
-
-- **Member Shading**: Bytes belonging to a specific member are highlighted with a semi-transparent background color.
-- **Floating Labels**: Member names (e.g., `_age`, `*ptr`) are rendered as small labels above their starting byte.
-- **Padding Indicators**: Alignment gaps are rendered with a diagonal "hatch" pattern and labeled as `[padding]`.
-- **Nesting Brackets**: Vertical brackets in the address gutter indicate the span of nested parent objects.
-
-### 7.3 Data Acquisition Strategy
-
-Since standard DAP `variables` responses may lack explicit memory offsets, the system employs a "Probing" strategy:
-
-1. **Base Address**: Obtain the memory address of the parent object.
-2. **Member Offsets**: Execute `evaluate` requests for child absolute addresses (e.g., `&obj.member`).
-3. **Layout Mapping**: Calculate `Offset = MemberAddress - BaseAddress`.
-4. **Padding Detection**: Identify gaps between `(Offset[i] + Size[i])` and `Offset[i+1]`.
-
-## 8. Acceptance Criteria
-
-- [x] **WI-104**: `DapMemoryService` successfully converts DAP Base64 responses to `Uint8Array`.
-- [x] **WI-105**: `MemoryViewComponent` renders 1KB of memory with zero layout shift during virtual scrolling.
-- [x] **WI-106**: Right-clicking a pointer in the Variables tree correctly switches the tab and populates the Memory View.
-- [ ] **Layout Mode**: Members of a struct are visually delineated with distinct colors and labels per Section 7.2 (Tracked in WI-120).
-- [ ] **Padding Detection**: Alignment gaps are correctly identified and labeled as `[padding]` (Tracked in WI-120).
+### Inline Editing (Tracked in WI-121)
+* [ ] Double-clicking a byte cell loads a text input with strict two-character hexadecimal formatting.
+* [ ] Pressing `Enter` or clicking outside triggers a DAP `writeMemory` event.
+* [ ] Successful modifications display a temporary green highlight transition.
+* [ ] Failed modifications rollback instantly, display the original data value, and highlight the error via a red warning border.
