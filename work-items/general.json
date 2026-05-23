@@ -484,6 +484,31 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-16"
       }
+    },
+    {
+      "id": "WI-131",
+      "title": "Remove LLDB Support and References",
+      "featureGroup": "General",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Remove all source code references, documentations, specifications, and work item definitions related to LLDB integration, ensuring Taro Debugger solely supports GDB DAP.",
+      "details": [
+        "Remove references to lldb and lldb-dap from README.md",
+        "Remove LLDB-related sections in docs/guides/dap-integration-faq.md",
+        "Remove references to LLDB in active architecture files under docs/architecture/",
+        "Remove references to LLDB in docs/project/system-specification.md and docs/tests/manual-verification.spec-plan.md",
+        "[Doc] docs/archive/specs/remove-lldb-support.md",
+        "[Test] Verify doc linting passes using npm run lint:docs"
+      ],
+      "timeline": {
+        "created": "2026-05-23",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-23"
+      }
     }
   ]
 }

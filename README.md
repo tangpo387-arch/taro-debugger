@@ -14,17 +14,17 @@ last_updated: 2026-04-14
 [![Angular](https://img.shields.io/badge/Angular-21%2B-DD0031.svg)](https://angular.io/)
 [![DAP](https://img.shields.io/badge/Protocol-DAP-blue.svg)](https://microsoft.github.io/debug-adapter-protocol/)
 
-Taro Debugger is a cross-platform frontend for debugging C/C++ applications over WebSocket-connected GDB/LLDB instances. It runs in any browser or as an Electron desktop app, requiring no IDE installation.
+Taro Debugger is a cross-platform frontend for debugging C/C++ applications over WebSocket-connected GDB instances. It runs in any browser or as an Electron desktop app, requiring no IDE installation.
 
 > [!NOTE]
-> **Scope**: C/C++ debugging only. Windows path variants (`\`) are handled internally — no extra configuration required. LLDB setup follows the same steps as GDB. Authentication and multi-user deployment are out of v1.0 scope.
+> **Scope**: C/C++ debugging only. Windows path variants (`\`) are handled internally — no extra configuration required. Authentication and multi-user deployment are out of v1.0 scope.
 
 ## Why Taro?
 
 - **Remote-First Architecture**: Connect to debug adapters over WebSockets, enabling real-time debugging of remote systems from any browser.
 - **Monaco Editor**: Syntax highlighting, breakpoint glyph margin, and live execution tracking — no IDE installation required.
 - **Universal Deployment**: Run as a standalone **Electron** desktop app for local files or deploy as a **Web Application** for centralized access.
-- **DAP-Native**: Built on DAP, ensuring compatibility with GDB, LLDB, and other standard debug engines.
+- **DAP-Native**: Built on DAP, ensuring compatibility with GDB and other standard debug engines.
 
 ## Tech Stack
 
@@ -92,12 +92,12 @@ Taro is fully compatible with the **DAP** standard. It supports core debugging o
 ### 1. Prerequisites
 
 - [Node.js](https://nodejs.org/) LTS (Long-Term Support) — v20 or later
-- [GDB](https://www.sourceware.org/gdb/) v13+ or [LLDB](https://lldb.llvm.org/) with DAP support
-- [websocketd](http://websocketd.com/) (bridges GDB/LLDB to WebSocket)
+- [GDB](https://www.sourceware.org/gdb/) v13+ with DAP support
+- [websocketd](http://websocketd.com/) (bridges GDB to WebSocket)
 
 ### 2. Launch the DAP Server
 
-Taro communicates with GDB/LLDB via WebSockets. Use `websocketd` to bridge the gap:
+Taro communicates with GDB via WebSockets. Use `websocketd` to bridge the gap:
 
 ```bash
 websocketd --port 4711 --binary /usr/bin/gdb ex "set debug dap-log-file <path>/dap.log" -ex "set debug dap-log-level 2" -i=dap

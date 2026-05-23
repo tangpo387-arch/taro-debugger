@@ -46,7 +46,7 @@ Feature points that are difficult to automate or require human sensory verificat
 
 ## Breakpoint DAP Synchronization — Live Integration Test
 
-> Requires a live DAP adapter (e.g., `lldb-dap` or `gdb`) connected to a compiled C/C++ binary.
+> Requires a live GDB DAP adapter connected to a compiled C/C++ binary.
 
 | Step | Action | Expected Result |
 | --- | --- | --- |

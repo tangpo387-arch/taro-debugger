@@ -34,7 +34,7 @@ Consolidates threads and stack frames into a single hierarchical flat tree view 
 
 A hierarchical tree view for inspecting local and global variables rendered via CDK virtual scroll.
 - **Data Source**: Managed by `DapVariablesService` (`scopes$`, `getVariables()`).
-- **Scope Filtering**: The `Registers` scope is excluded from display via a case-insensitive regex filter (`/^(registers?)$/i`) applied during tree construction. This suppresses the typically noisy register bank displayed by LLDB and GDB.
+- **Scope Filtering**: The `Registers` scope is excluded from display via a case-insensitive regex filter (`/^(registers?)$/i`) applied during tree construction. This suppresses the typically noisy register bank displayed by GDB.
 - **Lazy Loading**: Child variables are fetched on demand when the user expands a node. The first scope (e.g., `Locals`) is auto-expanded on `stopped`.
 - **Type Info**: Each variable with a type exposes an `ℹ` (`info_outline`) icon button in the row-actions area. Clicking it opens a CDK Connected Overlay anchored to the button itself, displaying the simplified type (via `CppSignaturePipe`). An expand toggle within the overlay reveals the full raw C++ type string. Clicking the same button again closes the overlay (toggle behavior).
 - **Memory Inspection**: Variables with a `memoryReference` expose a `memory` icon button. Clicking it emits `inspectMemoryRequest` with the address as a `bigint`.

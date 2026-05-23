@@ -98,6 +98,7 @@ graph LR
     WI_72["WI-72 Refactor doc-guard.js"]
     WI_99["WI-99 Author Multi-Process Debug Architecture Document"]
     WI_122["WI-122 Fix Disconnected State Display Inconsistency"]
+    WI_131["WI-131 Remove LLDB Support and References"]
     WI_27["WI-27 Integration of Tabbed Layout and Navigation"]
     WI_28["WI-28 DapAssemblyService and Disassemble Request"]
     WI_29["WI-29 AssemblyViewComponent and Instruction Rendering"]
@@ -325,6 +326,7 @@ graph LR
     style WI_72 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_99 fill:none,stroke-dasharray:5
     style WI_122 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_131 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_27 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI_28 fill:#6366f1,stroke:#000,stroke-width:2.5px
     style WI_29 fill:#6366f1,stroke:#000,stroke-width:2.5px

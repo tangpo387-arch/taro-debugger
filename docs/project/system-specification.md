@@ -241,7 +241,7 @@ The system uses a **Least Recently Used (LRU)** eviction policy to maintain a ba
 ### 8.3 Lifecycle & Consistency
 
 - **Session-Bound**: The cache is automatically invalidated and cleared whenever a DAP session is initialized or disconnected.
-- **Immutability Assumption**: The system assumes source files do not change on disk during an active debugging session, as GDB/LLDB typically do not provide file-watch events via DAP.
+- **Immutability Assumption**: The system assumes source files do not change on disk during an active debugging session, as GDB typically does not provide file-watch events via DAP.
 
 ## 9. Constraints
 

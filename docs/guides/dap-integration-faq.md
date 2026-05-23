@@ -51,24 +51,13 @@ In DAP, a typical debug session begins with an `initialize` request, followed by
 
 According to the official specification and implementation best practices, the initialization process must follow a strict order to ensure that "configuration" completes before "program execution." This section is heavily influenced by early development discussions; see [VS Code Issue #4902: Debug protocol: configuration sequence](https://github.com/microsoft/vscode/issues/4902).
 
-### Key Constraints
-
-#### Constraint 1: `initialized` Event Timing
+### Key Constraints#### Constraint 1: `initialized` Event Timing
 
 The Debug Adapter must send the `initialized` event only **after** returning the `initialize` response. The DAP specification's exact wording is:
 
 > *"Since the debug adapter is expected to send the `initialized` event as soon as possible, the client can send configuration requests immediately upon receiving the `initialized` event."*
 
-The key phrase is **"as soon as possible"** — the spec does **not** mandate a fixed relationship between `initialized` and `launch`/`attach`. This intentional flexibility accommodates different debugger engine architectures, resulting in **two spec-compliant behaviors** observed in the wild:
-
-| Adapter | When `initialized` is sent | Reason |
-| --- | --- | --- |
-| **GDB** (`gdb -i=dap`) | Immediately after `initialize` response | GDB can internally buffer breakpoint configuration without knowing the target binary; no `launch` info is required before accepting `setBreakpoints`. |
-| **LLDB** (`lldb-dap`) | Only **after** receiving the `launch`/`attach` request | LLDB's engine needs to know the target binary path (from `launch` args) before it can correctly resolve and mount breakpoints. It is not "ready" for configuration without this. |
-
-Both behaviors are fully spec-compliant. The DAP spec deliberately defers to the adapter's judgment on when it is truly ready.
-
-* **⚠️ Client-Side Implication:** A Frontend Client must **never assume** that the `initialized` event will arrive before or after `launch`/`attach`. The only safe strategy is the **fire-and-forget + await** pattern described below, which is compatible with both adapter types.
+The key phrase is **"as soon as possible"** — the spec does **not** mandate a fixed relationship between `initialized` and `launch`/`attach`. For GDB (`gdb -i=dap`), the adapter sends `initialized` immediately after the `initialize` response. This allows GDB to internally buffer breakpoint configuration without knowing the target binary; no `launch` info is required before accepting `setBreakpoints`.
 
 #### Constraint 2: `launch`/`attach` Response Timing
 
@@ -86,22 +75,20 @@ The `configurationDone` **request** must be sent only **after** the `launch` or 
 
 #### Standard Message Flow (Spec Reference)
 
-The following table shows the spec-defined ordering. Steps 3 and 4 may be interleaved differently depending on the adapter (see Constraint 1 above).
+The following table shows the GDB-defined ordering:
 
 1. **IDE → Adapter:** `initialize` request
 2. **Adapter → IDE:** `initialize` response (declares capabilities)
 3. **IDE → Adapter:** `launch`/`attach` request *(fire-and-forget — send without awaiting response)*
-4. **Adapter → IDE:** `initialized` event *(may arrive before or after step 3, adapter-dependent)*
+4. **Adapter → IDE:** `initialized` event *(arrives immediately after step 2)*
 5. **IDE → Adapter:** Configuration requests (`setBreakpoints`, `setExceptionBreakpoints`, etc.)
 6. **IDE → Adapter:** `configurationDone` request (signals configuration complete)
 7. **Adapter → IDE:** `configurationDone` response
 8. **Adapter → IDE:** `launch`/`attach` response (formally ends the launch sequence)
 
-#### Initialization Sequence Diagrams
+#### Initialization Sequence Diagram (GDB)
 
-The following two diagrams show how the same `DapSessionService` implementation handles both adapter behaviors identically, because `launch` is always sent fire-and-forget before awaiting `initialized`.
-
-**Variant A — GDB** (`initialized` arrives before `launch` is processed by the adapter):
+The following diagram shows how the `DapSessionService` implementation handles GDB's initialization sequence, because `launch` is always sent fire-and-forget before awaiting `initialized`.
 
 ```mermaid
 sequenceDiagram
@@ -122,38 +109,16 @@ sequenceDiagram
     Service-->>IDE: startSession() Promise Resolve
 ```
 
-**Variant B — lldb-dap** (`initialized` is held until adapter receives `launch`):
-
-```mermaid
-sequenceDiagram
-    participant IDE as DebuggerComponent
-    participant Service as DapSessionService
-    participant Adapter as lldb-dap Adapter
-
-    IDE->>Service: startSession()
-    Service->>Adapter: initialize Request
-    Adapter-->>Service: initialize Response
-    Service->>Adapter: launch/attach Request (fire-and-forget)
-    Adapter-->>Service: (Event) initialized ← lldb-dap sends this only AFTER receiving launch
-    Note over Service, Adapter: Enter configuration phase (await initialized before continuing)
-    Service->>Adapter: setBreakpoints and other configuration requests
-    Service->>Adapter: configurationDone Request (send and await Response)
-    Adapter-->>Service: configurationDone Response
-    Adapter-->>Service: launch/attach Response (arrives only now)
-    Service-->>IDE: startSession() Promise Resolve
-```
-
 ### Annotated Message Flow with Async Control
 
-The following flow is the **universal compatible implementation** that works correctly with both GDB-style (early `initialized`) and lldb-dap-style (late `initialized`) adapters:
+The following flow is the compatible implementation that works correctly with GDB-style (early `initialized`) adapters:
 
 ```text
 IDE → Adapter:  initialize request
 Adapter → IDE:  initialize response           ← await completion before continuing
 IDE → Adapter:  launch/attach request         ← send fire-and-forget (do NOT await response)
 
-                                              ← [GDB]      initialized event arrives HERE (early)
-                                              ← [lldb-dap] initialized event arrives HERE (after launch)
+                                               ← [GDB] initialized event arrives HERE (early)
 
 IDE waits:      initialized event             ← await this event before continuing
 IDE → Adapter:  setBreakpoints and other configuration requests
@@ -162,9 +127,7 @@ Adapter → IDE:  configurationDone response    ← await completion before cont
 Adapter → IDE:  launch/attach response        ← only NOW await this response
 ```
 
-> **⚠️ Warning:** The `launch`/`attach` request must be sent in a "fire-and-forget" manner (send without immediately awaiting the response), because the Adapter will only reply with the `launch`/`attach` response after the `configurationDone` response. If you immediately await the `launch`/`attach` response, you'll deadlock because `configurationDone` hasn't been sent yet.
->
-> **⚠️ Warning:** Never send `launch`/`attach` *after* awaiting the `initialized` event. If the adapter is `lldb-dap`, it will hold the `initialized` event until `launch` is received — creating a deadlock where both sides wait for each other indefinitely.
+> **⚠️ Warning:** The `launch`/`attach` request must be sent in a "fire-and-forget" manner (send without immediately awaiting the response), because GDB will only reply with the `launch`/`attach` response after the `configurationDone` response. If you immediately await the `launch`/`attach` response, you'll deadlock because `configurationDone` hasn't been sent yet.
 
 ### Implementation Recommendations Summary
 
