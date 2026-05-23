@@ -207,7 +207,17 @@ export class AssemblyViewComponent implements AfterViewInit, OnDestroy {
       const anchor = this.viewAnchor();
       if (this.DEBUG_SCROLL) console.log(`[AssemblyView] relocateEffect: viewAnchor updated to: ${anchor !== undefined ? '0x' + anchor.toString(16) : 'undefined'}`);
       if (anchor !== undefined) {
-        this.relocateWindow(anchor, 'jump');
+        const hasAddress = this.instructions.some(i => i.address === anchor);
+        if (hasAddress) {
+          if (this.DEBUG_SCROLL) console.log(`[AssemblyView] relocateEffect: Address 0x${anchor.toString(16)} already loaded, scrolling directly`);
+          if (this.viewport) {
+            this.isJumping = true;
+          }
+          this.scrollToAddress(anchor);
+        } else {
+          if (this.DEBUG_SCROLL) console.log(`[AssemblyView] relocateEffect: Address 0x${anchor.toString(16)} not loaded, relocating window`);
+          this.relocateWindow(anchor, 'jump');
+        }
       }
     });
 

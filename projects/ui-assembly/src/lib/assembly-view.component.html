@@ -39,8 +39,12 @@
 
     </div>
   </cdk-virtual-scroll-viewport>
-  <div *ngIf="isLoading()" class="loading-overlay">
-    <span>Loading disassembly...</span>
+  <div *ngIf="isLoading()" class="loading-bar">
+    <div class="loading-bar-inner"></div>
+  </div>
+  <div *ngIf="isLoading()" class="loading-indicator">
+    <mat-icon class="spin-icon">sync</mat-icon>
+    <span>Loading...</span>
   </div>
 
   @if (!isLoading() && instructions.length === 0) {

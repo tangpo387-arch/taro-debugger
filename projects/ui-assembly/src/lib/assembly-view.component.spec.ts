@@ -172,6 +172,52 @@ describe('AssemblyViewComponent', () => {
       // representing the SSOT for the ResizeObserver's becameVisible logic.
       expect(component.viewAnchor()).not.toBe(BigInt('0x1000'));
     });
+
+    it('should bypass relocateWindow and scroll directly when the address is already loaded', async () => {
+      const fakeInstructions: DapDisassembledInstruction[] = [
+        { address: 0x1000n, instruction: 'nop', instructionBytes: '90', instructionByteLength: 1 }
+      ];
+      component.instructions = fakeInstructions;
+      component.scrollStrategy.setConfig(fakeInstructions, 28);
+      fixture.detectChanges();
+
+      const relocateWindowSpy = vi.spyOn(component as any, 'relocateWindow');
+      const scrollToAddressSpy = vi.spyOn(component as any, 'scrollToAddress').mockImplementation(() => {});
+
+      // Update currentPc to 0x1000n (already loaded)
+      fixture.componentRef.setInput('currentPc', 0x1000n);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(scrollToAddressSpy).toHaveBeenCalledWith(0x1000n);
+      expect(relocateWindowSpy).not.toHaveBeenCalled();
+
+      relocateWindowSpy.mockRestore();
+      scrollToAddressSpy.mockRestore();
+    });
+
+    it('should call relocateWindow when the address is not loaded', async () => {
+      const fakeInstructions: DapDisassembledInstruction[] = [
+        { address: 0x1000n, instruction: 'nop', instructionBytes: '90', instructionByteLength: 1 }
+      ];
+      component.instructions = fakeInstructions;
+      component.scrollStrategy.setConfig(fakeInstructions, 28);
+      fixture.detectChanges();
+
+      const relocateWindowSpy = vi.spyOn(component as any, 'relocateWindow').mockResolvedValue(undefined);
+      const scrollToAddressSpy = vi.spyOn(component as any, 'scrollToAddress');
+
+      // Update currentPc to 0x2000n (not loaded)
+      fixture.componentRef.setInput('currentPc', 0x2000n);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(relocateWindowSpy).toHaveBeenCalledWith(0x2000n, 'jump');
+      expect(scrollToAddressSpy).not.toHaveBeenCalled();
+
+      relocateWindowSpy.mockRestore();
+      scrollToAddressSpy.mockRestore();
+    });
   });
 
   it('should verify opcode and mnemonic elements have title attributes for tooltips', () => {
