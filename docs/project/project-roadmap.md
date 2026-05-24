@@ -2,7 +2,7 @@
 title: Project Roadmap & Dependency Map
 scope: milestones, dependencies, architecture-tracking
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer, Human Engineer]
-last_updated: 2026-05-23
+last_updated: 2026-05-24
 ---
 
 # Project Roadmap & Dependency Map
@@ -20,7 +20,7 @@ graph LR
     WI_06["WI-06 DAP Session Management Service (`DapSessionService`)"]
     WI_07["WI-07 DAP Request Timeout Mechanism"]
     WI_08["WI-08 Integrate DapSessionService in DebuggerComponent"]
-    WI_09["WI-09 Implement Node.js WebSocket Bridge"]
+    WI_09["WI-09 Implement taro-session Core & Client"]
     WI_21["WI-21 Connection Error Handling"]
     WI_22["WI-22 DAP Server Error Handling"]
     WI_31["WI-31 DAP 'terminated' Event _restart Payload Passing"]
@@ -36,6 +36,9 @@ graph LR
     WI_94["WI-94 DapSessionManager Core Implementation"]
     WI_123["WI-123 Stop at Main via DAP Function Breakpoints"]
     WI_126["WI-126 Implement execution-scoped stackTrace cache and request coalescing in DapSessionService"]
+    WI_132["WI-132 Implement taro-session Chat Routing & Log Persistence"]
+    WI_133["WI-133 Implement taro-session Agent Memory & MCP Host"]
+    WI_134["WI-134 Implement AI Companion Integration & Cognitive Loop"]
     WI_10["WI-10 Debug Control Button Functionality"]
     WI_11["WI-11 DAP Event Handling & State Management"]
     WI_39["WI-39 Command Serialization: Control Button In-Flight Guard"]
@@ -161,6 +164,9 @@ graph LR
     WI_60 --> WI_61
     WI_61 --> WI_62
     WI_06 --> WI_126
+    WI_09 --> WI_132
+    WI_132 --> WI_133
+    WI_133 --> WI_134
     WI_07 --> WI_10
     WI_07 --> WI_11
     WI_10 --> WI_39
@@ -264,6 +270,9 @@ graph LR
     style WI_94 fill:none,stroke-dasharray:5
     style WI_123 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_126 fill:#4ade80,stroke:#000,stroke-width:2.5px
+    style WI_132 fill:#4ade80,stroke:#22c55e
+    style WI_133 fill:#4ade80,stroke:#22c55e
+    style WI_134 fill:#4ade80,stroke:#22c55e
     style WI_10 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_11 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_39 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2

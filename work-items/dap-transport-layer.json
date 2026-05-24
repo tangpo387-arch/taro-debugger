@@ -124,19 +124,22 @@
     },
     {
       "id": "WI-09",
-      "title": "Implement Node.js WebSocket Bridge",
+      "title": "Implement taro-session Core & Client",
       "featureGroup": "DAP Transport Layer",
       "metadata": {
-        "status": "pending",
+        "status": "proposed",
         "size": "M",
         "dependencies": []
       },
-      "description": "Implement a simple Node.js server that receives frontend WebSocket connections and forwards them to the local DAP executable (e.g., `lldb-dap`)",
+      "description": "Implement the core taro-session CLI server, supporting the /session/client WebSocket channel, spawning the GDB target, and auto-saving/loading config.json and breakpoints.json",
       "details": [
-        "Use the `ws` module to create a WebSocket Server (e.g., running on `:8080`)",
-        "On connection, launch `lldb-dap` or `gdb` as a child process based on the protocol",
-        "Bidirectional data forwarding: WebSocket → DAP `stdin`; DAP `stdout` → WebSocket back to frontend",
-        "Handle process termination and resource cleanup"
+        "Implement CLI --session-path directory loading and saving",
+        "Create /session/client WebSocket channel and multiplexer",
+        "Implement GDB spawn (gdb --interpreter=dap) and stdin/stdout proxying",
+        "Load and restore config.json and breakpoints.json on GDB startup",
+        "Implement continuous auto-saving of configs and breakpoints back to the .tarodb/ directory",
+        "[Test] Verify GDB spawns correctly, GDB stdin/stdout proxy routes, and config/breakpoints restore on startup",
+        "[Doc] docs/archive/specs/node-js-websocket-bridge.md"
       ],
       "timeline": {
         "created": "2026-04-04"
@@ -510,6 +513,85 @@
         "created": "2026-05-19",
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-19"
+      }
+    },
+    {
+      "id": "WI-132",
+      "title": "Implement taro-session Chat Routing & Log Persistence",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "proposed",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-09"
+        ]
+      },
+      "description": "Implement the real-time chat sub-protocol, /session/agent WebSocket routing, event broadcasting, and continuous log file persistence inside the logs/ directory",
+      "details": [
+        "Implement /session/agent socket connection and validation",
+        "Implement real-time logical user-agent chat message routing",
+        "Broadcast GDB DAP events to both Client and Agent sockets concurrently",
+        "Implement continuous real-time logging to logs/stdout.log, logs/stderr.log, and logs/dap.log",
+        "[Test] Verify GDB events are broadcasted, chat messages route correctly, and logs are persisted to disk",
+        "[Doc] docs/architecture/agentic-debug-architecture.md"
+      ],
+      "timeline": {
+        "created": "2026-05-24",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-133",
+      "title": "Implement taro-session Agent Memory & MCP Host",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "proposed",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-132"
+        ]
+      },
+      "description": "Implement the MCP server in taro-session supporting file inspection, SMT solver tool-calling, and cognitive memory.md reading/writing",
+      "details": [
+        "Implement the Model Context Protocol (MCP) host server on the /session/agent channel",
+        "Implement read_workspace_file, get_build_errors, and run_local_test MCP tools",
+        "Implement the solve_memory_corruption MCP tool interfacing with SMT-lib solvers (e.g. Z3)",
+        "Implement write_agent_memory and read_agent_memory MCP tools to persist and load memory.md",
+        "[Test] Verify MCP tools solve memory constraints, read files, and write cognitive memory.md",
+        "[Doc] docs/architecture/agentic-debug-architecture.md"
+      ],
+      "timeline": {
+        "created": "2026-05-24",
+        "created_by": "Antigravity-Agent"
+      }
+    },
+    {
+      "id": "WI-134",
+      "title": "Implement AI Companion Integration & Cognitive Loop",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "proposed",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-133"
+        ]
+      },
+      "description": "Implement the standalone Agentic AI Companion client process that loads AGENTS.md and MEMORY.md, connects to ws://localhost:8080/session/agent, and performs conversational debugging and tool-calling",
+      "details": [
+        "Implement standalone cognitive Agentic AI Companion client script",
+        "Implement loading and bootstrapping of personas from AGENTS.md",
+        "Connect client to ws://localhost:8080/session/agent and handle logical event streams",
+        "Implement LLM-driven active GDB DAP tool-calling (stackTrace, variables queries)",
+        "Implement cognitive reasoning loop using MCP solver constraints & memory updates",
+        "[Test] Verify companion connects, performs active GDB tool-calling, and updates memory.md via taro-session",
+        "[Doc] docs/architecture/agentic-debug-architecture.md"
+      ],
+      "timeline": {
+        "created": "2026-05-24",
+        "created_by": "Antigravity-Agent"
       }
     }
   ]
