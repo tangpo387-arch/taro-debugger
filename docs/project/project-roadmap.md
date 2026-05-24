@@ -2,7 +2,7 @@
 title: Project Roadmap & Dependency Map
 scope: milestones, dependencies, architecture-tracking
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer, Human Engineer]
-last_updated: 2026-05-24
+last_updated: 2026-05-27
 ---
 
 # Project Roadmap & Dependency Map
@@ -58,6 +58,7 @@ graph LR
     WI_26["WI-26 Setup Page Separation"]
     WI_24["WI-24 Electron IPC Transport Layer (`IpcTransportService`)"]
     WI_25["WI-25 Electron Local File System Access"]
+    WI_135["WI-135 Restructure Electron Desktop Workspace & Runtime Separation"]
     WI_17["WI-17 Call Stack Panel"]
     WI_55["WI-55 Variables Data State Management"]
     WI_56["WI-56 Variables Tree UI Component"]
@@ -254,7 +255,7 @@ graph LR
     style WI_06 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_07 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_08 fill:#4ade80,stroke:#000,stroke-width:2.5px
-    style WI_09 fill:#4ade80,stroke:#22c55e
+    style WI_09 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_21 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_22 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_31 fill:#4ade80,stroke:#22c55e
@@ -288,10 +289,11 @@ graph LR
     style WI_49 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_65 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_71 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_23 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_26 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
-    style WI_24 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_23 fill:#94a3b8,stroke:#000,stroke-width:2.5px
+    style WI_26 fill:#94a3b8,stroke:#000,stroke-width:2.5px
+    style WI_24 fill:#94a3b8,stroke:#000,stroke-width:2.5px
     style WI_25 fill:none,stroke-dasharray:5
+    style WI_135 fill:#94a3b8,stroke:#475569
     style WI_17 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_55 fill:#f472b6,stroke:#000,stroke-width:2.5px
     style WI_56 fill:#f472b6,stroke:#000,stroke-width:2.5px
@@ -389,7 +391,7 @@ graph LR
 | File Explorer | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23facc15'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#facc15"/> `#facc15` | 💎 Stabilized |
 | Execution Context Inspection | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f472b6'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f472b6"/> `#f472b6` | 🔵 Active |
 | Console & Status Bar | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%232dd4bf'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#2dd4bf"/> `#2dd4bf` | 💎 Stabilized |
-| Electron Desktop Mode | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%2394a3b8'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#94a3b8"/> `#94a3b8` | 💎 Stabilized |
+| Electron Desktop Mode | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%2394a3b8'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#94a3b8"/> `#94a3b8` | 🔵 Active |
 | Low-Level Inspection | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%236366f1'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#6366f1"/> `#6366f1` | 🔵 Active |
 | General | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23f1f5f9'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#f1f5f9"/> `#f1f5f9` | 💎 Stabilized |
 | UI System Design | <img src="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'14'%20height%3D'14'%3E%3Crect%20width%3D'14'%20height%3D'14'%20fill%3D'%23cbd5e1'%20rx%3D'3'%2F%3E%3C%2Fsvg%3E" width="14" height="14" alt="#cbd5e1"/> `#cbd5e1` | 🔵 Active |

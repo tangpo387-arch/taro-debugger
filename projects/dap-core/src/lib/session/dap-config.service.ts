@@ -42,7 +42,7 @@ export class DapConfigService {
   private static readonly STORAGE_KEY = 'taro_dap_config';
 
   private config: DapConfig = {
-    serverAddress: 'localhost:4711',
+    serverAddress: '127.0.0.1:8080/session/client',
     transportType: 'websocket',
     launchMode: 'launch',
     executablePath: '',

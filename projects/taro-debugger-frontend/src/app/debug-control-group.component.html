@@ -1,11 +1,8 @@
 <div class="control-group-container">
   <!-- Status LED indicator -->
   <div class="status-led-container" [title]="(executionState$ | async) | titlecase">
-    <span class="status-led" 
-          [class.running]="isRunning$ | async" 
-          [class.starting]="isStarting$ | async"
-          [class.stopped]="isStopped$ | async"
-          [class.error]="isError$ | async">
+    <span class="status-led" [class.running]="isRunning$ | async" [class.starting]="isStarting$ | async"
+      [class.stopped]="isStopped$ | async" [class.error]="isError$ | async">
     </span>
   </div>
 
@@ -14,15 +11,15 @@
   <!-- Group 1: Execution Control (Play/Pause) -->
   <div class="control-segment group-execution">
     @if (isRunning$ | async) {
-      <button mat-icon-button (click)="onPause()" [disabled]="(commandInFlight$ | async)" title="Pause (F6)">
-        <mat-icon>pause</mat-icon>
-      </button>
+    <button mat-icon-button (click)="onPause()" [disabled]="(commandInFlight$ | async)" title="Pause (F6)">
+      <mat-icon>pause</mat-icon>
+    </button>
     } @else {
-      <button mat-icon-button (click)="onResume()" 
-              [disabled]="(!(isStopped$ | async) && !(isIdle$ | async)) || (commandInFlight$ | async)" 
-              [title]="(isIdle$ | async) ? 'Run' : 'Continue (F5)'">
-        <mat-icon>play_arrow</mat-icon>
-      </button>
+    <button mat-icon-button (click)="onResume()"
+      [disabled]="(!(isStopped$ | async) && !(isDisconnected$ | async)) || (commandInFlight$ | async)"
+      [title]="(isDisconnected$ | async) ? 'Run' : 'Continue (F5)'">
+      <mat-icon>play_arrow</mat-icon>
+    </button>
     }
   </div>
 
@@ -30,26 +27,29 @@
 
   <!-- Group 2: Stepping -->
   <div class="control-segment group-stepping">
-    <button mat-icon-button (click)="onStepOver()" [disabled]="!(isStopped$ | async) || (commandInFlight$ | async)" title="Step Over (F10)">
+    <button mat-icon-button (click)="onStepOver()" [disabled]="!(isStopped$ | async) || (commandInFlight$ | async)"
+      title="Step Over (F10)">
       <mat-icon>redo</mat-icon>
     </button>
-    <button mat-icon-button (click)="onStepInto()" [disabled]="!(isStopped$ | async) || (commandInFlight$ | async)" title="Step Into (F11)">
+    <button mat-icon-button (click)="onStepInto()" [disabled]="!(isStopped$ | async) || (commandInFlight$ | async)"
+      title="Step Into (F11)">
       <mat-icon>arrow_downward</mat-icon>
     </button>
-    <button mat-icon-button (click)="onStepOut()" [disabled]="!(isStopped$ | async) || (commandInFlight$ | async)" title="Step Out (Shift+F11)">
+    <button mat-icon-button (click)="onStepOut()" [disabled]="!(isStopped$ | async) || (commandInFlight$ | async)"
+      title="Step Out (Shift+F11)">
       <mat-icon>arrow_upward</mat-icon>
     </button>
 
     <div class="inner-divider"></div>
 
-    <button mat-icon-button (click)="onStepNextInstruction()" [disabled]="!(isStopped$ | async) || (commandInFlight$ | async)"
-            title="Step Over Instruction (Nexti)"
-            class="instruction-step" [class.low-weight]="activeTabIndex === 0" [class.high-weight]="activeTabIndex === 1">
+    <button mat-icon-button (click)="onStepNextInstruction()"
+      [disabled]="!(isStopped$ | async) || (commandInFlight$ | async)" title="Step Over Instruction (Nexti)"
+      class="instruction-step" [class.low-weight]="activeTabIndex === 0" [class.high-weight]="activeTabIndex === 1">
       <mat-icon>skip_next</mat-icon>
     </button>
-    <button mat-icon-button (click)="onStepIntoInstruction()" [disabled]="!(isStopped$ | async) || (commandInFlight$ | async)" 
-            title="Step Into Instruction (Stepi)"
-            class="instruction-step" [class.low-weight]="activeTabIndex === 0" [class.high-weight]="activeTabIndex === 1">
+    <button mat-icon-button (click)="onStepIntoInstruction()"
+      [disabled]="!(isStopped$ | async) || (commandInFlight$ | async)" title="Step Into Instruction (Stepi)"
+      class="instruction-step" [class.low-weight]="activeTabIndex === 0" [class.high-weight]="activeTabIndex === 1">
       <mat-icon>subdirectory_arrow_right</mat-icon>
     </button>
   </div>
@@ -58,9 +58,9 @@
 
   <!-- Group 3: Restart -->
   <div class="control-segment group-restart">
-    <button mat-icon-button (click)="onRestart()" 
-            [disabled]="(isStarting$ | async) || (isIdle$ | async) || (commandInFlight$ | async)" 
-            [title]="(isError$ | async) ? 'Reconnect' : 'Restart (Ctrl+Shift+F5)'">
+    <button mat-icon-button (click)="onRestart()"
+      [disabled]="(isStarting$ | async) || (isIdle$ | async) || (isDisconnected$ | async) || (commandInFlight$ | async)"
+      [title]="(isError$ | async) ? 'Reconnect' : 'Restart (Ctrl+Shift+F5)'">
       <mat-icon>{{ (isError$ | async) ? 'sync' : 'replay' }}</mat-icon>
     </button>
   </div>
@@ -70,8 +70,8 @@
   <!-- Group 4: Terminate -->
   <div class="control-segment group-terminate">
     <button mat-icon-button (click)="onStop()" class="warn-btn"
-            [disabled]="((isRunning$ | async) === false && (isStopped$ | async) === false) || (commandInFlight$ | async)" 
-            title="Stop (Shift+F5)">
+      [disabled]="((isRunning$ | async) === false && (isStopped$ | async) === false) || (commandInFlight$ | async)"
+      title="Stop (Shift+F5)">
       <mat-icon>stop</mat-icon>
     </button>
   </div>

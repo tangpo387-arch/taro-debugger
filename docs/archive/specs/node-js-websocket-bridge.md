@@ -98,7 +98,13 @@ wss.on('connection', (socket, req) => {
         // Route chat message directly to the agent
         if (agentSocket) agentSocket.send(JSON.stringify(msg));
       } else {
-        // Forward DAP request to GDB
+        // Forward DAP request to GDB (spawning it dynamically on initialize)
+        const headerMatch = msg.toString().match(/^Content-Length:\s*\d+\r\n\r\n/i);
+        const jsonStr = headerMatch ? msg.toString().substring(headerMatch[0].length) : msg.toString();
+        const parsed = JSON.parse(jsonStr);
+        if (parsed.command === 'initialize') {
+          await setupSession();
+        }
         if (gdbProcess) gdbProcess.stdin.write(message);
       }
     });
@@ -120,16 +126,17 @@ wss.on('connection', (socket, req) => {
   }
 });
 
-function setupSession() {
-  if (!gdbProcess) {
-    gdbProcess = spawn('gdb', ['--interpreter=dap']);
-    
-    gdbProcess.stdout.on('data', (data) => {
-      // Broadcast GDB events and responses to both Client and Agent
-      if (clientSocket) clientSocket.send(data);
-      if (agentSocket) agentSocket.send(data);
-    });
+async function setupSession() {
+  if (gdbProcess) {
+    await terminateGdb();
   }
+  gdbProcess = spawn('gdb', ['--interpreter=dap']);
+  
+  gdbProcess.stdout.on('data', (data) => {
+    // Broadcast GDB events and responses to both Client and Agent
+    if (clientSocket) clientSocket.send(data);
+    if (agentSocket) agentSocket.send(data);
+  });
 }
 ```
 
@@ -233,9 +240,10 @@ projects/taro-session/
 - Isolates endpoints through connection URL parsing:
   - `ws://localhost:8080/session/client`
   - `ws://localhost:8080/session/agent`
-- Coordinates incoming messages and forwards requests:
-  - **Client messages**: Forwards standard DAP commands directly to the GDB child process `stdin`. Chat messages (e.g. `channel: "chat"`) are routed directly to the active Agent channel.
+- Coordinates incoming messages, handles GDB subprocess session lifecycles, and forwards requests:
+  - **Client messages**: Forwards standard DAP commands directly to the GDB child process `stdin`. If the request is `initialize`, it dynamically kills any running GDB instance and spawns a fresh GDB subprocess before forwarding the request. Chat messages (e.g. `channel: "chat"`) are routed directly to the active Agent channel.
   - **Agent messages**: Forwards read-only DAP diagnostic requests (`channel: "dap"`) to GDB `stdin`. Chat responses (e.g. `channel: "chat"`) are routed to the Client channel. MCP calls are processed locally by the MCP tool registry.
+  - **Keep-Alive Socket Management**: Does not close the WebSocket or terminate the daemon process when GDB exits. Keeps the connection open, permitting multiple sequential `initialize`/`launch` debug cycles.
 
 #### 2.3 Session Manager (`src/session.ts`)
 - Manages the read/write transactions to the unified debug session directory (`.tarodb`).
@@ -245,15 +253,15 @@ projects/taro-session/
 - Implements synchronous and asynchronous write-through utilities to save run state (e.g., active breakpoints, chat history, or memory updates) cleanly to the disk without file locks or contention.
 
 #### 2.4 GDB Subprocess Manager (`src/gdb-process.ts`)
-- Uses Node’s `child_process.spawn` to spin up GDB:
+- Managed dynamically by the Multiplexer. Uses Node’s `child_process.spawn` to dynamically spin up GDB when an `initialize` request is received:
   ```typescript
-  const gdb = spawn('gdb', ['--interpreter=dap'], { cwd: sessionConfig.cwd });
+  const gdb = spawn(gdbPath, ['--interpreter=dap'], { cwd: process.cwd() });
   ```
 - Subscribes to `gdb.stdout` and `gdb.stderr` streams to parse continuous DAP frame packets.
 - Broadcasts every incoming DAP event from GDB simultaneously to both `/session/client` and `/session/agent` WebSocket channels.
 - **Orphan Prevention & Lifecycle Cleanup**: 
   - Monitors the lifetime of active sockets.
-  - If the primary Client connection `/session/client` terminates unexpectedly (network drop, window closed), the manager immediately initiates cascading cleanup.
+  - If the primary Client connection `/session/client` terminates unexpectedly (network drop, window closed), the manager immediately initiates cascading GDB process cleanup, terminates the server sockets, and exits the daemon process via `process.exit(0)`.
   - Sends a standard `disconnect` DAP request to GDB. If GDB does not terminate within a `2000ms` window, sends `SIGTERM` followed immediately by `SIGKILL` to clean the process table.
 
 #### 2.5 MCP Host (`src/mcp-host.ts`)
@@ -275,7 +283,7 @@ projects/taro-session/
 
 - [ ] A standalone Node.js server starts and successfully listens on standard ports (default `:8080`).
 - [ ] Correctly handles and isolates `/session/client` and `/session/agent` WebSocket connections.
-- [ ] GDB is successfully launched in DAP mode (`--interpreter=dap`) upon client connection.
+- [ ] GDB is successfully launched dynamically in DAP mode (`--interpreter=dap`) when the client sends an `initialize` request over the WebSocket.
 - [ ] DAP requests from the client and authorized agent are successfully forwarded to GDB.
 - [ ] DAP responses and event streams from GDB are broadcasted concurrently to both the client and the agent.
 - [ ] Real-time user-agent chat messages are successfully routed between the `/client` and `/agent` endpoints.
@@ -283,7 +291,8 @@ projects/taro-session/
 - [ ] The bridge exposes a functional Model Context Protocol (MCP) interface supporting workspace file inspection.
 - [ ] The bridge implements and exposes the `solve_memory_corruption` MCP tool, accepting AI-defined constraints and returning formal SAT-solver solutions/counter-examples for debugging.
 - [ ] Multiple specialized agents can coordinate diagnostics by exchanging structured sub-tasks.
-- [ ] Disconnecting either the client or the agent triggers a complete cleanup, successfully terminating GDB and leaving no orphan processes.
+- [ ] The WebSocket connection is kept alive across sequential debug sessions. If GDB exits, the client can initiate a new `initialize`/`launch` sequence to dynamically spawn GDB again.
+- [ ] Disconnecting the client WebSocket explicitly triggers a complete cleanup, terminating any GDB processes, shutting down the server, and cleanly exiting the daemon process with `process.exit(0)`.
 - [ ] Verify standard error output from GDB is parsed and output to the client debug console.
 
 

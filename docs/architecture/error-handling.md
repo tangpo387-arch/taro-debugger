@@ -2,7 +2,7 @@
 title: System Architecture - Error Handling
 scope: architecture, error-handling, resilience
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-06
+last_updated: 2026-05-27
 related:
   - ../architecture.md
   - ../project/system-specification.md
@@ -38,7 +38,7 @@ sequenceDiagram
 | **Connection lost** | `connectionStatus$` → `false`<br/>`onMessage()` complete | Emit `_transportError` event<br/>`executionState` → `error` | `MatSnackBar` notification + Console log |
 | **WebSocket error** | `onerror` → `connectionStatus$` `false`<br/>`onMessage()` error | Emit `_transportError` event<br/>`executionState` → `error` | `MatSnackBar` notification + Console log |
 
-**Recovery flow**: Users must use the Restart/Reconnect button in the UI layer to call `disconnect()` + `startSession()` to reconnect. If in `error` state, `disconnect()` internally calls `reset()` to return to `idle`.
+**Recovery flow**: Users must use the Restart/Reconnect button in the UI layer. The correct public entry point is `stop()`, which returns early (no request sent) when in `error` state, followed by `startSession()` to reconnect. The internal `disconnect()` is a private method that handles transport teardown and is not callable from UI components.
 
 ## 2. DAP Server Error Handling
 

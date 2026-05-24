@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, OnDestroy } from '@angular/core';
 import { Observable, Subject, BehaviorSubject, Subscription, firstValueFrom } from 'rxjs';
 import { filter, timeout } from 'rxjs/operators';
 import { DapTransportService } from '../transport/dap-transport.service';
@@ -41,13 +41,13 @@ export interface VerifiedBreakpoint {
 }
 
 /** Execution State */
-export type ExecutionState = 'idle' | 'starting' | 'running' | 'stopped' | 'error';
+export type ExecutionState = 'disconnected' | 'idle' | 'starting' | 'running' | 'stopped' | 'error';
 
 /** Internal state for tracking per-file setBreakpoints serialization */
 type BreakpointFileState = { inFlight: boolean; pending: number[] | undefined };
 
 @Injectable()
-export class DapSessionService {
+export class DapSessionService implements OnDestroy {
   private readonly configService = inject(DapConfigService);
 
   private readonly transportFactory = inject(TransportFactoryService);
@@ -107,10 +107,7 @@ export class DapSessionService {
   public readonly onTraffic$: Observable<any> = this.trafficSubject.asObservable();
 
   /** Current debug execution state */
-  private executionStateSubject = new BehaviorSubject<ExecutionState>('idle');
-
-  /** Private guard to block concurrent disconnect calls during async handshake */
-  private isDisconnecting = false;
+  private executionStateSubject = new BehaviorSubject<ExecutionState>('disconnected');
 
   /** Emits true while any execution-control command is in-flight */
   private commandInFlightSubject = new BehaviorSubject<boolean>(false);
@@ -130,6 +127,22 @@ export class DapSessionService {
   }
 
   public constructor() { }
+
+  public ngOnDestroy(): void {
+    this.closeTransport();
+  }
+
+  private closeTransport(): void {
+    if (this.messageSubscription) {
+      this.messageSubscription.unsubscribe();
+      this.messageSubscription = undefined;
+    }
+    this.transportStatusSubscription?.unsubscribe();
+    this.transportStatusSubscription = undefined;
+    this.transport?.disconnect();
+    this.transport = undefined;
+    this.connectionStatusSubject.next(false);
+  }
 
 
   /**
@@ -154,36 +167,38 @@ export class DapSessionService {
       throw new Error('Server address is empty');
     }
 
-    // Create corresponding Transport instance based on configuration
-    this.transport = this.transportFactory.createTransport(config.transportType);
+    if (!this.transport || !this.connectionStatusSubject.value) {
+      // Create corresponding Transport instance based on configuration
+      this.transport = this.transportFactory.createTransport(config.transportType);
 
-    // Bridge transport connection status to the Session level
-    this.transportStatusSubscription?.unsubscribe();
-    this.transportStatusSubscription = this.transport.connectionStatus$.subscribe(
-      status => this.connectionStatusSubject.next(status)
-    );
+      // Bridge transport connection status to the Session level
+      this.transportStatusSubscription?.unsubscribe();
+      this.transportStatusSubscription = this.transport.connectionStatus$.subscribe(
+        status => this.connectionStatusSubject.next(status)
+      );
 
-    try {
-      // Wait for the connection to be established (timeout 3000ms)
-      await firstValueFrom(this.transport.connect(config.serverAddress).pipe(timeout(3000)));
-    } catch (e: any) {
-      if (e.name === 'TimeoutError') {
-        throw new Error(`Connection to ${config.serverAddress} timed out`);
+      try {
+        // Wait for the connection to be established (timeout 3000ms)
+        await firstValueFrom(this.transport.connect(config.serverAddress).pipe(timeout(3000)));
+      } catch (e: any) {
+        if (e.name === 'TimeoutError') {
+          throw new Error(`Connection to ${config.serverAddress} timed out`);
+        }
+        throw new Error(`${config.transportType} connection failed`);
       }
-      throw new Error(`${config.transportType} connection failed`);
-    }
 
-    if (this.messageSubscription) {
-      this.messageSubscription.unsubscribe();
+      if (this.messageSubscription) {
+        this.messageSubscription.unsubscribe();
+      }
+
+      this.messageSubscription = this.transport.onMessage().subscribe({
+        next: (msg) => this.handleIncomingMessage(msg),
+        error: (err) => this.handleIncomingTransportError(err),
+        complete: () => this.handleIncomingTransportComplete()
+      });
     }
 
     this.executionStateSubject.next('starting');
-
-    this.messageSubscription = this.transport.onMessage().subscribe({
-      next: (msg) => this.handleIncomingMessage(msg),
-      error: (err) => this.handleIncomingTransportError(err),
-      complete: () => this.handleIncomingTransportComplete()
-    });
     // ... (rest of the code remains same until end of startSession)
 
     const initializedPromise = firstValueFrom(
@@ -204,6 +219,10 @@ export class DapSessionService {
       supportsMemoryReferences: true
     });
     this.capabilities = initResponse.body || {};
+
+    if (!this.capabilities.supportsTerminateRequest) {
+      throw new DapFatalException('Debug adapter does not support terminate request');
+    }
 
     // Step 2: Send launch/attach request (fire-and-forget, don't wait for response yet)
     // According to DAP spec, launch/attach response returns after configurationDone
@@ -254,27 +273,26 @@ export class DapSessionService {
    * @param options.terminateDebuggee - Whether the debuggee should be terminated (default: true)
    * @param options.restart - Whether this disconnect is part of a restart flow (default: false)
    */
-  public async disconnect(options: { terminateDebuggee?: boolean, restart?: boolean } = {}): Promise<void> {
+  private async disconnect(options: { terminateDebuggee?: boolean } = {}): Promise<void> {
     const state = this.executionStateSubject.value;
-    if (state === 'idle' || this.isDisconnecting) {
+    if (state === 'disconnected' || state === 'error') {
       return;
     }
+    else if (state !== 'idle') {
+      throw new DapFatalException(`Cannot disconnect from state '${state}'`);
+    }
 
-    this.isDisconnecting = true;
-
+    this.executionStateSubject.next('disconnected');
+    this.reset();
     try {
-      if (this.transport && state !== 'error') {
-        // Send disconnect request to DAP Server
+      if (this.transport) {
+        // Send disconnect request to DAP Server (with 2s timeout)
         await this.sendRequest('disconnect', {
-          restart: options.restart ?? false,
           terminateDebuggee: options.terminateDebuggee ?? true
-        });
+        }, 2000);
       }
     } catch (e) {
       console.warn('Failed to send disconnect request cleanly', e);
-    } finally {
-      this.isDisconnecting = false;
-      this.reset();
     }
   }
 
@@ -283,23 +301,11 @@ export class DapSessionService {
    * Clears resources directly (e.g., used to return from error to idle safely).
    */
   private reset(): void {
-    // Stop receiving messages
-    if (this.messageSubscription) {
-      this.messageSubscription.unsubscribe();
-      this.messageSubscription = undefined;
-    }
-
     for (const [seq, handler] of this.pendingRequests.entries()) {
       handler.reject(new Error('Session reset'));
       this.pendingRequests.delete(seq);
     }
 
-    this.transportStatusSubscription?.unsubscribe();
-    this.transportStatusSubscription = undefined;
-    this.transport?.disconnect();
-    this.transport = undefined;
-    this.connectionStatusSubject.next(false);
-    this.executionStateSubject.next('idle');
     this.commandInFlightSubject.next(false);
     this.clearSessionData();
   }
@@ -307,31 +313,30 @@ export class DapSessionService {
   /**
    * Public API for stopping the debug session.
    *
-   * Hierarchical strategy (R-CS5):
-   * 1. If the adapter supports 'terminate', send 'terminate' request.
-   * 2. Otherwise, fall back to 'disconnect' with 'terminateDebuggee: true'.
+   * Mandatorily sends a 'terminate' request to the debug adapter.
    */
   public async stop(): Promise<void> {
     const state = this.executionStateSubject.value;
-    if (state === 'error') {
-      this.reset();
-      return;
-    }
-    if (state === 'idle') {
-      return;
-    }
-
-    if (this.capabilities?.supportsTerminateRequest) {
-      try {
-        await this.sendRequest('terminate');
+    switch (state) {
+      case 'error':
+      case 'idle':
+      case 'disconnected':
         return;
-      } catch (e) {
-        console.warn('Terminate request failed, falling back to disconnect', e);
+      case 'starting':
+      case 'running':
+      case 'stopped': {
+        const terminatedPromise = firstValueFrom(
+          this.eventSubject.pipe(
+            filter(e => e.event === 'terminated'),
+            timeout(2000)
+          )
+        ).catch(() => { });
+
+        await this.sendRequest('terminate');
+        await terminatedPromise;
+        break;
       }
     }
-
-    // Fallback: Disconnect with termination
-    await this.disconnect({ terminateDebuggee: true });
   }
 
   /**
@@ -347,20 +352,10 @@ export class DapSessionService {
       return;
     }
 
-    if (this.capabilities?.supportsRestartRequest) {
-      try {
-        await this.sendRequest('restart');
-        return;
-      } catch (e) {
-        console.warn('Restart request failed, falling back to soft restart', e);
-      }
-    }
-
     // Soft Restart Fallback
     if (state === 'running' || state === 'stopped') {
       // Session is active: cleanly terminate the debuggee, then reconnect.
       await this.stop();
-      await this.disconnect({ restart: true });
     }
     // For terminated/idle: disconnect() would be a no-op, so go straight to startSession.
     await this.startSession();
@@ -891,7 +886,9 @@ export class DapSessionService {
     if (!this.capabilities?.supportsCancelRequest) {
       return;
     }
-    if (this.transport && this.executionStateSubject.value !== 'idle' && this.executionStateSubject.value !== 'error') {
+    if (this.transport && this.executionStateSubject.value !== 'idle' &&
+      this.executionStateSubject.value !== 'disconnected' &&
+      this.executionStateSubject.value !== 'error') {
       try {
         await this.sendRequest('cancel', { requestId });
       } catch (e) {
@@ -1069,6 +1066,8 @@ export class DapSessionService {
       event: '_transportError',
       body: { reason: 'error', message: errMsg }
     });
+    // Mandatory: close transport before entering error state (R-ERR1)
+    this.closeTransport();
     this.executionStateSubject.next('error');
     this.commandInFlightSubject.next(false);
     for (const [seq, handler] of this.pendingRequests.entries()) {
@@ -1079,7 +1078,7 @@ export class DapSessionService {
   }
 
   private handleIncomingTransportComplete(): void {
-    if (this.executionStateSubject.value !== 'idle') {
+    if (this.executionStateSubject.value !== 'idle' && this.executionStateSubject.value !== 'disconnected') {
       // Emit synthetic event for UI-layer notification before transitioning state
       this.eventSubject.next({
         seq: 0,
@@ -1087,6 +1086,8 @@ export class DapSessionService {
         event: '_transportError',
         body: { reason: 'disconnected', message: 'Connection to DAP Server was unexpectedly closed' }
       });
+      // Mandatory: close transport before entering error state (R-ERR1)
+      this.closeTransport();
       this.executionStateSubject.next('error');
       this.commandInFlightSubject.next(false);
       for (const [seq, handler] of this.pendingRequests.entries()) {
@@ -1215,10 +1216,19 @@ export class DapSessionService {
         break;
       }
 
-      case 'terminated':
-      case 'exited':
-        this.reset();
+      case 'exited': {
+        const state = this.executionStateSubject.value;
+        if (state === 'running' || state === 'stopped') {
+          this.executionStateSubject.next('idle');
+          this.reset();
+        }
         break;
+      }
+
+      case 'terminated': {
+        this.disconnect();
+        break;
+      }
 
       case 'process':
         this.processInfoSubject.next({

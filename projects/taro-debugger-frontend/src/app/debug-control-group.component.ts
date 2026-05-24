@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DapSessionService } from '@taro/dap-core';
 import { Observable, firstValueFrom, map } from 'rxjs';
+import { UiFatalException } from '@taro/ui-shared';
 
 /**
  * DebugControlGroupComponent
@@ -43,7 +44,7 @@ export class DebugControlGroupComponent {
   public readonly isIdle$ = this.executionState$.pipe(map(state => state === 'idle'));
   public readonly isStarting$ = this.executionState$.pipe(map(state => state === 'starting'));
   public readonly isError$ = this.executionState$.pipe(map(state => state === 'error'));
-
+  public readonly isDisconnected$ = this.executionState$.pipe(map(state => state === 'disconnected'));
   /** Emits true when a control command is currently being processed by the session */
   public readonly commandInFlight$ = this.dapSession.commandInFlight$;
 
@@ -51,27 +52,30 @@ export class DebugControlGroupComponent {
 
   public async onResume(): Promise<void> {
     const state = await firstValueFrom(this.dapSession.executionState$);
-    if (state === 'idle') {
+    if (state === 'disconnected') {
       this.run.emit();
+    } else if (state == 'stopped') {
+      this.dapSession.continue().catch(() => { });
     } else {
-      this.dapSession.continue().catch(() => {});
+      throw new UiFatalException("Invalid execution state for continue command: " + state);
     }
+
   }
 
   public onPause(): void {
-    this.dapSession.pause().catch(() => {});
+    this.dapSession.pause().catch(() => { });
   }
 
   public onStepOver(): void {
-    this.dapSession.next().catch(() => {});
+    this.dapSession.next().catch(() => { });
   }
 
   public onStepInto(): void {
-    this.dapSession.stepIn().catch(() => {});
+    this.dapSession.stepIn().catch(() => { });
   }
 
   public onStepOut(): void {
-    this.dapSession.stepOut().catch(() => {});
+    this.dapSession.stepOut().catch(() => { });
   }
 
   public onRestart(): void {

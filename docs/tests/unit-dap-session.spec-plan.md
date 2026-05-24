@@ -4,7 +4,7 @@ scope: unit-test
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 target-file: projects/dap-core/src/lib/session/dap-session.service.ts
 related-wi: [WI-41, WI-86, WI-89, WI-93, WI-126]
-last_updated: 2026-05-21
+last_updated: 2026-05-27
 ---
 
 # DapSessionService — Unit Spec Plan
@@ -47,14 +47,18 @@ Fully isolated tests for `DapSessionService`. Focuses on DAP session lifecycle, 
 
 * **Stop and Restart Logic (R-CS5 / WI-86)**
   * **Stop Hierarchy**:
-    * Verify that `stop()` sends `terminate` if supported.
-    * Verify that `stop()` falls back to `disconnect` if `terminate` is unsupported or fails.
-    * Verify that `stop()` returns early if already `terminated` or `idle`.
+    * Verify that `stop()` sends a `terminate` request and awaits the `terminated` event from `starting`, `running`, and `stopped` states.
+    * Verify that `stop()` returns early (no request sent) when called from the `idle`, `disconnected`, or `error` states.
+    * Verify that `stop()` does not synchronously modify the execution state — state transitions occur exclusively via the `terminated` event.
+  * **Disconnect Pre-condition Guard**:
+    * Verify that `disconnect()` returns early without throwing when called from `disconnected` state.
+    * Verify that `disconnect()` returns early without throwing when called from `error` state.
+    * Verify that `disconnect()` throws a `DapFatalException` when called from any active state (`running`, `stopped`, `starting`).
+    * Verify that `disconnect()` transitions state to `disconnected` and sends a `disconnect` DAP request when called from `idle`.
   * **Restart Hierarchy**:
-    * Verify that `restart()` sends `restart` if supported.
-    * Verify that `restart()` executes "Soft Restart" (stop → disconnect → startSession) if native restart is unsupported.
-    * Verify that `restart()` returns early if state is `idle`, `starting`, or `terminated`.
-    * Verify that Soft Restart from `running`/`stopped` state explicitly calls `stop()` before `disconnect`.
+    * Verify that `restart()` executes "Soft Restart" (stop → startSession) when the adapter does not support native restart.
+    * Verify that `restart()` returns early if state is `idle` or `starting`.
+    * Verify that Soft Restart from `running`/`stopped` state calls `stop()` before invoking `startSession()`.
 
 * **Session Lifecycle & Transport Errors**
   * Verify that transport completion in `terminated` state does NOT trigger an `error` transition.

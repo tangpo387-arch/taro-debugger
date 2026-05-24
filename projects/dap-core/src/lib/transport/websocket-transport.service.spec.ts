@@ -95,8 +95,8 @@ describe('WebSocketTransportService', () => {
 
   describe('Connection Management', () => {
     it('should prepend ws:// if no protocol is given', async () => {
-      connectService('localhost:4711');
-      expect(latestSocket.url).toBe('ws://localhost:4711');
+      connectService('127.0.0.1:8080/session/client');
+      expect(latestSocket.url).toBe('ws://127.0.0.1:8080/session/client');
     });
 
     it('should keep ws:// prefix when provided', async () => {

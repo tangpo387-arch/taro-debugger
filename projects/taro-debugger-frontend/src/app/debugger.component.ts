@@ -208,8 +208,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   public async ngOnInit(): Promise<void> {
     this.currentConfig = this.configService.getConfig();
 
-    this.logService.consoleLog("Start debugging session...", 'info', 'system');
-
     // Guard mechanism: If executable path is missing, automatically navigate back to setup page
     if (!this.currentConfig.executablePath) {
       console.warn('Incomplete configuration parameters detected. Navigating back to setup page.');
@@ -394,7 +392,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
               updated = true;
             }
           }
-          
+
           if (updated) {
             this.cdr.detectChanges();
           }
@@ -481,15 +479,12 @@ export class DebuggerComponent implements OnInit, OnDestroy {
    */
   private async startSession(): Promise<void> {
     try {
-      this.logService.consoleLog("Initializing DAP Session...", 'info', 'system');
+      this.logService.consoleLog("Initializing Debug Session...", 'info', 'system');
 
       await this.dapSession.startSession();
 
       this.logService.consoleLog(`Session started in ${this.currentConfig.launchMode} mode.`, 'info', 'system');
     } catch (error: any) {
-      // 1. Clean up problematic session
-      this.dapSession.disconnect();
-
       const msg = error?.message || 'Unknown error';
       this.logService.consoleLog(`Start Session failed: ${msg}`, 'error', 'system');
 
@@ -570,7 +565,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       case 'exited': {
         this.initialSourcesLoaded = false;
         const exitCode = event.body?.exitCode;
-        if (exitCode !== undefined && exitCode !== 0) {
+        if (exitCode !== undefined && exitCode !== null && exitCode !== 0) {
           // Abnormal exit: show warning snackbar with exit code (§7.2)
           this.logService.consoleLog(`[Warning] Program exited with non-zero code: ${exitCode}`, 'error', 'system');
         } else {
@@ -824,7 +819,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   /** Start new session (Run) */
   public async onRun(): Promise<void> {
     try {
-      await this.dapSession.startSession();
+      await this.startSession();
     } catch (e: any) {
       this.logService.consoleLog(`Run failed: ${e.message}`, 'error', 'system');
     }
@@ -856,16 +851,15 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     this.eventSubscription?.unsubscribe();
     this.stateSubscription?.unsubscribe();
     this.trafficSubscription?.unsubscribe();
-    this.dapSession.disconnect();
   }
 
   /**
    * Handle 'Reset' button click event
    * Disconnects current debug session and navigates back to setup view
    */
-  public goBack(): void {
+  public async goBack(): Promise<void> {
     // Disconnect session and connection
-    this.dapSession.disconnect();
+    await this.dapSession.stop();
 
     this.router.navigate(['/setup']);
   }

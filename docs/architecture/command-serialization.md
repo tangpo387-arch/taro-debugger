@@ -290,7 +290,6 @@ public async setBreakpoints(path: string, lines: number[]): Promise<DapResponse>
 - **Hierarchy Strategy**: Both `stop()` and `restart()` adapt their behavior based on the Debug Adapter's `capabilities` to ensure the most graceful termination possible.
 - **Stop Action**:
   - Primary: If `supportsTerminateRequest`, send `terminate`.
-  - Fallback: If unsupported or failed, send `disconnect` with `terminateDebuggee: true`.
 - **Restart Action**:
   - Primary: If `supportsRestartRequest`, send `restart`.
   - Fallback: "Soft Restart" — execute `stop()` → `disconnect({ restart: true })` → `startSession()`.

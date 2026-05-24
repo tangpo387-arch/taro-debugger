@@ -33,7 +33,7 @@ describe('DapConfigService', () => {
     expect(service).toBeTruthy();
     const config = service.getConfig();
     // Check initial default values defined in the service
-    expect(config.serverAddress).toBe('localhost:4711');
+    expect(config.serverAddress).toBe('127.0.0.1:8080/session/client');
     expect(config.transportType).toBe('websocket');
     expect(config.launchMode).toBe('launch');
     expect(config.stopOnEntry).toBe(true);
@@ -85,7 +85,7 @@ describe('DapConfigService', () => {
 
     // Assert — should fall back to default values and log the parse error
     const config = newService.getConfig();
-    expect(config.serverAddress).toBe('localhost:4711');
+    expect(config.serverAddress).toBe('127.0.0.1:8080/session/client');
     expect(consoleSpy).toHaveBeenCalled();
 
     consoleSpy.mockRestore();

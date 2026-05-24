@@ -1,0 +1,21 @@
+{
+  "name": "taro-session",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/taro-session.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/taro-session.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0",
+    "yargs-parser": "^21.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/ws": "^8.5.10",
+    "@types/yargs-parser": "^21.0.3",
+    "typescript": "^5.3.3"
+  }
+}

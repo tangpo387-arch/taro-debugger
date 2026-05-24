@@ -2,7 +2,7 @@
 title: Architecture - Session Layer
 scope: architecture, session-layer, state-machine, data-flow
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-05-01
+last_updated: 2026-05-27
 related:
   - ../architecture.md
   - command-serialization.md
@@ -29,6 +29,7 @@ The state machine is driven by two distinct types of inputs: **Imperative Functi
 ```mermaid
 graph TD
     %% States
+    disconnected([disconnected])
     idle([idle])
     starting([starting])
     running([running])
@@ -36,27 +37,25 @@ graph TD
     error([error])
 
     %% User Actions (Functions)
-    idle -- "<font color='#b85c5c'>[F] startSession()</font>" --> starting
+    disconnected -- "<font color='#b85c5c'>[F] startSession()</font>" --> starting
     stopped -- "<font color='#b85c5c'>[F] continue/next/step*()</font>" --> running
-    running -- "<font color='#b85c5c'>[F] stop()</font>" --> idle
-    stopped -- "<font color='#b85c5c'>[F] stop()</font>" --> idle
-    running -- "<font color='#b85c5c'>[F] restart()</font>" --> starting
-    stopped -- "<font color='#b85c5c'>[F] restart()</font>" --> starting
-    error -- "<font color='#b85c5c'>[F] stop()</font>" --> idle
-
+    running -- "<font color='#b85c5c'>[F] restart()</font>" ---> starting
+    stopped -- "<font color='#b85c5c'>[F] restart()</font>" ----> starting
+    
     %% Adapter Actions (Events)
     starting -- "<font color='#5c7fb8'>[E] launch success</font>" --> running
     running -- "<font color='#5c7fb8'>[E] stopped</font>" --> stopped
     stopped -- "<font color='#5c7fb8'>[E] continued</font>" --> running
-    running -- "<font color='#5c7fb8'>[E] terminated</font>" --> idle
-    stopped -- "<font color='#5c7fb8'>[E] terminated</font>" --> idle
-    starting -- "<font color='#5c7fb8'>[E] disconnect</font>" --> error
-    running -- "<font color='#5c7fb8'>[E] disconnect</font>" --> error
-    stopped -- "<font color='#5c7fb8'>[E] disconnect</font>" --> error
-
+    starting -- "<font color='#5c7fb8'>[E] terminated</font>" ----> idle
+    running -- "<font color='#5c7fb8'>[E] exited</font>" ----> idle
+    stopped -- "<font color='#5c7fb8'>[E] exited</font>" -----> idle
+    starting -- "<font color='#5c7fb8'>[E] disconnect</font>" ---> error
+    running -- "<font color='#5c7fb8'>[E] disconnect</font>" ---> error
+    stopped -- "<font color='#5c7fb8'>[E] disconnect</font>" ---> error
+    idle -- "<font color='#5c7fb8'>[E] terminated</font>" -----> disconnected
     %% Styles
-    linkStyle 0,1,2,3,4,5,6 stroke:#b85c5c,stroke-width:2px;
-    linkStyle 7,8,9,10,11,12,13,14 stroke:#5c7fb8,stroke-width:2px;
+    linkStyle 0,1,2,3 stroke:#b85c5c,stroke-width:2px;
+    linkStyle 4,5,6,7,8,9,10,11,12,13 stroke:#5c7fb8,stroke-width:2px;
     
     classDef default fill:#eee,stroke:#333,stroke-width:1px;
     style error fill:#fcf3f3,stroke:#b85c5c;
@@ -67,7 +66,10 @@ graph TD
 > The state machine transitions between five primary states: `idle`, `starting`, `running`, `stopped`, and `error`.
 > - **Imperative transitions (Red)** are triggered by User functions like `startSession()`, `continue()`, `next()`, and `stepIn/Out()`.
 > - **Asynchronous transitions (Blue)** are triggered by Adapter events like `stopped`, `continued`, and `terminated`.
-> - **Error state** is reached via unexpected disconnections and requires a `stop()` call to reset to `idle`.
+> - **Error state** is reached via unexpected disconnections. The public recovery path is `stop()`, which returns early (no request sent) when in `error` state, allowing `restart()` or `startSession()` to be called next.
+
+> [!IMPORTANT]
+> **R-ERR1 — Mandatory Transport Close on Error Entry**: Any code path that transitions the execution state to `error` **MUST** call `closeTransport()` before setting the new state. This guarantees that no stale transport subscriptions or dangling socket references survive past the error boundary.
 
 ### 2.1 Trigger Types
 
@@ -95,7 +97,7 @@ type ExecutionState = 'idle' | 'starting' | 'running' | 'stopped' | 'error';
 | `starting` | Transitional: establishing connection, `initialize` handshake, and `launch`/`attach` flow. |
 | `running` | The debug target is executing. DAP is busy; inspection requests (stack/vars) are discouraged. |
 | `stopped` | Program paused (breakpoint/step). Thread, stack, and variable queries are available. |
-| `error` | Unexpected anomaly (e.g., transport crash). Requires calling `stop()` to return to `idle`. |
+| `error` | Unexpected anomaly (e.g., transport crash). The public recovery path is `stop()`, which returns early without sending any DAP request (same as `idle`). The internal `disconnect()` also treats `error` as a safe early-return since the transport is already closed. **Invariant (R-ERR1)**: `closeTransport()` is always called before this state is set, ensuring no dangling transport references. |
 
 ## 3. Event Processing & Synthetic Events
 
@@ -126,7 +128,9 @@ Transport instances are **lazily created** via `TransportFactoryService` during 
 | --- | --- |
 | `constructor()` | Transport is `undefined`. |
 | `startSession()` | Created based on `config.transportType`. |
-| `disconnect()` | Calls `transport.disconnect()`, clears message subscriptions, and resets state. |
+| `stop()` (public) | Sends `terminate`, awaits the `terminated` event, then internally calls `disconnect()`. Returns immediately (no request sent) when state is `idle`, `disconnected`, or `error`. |
+| `disconnect()` (private) | Sends a DAP `disconnect` request, clears message subscriptions, and resets state to `disconnected`. Only reachable via the `terminated` event handler or the `idle`-state internal path. |
+| Error entry (R-ERR1) | **`closeTransport()` is called before the state is set to `error`** — this unsubscribes the message stream, calls `transport.disconnect()`, nulls the transport reference, and sets `connectionStatus$` to `false`. This invariant applies to all error code paths (`handleIncomingTransportError`, `handleIncomingTransportComplete`). |
 
 ## 6. Breakpoint Management (SSOT)
 
@@ -196,9 +200,8 @@ When the user switches between call stack frames, the system enforces a **"Lates
 | API | Type | Description |
 | --- | --- | --- |
 | `startSession()` | `Promise<DapResponse>` | Connect → Initialize → Launch/Attach flow. |
-| `stop()` | `Promise<void>` | Terminate (if supported) → Disconnect fallback. |
-| `restart()` | `Promise<void>` | Restart (if supported) → Soft restart fallback. |
-| `disconnect(options?)` | `Promise<void>` | Calm disconnect with `terminateDebuggee` control. |
+| `stop()` | `Promise<void>` | Sends `terminate` and awaits the `terminated` event. Returns early (no-op) if state is `idle`, `disconnected`, or `error`. |
+| `restart()` | `Promise<void>` | Soft restart: `stop()` → `startSession()`. Returns early if state is `idle` or `starting`. |
 | `continue() / next() / ...` | `Promise<DapResponse>` | Standard debug control commands. |
 | `nextInstruction()` | `Promise<DapResponse>` | Instruction-level step over. |
 | `setBreakpoints(p, l)` | `Promise<VerifiedBreakpoint[]>` | Sync breakpoints with serialization logic. |

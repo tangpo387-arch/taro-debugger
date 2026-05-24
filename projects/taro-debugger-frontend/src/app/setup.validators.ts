@@ -8,8 +8,8 @@ export function serverAddressValidator(control: AbstractControl): ValidationErro
   const value = (control.value as string)?.trim();
   if (!value) return null; // Let the required validator handle empty values
 
-  // Pattern: [IPv6] or host part, then a colon, then 1-5 digits
-  const pattern = /^(\[[a-fA-F0-9:]+\]|[a-zA-Z0-9._-]+):(\d{1,5})$/;
+  // Pattern: [IPv6] or host part, then a colon, then 1-5 digits, then optional path
+  const pattern = /^(\[[a-fA-F0-9:]+\]|[a-zA-Z0-9._-]+):(\d{1,5})(\/.*)?$/;
   const match = value.match(pattern);
 
   if (!match) return { invalidFormat: true };

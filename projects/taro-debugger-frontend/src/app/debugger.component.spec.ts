@@ -33,6 +33,7 @@ describe('DebuggerComponent — onStepInstructionTab()', () => {
       onEvent: () => EMPTY,
       onTraffic$: EMPTY,
       startSession: vi.fn().mockResolvedValue({}),
+      stop: vi.fn().mockResolvedValue(undefined),
       disconnect: vi.fn(),
       nextInstruction: vi.fn().mockResolvedValue({}),
       stepInInstruction: vi.fn().mockResolvedValue({}),
@@ -134,6 +135,7 @@ describe('DebuggerComponent — Keyboard Shortcut Integration', () => {
       onEvent: () => EMPTY,
       onTraffic$: EMPTY,
       startSession: vi.fn().mockResolvedValue({}),
+      stop: vi.fn().mockResolvedValue(undefined),
       disconnect: vi.fn(),
       continue: vi.fn(),
       next: vi.fn()
@@ -237,6 +239,7 @@ describe('DebuggerComponent — Reveal Logic', () => {
             activeThread$: EMPTY,
             onEvent: () => EMPTY,
             onTraffic$: EMPTY,
+            stop: vi.fn().mockResolvedValue(undefined),
             disconnect: vi.fn(),
             fileTree: { readFile: () => of('') }
           }
@@ -301,6 +304,7 @@ describe('DebuggerComponent — State Cleanup (WI-83)', () => {
       onTraffic$: EMPTY,
       breakpoints$: EMPTY,
       startSession: vi.fn().mockResolvedValue({}),
+      stop: vi.fn().mockResolvedValue(undefined),
       disconnect: vi.fn(),
       activeThread$: EMPTY,
     };
@@ -403,6 +407,7 @@ describe('DebuggerComponent — No-Source Frame UX (WI-100)', () => {
       executionState$: EMPTY,
       onEvent: () => EMPTY,
       onTraffic$: EMPTY,
+      stop: vi.fn().mockResolvedValue(undefined),
       disconnect: vi.fn(),
     };
 
@@ -481,7 +486,7 @@ describe('DebuggerComponent — Memory View Integration (WI-106)', () => {
       providers: [
         DebuggerComponent,
         { provide: DapMemoryService, useValue: mockMemoryService },
-        { provide: DapSessionService, useValue: { connectionStatus$: EMPTY, executionState$: EMPTY, processInfo$: EMPTY, threads$: EMPTY, activeThread$: EMPTY, onEvent: () => EMPTY, onTraffic$: EMPTY, disconnect: vi.fn() } },
+        { provide: DapSessionService, useValue: { connectionStatus$: EMPTY, executionState$: EMPTY, processInfo$: EMPTY, threads$: EMPTY, activeThread$: EMPTY, onEvent: () => EMPTY, onTraffic$: EMPTY, stop: vi.fn().mockResolvedValue(undefined), disconnect: vi.fn() } },
         { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
         { provide: DapLogService, useValue: { consoleLog: vi.fn() } },
         { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe', stopOnEntry: true }) } },

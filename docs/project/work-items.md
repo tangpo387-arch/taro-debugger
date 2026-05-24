@@ -10,21 +10,6 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
 
 ## DAP Transport Layer
 
-### WI-09: Implement taro-session Core & Client
-
-- **Status**: 💡 Proposed
-- **Size**: M
-- **Description**: Implement the core taro-session CLI server, supporting the /session/client WebSocket channel, spawning the GDB target, and auto-saving/loading config.json and breakpoints.json
-- **Details**:
-  - Implement CLI --session-path directory loading and saving
-  - Create /session/client WebSocket channel and multiplexer
-  - Implement GDB spawn (gdb --interpreter=dap) and stdin/stdout proxying
-  - Load and restore config.json and breakpoints.json on GDB startup
-  - Implement continuous auto-saving of configs and breakpoints back to the .tarodb/ directory
-  - [Test] Verify GDB spawns correctly, GDB stdin/stdout proxy routes, and config/breakpoints restore on startup
-  - [Doc] docs/archive/specs/node-js-websocket-bridge.md
-- **Dependencies**: none
-
 ### WI-132: Implement taro-session Chat Routing & Log Persistence
 
 - **Status**: 💡 Proposed
@@ -67,6 +52,22 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - [Test] Verify companion connects, performs active GDB tool-calling, and updates memory.md via taro-session
   - [Doc] docs/architecture/agentic-debug-architecture.md
 - **Dependencies**: WI-133
+
+## Electron Desktop Mode
+
+### WI-135: Restructure Electron Desktop Workspace & Runtime Separation
+
+- **Status**: 💡 Proposed
+- **Size**: M
+- **Description**: Separate Electron desktop runtime into an independent npm workspace under projects/taro-debugger-electron and copy Angular assets during build time
+- **Details**:
+  - Create projects/taro-debugger-electron workspace
+  - Move electron source files to projects/taro-debugger-electron/src/
+  - Implement copy-assets.js build script
+  - Update GDB IPC bridge to load local assets browser/index.html
+  - [Doc] docs/project/system-specification.md
+  - [Test] Verify Electron compiles, loads assets, and packages cleanly
+- **Dependencies**: none
 
 ## Low-Level Inspection
 

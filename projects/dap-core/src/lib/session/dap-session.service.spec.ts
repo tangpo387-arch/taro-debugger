@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { DapSessionService, ExecutionState } from './dap-session.service';
+import { DapSessionService, DapFatalException, ExecutionState } from './dap-session.service';
 import { DapConfigService } from './dap-config.service';
 import { TransportFactoryService } from '../transport/transport-factory.service';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -32,7 +32,7 @@ describe('DapSessionService', () => {
 
     configService = {
       getConfig: vi.fn().mockReturnValue({
-        serverAddress: 'ws://localhost:8080',
+        serverAddress: 'ws://127.0.0.1:8080/session/client',
         transportType: 'websocket',
         launchMode: 'launch',
         executablePath: '/path/to/exe',
@@ -160,7 +160,7 @@ describe('DapSessionService', () => {
   describe('Stop on Entry (WI-123)', () => {
     it('should send setFunctionBreakpoints(main) during session start if stopOnEntry is true', async () => {
       configService.getConfig.mockReturnValue({
-        serverAddress: 'ws://localhost:8080',
+        serverAddress: 'ws://127.0.0.1:8080/session/client',
         transportType: 'websocket',
         launchMode: 'launch',
         executablePath: '/path/to/exe',
@@ -174,7 +174,7 @@ describe('DapSessionService', () => {
             request_seq: req.seq,
             success: true,
             command: req.command,
-            body: req.command === 'initialize' ? { supportsFunctionBreakpoints: true } : {}
+            body: req.command === 'initialize' ? { supportsFunctionBreakpoints: true, supportsTerminateRequest: true } : {}
           });
         }, 0);
       });
@@ -199,7 +199,7 @@ describe('DapSessionService', () => {
 
     it('should NOT send setFunctionBreakpoints if stopOnEntry is false', async () => {
       configService.getConfig.mockReturnValue({
-        serverAddress: 'ws://localhost:8080',
+        serverAddress: 'ws://127.0.0.1:8080/session/client',
         transportType: 'websocket',
         launchMode: 'launch',
         executablePath: '/path/to/exe',
@@ -213,7 +213,7 @@ describe('DapSessionService', () => {
             request_seq: req.seq,
             success: true,
             command: req.command,
-            body: {}
+            body: req.command === 'initialize' ? { supportsTerminateRequest: true } : {}
           });
         }, 0);
       });
@@ -234,7 +234,7 @@ describe('DapSessionService', () => {
 
     it('should remove stopAtBeginningOfMainSubprogram from launch arguments', async () => {
       configService.getConfig.mockReturnValue({
-        serverAddress: 'ws://localhost:8080',
+        serverAddress: 'ws://127.0.0.1:8080/session/client',
         transportType: 'websocket',
         launchMode: 'launch',
         executablePath: '/path/to/exe',
@@ -248,7 +248,7 @@ describe('DapSessionService', () => {
             request_seq: req.seq,
             success: true,
             command: req.command,
-            body: {}
+            body: req.command === 'initialize' ? { supportsTerminateRequest: true } : {}
           });
         }, 0);
       });
@@ -393,9 +393,44 @@ describe('DapSessionService', () => {
     });
   });
 
+  describe('Mandatory supportsTerminateRequest Enforcing', () => {
+    it('should throw DapFatalException during startSession if supportsTerminateRequest is not supported', async () => {
+      configService.getConfig.mockReturnValue({
+        serverAddress: 'ws://127.0.0.1:8080/session/client',
+        transportType: 'websocket',
+        launchMode: 'launch',
+        executablePath: '/path/to/exe',
+        stopOnEntry: true
+      });
+
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          (service as any).handleIncomingMessage({
+            type: 'response',
+            request_seq: req.seq,
+            success: true,
+            command: req.command,
+            body: req.command === 'initialize' ? { supportsTerminateRequest: false } : {}
+          });
+        }, 0);
+      });
+
+      const sessionPromise = service.startSession();
+      const expectPromise = expect(sessionPromise).rejects.toThrow('Debug adapter does not support terminate request');
+
+      // Simulate initialized event
+      setTimeout(() => {
+        (service as any).handleIncomingMessage({ type: 'event', event: 'initialized', seq: 100 });
+      }, 10);
+
+      await vi.runAllTimersAsync();
+      await expectPromise;
+    });
+  });
+
   describe('Execution States', () => {
-    it('should start with idle state', () => {
-      expect((service as any).executionStateSubject.value).toBe('idle');
+    it('should start with disconnected state', () => {
+      expect((service as any).executionStateSubject.value).toBe('disconnected');
     });
 
     it('should transition through states based on events', () => {
@@ -417,8 +452,11 @@ describe('DapSessionService', () => {
       (service as any).handleTransportEvent({ type: 'event', event: 'continued', seq: 2 });
       expect((service as any).executionStateSubject.value).toBe('running');
 
-      (service as any).handleTransportEvent({ type: 'event', event: 'terminated', seq: 3 });
+      (service as any).handleTransportEvent({ type: 'event', event: 'exited', seq: 3 });
       expect((service as any).executionStateSubject.value).toBe('idle');
+
+      (service as any).handleTransportEvent({ type: 'event', event: 'terminated', seq: 4 });
+      expect((service as any).executionStateSubject.value).toBe('disconnected');
     });
 
     it('should transition to error on transport error', () => {
@@ -478,22 +516,6 @@ describe('DapSessionService', () => {
       await promise;
       expect((service as any).executionStateSubject.value).toBe('running');
       expect((service as any).commandInFlightSubject.value).toBe(false);
-    });
-
-    it('should recover from error state to idle via stop()', async () => {
-      (service as any).executionStateSubject.next('error');
-      await service.stop();
-      expect((service as any).executionStateSubject.value).toBe('idle');
-    });
-
-    it('should recover from error state to idle via disconnect() without sending DAP request', async () => {
-      (service as any).executionStateSubject.next('error');
-      (service as any).transport = mockTransport;
-
-      await service.disconnect();
-
-      expect((service as any).executionStateSubject.value).toBe('idle');
-      expect(mockTransport.sendRequest).not.toHaveBeenCalled();
     });
   });
 
@@ -939,37 +961,6 @@ describe('DapSessionService', () => {
     });
   });
 
-  describe('Disconnect/Terminate One-Shot (R-CS5)', () => {
-    it('should return immediately without sending a DAP request if state is already idle', async () => {
-      (service as any).transport = mockTransport;
-      (service as any).executionStateSubject.next('idle');
-
-      await service.disconnect();
-
-      expect(mockTransport.sendRequest).not.toHaveBeenCalled();
-    });
-
-
-    it('should prevent double-call to disconnect from sending multiple requests', async () => {
-      (service as any).transport = mockTransport;
-      (service as any).executionStateSubject.next('running');
-
-      const p1 = service.disconnect();
-      const p2 = service.disconnect();
-
-      // Trigger response for the first request (seq 1)
-      (service as any).handleIncomingMessage({
-        type: 'response', request_seq: 1, command: 'disconnect', success: true
-      });
-
-      await Promise.all([p1, p2]);
-
-      expect(mockTransport.sendRequest).toHaveBeenCalledTimes(1);
-      expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({ command: 'disconnect' }));
-    });
-
-  });
-
   describe('setBreakpoints Serialization (R-CS4)', () => {
     it('should send first setBreakpoints request immediately', async () => {
       (service as any).transport = mockTransport;
@@ -1145,162 +1136,6 @@ describe('DapSessionService', () => {
         command: 'setBreakpoints',
         arguments: expect.objectContaining({ breakpoints: [{ line: 20 }] })
       }));
-    });
-  });
-
-  describe('Stop and Restart Logic (WI-86)', () => {
-    beforeEach(() => {
-      (service as any).transport = mockTransport;
-      (service as any).executionStateSubject.next('running');
-    });
-
-    describe('stop()', () => {
-      it('should send terminate request if supported', async () => {
-        (service as any).capabilities = { supportsTerminateRequest: true };
-
-        const promise = service.stop();
-
-        expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
-          command: 'terminate'
-        }));
-
-        (service as any).handleIncomingMessage({
-          type: 'response',
-          request_seq: 1,
-          success: true,
-          command: 'terminate'
-        });
-
-        await promise;
-      });
-
-      it('should fallback to disconnect if terminate is NOT supported', async () => {
-        (service as any).capabilities = { supportsTerminateRequest: false };
-
-        const promise = service.stop();
-
-        // Should NOT send terminate
-        expect(mockTransport.sendRequest).not.toHaveBeenCalledWith(expect.objectContaining({
-          command: 'terminate'
-        }));
-
-        // Should send disconnect with terminateDebuggee: true
-        expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
-          command: 'disconnect',
-          arguments: expect.objectContaining({ terminateDebuggee: true })
-        }));
-
-        (service as any).handleIncomingMessage({
-          type: 'response',
-          request_seq: 1,
-          success: true,
-          command: 'disconnect'
-        });
-
-        await promise;
-      });
-
-      it('should fallback to disconnect if terminate fails', async () => {
-        (service as any).capabilities = { supportsTerminateRequest: true };
-
-        const promise = service.stop();
-
-        expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
-          command: 'terminate'
-        }));
-
-        // Simulate failure
-        (service as any).handleIncomingMessage({
-          type: 'response',
-          request_seq: 1,
-          success: false,
-          command: 'terminate',
-          message: 'Failed'
-        });
-
-        // Wait for microtask (catch block)
-        await Promise.resolve();
-
-        // Should then call disconnect
-        expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
-          command: 'disconnect',
-          arguments: expect.objectContaining({ terminateDebuggee: true })
-        }));
-
-        (service as any).handleIncomingMessage({
-          type: 'response',
-          request_seq: 2,
-          success: true,
-          command: 'disconnect'
-        });
-
-        await promise;
-      });
-
-      it('should return early if state is idle', async () => {
-        (service as any).executionStateSubject.next('idle');
-        await service.stop();
-        expect(mockTransport.sendRequest).not.toHaveBeenCalled();
-      });
-    });
-
-    describe('restart()', () => {
-      it('should send restart request if supported', async () => {
-        (service as any).capabilities = { supportsRestartRequest: true };
-
-        const promise = service.restart();
-
-        expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
-          command: 'restart'
-        }));
-
-        (service as any).handleIncomingMessage({
-          type: 'response',
-          request_seq: 1,
-          success: true,
-          command: 'restart'
-        });
-
-        await promise;
-      });
-
-
-      it('should NOT allow restart from idle state (Run is preferred)', async () => {
-        (service as any).executionStateSubject.next('idle');
-        const startSessionSpy = vi.spyOn(service, 'startSession').mockResolvedValue({} as any);
-
-        await service.restart();
-
-        expect(startSessionSpy).not.toHaveBeenCalled();
-      });
-
-      it('should call stop() before disconnect during soft restart from running state', async () => {
-        (service as any).capabilities = { supportsRestartRequest: false };
-        (service as any).executionStateSubject.next('running');
-        const stopSpy = vi.spyOn(service, 'stop').mockResolvedValue(undefined);
-        const disconnectSpy = vi.spyOn(service as any, 'disconnect').mockResolvedValue(undefined);
-        const startSessionSpy = vi.spyOn(service, 'startSession').mockResolvedValue({} as any);
-
-        await service.restart();
-
-        expect(stopSpy).toHaveBeenCalled();
-        expect(disconnectSpy).toHaveBeenCalledWith(expect.objectContaining({ restart: true }));
-        expect(startSessionSpy).toHaveBeenCalled();
-      });
-
-      it('should call stop() before disconnect during soft restart from stopped state', async () => {
-        (service as any).capabilities = { supportsRestartRequest: false };
-        (service as any).executionStateSubject.next('stopped');
-        const stopSpy = vi.spyOn(service, 'stop').mockResolvedValue(undefined);
-        const disconnectSpy = vi.spyOn(service as any, 'disconnect').mockResolvedValue(undefined);
-        const startSessionSpy = vi.spyOn(service, 'startSession').mockResolvedValue({} as any);
-
-        await service.restart();
-
-        expect(stopSpy).toHaveBeenCalled();
-        expect(disconnectSpy).toHaveBeenCalledWith(expect.objectContaining({ restart: true }));
-        expect(startSessionSpy).toHaveBeenCalled();
-      });
     });
   });
 
@@ -1553,6 +1388,310 @@ describe('DapSessionService', () => {
       expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
         command: 'threads'
       }));
+    });
+  });
+
+  // ── Stop and Restart Logic (R-CS5 / WI-86) ────────────────────────
+
+  describe('Stop and Restart Logic (R-CS5)', () => {
+    /** Helper: simulate adapter responding with terminate ack and emitting 'exited' + 'terminated' events (per DAP spec order) */
+    function simulateTerminateFlow(): void {
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          (service as any).handleIncomingMessage({
+            type: 'response',
+            request_seq: req.seq,
+            success: true,
+            command: req.command
+          });
+          if (req.command === 'terminate') {
+            // DAP spec: adapter emits 'exited' (transitioning state to idle) before 'terminated'
+            (service as any).handleIncomingMessage({
+              type: 'event',
+              event: 'exited',
+              seq: 998,
+              body: { exitCode: 0 }
+            });
+            (service as any).handleIncomingMessage({
+              type: 'event',
+              event: 'terminated',
+              seq: 999
+            });
+          }
+        }, 0);
+      });
+    }
+
+    describe('stop() — Early-Return States', () => {
+      it('should return early without sending a request when state is idle', async () => {
+        // Arrange
+        (service as any).transport = mockTransport;
+        (service as any).executionStateSubject.next('idle');
+
+        // Act
+        await service.stop();
+
+        // Assert
+        expect(mockTransport.sendRequest).not.toHaveBeenCalled();
+      });
+
+      it('should return early without sending a request when state is disconnected', async () => {
+        // Arrange
+        (service as any).transport = mockTransport;
+        // State starts as 'disconnected' by default
+
+        // Act
+        await service.stop();
+
+        // Assert
+        expect(mockTransport.sendRequest).not.toHaveBeenCalled();
+      });
+
+      it('should return early without sending a request when state is error', async () => {
+        // Arrange
+        (service as any).transport = mockTransport;
+        (service as any).executionStateSubject.next('error');
+
+        // Act
+        await service.stop();
+
+        // Assert
+        expect(mockTransport.sendRequest).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('stop() — Active States', () => {
+      it('should send terminate request and await terminated event when state is running', async () => {
+        // Arrange
+        (service as any).transport = mockTransport;
+        (service as any).executionStateSubject.next('running');
+        simulateTerminateFlow();
+
+        // Act
+        const stopPromise = service.stop();
+        vi.advanceTimersByTime(10);
+        await stopPromise;
+
+        // Assert
+        expect(mockTransport.sendRequest).toHaveBeenCalledWith(
+          expect.objectContaining({ command: 'terminate' })
+        );
+      });
+
+      it('should send terminate request and await terminated event when state is stopped', async () => {
+        // Arrange
+        (service as any).transport = mockTransport;
+        (service as any).executionStateSubject.next('stopped');
+        simulateTerminateFlow();
+
+        // Act
+        const stopPromise = service.stop();
+        vi.advanceTimersByTime(10);
+        await stopPromise;
+
+        // Assert
+        expect(mockTransport.sendRequest).toHaveBeenCalledWith(
+          expect.objectContaining({ command: 'terminate' })
+        );
+      });
+
+      it('should send terminate request when state is starting', async () => {
+        // Arrange
+        (service as any).transport = mockTransport;
+        (service as any).executionStateSubject.next('starting');
+
+        // Provide a minimal mock: respond to terminate, then emit the terminated event
+        // directly via the internal eventSubject (bypassing handleTransportEvent which would
+        // call disconnect() from 'starting', throwing DapFatalException).
+        mockTransport.sendRequest.mockImplementation((req: any) => {
+          setTimeout(() => {
+            (service as any).handleIncomingMessage({
+              type: 'response',
+              request_seq: req.seq,
+              success: true,
+              command: req.command
+            });
+            if (req.command === 'terminate') {
+              // Emit directly to the event subject to unblock the firstValueFrom in stop(),
+              // without invoking handleTransportEvent which would try to call disconnect().
+              (service as any).eventSubject.next({ type: 'event', event: 'terminated', seq: 999 });
+            }
+          }, 0);
+        });
+
+        // Act
+        const stopPromise = service.stop();
+        vi.advanceTimersByTime(10);
+        await stopPromise;
+
+        // Assert
+        expect(mockTransport.sendRequest).toHaveBeenCalledWith(
+          expect.objectContaining({ command: 'terminate' })
+        );
+      });
+
+
+      it('should NOT synchronously modify execution state when terminate is sent', async () => {
+        // Arrange
+        (service as any).transport = mockTransport;
+        (service as any).executionStateSubject.next('running');
+
+        // Do NOT immediately emit terminated event — state transition must NOT happen synchronously
+        mockTransport.sendRequest.mockReturnValue(new Promise(() => { }));
+
+        // Act
+        service.stop(); // fire-and-forget (intentionally not awaited)
+
+        // Assert: state must not have changed synchronously
+        expect((service as any).executionStateSubject.value).toBe('running');
+      });
+    });
+
+    describe('Disconnect Pre-condition Guard', () => {
+      it('should return early without throwing when called from disconnected state', async () => {
+        // Arrange
+        (service as any).transport = mockTransport;
+        // Default initial state is 'disconnected'
+
+        // Act & Assert
+        await expect((service as any).disconnect()).resolves.toBeUndefined();
+        expect(mockTransport.sendRequest).not.toHaveBeenCalled();
+      });
+
+      it('should throw DapFatalException when called from running state', async () => {
+        // Arrange
+        (service as any).transport = mockTransport;
+        (service as any).executionStateSubject.next('running');
+
+        // Act & Assert
+        await expect((service as any).disconnect()).rejects.toThrow(DapFatalException);
+      });
+
+      it('should throw DapFatalException when called from stopped state', async () => {
+        // Arrange
+        (service as any).transport = mockTransport;
+        (service as any).executionStateSubject.next('stopped');
+
+        // Act & Assert
+        await expect((service as any).disconnect()).rejects.toThrow(DapFatalException);
+      });
+
+      it('should throw DapFatalException when called from starting state', async () => {
+        // Arrange
+        (service as any).transport = mockTransport;
+        (service as any).executionStateSubject.next('starting');
+
+        // Act & Assert
+        await expect((service as any).disconnect()).rejects.toThrow(DapFatalException);
+      });
+
+      it('should return early without throwing when called from error state', async () => {
+        // Arrange
+        (service as any).transport = mockTransport;
+        (service as any).executionStateSubject.next('error');
+
+        // Act & Assert: user changed disconnect() to return early for 'error' (not throw)
+        await expect((service as any).disconnect()).resolves.toBeUndefined();
+        expect(mockTransport.sendRequest).not.toHaveBeenCalled();
+      });
+
+      it('should transition to disconnected and send disconnect request when called from idle', async () => {
+        // Arrange
+        (service as any).transport = mockTransport;
+        (service as any).executionStateSubject.next('idle');
+
+        mockTransport.sendRequest.mockImplementation((req: any) => {
+          setTimeout(() => {
+            (service as any).handleIncomingMessage({
+              type: 'response',
+              request_seq: req.seq,
+              success: true,
+              command: req.command
+            });
+          }, 0);
+        });
+
+        // Act
+        const p = (service as any).disconnect();
+        vi.advanceTimersByTime(10);
+        await p;
+
+        // Assert
+        expect((service as any).executionStateSubject.value).toBe('disconnected');
+        expect(mockTransport.sendRequest).toHaveBeenCalledWith(
+          expect.objectContaining({ command: 'disconnect' })
+        );
+      });
+    });
+
+    describe('restart() — Soft Restart', () => {
+      it('should return early without doing anything when state is idle', async () => {
+        // Arrange
+        (service as any).transport = mockTransport;
+        (service as any).executionStateSubject.next('idle');
+
+        // Act
+        await service.restart();
+
+        // Assert
+        expect(mockTransport.sendRequest).not.toHaveBeenCalled();
+      });
+
+      it('should return early without doing anything when state is starting', async () => {
+        // Arrange
+        (service as any).transport = mockTransport;
+        (service as any).executionStateSubject.next('starting');
+
+        // Act
+        await service.restart();
+
+        // Assert
+        expect(mockTransport.sendRequest).not.toHaveBeenCalled();
+      });
+
+      it('should call stop() before startSession() when state is running (Soft Restart)', async () => {
+        // Arrange
+        (service as any).transport = mockTransport;
+        (service as any).executionStateSubject.next('running');
+
+        const callOrder: string[] = [];
+        const stopSpy = vi.spyOn(service, 'stop').mockImplementation(async () => {
+          callOrder.push('stop');
+        });
+        const startSpy = vi.spyOn(service, 'startSession').mockImplementation(async () => {
+          callOrder.push('startSession');
+          return {} as any;
+        });
+
+        // Act
+        await service.restart();
+
+        // Assert
+        expect(stopSpy).toHaveBeenCalledTimes(1);
+        expect(startSpy).toHaveBeenCalledTimes(1);
+        expect(callOrder).toEqual(['stop', 'startSession']);
+      });
+
+      it('should call stop() before startSession() when state is stopped (Soft Restart)', async () => {
+        // Arrange
+        (service as any).transport = mockTransport;
+        (service as any).executionStateSubject.next('stopped');
+
+        const callOrder: string[] = [];
+        const stopSpy = vi.spyOn(service, 'stop').mockImplementation(async () => {
+          callOrder.push('stop');
+        });
+        const startSpy = vi.spyOn(service, 'startSession').mockImplementation(async () => {
+          callOrder.push('startSession');
+          return {} as any;
+        });
+
+        // Act
+        await service.restart();
+
+        // Assert
+        expect(callOrder).toEqual(['stop', 'startSession']);
+      });
     });
   });
 

@@ -127,7 +127,7 @@
       "title": "Implement taro-session Core & Client",
       "featureGroup": "DAP Transport Layer",
       "metadata": {
-        "status": "proposed",
+        "status": "accepted",
         "size": "M",
         "dependencies": []
       },
@@ -142,7 +142,8 @@
         "[Doc] docs/archive/specs/node-js-websocket-bridge.md"
       ],
       "timeline": {
-        "created": "2026-04-04"
+        "created": "2026-04-04",
+        "completed": "2026-05-27"
       }
     },
     {
