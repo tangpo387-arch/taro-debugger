@@ -603,7 +603,21 @@ export class DebuggerComponent implements OnInit, OnDestroy {
           ? 'Connection lost'
           : 'Transport error';
         this.logService.consoleLog(`${reason}: ${body.message}`, 'error', 'system');
-        this.snackBar.open(`${reason}: ${body.message}`, 'Dismiss', { duration: 8000 });
+
+        // Show error dialog and return to setup page
+        const dialogRef = this.dialog.open(ErrorDialog, {
+          width: '400px',
+          disableClose: true, // Force user to make a choice
+          data: {
+            title: reason,
+            message: body.message,
+            hideRetry: true
+          } as ErrorDialogData
+        });
+
+        dialogRef.afterClosed().subscribe(() => {
+          this.goBack();
+        });
         break;
       }
       case '_sessionWarning': {

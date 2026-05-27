@@ -187,7 +187,7 @@ describe('TI-05 — Connection Error & Intent Detection', () => {
       expect(currentState).toBe('error');
     });
 
-    it('should emit _transportError with reason=disconnected on unexpected socket close', () => {
+    it('should emit _transportError with reason=error on unexpected socket close', () => {
       // Arrange
       simulateRunningState();
 
@@ -200,7 +200,7 @@ describe('TI-05 — Connection Error & Intent Detection', () => {
       // Assert
       const transportErrors = emittedEvents.filter(e => e.event === '_transportError');
       expect(transportErrors).toHaveLength(1);
-      expect(transportErrors[0].body.reason).toBe('disconnected');
+      expect(transportErrors[0].body.reason).toBe('error');
     });
 
     it('should NOT emit _transportError when transport completes after session is already idle', () => {

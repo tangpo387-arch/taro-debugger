@@ -88,7 +88,7 @@ export class DapSessionService implements OnDestroy {
   public capabilities: any = {};
   private stateTransitionTimer?: any;
   private readonly STATE_TRANSITION_TIMEOUT_MS = 5000;
-  private transport?: DapTransportService;
+  private transport: DapTransportService;
   private connectionStatusSubject = new BehaviorSubject<boolean>(false);
   private transportStatusSubscription?: Subscription;
 
@@ -126,10 +126,19 @@ export class DapSessionService implements OnDestroy {
     return this.executionStateSubject.value;
   }
 
-  public constructor() { }
+  public constructor() {
+    const config = this.configService.getConfig();
+    this.transport = this.transportFactory.createTransport(config.transportType);
+
+    // Bridge transport connection status to the Session level
+    this.transportStatusSubscription = this.transport.connectionStatus$.subscribe(
+      status => this.connectionStatusSubject.next(status)
+    );
+  }
 
   public ngOnDestroy(): void {
     this.closeTransport();
+    this.transportStatusSubscription?.unsubscribe();
   }
 
   private closeTransport(): void {
@@ -137,10 +146,7 @@ export class DapSessionService implements OnDestroy {
       this.messageSubscription.unsubscribe();
       this.messageSubscription = undefined;
     }
-    this.transportStatusSubscription?.unsubscribe();
-    this.transportStatusSubscription = undefined;
-    this.transport?.disconnect();
-    this.transport = undefined;
+    this.transport.disconnect();
     this.connectionStatusSubject.next(false);
   }
 
@@ -167,16 +173,7 @@ export class DapSessionService implements OnDestroy {
       throw new Error('Server address is empty');
     }
 
-    if (!this.transport || !this.connectionStatusSubject.value) {
-      // Create corresponding Transport instance based on configuration
-      this.transport = this.transportFactory.createTransport(config.transportType);
-
-      // Bridge transport connection status to the Session level
-      this.transportStatusSubscription?.unsubscribe();
-      this.transportStatusSubscription = this.transport.connectionStatus$.subscribe(
-        status => this.connectionStatusSubject.next(status)
-      );
-
+    if (!this.connectionStatusSubject.value) {
       try {
         // Wait for the connection to be established (timeout 3000ms)
         await firstValueFrom(this.transport.connect(config.serverAddress).pipe(timeout(3000)));
@@ -1079,22 +1076,7 @@ export class DapSessionService implements OnDestroy {
 
   private handleIncomingTransportComplete(): void {
     if (this.executionStateSubject.value !== 'idle' && this.executionStateSubject.value !== 'disconnected') {
-      // Emit synthetic event for UI-layer notification before transitioning state
-      this.eventSubject.next({
-        seq: 0,
-        type: 'event',
-        event: '_transportError',
-        body: { reason: 'disconnected', message: 'Connection to DAP Server was unexpectedly closed' }
-      });
-      // Mandatory: close transport before entering error state (R-ERR1)
-      this.closeTransport();
-      this.executionStateSubject.next('error');
-      this.commandInFlightSubject.next(false);
-      for (const [seq, handler] of this.pendingRequests.entries()) {
-        handler.reject(new Error('Connection abruptly closed'));
-        this.pendingRequests.delete(seq);
-      }
-      this.clearSessionData();
+      this.handleIncomingTransportError(new Error("Connection to Debug session was unexpectedly closed"));
     }
   }
 
