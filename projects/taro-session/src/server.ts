@@ -16,6 +16,7 @@ export class WebSocketServer {
 
   private clientSocket?: WebSocket;
   private agentSocket?: WebSocket;
+  private closeCallbacks: (() => void)[] = [];
 
   constructor(
     port: number,
@@ -31,6 +32,16 @@ export class WebSocketServer {
     this.gdbProcess = gdbProcess;
     this.mcpHost = mcpHost;
     this.gdbPath = gdbPath;
+  }
+
+  public onClose(cb: () => void): void {
+    this.closeCallbacks.push(cb);
+  }
+
+  private triggerClose(): void {
+    for (const cb of this.closeCallbacks) {
+      cb();
+    }
   }
 
   public start(): void {
@@ -169,15 +180,13 @@ export class WebSocketServer {
     });
 
     socket.on('close', async () => {
-      this.logger.logStdout('Frontend client disconnected (/session/client). Exiting daemon...');
+      this.logger.logStdout('Frontend client disconnected (/session/client)');
       this.clientSocket = undefined;
       
       // Cascade GDB process termination when client drops to avoid orphan processes
       await this.gdbProcess.terminate();
       this.stop();
-      this.logger.logStdout('taro-session stopped cleanly due to client disconnect.');
-      this.logger.close();
-      process.exit(0);
+      this.triggerClose();
     });
   }
 
