@@ -97,23 +97,25 @@
       "title": "Restructure Electron Desktop Workspace & Runtime Separation",
       "featureGroup": "Electron Desktop Mode",
       "metadata": {
-        "status": "proposed",
+        "status": "accepted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": []
       },
-      "description": "Separate Electron desktop runtime into an independent npm workspace under projects/taro-debugger-electron and copy Angular assets during build time",
+      "description": "Separate Electron desktop runtime into an independent npm workspace under projects/taro-debugger-electron",
       "details": [
         "Create projects/taro-debugger-electron workspace",
         "Move electron source files to projects/taro-debugger-electron/src/",
-        "Implement copy-assets.js build script",
-        "Update GDB IPC bridge to load local assets browser/index.html",
+        "Redirect taro-session tsconfig outDir to ../../dist/taro-session",
+        "Redirect taro-debugger-electron tsconfig outDir to ../../dist/electron",
+        "Update GDB IPC bridge to load local assets from dist/taro-debugger-frontend/browser/index.html",
         "[Doc] docs/project/system-specification.md",
-        "[Test] Verify Electron compiles, loads assets, and packages cleanly"
+        "[Test] Verify Electron compiles, loads assets, and packages cleanly using outputs under dist/"
       ],
       "timeline": {
         "created": "2026-05-24",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-27"
       }
     }
   ]

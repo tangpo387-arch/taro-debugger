@@ -35,6 +35,9 @@
       "path": "./projects/taro-debugger-frontend/tsconfig.app.json"
     },
     {
+      "path": "./projects/taro-debugger-electron/tsconfig.json"
+    },
+    {
       "path": "./projects/taro-debugger-frontend/tsconfig.spec.json"
     },
     {

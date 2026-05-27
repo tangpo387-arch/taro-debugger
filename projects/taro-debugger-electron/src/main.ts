@@ -21,7 +21,7 @@ function createWindow() {
 
   if (isDev) {
     // Development mode: load from Angular's dev-server
-    mainWindow.loadURL('http://localhost:4200').catch((err) => {
+    mainWindow.loadURL('http://localhost:4200/').catch((err) => {
       console.error('Failed to load dev server:', err);
     });
     // Open DevTools in dev mode by default
@@ -262,7 +262,7 @@ ipcMain.handle('dap-invoke', async (event, payload) => {
       if (dapWs) { dapWs.close(); dapWs = null; }
       dapBuffer = Buffer.alloc(0);
 
-      const wsUrl = address.startsWith('ws') ? address : `ws://${address}`;
+      const wsUrl = address.startsWith('ws') ? address : `ws://${address}/session/client`;
 
       // Shared parser logic for raw DAP stream
       const onRawData = (data: Buffer | ArrayBuffer | Uint8Array) => {

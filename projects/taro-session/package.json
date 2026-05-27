@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "main": "dist/taro-session.js",
+  "main": "../../dist/taro-session/taro-session.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/taro-session.js"
+    "build": "tsc && cp package.json ../../dist/taro-session/",
+    "start": "node ../../dist/taro-session/taro-session.js"
   },
   "dependencies": {
     "ws": "^8.18.0",

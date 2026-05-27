@@ -1,0 +1,15 @@
+{
+  "name": "taro-debugger-electron",
+  "version": "1.0.0",
+  "private": true,
+  "main": "../../dist/electron/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "electron": "^40.6.1"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.2"
+  }
+}

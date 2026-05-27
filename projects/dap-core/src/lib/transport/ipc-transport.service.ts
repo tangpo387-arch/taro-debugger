@@ -48,7 +48,7 @@ export class IpcTransportService extends DapTransportService {
         })
       );
 
-      const resolvedAddress = address || 'localhost:4711';
+      const resolvedAddress = address || 'localhost:8080';
 
       this.electronAPI.invoke('dap-invoke', { action: 'connect', address: resolvedAddress })
         .then(() => {

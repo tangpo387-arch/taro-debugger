@@ -53,22 +53,6 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - [Doc] docs/architecture/agentic-debug-architecture.md
 - **Dependencies**: WI-133
 
-## Electron Desktop Mode
-
-### WI-135: Restructure Electron Desktop Workspace & Runtime Separation
-
-- **Status**: 💡 Proposed
-- **Size**: M
-- **Description**: Separate Electron desktop runtime into an independent npm workspace under projects/taro-debugger-electron and copy Angular assets during build time
-- **Details**:
-  - Create projects/taro-debugger-electron workspace
-  - Move electron source files to projects/taro-debugger-electron/src/
-  - Implement copy-assets.js build script
-  - Update GDB IPC bridge to load local assets browser/index.html
-  - [Doc] docs/project/system-specification.md
-  - [Test] Verify Electron compiles, loads assets, and packages cleanly
-- **Dependencies**: none
-
 ## Low-Level Inspection
 
 ### WI-107: DapRegisterService Implementation

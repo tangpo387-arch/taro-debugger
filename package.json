@@ -24,11 +24,13 @@
     "test": "ng test dap-core --watch=false && ng test ui-shared --watch=false && ng test ui-editor --watch=false && ng test ui-inspection --watch=false && ng test ui-console --watch=false && ng test ui-assembly --watch=false && ng test taro-debugger-frontend --watch=false",
     "test:file": "ng test",
     "postinstall": "node scripts/postinstall.js",
-    "electron:build": "tsc -p tsconfig.electron.json",
+    "electron:build": "npm run build -w taro-debugger-electron",
     "electron:run": "electron . --no-sandbox",
     "electron:dev": "npm run electron:build && electron . --no-sandbox",
     "electron:start": "npm run build && npm run electron:build && electron . --no-sandbox",
     "electron:package": "npm run build && npm run electron:build && electron-builder -lw",
+    "session:build": "npm run build -w taro-session",
+    "session:start": "node dist/taro-session/taro-session.js",
     "lint:docs": "node scripts/doc-guard.js verify",
     "prepublish:npm": "npm run build",
     "publish:npm": "npm publish"
@@ -36,6 +38,9 @@
   "private": true,
   "license": "Apache-2.0",
   "packageManager": "npm@11.9.0",
+  "workspaces": [
+    "projects/*"
+  ],
   "dependencies": {
     "@angular/cdk": "~21.2.1",
     "@angular/common": "^21.2.0",
