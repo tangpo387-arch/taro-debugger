@@ -15,7 +15,7 @@
       </span>
       <div class="node-label">
         <span class="frame-id">#{{node.frame?.id}}</span>
-        <span class="frame-func" [matTooltip]="node.frame?.name">{{node.frame?.name | cppSignature}}</span>
+        <span class="frame-func" [matTooltip]="node.frame?.name" [matTooltipClass]="'taro-mono-tooltip'">{{node.frame?.name | cppSignature}}</span>
         @if (node.frame?.source) {
         <span class="frame-source">{{node.frame?.source?.name}}:{{node.frame?.line}}</span>
         }

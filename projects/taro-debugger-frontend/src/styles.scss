@@ -76,22 +76,32 @@ body {
 }
 
 /* ── Tooltip Customization ── */
-.assembly-tooltip {
+.mdc-tooltip__surface {
+  background-color: var(--mat-sys-surface) !important;
+  color: var(--mat-sys-on-surface) !important;
+  font-family: var(--font-sans) !important;
+  font-size: var(--text-xs) !important;
+  font-weight: var(--weight-regular) !important;
+  line-height: 1.2 !important;
+  padding: 3px 6px !important;
+  border: 1px solid var(--mat-sys-on-surface) !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  text-align: left !important;
+}
+
+.assembly-tooltip,
+.taro-mono-tooltip {
   /* The matTooltipClass is applied to the host wrapper. Let it be transparent. */
   max-width: 700px !important;
 }
 
-.assembly-tooltip .mdc-tooltip__surface {
-  background-color: var(--mat-sys-surface-container-highest) !important;
-  color: var(--mat-sys-on-surface) !important;
+.assembly-tooltip .mdc-tooltip__surface,
+.taro-mono-tooltip .mdc-tooltip__surface {
   font-family: var(--font-mono) !important;
   font-size: var(--text-sm) !important;
-  line-height: 1.5 !important;
+  line-height: 1.4 !important;
   white-space: pre-wrap !important;
   max-width: 700px !important;
-  padding: 12px 16px !important;
-  border: 1px solid var(--mat-sys-outline-variant) !important;
-  box-shadow: var(--mat-sys-shadow) !important;
-  border-radius: 4px !important;
-  text-align: left !important;
+  padding: 8px 12px !important;
 }
