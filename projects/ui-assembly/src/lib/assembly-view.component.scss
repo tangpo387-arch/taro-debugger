@@ -9,7 +9,8 @@
 .assembly-container {
   display: flex;
   flex-direction: column;
-  height: 100%; /* Height 100% since parent :host is display: block */
+  height: 100%;
+  /* Height 100% since parent :host is display: block */
   width: 100%;
   background-color: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
@@ -30,6 +31,7 @@
   &::-webkit-scrollbar {
     display: none;
   }
+
   scrollbar-width: none; // Firefox compatibility
   -ms-overflow-style: none; // IE/Edge compatibility
 }
@@ -108,9 +110,17 @@
 }
 
 @keyframes active-row-pulse {
-  0% { background-color: var(--mat-sys-secondary-container); }
-  50% { background-color: var(--mat-sys-surface-container-highest); }
-  100% { background-color: var(--mat-sys-secondary-container); }
+  0% {
+    background-color: var(--mat-sys-secondary-container);
+  }
+
+  50% {
+    background-color: var(--mat-sys-surface-container-highest);
+  }
+
+  100% {
+    background-color: var(--mat-sys-secondary-container);
+  }
 }
 
 .gutter {
@@ -149,14 +159,16 @@
 }
 
 .address {
-  flex: 0 0 112px; /* Standardized to 8px grid modulus */
+  flex: 0 0 112px;
+  /* Standardized to 8px grid modulus */
   color: var(--mat-sys-outline);
   font-size: var(--text-sm);
   overflow: hidden;
 }
 
 .offset {
-  flex: 0 0 56px; /* Standardized to 8px grid modulus */
+  flex: 0 0 56px;
+  /* Standardized to 8px grid modulus */
   color: var(--mat-sys-tertiary);
   font-size: var(--text-sm);
   overflow: hidden;
@@ -235,35 +247,35 @@
 }
 
 @keyframes loading-bar-anim {
-  0% { transform: translateX(-100%) scaleX(0.5); }
-  50% { transform: translateX(0%) scaleX(0.5); }
-  100% { transform: translateX(100%) scaleX(0.5); }
+  0% {
+    transform: translateX(-100%) scaleX(0.5);
+  }
+
+  50% {
+    transform: translateX(0%) scaleX(0.5);
+  }
+
+  100% {
+    transform: translateX(100%) scaleX(0.5);
+  }
 }
 
 @keyframes loading-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .floating-actions {
   position: absolute;
-  bottom: 24px;
+  bottom: 16px;
   right: 24px;
-  z-index: 100;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  
-  button {
-    box-shadow: var(--mat-sys-shadow);
-    transition: background-color 0.2s ease, color 0.2s ease;
-
-    &:disabled {
-      opacity: 1 !important;
-      background-color: var(--mat-sys-surface-container-high) !important;
-      color: var(--mat-sys-on-surface-variant) !important;
-      cursor: default;
-    }
-  }
+  z-index: 10;
 }
-
