@@ -25,7 +25,7 @@ audience: AI model performing role selection for each user request
   3. THIRD: ONLY after USER approval, execute `node scripts/update-wi.js WI-<ID> <status>`.
 - Before authoring, renaming, or modifying any document in docs/, you MUST load Skill: `[DEV:DOCS] Documentation Standards` for strict naming and formatting rules.
 - Before authoring, designing, or modifying any AI skill file in .agents/, you MUST load Skill: `[META:RULE] AI Skill Engineering` for prompt engineering constraints.
-- For any WI that meets the complexity gate (new architectural pattern, 3+ file changes, non-obvious protocol constraint, or Size M+), you MUST load Skill: `[PROJ:FLOW] Work Item Management` to review the Complexity Gate criteria.
+- When explicitly requested by the user to create or manage a Work Item, you MUST load Skill: `[PROJ:FLOW] Work Item Management` to ensure strict compliance with Work Item lifecycle controls and Complexity Gate criteria.
 
 </constraints>
 

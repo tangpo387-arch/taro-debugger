@@ -161,7 +161,8 @@ To ensure modularity and crash resilience, **the `taro-session` Server is the pr
 
 The **AI Companion and the active Debug Session are loosely coupled**: the session operates and persists independently of the AI companion's connection state, allowing GDB execution, log buffering, and breakpoint tracking to survive agent client lifecycle events.
 
-State management and data persistence are cleanly distributed across the layers as follows:| State Type | Primary Owner | Storage/Persistence Mechanism | Architectural Lifecycle |
+State management and data persistence are cleanly distributed across the layers as follows:
+| State Type | Primary Owner | Storage/Persistence Mechanism | Architectural Lifecycle |
 | :--- | :--- | :--- | :--- |
 | **Session Configurations** (paths, target binaries, arguments) | **`taro-session` Server** | Local Host Storage Directory (`config.json`). | Saved on creation. Loaded automatically when a session is resumed to relaunch GDB. |
 | **Breakpoints & Watchpoints Database** | **`taro-session` Server** | Local Host Storage Directory (`breakpoints.json`). | Persisted continuously by the server. Restored by the server sending corresponding DAP requests to GDB on startup or session resume. |

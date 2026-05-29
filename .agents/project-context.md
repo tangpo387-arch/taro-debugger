@@ -52,7 +52,7 @@ This document is purely an index and terminology outline. You are STRICTLY FORBI
 | Task Type | Layer | Primary Agent | Mandatory Trigger |
 | :--- | :--- | :--- | :--- |
 | Define or update requirements | — | `Product_Architect` | Load **Skill: `[DEV:ARCH] System Architecture`** |
-| Write any spec (WI, feature, or data schema) | — | `Product_Architect` | Load **Skill: `[PROJ:FLOW] Work Item Management`** |
+| Write any feature spec or design document | - | `Product_Architect` | Load **Skill: `[PROJ:FLOW] Work Item Management`** |
 | Write or format human-facing documentation (`docs/`) | — | `Product_Architect`, `Quality_Control_Reviewer` | Load **Skill: `[DEV:DOCS] Documentation Standards`** |
 | Write or design AI skill prompts (`.agents/skills/`) | — | `Product_Architect`, `Quality_Control_Reviewer` | Load **Skill: `[META:RULE] AI Skill Engineering`** |
 | Add a new UI feature | **UI** | `Lead_Engineer` | Load **Skill: `[DEV:ARCH] System Architecture`** |
