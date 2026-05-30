@@ -36,8 +36,10 @@ describe('DapSessionService', () => {
         transportType: 'websocket',
         launchMode: 'launch',
         executablePath: '/path/to/exe',
-        stopOnEntry: true
-      })
+        stopOnEntry: true,
+        sessionPath: '.tarodb'
+      }),
+      setConfig: vi.fn()
     };
 
     TestBed.configureTestingModule({
@@ -157,6 +159,110 @@ describe('DapSessionService', () => {
     });
   });
 
+  // ── Setup Handshake (WI-136) ───────────────────────────────────────────────
+
+  describe('Setup Handshake (WI-136)', () => {
+    /**
+     * Shared helper: configures mockTransport.sendRequest to respond in order:
+     *  1. setup channel → session-ready
+     *  2. all other requests → success response
+     * Also fires the 'initialized' DAP event after a short delay.
+     */
+    function wireFullStartSession(sessionReadyBody: object = {}): void {
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          if (req.channel === 'setup') {
+            (service as any).handleIncomingMessage({
+              channel: 'setup',
+              event: 'session-ready',
+              body: sessionReadyBody
+            });
+            return;
+          }
+          (service as any).handleIncomingMessage({
+            type: 'response',
+            request_seq: req.seq,
+            success: true,
+            command: req.command,
+            body: req.command === 'initialize'
+              ? { supportsTerminateRequest: true }
+              : {}
+          });
+        }, 0);
+      });
+
+      // Emit 'initialized' event after DAP initialize completes
+      setTimeout(() => {
+        (service as any).handleIncomingMessage({ type: 'event', event: 'initialized', seq: 100 });
+      }, 10);
+    }
+
+    it('should send open-session on the setup channel before DAP initialize', async () => {
+      // Arrange — wire the full session flow via shared helper
+      wireFullStartSession({
+        status: 'success',
+        sessionPath: '.tarodb',
+        config: { configuration: { program: '/exe', args: [], cwd: '/root' } }
+      });
+
+      // Act
+      const sessionPromise = service.startSession();
+      await vi.runAllTimersAsync();
+      await sessionPromise;
+
+      // Assert — open-session must be the very first sendRequest call
+      const calls = mockTransport.sendRequest.mock.calls;
+      const firstCall = calls[0][0];
+      expect(firstCall).toMatchObject({ channel: 'setup', command: 'open-session' });
+
+      // Assert — initialize must follow open-session
+      const openSessionIndex = calls.findIndex(
+        (args: any[]) => args[0].channel === 'setup' && args[0].command === 'open-session'
+      );
+      const initializeIndex = calls.findIndex(
+        (args: any[]) => args[0].command === 'initialize'
+      );
+      expect(initializeIndex).toBeGreaterThan(-1);
+      expect(openSessionIndex).toBeLessThan(initializeIndex);
+    });
+
+    it('should merge session-ready config into DapConfigService', async () => {
+      // Arrange
+      configService.getConfig.mockReturnValue({
+        serverAddress: 'ws://127.0.0.1:8080/session/client',
+        transportType: 'websocket',
+        launchMode: 'launch',
+        executablePath: '',
+        stopOnEntry: false,
+        sessionPath: '/my/session.tarodb'
+      });
+
+      const backendConfig = {
+        program: '/usr/bin/myapp',
+        args: ['--verbose', '--port=8080'],
+        cwd: '/workspace/project'
+      };
+
+      wireFullStartSession({
+        status: 'success',
+        sessionPath: '/my/session.tarodb',
+        config: { configuration: backendConfig }
+      });
+
+      // Act
+      const sessionPromise = service.startSession();
+      await vi.runAllTimersAsync();
+      await sessionPromise;
+
+      // Assert — setConfig must have been called with the backend-provided values
+      expect(configService.setConfig).toHaveBeenCalledWith(expect.objectContaining({
+        executablePath: '/usr/bin/myapp',
+        sourcePath: '/workspace/project',
+        programArgs: '--verbose --port=8080'
+      }));
+    });
+  });
+
   describe('Stop on Entry (WI-123)', () => {
     it('should send setFunctionBreakpoints(main) during session start if stopOnEntry is true', async () => {
       configService.getConfig.mockReturnValue({
@@ -164,11 +270,21 @@ describe('DapSessionService', () => {
         transportType: 'websocket',
         launchMode: 'launch',
         executablePath: '/path/to/exe',
-        stopOnEntry: true
+        stopOnEntry: true,
+        sessionPath: '.tarodb'
       });
 
       mockTransport.sendRequest.mockImplementation((req: any) => {
         setTimeout(() => {
+          // Handle setup handshake first
+          if (req.channel === 'setup') {
+            (service as any).handleIncomingMessage({
+              channel: 'setup',
+              event: 'session-ready',
+              body: { status: 'success', sessionPath: '.tarodb', config: { configuration: { program: '/path/to/exe', args: [], cwd: '/root' } } }
+            });
+            return;
+          }
           (service as any).handleIncomingMessage({
             type: 'response',
             request_seq: req.seq,
@@ -203,11 +319,20 @@ describe('DapSessionService', () => {
         transportType: 'websocket',
         launchMode: 'launch',
         executablePath: '/path/to/exe',
-        stopOnEntry: false
+        stopOnEntry: false,
+        sessionPath: '.tarodb'
       });
 
       mockTransport.sendRequest.mockImplementation((req: any) => {
         setTimeout(() => {
+          if (req.channel === 'setup') {
+            (service as any).handleIncomingMessage({
+              channel: 'setup',
+              event: 'session-ready',
+              body: { status: 'success', sessionPath: '.tarodb', config: { configuration: { program: '/path/to/exe', args: [], cwd: '/root' } } }
+            });
+            return;
+          }
           (service as any).handleIncomingMessage({
             type: 'response',
             request_seq: req.seq,
@@ -238,11 +363,20 @@ describe('DapSessionService', () => {
         transportType: 'websocket',
         launchMode: 'launch',
         executablePath: '/path/to/exe',
-        stopOnEntry: true
+        stopOnEntry: true,
+        sessionPath: '.tarodb'
       });
 
       mockTransport.sendRequest.mockImplementation((req: any) => {
         setTimeout(() => {
+          if (req.channel === 'setup') {
+            (service as any).handleIncomingMessage({
+              channel: 'setup',
+              event: 'session-ready',
+              body: { status: 'success', sessionPath: '.tarodb', config: { configuration: { program: '/path/to/exe', args: [], cwd: '/root' } } }
+            });
+            return;
+          }
           (service as any).handleIncomingMessage({
             type: 'response',
             request_seq: req.seq,
@@ -400,11 +534,20 @@ describe('DapSessionService', () => {
         transportType: 'websocket',
         launchMode: 'launch',
         executablePath: '/path/to/exe',
-        stopOnEntry: true
+        stopOnEntry: true,
+        sessionPath: '.tarodb'
       });
 
       mockTransport.sendRequest.mockImplementation((req: any) => {
         setTimeout(() => {
+          if (req.channel === 'setup') {
+            (service as any).handleIncomingMessage({
+              channel: 'setup',
+              event: 'session-ready',
+              body: { status: 'success', sessionPath: '.tarodb', config: { configuration: { program: '/path/to/exe', args: [], cwd: '/root' } } }
+            });
+            return;
+          }
           (service as any).handleIncomingMessage({
             type: 'response',
             request_seq: req.seq,

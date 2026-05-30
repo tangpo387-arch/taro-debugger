@@ -2,10 +2,11 @@
 title: Source File Responsibility Map
 scope: file-map, navigation, ownership, layers
 audience: [Human Engineer, Product_Architect, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-05-21
+last_updated: 2026-05-29
 related:
   - docs/architecture.md
   - .agents/project-context.md
+  - docs/archive/specs/setup-handshake-protocol.md
 ---
 
 # Source File Responsibility Map
@@ -78,6 +79,21 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | `projects/dap-core/src/lib/transport/ipc-transport.service.ts` | Electron IPC implementation of the transport contract; bridges DAP messages via Electron's `contextBridge` / `ipcRenderer` | Implements all `DapTransportService` abstract methods |
 | `projects/dap-core/src/lib/transport/transport-factory.service.ts` | Factory service creating Transport instances based on `TransportType` | `createTransport(type, address)` |
 | `projects/dap-core/src/lib/transport/electron-api.token.ts` | Injection Token for the Electron contextBridge API. | `ELECTRON_API` |
+
+## Backend Daemon (`taro-session`)
+
+> [!NOTE]
+> **Session Path is now client-driven.** The `--session-path` CLI argument is no longer mandatory at startup. The client frontend specifies the session directory via the setup channel (`open-session` / `new-session`) after establishing a WebSocket connection.
+> For the full server architecture, connection state machine, logging, and CLI reference, see 👉 [architecture/taro-session.md](architecture/taro-session.md).
+
+| File | Responsibility | Key Exports |
+| --- | --- | --- |
+| `projects/taro-session/src/server.ts` | WebSocket server multiplexer implementing the 4-state Connection State Machine (`UNINITIALIZED → INITIALIZING → READY → ERROR`). Handles setup channel, agent guard (close 4005), DAP gating, and `launch` argument validation. See spec: [setup-handshake-protocol.md](archive/specs/setup-handshake-protocol.md) | `WebSocketServer`, `ServerSessionState` |
+| `projects/taro-session/src/session.ts` | Session directory manager: creates and reads `.tarodb/` files (`config.json`, `breakpoints.json`, `chat.json`, `memory.md`) | `SessionManager`, `SessionConfig`, `DebuggerConfiguration` |
+| `projects/taro-session/src/gdb-process.ts` | GDB subprocess manager: spawns `gdb --interpreter=dap`, wraps stdin/stdout, handles process exit cascades | `GdbProcessManager` |
+| `projects/taro-session/src/mcp-host.ts` | Model Context Protocol (MCP) host: registers workspace inspection tools and routes JSON-RPC 2.0 agent requests | `McpHost` |
+| `projects/taro-session/src/logger.ts` | Append-only file logger: writes `stdout.log`, `stderr.log`, `dap.log` under the configured log directory. Default path: `os.tmpdir()/taro-session-logs-<PID>/logs/` | `SessionLogger` |
+| `projects/taro-session/src/taro-session.ts` | CLI entrypoint: parses arguments (`--port`, `--gdb-path`, `--log-path`, `--one-shot`), instantiates `SessionLogger` and `WebSocketServer`, manages the connection-loop lifecycle | `bootstrap()` |
 
 ## UI Shared Foundation (@taro/ui-shared)
 

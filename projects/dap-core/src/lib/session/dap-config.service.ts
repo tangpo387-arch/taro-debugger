@@ -27,6 +27,13 @@ export interface DapConfig {
 
   /** Whether the debugger should automatically stop at the program entry point (main) */
   stopOnEntry: boolean;
+
+  /**
+   * Path to the .tarodb session directory on the local filesystem.
+   * Sent to taro-session via the setup channel before DAP initialization.
+   * Defaults to '.tarodb' relative to the daemon working directory.
+   */
+  sessionPath: string;
 }
 
 /**
@@ -48,7 +55,8 @@ export class DapConfigService {
     executablePath: '',
     sourcePath: '',
     programArgs: '',
-    stopOnEntry: true
+    stopOnEntry: true,
+    sessionPath: '.tarodb'
   };
 
   constructor() {

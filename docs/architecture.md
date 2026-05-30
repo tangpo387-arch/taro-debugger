@@ -2,11 +2,12 @@
 title: Master System Architecture & Topology
 scope: architecture, layers, client-server, websocket-multiplexing, data-persistence
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-05-24
+last_updated: 2026-05-30
 related:
   - docs/project/system-specification.md
   - docs/architecture/transport-layer.md
   - docs/architecture/session-layer.md
+  - docs/architecture/taro-session.md
   - docs/architecture/agentic-debug-architecture.md
 ---
 
@@ -70,11 +71,12 @@ To ensure optimal crash resilience and separation of concerns, the systems follo
 - **DI Encapsulation**: Guarantees session isolation by binding all debug state services (`DapSessionService`, `DapVariablesService`, etc.) to the lifecycle of the parent `DebuggerComponent` to prevent context leakages.
 
 ### 2.2 `taro-session` (Process Execution & Session Persistence)
-- **Subprocess Isolation**: Spawns GDB (`gdb --interpreter=dap`) as an isolated child process of the daemon, guarding against frontend interface pauses.
-- **Orphan Prevention**: Monitors socket connections. If the primary `/session/client` connection terminates unexpectedly, it triggers graceful debugger termination and forcefully kills GDB within a 2-second grace period.
-- **Unified Persistence Map**: Owns and maintains the unified `.tarodb` directory containing flat, human-readable JSON/Markdown files (`config.json`, `breakpoints.json`, `chat.json`, `memory.md`, and `logs/`).
-- **Telemetry Brokering**: Multiplexes raw GDB standard output events and console traces simultaneously to both the frontend client and the Agentic AI companion.
-- **Intelligent Diagnostics (MCP)**: Hosts a Model Context Protocol (MCP) server, offering cognitive tools (workspace file inspection, compilation diagnostics, Z3 SMT solver constraint-checking).
+- **Subprocess Isolation**: Spawns and owns the `gdb --interpreter=dap` child process.
+- **Unified Persistence**: Maintains the `.tarodb` directory (`config.json`, `breakpoints.json`, `chat.json`, `memory.md`, `logs/`).
+- **Telemetry Brokering**: Multiplexes GDB output to both `/session/client` and `/session/agent` simultaneously.
+- **Intelligent Diagnostics**: Hosts an MCP server for workspace inspection, compilation diagnostics, and Z3 solver tools.
+
+> For the full server responsibility breakdown, connection state machine, graceful disconnect policy, logging configuration, and CLI reference, see 👉 [architecture/taro-session.md](architecture/taro-session.md).
 
 ---
 
@@ -104,8 +106,12 @@ sequenceDiagram
     participant GDB as GDB Subprocess
 
     FE->>TS: Connect to ws://localhost:8080/session/client
-    TS->>TS: Read `.tarodb/config.json` & `.tarodb/breakpoints.json`
-    TS->>GDB: Spawn `gdb --interpreter=dap`
+    TS-->>FE: (Server in UNINITIALIZED state — awaiting setup)
+    FE->>TS: setup channel: open-session { sessionPath }
+    TS->>TS: INITIALIZING — read config.json, spawn GDB
+    TS-->>FE: setup: session-ready { config }
+    Note over FE,TS: Server transitions to READY state
+    FE->>TS: DAP initialize request
     GDB-->>TS: Emit "initialized" event
     TS-->>FE: Broadcast "initialized" event
     FE->>TS: Send "configurationDone" DAP request
@@ -113,12 +119,7 @@ sequenceDiagram
     GDB-->>TS: Emit GDB start execution
     TS-->>FE: Broadcast "running" event
 ```
-> [Diagram: Connection and subprocess startup flow. The frontend establishes a connection to the daemon. The daemon loads local configs/breakpoints from disk, spawns GDB, captures the initialized event, and forwards it to the frontend. The frontend completes configuration done handshake, which is routed to GDB to start target execution.]
-
-### 4.2 Graceful Disconnect & Orphan Sweeper
-If the user closes the frontend tab or navigation triggers a disconnect, `taro-session` initiates standard process cleanup to leave zero orphan debuggers on the host machine:
-1. **DAP Disconnect**: The daemon sends a `disconnect` DAP request to GDB.
-2. **Cascading Kill**: If the process is not fully terminated within `2000ms`, the GDB process manager issues `SIGTERM` followed by a final `SIGKILL` to reclaim OS resources.
+> [Diagram: Updated session lifecycle flow including the new Setup Handshake Phase (WI-136). The frontend connects and immediately enters the UNINITIALIZED state. It must send a `setup` channel command (`open-session` or `new-session`) before any standard DAP messages. Only upon receiving `session-ready` does the server enter the `READY` state, after which DAP initialization proceeds as normal.]
 
 ---
 
@@ -129,6 +130,7 @@ The system documentation is organized logically into detailed modules:
 ### 5.1 System Integration & Topology
 - **Master Index (This Document)**: Overview of frontend-backend client-server decoupling and topology.
 - **System Specification**: Detailed component-level specifications and deployment constraints: 👉 [system-specification.md](project/system-specification.md).
+- **taro-session Daemon**: Full server responsibilities, connection state machine, logging, and CLI reference: 👉 [architecture/taro-session.md](architecture/taro-session.md).
 - **Agentic Debug Architecture**: Cognitive companion, MCP tool details, SMT solver interfaces, and chat-log persistence: 👉 [architecture/agentic-debug-architecture.md](architecture/agentic-debug-architecture.md).
 
 ### 5.2 Frontend Components & UI Layer (`taro-debugger-frontend`)

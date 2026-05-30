@@ -10,6 +10,20 @@
       <form [formGroup]="form" (ngSubmit)="onConnect()" novalidate>
         <div class="section-label">Connection Settings</div>
 
+        <!-- Session Directory Path -->
+        <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+          <mat-label>Session Directory Path</mat-label>
+          <input matInput id="sessionPathInputElectron" formControlName="sessionPath"
+                 placeholder="e.g., .tarodb">
+          <mat-icon matSuffix>folder_shared</mat-icon>
+          @if (!form.controls.sessionPath.errors) {
+            <mat-hint>Path to local .tarodb debugger session folder</mat-hint>
+          }
+          @if (form.controls.sessionPath.touched && form.controls.sessionPath.hasError('required')) {
+            <mat-error>Session directory path is required</mat-error>
+          }
+        </mat-form-field>
+
         <div class="mode-selector-wrapper">
           <span class="mode-label">Launch Mode</span>
           <mat-button-toggle-group formControlName="launchMode" id="launchModeToggle"

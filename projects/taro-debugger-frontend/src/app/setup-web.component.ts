@@ -57,7 +57,11 @@ export class SetupWebComponent implements OnInit, OnDestroy {
     }),
     sourcePath: new FormControl('', { nonNullable: true }),
     programArgs: new FormControl('', { nonNullable: true }),
-    stopOnEntry: new FormControl(true, { nonNullable: true })
+    stopOnEntry: new FormControl(true, { nonNullable: true }),
+    sessionPath: new FormControl('.tarodb', {
+      nonNullable: true,
+      validators: Validators.required
+    })
   });
 
   private readonly router = inject(Router);
@@ -73,7 +77,8 @@ export class SetupWebComponent implements OnInit, OnDestroy {
       executablePath: existingConfig.executablePath,
       sourcePath: existingConfig.sourcePath,
       programArgs: existingConfig.programArgs,
-      stopOnEntry: existingConfig.stopOnEntry
+      stopOnEntry: existingConfig.stopOnEntry,
+      sessionPath: existingConfig.sessionPath || '.tarodb'
     });
 
     // 2. Adjust initial validation based on loaded launchMode

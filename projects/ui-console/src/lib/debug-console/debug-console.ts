@@ -1,11 +1,12 @@
 import {
   Component,
   OnInit,
-  OnDestroy,
   ViewChild,
   inject,
   ChangeDetectorRef,
   ElementRef,
+  DestroyRef,
+  ViewRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -39,10 +40,11 @@ import { DapLogService } from '../dap-log.service';
   templateUrl: './debug-console.html',
   styleUrls: ['./debug-console.scss'],
 })
-export class DebugConsoleComponent implements OnInit, OnDestroy {
+export class DebugConsoleComponent implements OnInit {
   private readonly logService = inject(DapLogService);
   private readonly dapSession = inject(DapSessionService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
 
   public readonly consoleLogs$: Observable<LogEntry[]> = this.logService.consoleLogs$;
 
@@ -84,13 +86,19 @@ export class DebugConsoleComponent implements OnInit, OnDestroy {
         this.pendingEvaluateSeq = msg.seq;
       }
     });
-  }
 
-  public ngOnDestroy(): void {
-    this.stateSubscription?.unsubscribe();
-    this.logSubscription?.unsubscribe();
-    this.trafficSubscription?.unsubscribe();
-    this.expandedLogs.clear();
+    // Register all teardown logic via DestroyRef so ngOnDestroy is not needed.
+    // Cancels any in-flight evaluate before the view is torn down, which clears
+    // the 30s timeout timer and prevents callbacks firing on a destroyed view.
+    this.destroyRef.onDestroy(() => {
+      if (this.evaluateInFlight$.value) {
+        this.onCancelEvaluate();
+      }
+      this.stateSubscription?.unsubscribe();
+      this.logSubscription?.unsubscribe();
+      this.trafficSubscription?.unsubscribe();
+      this.expandedLogs.clear();
+    });
   }
 
   public trackByLog(_index: number, item: LogEntry): string {
@@ -149,7 +157,9 @@ export class DebugConsoleComponent implements OnInit, OnDestroy {
       this.pendingEvaluateSeq = undefined;
     }
     this.evaluateInFlight$.next(false);
-    this.cdr.detectChanges();
+    if (!(this.cdr as ViewRef).destroyed) {
+      this.cdr.detectChanges();
+    }
   }
 
   public scrollToBottom(): void {

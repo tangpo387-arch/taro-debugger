@@ -133,7 +133,8 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     executablePath: '',
     sourcePath: '',
     programArgs: '',
-    stopOnEntry: true
+    stopOnEntry: true,
+    sessionPath: '.tarodb'
   };
 
   /** Current execution state (used for non-async pipe scenarios) */

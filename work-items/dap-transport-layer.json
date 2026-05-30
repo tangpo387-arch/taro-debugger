@@ -594,6 +594,34 @@
         "created": "2026-05-24",
         "created_by": "Antigravity-Agent"
       }
+    },
+    {
+      "id": "WI-136",
+      "title": "Implement taro-session Connection State Machine & Setup Handshake",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Introduce a formal connection state machine in taro-session and taro-debugger. Client performs setup handshake before standard DAP initialization.",
+      "details": [
+        "Add connection state machine and setup command handler to server.ts",
+        "Enforce launch parameter validation",
+        "Guard agent socket connection",
+        "Update frontend config and forms with sessionPath",
+        "Update startSession to perform setup handshake and populate config",
+        "Update docs/architecture and filemap with docs/archive/specs/setup-handshake-protocol.md",
+        "Provide a narrative link in docs/architecture.md mapping the websocket bridge setup phase to the setup handshake protocol spec",
+        "[Doc] docs/archive/specs/setup-handshake-protocol.md",
+        "[Test] Verify state gating and connection rejection"
+      ],
+      "timeline": {
+        "created": "2026-05-29",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-30"
+      }
     }
   ]
 }

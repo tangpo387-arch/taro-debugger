@@ -47,7 +47,7 @@ export class WebSocketTransportService extends DapTransportService {
       };
 
       this.socket.onmessage = (event: MessageEvent) => {
-        // Use a Promise Queue to ensure WebSocket events are processed sequentially, 
+        // Use a Promise Queue to ensure WebSocket events are processed sequentially,
         // avoiding out-of-order execution during asynchronous Blob parsing
         this.messageQueue = this.messageQueue.then(async () => {
           try {

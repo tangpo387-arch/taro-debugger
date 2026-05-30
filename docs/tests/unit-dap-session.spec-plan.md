@@ -3,8 +3,8 @@ title: DapSessionService — Unit Spec Plan
 scope: unit-test
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 target-file: projects/dap-core/src/lib/session/dap-session.service.ts
-related-wi: [WI-41, WI-86, WI-89, WI-93, WI-126]
-last_updated: 2026-05-27
+related-wi: [WI-41, WI-86, WI-89, WI-93, WI-126, WI-136]
+last_updated: 2026-05-30
 ---
 
 # DapSessionService — Unit Spec Plan
@@ -16,6 +16,10 @@ Fully isolated tests for `DapSessionService`. Focuses on DAP session lifecycle, 
 ---
 
 ## Test Cases
+
+* **Setup Handshake (WI-136)**
+  * Verify that `startSession()` sends an `open-session` command on the `setup` channel before any standard DAP `initialize` request.
+  * Verify that on receiving `session-ready`, `startSession()` calls `configService.setConfig()` with `executablePath`, `sourcePath`, and `programArgs` populated from the backend-returned configuration.
 
 * **Sequence ID management**
   * Verify that `seq` increments correctly when sending requests.

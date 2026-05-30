@@ -196,7 +196,52 @@ export class DapSessionService implements OnDestroy {
     }
 
     this.executionStateSubject.next('starting');
-    // ... (rest of the code remains same until end of startSession)
+
+    // ── Setup Handshake Phase ───────────────────────────────────────────────
+    // Per WI-136 spec: the client MUST send a setup channel command and await
+    // session-ready before issuing any standard DAP messages.
+    const setupResultPromise = firstValueFrom(
+      this.eventSubject.pipe(
+        filter((e: any) =>
+          e.channel === 'setup' &&
+          (e.event === 'session-ready' || e.event === 'session-failed')
+        ),
+        timeout(10000)
+      )
+    );
+
+    // Send open-session setup envelope
+    this.transport.sendRequest({
+      channel: 'setup',
+      command: 'open-session',
+      arguments: {
+        sessionPath: config.sessionPath || '.tarodb'
+      }
+    } as any);
+
+    const setupResult: any = await setupResultPromise;
+
+    if (setupResult.event === 'session-failed') {
+      const reason = setupResult.body?.error || 'Unknown session setup failure';
+      throw new Error(`Session setup failed: ${reason}`);
+    }
+
+    // session-ready: merge returned configuration into DapConfigService so that
+    // the frontend UI reflects what the backend actually loaded from config.json.
+    if (setupResult.body?.config?.configuration) {
+      const backendConfig = setupResult.body.config.configuration;
+      const currentConfig = this.configService.getConfig();
+      this.configService.setConfig({
+        ...currentConfig,
+        executablePath: backendConfig.program || currentConfig.executablePath,
+        sourcePath: backendConfig.cwd || currentConfig.sourcePath,
+        programArgs: Array.isArray(backendConfig.args)
+          ? backendConfig.args.join(' ')
+          : currentConfig.programArgs
+      });
+    }
+
+    // ── Standard DAP Initialization Phase ──────────────────────────────────
 
     const initializedPromise = firstValueFrom(
       this.eventSubject.pipe(filter(e => e.event === 'initialized'))
@@ -1014,6 +1059,14 @@ export class DapSessionService implements OnDestroy {
   private handleIncomingMessage(msg: any): void {
     // Emit all incoming messages to the diagnostic traffic stream before processing (§4.6)
     this.trafficSubject.next(msg);
+
+    // ── Setup Channel Intercept ──────────────────────────────────────────────
+    // Messages from the taro-session setup channel (session-ready / session-failed)
+    // are not standard DAP messages; route them directly to the event subject.
+    if (msg.channel === 'setup') {
+      this.eventSubject.next(msg as any);
+      return;
+    }
 
     if (msg.type === 'response') {
       const response = msg as DapResponse;
