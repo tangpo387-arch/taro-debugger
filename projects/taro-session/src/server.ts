@@ -51,6 +51,8 @@ export class WebSocketServer {
 
   /** Current state of the /session/client connection lifecycle */
   private sessionState: ServerSessionState = 'UNINITIALIZED';
+  private exitedEventSent = false;
+  private terminatedEventSent = false;
 
   constructor(
     port: number,
@@ -103,26 +105,60 @@ export class WebSocketServer {
   private wireGdbEvents(): void {
     if (!this.gdbProcess) return;
 
+    const currentGdb = this.gdbProcess;
+
+    this.exitedEventSent = false;
+    this.terminatedEventSent = false;
+
     this.gdbProcess.onMessage((message) => {
+      // Discard messages if this GdbProcess has been superseded
+      if (this.gdbProcess !== currentGdb) return;
+
+      if (/"event"\s*:\s*"exited"/.test(message)) {
+        this.exitedEventSent = true;
+        this.logger.logStdout(`gdb Process exited, message ${message}`);
+      }
+      if (/"event"\s*:\s*"terminated"/.test(message)) {
+        this.terminatedEventSent = true;
+        this.logger.logStdout(`gdb Process terminated, message ${message}`);
+      }
       this.broadcastToSockets(message);
     });
 
     this.gdbProcess.onExit((code) => {
-      this.broadcastToSockets(
-        JSON.stringify({
-          seq: 10000,
-          type: 'event',
-          event: 'exited',
-          body: { exitCode: code }
-        })
-      );
-      this.broadcastToSockets(
-        JSON.stringify({
-          seq: 10001,
-          type: 'event',
-          event: 'terminated'
-        })
-      );
+      // Discard exit events if this GdbProcess has been superseded by a newer session
+      if (this.gdbProcess !== currentGdb) {
+        this.logger.logStdout('Ignored onExit: a new GDB process has already been spawned.');
+        return;
+      }
+
+      this.logger.logStdout(`gdb Process exit: ${code}, exited: ${this.exitedEventSent}, terminated: ${this.terminatedEventSent}`);
+      if (!this.exitedEventSent) {
+        this.exitedEventSent = true;
+        this.broadcastToSockets(
+          JSON.stringify({
+            seq: 10000,
+            type: 'event',
+            event: 'exited',
+            body: { exitCode: code }
+          })
+        );
+      }
+      if (!this.terminatedEventSent) {
+        this.terminatedEventSent = true;
+        this.broadcastToSockets(
+          JSON.stringify({
+            seq: 10001,
+            type: 'event',
+            event: 'terminated'
+          })
+        );
+      }
+
+      // Reset state to INITIALIZING upon GDB exit to prepare for standard initialize-driven restarts
+      this.sessionState = 'INITIALIZING';
+      this.gdbProcess = undefined;
+      this.logger.logStdout('Session state reset to INITIALIZING following GDB process exit.');
     });
   }
 
@@ -166,6 +202,40 @@ export class WebSocketServer {
             this.logger.logStderr('Attempted to route chat to Agent, but Agent is offline');
           }
           return;
+        }
+
+        // ── Auto-spawn GDB if we are in READY or INITIALIZING state and receive 'initialize' ──
+        if ((this.sessionState === 'READY' || this.sessionState === 'INITIALIZING') && msg.command === 'initialize') {
+          this.logger.logStdout('Auto-spawning GDB process on-demand for initialize request');
+          try {
+            // Cleanly terminate the prior GDB process (if it exists) to avoid orphaned subprocesses
+            if (this.gdbProcess) {
+              this.logger.logStdout('Terminating stale GDB process instance prior to starting new session');
+              await this.gdbProcess.terminate();
+            }
+
+            const gdbProcess = new GdbProcessManager(this.logger);
+            gdbProcess.spawn(this.gdbPath);
+            this.gdbProcess = gdbProcess;
+            
+            // Wire GDB event listeners
+            this.wireGdbEvents();
+            
+            // Transition to READY
+            this.sessionState = 'READY';
+          } catch (err: any) {
+            this.logger.logStderr(`Failed to spawn GDB on-demand: ${err.message}`);
+            const errorResponse = JSON.stringify({
+              seq: 0,
+              type: 'response',
+              request_seq: msg.seq ?? 0,
+              success: false,
+              command: msg.command,
+              message: `Failed to initialize debugger backend: ${err.message}`
+            });
+            this.sendToClientAsBlob(errorResponse);
+            return;
+          }
         }
 
         // ── DAP Gate: reject if not READY ────────────────────────────────────

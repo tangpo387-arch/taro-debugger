@@ -167,7 +167,10 @@ export class DapSessionService implements OnDestroy {
    * 3. Wait for initialized event (configurationDone is handled internally)
    * 4. Send launch/attach request (response returns after configurationDone)
    */
-  public async startSession(): Promise<DapResponse> {
+  /**
+   * Establishes the underlying connection to the debug transport (e.g., WebSocket).
+   */
+  public async connectTransport(): Promise<void> {
     const config = this.configService.getConfig();
     if (config.transportType === 'websocket' && !config.serverAddress) {
       throw new Error('Server address is empty');
@@ -194,14 +197,17 @@ export class DapSessionService implements OnDestroy {
         complete: () => this.handleIncomingTransportComplete()
       });
     }
+  }
 
-    this.executionStateSubject.next('starting');
-
-    // ── Setup Handshake Phase ───────────────────────────────────────────────
-    // Per WI-136 spec: the client MUST send a setup channel command and await
-    // session-ready before issuing any standard DAP messages.
-    // We also monitor '_transportError' to fail immediately on socket error/close
-    // rather than waiting for a delayed timeout.
+  /**
+   * Performs the DAP session handshake and complete initialization sequence.
+   * Assumes the underlying transport is already connected.
+   */
+  /**
+   * Sends the 'new-session' command on the setup channel and awaits session-ready.
+   */
+  public async createNewSession(): Promise<void> {
+    const config = this.configService.getConfig();
     const setupResultPromise = firstValueFrom(
       this.eventSubject.pipe(
         filter((e: any) =>
@@ -212,30 +218,52 @@ export class DapSessionService implements OnDestroy {
       )
     );
 
-    // Send setup handshake command dynamically based on configured setupMode
-    if (config.setupMode === 'new') {
-      this.transport.sendRequest({
-        channel: 'setup',
-        command: 'new-session',
-        arguments: {
-          sessionPath: config.sessionPath,
-          config: {
-            program: config.executablePath,
-            args: config.programArgs ? config.programArgs.split(' ').filter(a => a.length > 0) : [],
-            cwd: config.sourcePath || undefined
-          }
+    this.transport.sendRequest({
+      channel: 'setup',
+      command: 'new-session',
+      arguments: {
+        sessionPath: config.sessionPath,
+        config: {
+          program: config.executablePath,
+          args: config.programArgs ? config.programArgs.split(' ').filter(a => a.length > 0) : [],
+          cwd: config.sourcePath || undefined
         }
-      } as any);
-    } else {
-      this.transport.sendRequest({
-        channel: 'setup',
-        command: 'open-session',
-        arguments: {
-          sessionPath: config.sessionPath || '.tarodb'
-        }
-      } as any);
-    }
+      }
+    } as any);
 
+    await this.handleSetupHandshakeResult(setupResultPromise);
+  }
+
+  /**
+   * Sends the 'open-session' command on the setup channel and awaits session-ready.
+   */
+  public async openExistingSession(): Promise<void> {
+    const config = this.configService.getConfig();
+    const setupResultPromise = firstValueFrom(
+      this.eventSubject.pipe(
+        filter((e: any) =>
+          (e.channel === 'setup' && (e.event === 'session-ready' || e.event === 'session-failed')) ||
+          e.event === '_transportError'
+        ),
+        timeout(10000)
+      )
+    );
+
+    this.transport.sendRequest({
+      channel: 'setup',
+      command: 'open-session',
+      arguments: {
+        sessionPath: config.sessionPath || '.tarodb'
+      }
+    } as any);
+
+    await this.handleSetupHandshakeResult(setupResultPromise);
+  }
+
+  /**
+   * Common result handling helper for the setup channel handshake response.
+   */
+  private async handleSetupHandshakeResult(setupResultPromise: Promise<any>): Promise<void> {
     let setupResult: any;
     try {
       setupResult = await setupResultPromise;
@@ -274,9 +302,18 @@ export class DapSessionService implements OnDestroy {
           : currentConfig.programArgs
       });
     }
+  }
+
+  /**
+   * Performs the DAP session handshake and complete initialization sequence.
+   * Assumes the underlying transport is already connected.
+   */
+  private async initializeSession(): Promise<DapResponse> {
+    const config = this.configService.getConfig();
+
+    this.executionStateSubject.next('starting');
 
     // ── Standard DAP Initialization Phase ──────────────────────────────────
-
     const initializedPromise = firstValueFrom(
       this.eventSubject.pipe(filter(e => e.event === 'initialized'))
     );
@@ -327,6 +364,31 @@ export class DapSessionService implements OnDestroy {
   }
 
   /**
+   * Starts a complete DAP Session.
+   * 
+   * Follows the standard DAP message flow:
+   * 1. Establish underlying Transport connection
+   * 2. Send initialize request
+   * 3. Wait for initialized event (configurationDone is handled internally)
+   * 4. Send launch/attach request (response returns after configurationDone)
+   */
+  public async startSession(): Promise<DapResponse> {
+    this.assertState(['disconnected', 'idle', 'error'], 'startSession');
+    await this.connectTransport();
+
+    const config = this.configService.getConfig();
+    this.executionStateSubject.next('starting');
+
+    // ── Setup Handshake Phase ───────────────────────────────────────────────
+    if (config.setupMode === 'new') {
+      await this.createNewSession();
+    } else {
+      await this.openExistingSession();
+    }
+    return this.initializeSession();
+  }
+
+  /**
    * Decides whether to call launch or attach based on configuration (internal use)
    */
   private async launchOrAttach(): Promise<DapResponse> {
@@ -354,7 +416,7 @@ export class DapSessionService implements OnDestroy {
     if (state === 'disconnected' || state === 'error') {
       return;
     }
-    else if (state !== 'idle') {
+    else if ((state !== 'idle') && (state !== 'stopped')) {
       throw new DapFatalException(`Cannot disconnect from state '${state}'`);
     }
 
@@ -419,6 +481,28 @@ export class DapSessionService implements OnDestroy {
   }
 
   /**
+   * Asserts that the session is in one of the allowed execution states.
+   * Throws a DapFatalException if the current state is not allowed.
+   */
+  private assertState(allowedStates: ExecutionState[], actionName: string): void {
+    const currentState = this.executionStateSubject.value;
+    if (!allowedStates.includes(currentState)) {
+      throw new DapFatalException(
+        `Cannot perform '${actionName}' from execution state '${currentState}'. Allowed states: ${allowedStates.join(', ')}`
+      );
+    }
+  }
+
+  /**
+   * Public API to start the DAP protocol handshake sequence.
+   * Assumes the transport is connected and the session configuration is loaded.
+   */
+  public async start(): Promise<DapResponse> {
+    this.assertState(['disconnected', 'idle', 'error'], 'start');
+    return this.initializeSession();
+  }
+
+  /**
    * Public API for restarting the debug session.
    *
    * Hierarchical strategy (R-CS5):
@@ -437,13 +521,14 @@ export class DapSessionService implements OnDestroy {
       await this.stop();
     }
     // For terminated/idle: disconnect() would be a no-op, so go straight to startSession.
-    await this.startSession();
+    await this.initializeSession();
   }
 
   /**
    * Continue execution
    */
   public async continue(): Promise<DapResponse> {
+    this.assertState(['stopped'], 'continue');
     if (this.commandInFlightSubject.value) {
       return Promise.resolve({ seq: 0, type: 'response', command: 'continue', success: true, request_seq: 0 });
     }

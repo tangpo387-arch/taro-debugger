@@ -257,8 +257,6 @@ export class DebuggerComponent implements OnInit, OnDestroy {
       this.logService.appendDapLog(msg);
     });
 
-    await this.startSession();
-
     // Initialize global keyboard shortcuts (F5-F11)
     this.initShortcuts();
 
@@ -267,6 +265,8 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
     // Initialize frame selection serialization stream (WI-42)
     this.initFrameSelectionStream();
+
+    this.startSession();
   }
 
   /**
@@ -836,7 +836,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   /** Start new session (Run) */
   public async onRun(): Promise<void> {
     try {
-      await this.startSession();
+      await this.dapSession.start();
     } catch (e: any) {
       this.logService.consoleLog(`Run failed: ${e.message}`, 'error', 'system');
     }
