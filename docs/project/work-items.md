@@ -54,7 +54,7 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
 
 ### WI-141: Extract DapBreakpointManager & DapThreadManager
 
-- **Status**: 💡 Proposed
+- **Status**: ⏳ Pending
 - **Size**: L
 - **Description**: Decompose DapSessionService Phase 1: extract breakpoint and thread management into dedicated services to reduce God Object scope.
 - **Details**:

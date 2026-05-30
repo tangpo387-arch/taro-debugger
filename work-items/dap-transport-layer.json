@@ -704,7 +704,7 @@
       "title": "Extract DapBreakpointManager & DapThreadManager",
       "featureGroup": "DAP Transport Layer",
       "metadata": {
-        "status": "proposed",
+        "status": "pending",
         "size": "L",
         "milestone": "v1.0",
         "dependencies": [

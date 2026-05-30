@@ -6,6 +6,8 @@ import { DapSessionService } from './session/dap-session.service';
 import { DapConfigService } from './session/dap-config.service';
 import { DapAssemblyCacheService } from './session/dap-assembly-cache.service';
 import { DapMemoryService } from './session/dap-memory.service';
+import { DapBreakpointManager } from './session/dap-breakpoint-manager.service';
+import { DapThreadManager } from './session/dap-thread-manager.service';
 
 /**
  * Provides the core DAP library services.
@@ -21,6 +23,8 @@ export function provideDapCore(): EnvironmentProviders {
     DapConfigService,
     DapAssemblyCacheService,
     DapMemoryService,
+    DapBreakpointManager,
+    DapThreadManager,
     // Note: ELECTRON_API token should be provided by the host application
     // if IPC transport is used.
   ]);

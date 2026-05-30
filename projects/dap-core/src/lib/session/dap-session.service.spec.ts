@@ -4,6 +4,8 @@ import { DapConfigService } from './dap-config.service';
 import { TransportFactoryService } from '../transport/transport-factory.service';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Subject, of, BehaviorSubject } from 'rxjs';
+import { DapBreakpointManager } from './dap-breakpoint-manager.service';
+import { DapThreadManager } from './dap-thread-manager.service';
 
 describe('DapSessionService', () => {
   let service: DapSessionService;
@@ -45,6 +47,8 @@ describe('DapSessionService', () => {
     TestBed.configureTestingModule({
       providers: [
         DapSessionService,
+        DapBreakpointManager,
+        DapThreadManager,
         { provide: TransportFactoryService, useValue: transportFactory },
         { provide: DapConfigService, useValue: configService }
       ]

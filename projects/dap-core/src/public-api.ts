@@ -10,6 +10,8 @@ export * from './lib/transport/ipc-transport.service';
 export * from './lib/transport/transport-factory.service';
 export * from './lib/transport/electron-api.token';
 export * from './lib/session/dap-session.service';
+export * from './lib/session/dap-breakpoint-manager.service';
+export * from './lib/session/dap-thread-manager.service';
 export * from './lib/session/dap-config.service';
 export * from './lib/session/assembly.types';
 export * from './lib/session/dap-assembly-cache.service';
@@ -18,3 +20,4 @@ export * from './lib/session/dap-thread';
 
 // Re-export error types that might be needed by consumers
 export { EvaluateCancelledError, DapFatalException } from './lib/session/dap-session.service';
+export type { VerifiedBreakpoint } from './lib/session/dap-breakpoint-manager.service';

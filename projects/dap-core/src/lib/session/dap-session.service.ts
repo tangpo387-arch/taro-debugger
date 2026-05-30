@@ -6,6 +6,8 @@ import { TransportFactoryService } from '../transport/transport-factory.service'
 import { DapConfigService } from './dap-config.service';
 import { DapRequest, DapResponse, DapEvent, DisassembleArguments, StepArguments, DapDisassemblyResponse, ReadMemoryArguments, ReadMemoryResponse, WriteMemoryArguments, WriteMemoryResponse, DapCapabilities } from '../dap.types';
 import { DapThreadSession } from './dap-thread';
+import { DapBreakpointManager, VerifiedBreakpoint } from './dap-breakpoint-manager.service';
+import { DapThreadManager } from './dap-thread-manager.service';
 
 /** Error thrown when an evaluate request is cancelled or times out */
 export class EvaluateCancelledError extends Error {
@@ -26,61 +28,30 @@ export class DapFatalException extends Error {
   }
 }
 
-/** A single verified breakpoint returned by the DAP adapter */
-export interface VerifiedBreakpoint {
-  /** The verified 1-based line number (may differ from the requested line) */
-  line: number;
-  /** Whether the adapter confirmed this breakpoint as verified */
-  verified: boolean;
-  /** Whether the breakpoint is currently enabled in the UI */
-  enabled: boolean;
-  /** Optional adapter-assigned breakpoint ID */
-  id?: number;
-  /** Optional message from the adapter (e.g., reason for unverified state) */
-  message?: string;
-}
-
 /** Execution State */
 export type ExecutionState = 'disconnected' | 'idle' | 'starting' | 'running' | 'stopped' | 'error';
-
-/** Internal state for tracking per-file setBreakpoints serialization */
-type BreakpointFileState = { inFlight: boolean; pending: number[] | undefined };
 
 @Injectable()
 export class DapSessionService implements OnDestroy {
   private readonly configService = inject(DapConfigService);
-
   private readonly transportFactory = inject(TransportFactoryService);
+  
+  // Sub-managers
+  private readonly breakpointManager = inject(DapBreakpointManager);
+  private readonly threadManager = inject(DapThreadManager);
+
   private seq = 1;
   private readonly pendingRequests = new Map<number, { resolve: (response: DapResponse) => void; reject: (error: any) => void; silentError?: boolean }>();
   private messageSubscription?: Subscription;
-  private readonly breakpointFileState = new Map<string, BreakpointFileState>();
-  /** 
-   * Centralized SSOT for verified breakpoints across all files. 
-   * Keyed by absolute file path. 
-   */
-  private readonly breakpointsMap = new Map<string, VerifiedBreakpoint[]>();
-
-  /** 
-   * Tracks IDs of system-injected breakpoints (e.g., stop-on-entry) 
-   * to distinguish them from user-defined breakpoints during 'stopped' events.
-   */
-  private readonly systemBreakpointIds = new Set<number>();
 
   /** Reactive stream of the current breakpoint state. */
-  private readonly breakpointsSubject = new BehaviorSubject<Map<string, VerifiedBreakpoint[]>>(new Map(this.breakpointsMap));
-  public readonly breakpoints$ = this.breakpointsSubject.asObservable();
+  public readonly breakpoints$ = this.breakpointManager.breakpoints$;
 
-  private readonly threadsSubject = new BehaviorSubject<DapThreadSession[]>([]);
-  public readonly threads$ = this.threadsSubject.asObservable();
+  /** Reactive stream of all active threads. */
+  public readonly threads$ = this.threadManager.threads$;
 
-  private readonly threadObjects = new Map<number, DapThreadSession>();
-  private threadEventsBuffer: any[] = [];
-  private threadEventTimeout: any = null;
-  private threadsQueryInFlight: Promise<void> | null = null;
-
-  private readonly activeThreadSubject = new BehaviorSubject<DapThreadSession | null>(null);
-  public readonly activeThread$ = this.activeThreadSubject.asObservable();
+  /** Reactive stream of the active thread. */
+  public readonly activeThread$ = this.threadManager.activeThread$;
 
   private readonly processInfoSubject = new BehaviorSubject<{ name: string; systemProcessId?: number } | null>(null);
   public readonly processInfo$ = this.processInfoSubject.asObservable();
@@ -119,11 +90,41 @@ export class DapSessionService implements OnDestroy {
   }
 
   public get threadsList(): DapThreadSession[] {
-    return this.threadsSubject.value;
+    return this.threadManager.threadsList;
   }
 
   public get executionState(): ExecutionState {
     return this.executionStateSubject.value;
+  }
+
+  /** @internal Getter for backward compatibility in unit tests */
+  public get systemBreakpointIds() {
+    return (this.breakpointManager as any).systemBreakpointIds;
+  }
+
+  /** @internal Getter for backward compatibility in unit tests */
+  public get threadObjects() {
+    return (this.threadManager as any).threadObjects;
+  }
+
+  /** @internal Getter for backward compatibility in unit tests */
+  public get breakpointsSubject() {
+    return (this.breakpointManager as any).breakpointsSubject;
+  }
+
+  /** @internal Getter for backward compatibility in unit tests */
+  public get breakpointsMap() {
+    return (this.breakpointManager as any).breakpointsMap;
+  }
+
+  /** @internal Getter for backward compatibility in unit tests */
+  public get activeThreadSubject() {
+    return (this.threadManager as any).activeThreadSubject;
+  }
+
+  /** @internal Getter for backward compatibility in unit tests */
+  public get threadsSubject() {
+    return (this.threadManager as any).threadsSubject;
   }
 
   public constructor() {
@@ -149,7 +150,6 @@ export class DapSessionService implements OnDestroy {
     this.transport.disconnect();
     this.connectionStatusSubject.next(false);
   }
-
 
   /**
    * Get connection status Observable (false until transport is established)
@@ -190,10 +190,6 @@ export class DapSessionService implements OnDestroy {
     }
   }
 
-  /**
-   * Performs the DAP session handshake and complete initialization sequence.
-   * Assumes the underlying transport is already connected.
-   */
   /**
    * Sends the 'new-session' command on the setup channel and awaits session-ready.
    */
@@ -356,12 +352,6 @@ export class DapSessionService implements OnDestroy {
 
   /**
    * Starts a complete DAP Session.
-   * 
-   * Follows the standard DAP message flow:
-   * 1. Establish underlying Transport connection
-   * 2. Send initialize request
-   * 3. Wait for initialized event (configurationDone is handled internally)
-   * 4. Send launch/attach request (response returns after configurationDone)
    */
   public async startSession(): Promise<DapResponse> {
     this.assertState(['disconnected', 'idle', 'error'], 'startSession');
@@ -399,8 +389,6 @@ export class DapSessionService implements OnDestroy {
 
   /**
    * Disconnect the session calmly.
-   * @param options.terminateDebuggee - Whether the debuggee should be terminated (default: true)
-   * @param options.restart - Whether this disconnect is part of a restart flow (default: false)
    */
   private async disconnect(options: { terminateDebuggee?: boolean } = {}): Promise<void> {
     const state = this.executionStateSubject.value;
@@ -427,7 +415,6 @@ export class DapSessionService implements OnDestroy {
 
   /**
    * Reset session completely to idle, without sending a DAP request.
-   * Clears resources directly (e.g., used to return from error to idle safely).
    */
   private reset(): void {
     for (const [seq, handler] of this.pendingRequests.entries()) {
@@ -441,8 +428,6 @@ export class DapSessionService implements OnDestroy {
 
   /**
    * Public API for stopping the debug session.
-   *
-   * Mandatorily sends a 'terminate' request to the debug adapter.
    */
   public async stop(): Promise<void> {
     const state = this.executionStateSubject.value;
@@ -473,7 +458,6 @@ export class DapSessionService implements OnDestroy {
 
   /**
    * Asserts that the session is in one of the allowed execution states.
-   * Throws a DapFatalException if the current state is not allowed.
    */
   private assertState(allowedStates: ExecutionState[], actionName: string): void {
     const currentState = this.executionStateSubject.value;
@@ -486,7 +470,6 @@ export class DapSessionService implements OnDestroy {
 
   /**
    * Public API to start the DAP protocol handshake sequence.
-   * Assumes the transport is connected and the session configuration is loaded.
    */
   public async start(): Promise<DapResponse> {
     this.assertState(['disconnected', 'idle', 'error'], 'start');
@@ -495,10 +478,6 @@ export class DapSessionService implements OnDestroy {
 
   /**
    * Public API for restarting the debug session.
-   *
-   * Hierarchical strategy (R-CS5):
-   * 1. If the adapter supports 'restart', send 'restart' request.
-   * 2. Otherwise, perform a "Soft Restart": disconnect followed by startSession.
    */
   public async restart(): Promise<void> {
     const state = this.executionStateSubject.value;
@@ -517,16 +496,6 @@ export class DapSessionService implements OnDestroy {
 
   // ── Execution Control Commands ──────────────────────────────────────
 
-  /**
-   * Generic execution control command handler.
-   * Centralizes state assertion, commandInFlight guard, state transition guard,
-   * and resumption state handling for all step/continue commands.
-   *
-   * @param command The DAP command name (e.g., 'continue', 'next', 'stepIn')
-   * @param allThreadsContinued Whether resumption applies to all threads (true for continue, false for step commands)
-   * @param extraArgs Optional additional arguments to merge into the request (e.g., granularity)
-   * @param allowedStates Execution states from which this command is allowed (defaults to ['stopped'])
-   */
   private async executeStepCommand(
     command: string,
     allThreadsContinued: boolean,
@@ -540,7 +509,7 @@ export class DapSessionService implements OnDestroy {
     this.commandInFlightSubject.next(true);
     this.startStateTransitionGuard(command);
     try {
-      const threadId = this.activeThreadSubject.value?.id || 1;
+      const threadId = this.threadManager.activeThread?.id || 1;
       const args: StepArguments = { threadId, ...extraArgs };
       const response = await this.sendRequest(command, args);
       if (response.success) {
@@ -560,244 +529,28 @@ export class DapSessionService implements OnDestroy {
     }
   }
 
-  /**
-   * Continue execution
-   */
   public async continue(): Promise<DapResponse> {
     return this.executeStepCommand('continue', true);
   }
 
-  /**
-   * Step Over (Next)
-   */
   public async next(): Promise<DapResponse> {
     return this.executeStepCommand('next', false);
   }
 
-  /**
-   * Step Into
-   */
   public async stepIn(): Promise<DapResponse> {
     return this.executeStepCommand('stepIn', false);
   }
 
-  /**
-   * Step Out
-   */
   public async stepOut(): Promise<DapResponse> {
     return this.executeStepCommand('stepOut', false);
   }
 
-  /**
-   * Step Over at Instruction Level (Nexti)
-   */
   public async nextInstruction(): Promise<DapResponse> {
     return this.executeStepCommand('next', false, { granularity: 'instruction' });
   }
 
-  /**
-   * Step Into at Instruction Level (Stepi)
-   */
   public async stepInInstruction(): Promise<DapResponse> {
     return this.executeStepCommand('stepIn', false, { granularity: 'instruction' });
-  }
-
-  /**
-   * Synchronize breakpoints for a single source file with the DAP adapter.
-   * Per the DAP spec, this replaces all breakpoints for the given source.
-   * Implements R-CS4: Per-file serialization and last-write-wins for pending updates.
-   * 
-   * @param sourcePath Absolute path to the source file
-   * @param lines 1-based line numbers of all desired breakpoints in this file
-   * @returns Array of verified breakpoint results from the adapter
-   */
-  public async setBreakpoints(sourcePath: string, lines: number[]): Promise<VerifiedBreakpoint[]> {
-    const state = this.breakpointFileState.get(sourcePath) ?? { inFlight: false, pending: undefined };
-
-    // If a request for this file is already in progress, store the latest lines
-    // in the pending slot (last-write-wins) and exit early.
-    if (state.inFlight) {
-      state.pending = lines;
-      this.breakpointFileState.set(sourcePath, state);
-      return [];
-    }
-
-    state.inFlight = true;
-    state.pending = undefined;
-    this.breakpointFileState.set(sourcePath, state);
-
-    try {
-      // Only send enabled breakpoints to the DAP adapter
-      const existingBps = this.breakpointsMap.get(sourcePath) || [];
-      const enabledLines = lines.filter(line => {
-        const existing = existingBps.find(b => b.line === line);
-        return existing ? existing.enabled : true;
-      });
-
-      const breakpointArgs = enabledLines.map(line => ({ line }));
-      const response = await this.sendRequest('setBreakpoints', {
-        source: { path: sourcePath },
-        breakpoints: breakpointArgs,
-        lines: enabledLines
-      });
-
-      const rawBreakpoints: any[] = response.body?.breakpoints || [];
-      const verified = rawBreakpoints.map((bp: any, index: number) => {
-        const requestedLine = enabledLines[index];
-        // If the adapter relocated the breakpoint, we still want to keep the 'enabled' 
-        // status from the requested line.
-        const existing = existingBps.find(b => b.line === requestedLine);
-        return {
-          line: bp.line ?? requestedLine,
-          verified: bp.verified ?? false,
-          enabled: existing ? existing.enabled : true,
-          id: bp.id,
-          message: bp.message
-        };
-      });
-
-      // Also include the "disabled" breakpoints that were requested but not sent to DAP
-      const disabledLines = lines.filter(line => !enabledLines.includes(line));
-      const disabledBps: VerifiedBreakpoint[] = disabledLines.map(line => ({
-        line,
-        verified: false,
-        enabled: false
-      }));
-
-      const finalBps = [...verified, ...disabledBps].sort((a, b) => a.line - b.line);
-
-      // Update SSOT
-      this.breakpointsMap.set(sourcePath, finalBps);
-      this.breakpointsSubject.next(new Map(this.breakpointsMap));
-
-      return finalBps;
-    } finally {
-      const currentState = this.breakpointFileState.get(sourcePath);
-      if (currentState) {
-        currentState.inFlight = false;
-        const nextLines = currentState.pending;
-        currentState.pending = undefined;
-        this.breakpointFileState.set(sourcePath, currentState);
-
-        if (nextLines !== undefined) {
-          void this.setBreakpoints(sourcePath, nextLines);
-        }
-      }
-    }
-  }
-
-  /**
-   * Sets function breakpoints (symbolic breakpoints).
-   * @param breakpoints Array of function names or objects with name/condition
-   * @param isSystem Whether these are system-managed breakpoints (e.g., main entry)
-   */
-  public async setFunctionBreakpoints(breakpoints: { name: string; condition?: string }[], isSystem = false): Promise<any[]> {
-    const response = await this.sendRequest('setFunctionBreakpoints', {
-      breakpoints: breakpoints.map(bp => ({
-        name: bp.name,
-        condition: bp.condition
-      }))
-    });
-
-    const results = response.body?.breakpoints || [];
-
-    if (isSystem) {
-      results.forEach((bp: any) => {
-        if (bp.id !== undefined) {
-          this.systemBreakpointIds.add(bp.id);
-        }
-      });
-    }
-
-    return results;
-  }
-
-  /**
-   * Updates the local breakpoint intent and triggers synchronization with the DAP server.
-   * This provides immediate "optimistic" UI updates by showing requested breakpoints 
-   * as unverified before the server responds.
-   */
-  private async updateBreakpointIntent(sourcePath: string, lines: number[]): Promise<void> {
-    const existingBps = this.breakpointsMap.get(sourcePath) || [];
-
-    // Create optimistic list: 
-    // - Keep existing verified/disabled breakpoints if they are still in the 'lines' list
-    // - Add new breakpoints as unverified/enabled
-    const intentBps: VerifiedBreakpoint[] = lines.map(line => {
-      const existing = existingBps.find(b => b.line === line);
-      if (existing) return existing;
-      return { line, verified: false, enabled: true };
-    });
-
-    // Update local state immediately for optimistic UI
-    this.breakpointsMap.set(sourcePath, intentBps);
-    this.breakpointsSubject.next(new Map(this.breakpointsMap));
-
-    // Trigger real sync with DAP
-    await this.setBreakpoints(sourcePath, lines);
-  }
-
-  /**
-   * Toggles a breakpoint at a specific line.
-   * This is the primary entry point for Editor interactions.
-   */
-  public async toggleBreakpoint(sourcePath: string, line: number): Promise<void> {
-    const bps = this.breakpointsMap.get(sourcePath) || [];
-    const exists = bps.some(b => b.line === line);
-
-    let newLines: number[];
-    if (exists) {
-      newLines = bps.filter(b => b.line !== line).map(b => b.line);
-    } else {
-      newLines = [...bps.map(b => b.line), line];
-    }
-
-    await this.updateBreakpointIntent(sourcePath, newLines);
-  }
-
-  /**
-   * Toggles the enabled state of a specific breakpoint.
-   */
-  public async toggleBreakpointEnabled(sourcePath: string, line: number): Promise<void> {
-    const bps = this.breakpointsMap.get(sourcePath) || [];
-    const index = bps.findIndex(b => b.line === line);
-    if (index !== -1) {
-      bps[index].enabled = !bps[index].enabled;
-
-      // Update local state immediately for optimistic UI
-      this.breakpointsMap.set(sourcePath, [...bps]);
-      this.breakpointsSubject.next(new Map(this.breakpointsMap));
-
-      // Re-sync with DAP server (only send enabled ones)
-      const allLines = bps.map(b => b.line);
-      await this.setBreakpoints(sourcePath, allLines);
-    }
-  }
-
-  /**
-   * Removes a specific breakpoint.
-   */
-  public async removeBreakpoint(sourcePath: string, line: number): Promise<void> {
-    const bps = this.breakpointsMap.get(sourcePath) || [];
-    const filtered = bps.filter(b => b.line !== line);
-    const allLines = filtered.map(b => b.line);
-
-    await this.updateBreakpointIntent(sourcePath, allLines);
-  }
-
-  /**
-   * Internal helper to re-push all stored breakpoints to a new adapter session.
-   * Called during startSession sequence (DAP Configuration phase).
-   */
-  private async resyncAllBreakpointsInternal(): Promise<void> {
-    if (this.breakpointsMap.size === 0) return;
-
-    const syncPromises = Array.from(this.breakpointsMap.entries()).map(([path, bps]) => {
-      const lines = bps.map(b => b.line);
-      return this.setBreakpoints(path, lines);
-    });
-
-    await Promise.allSettled(syncPromises);
   }
 
   /**
@@ -809,7 +562,7 @@ export class DapSessionService implements OnDestroy {
     }
     this.commandInFlightSubject.next(true);
     try {
-      const threadId = this.activeThreadSubject.value?.id || 1;
+      const threadId = this.threadManager.activeThread?.id || 1;
       const response = await this.sendRequest('pause', { threadId });
       if (!response.success) {
         this.commandInFlightSubject.next(false);
@@ -821,98 +574,66 @@ export class DapSessionService implements OnDestroy {
     }
   }
 
-  /**
-   * Fetch threads and update the subjects. Called internally on 'stopped'.
-   */
+  // ── delegated Manager Methods ──────────────────────────────────────────
+
+  public async setBreakpoints(sourcePath: string, lines: number[]): Promise<VerifiedBreakpoint[]> {
+    return this.breakpointManager.setBreakpoints(sourcePath, lines);
+  }
+
+  public async setFunctionBreakpoints(breakpoints: { name: string; condition?: string }[], isSystem = false): Promise<any[]> {
+    return this.breakpointManager.setFunctionBreakpoints(breakpoints, isSystem);
+  }
+
+  public async toggleBreakpoint(sourcePath: string, line: number): Promise<void> {
+    return this.breakpointManager.toggleBreakpoint(sourcePath, line);
+  }
+
+  public async toggleBreakpointEnabled(sourcePath: string, line: number): Promise<void> {
+    return this.breakpointManager.toggleBreakpointEnabled(sourcePath, line);
+  }
+
+  public async removeBreakpoint(sourcePath: string, line: number): Promise<void> {
+    return this.breakpointManager.removeBreakpoint(sourcePath, line);
+  }
+
+  public async resyncAllBreakpointsInternal(): Promise<void> {
+    return this.breakpointManager.resyncAllBreakpointsInternal();
+  }
+
   public async fetchThreads(): Promise<void> {
-    if (this.threadsQueryInFlight) {
-      return this.threadsQueryInFlight;
-    }
-
-    this.threadsQueryInFlight = (async () => {
-      try {
-        const response = await this.sendRequest('threads');
-        if (response.success && response.body?.threads) {
-          const mapped = response.body.threads.map((t: any) => this.getOrCreateThreadObject(t));
-          this.threadsSubject.next(mapped);
-          const currentActive = this.activeThreadSubject.value;
-          const threadsList = response.body.threads;
-          if (threadsList.length > 0 && (currentActive === null || !threadsList.some((t: any) => t.id === currentActive.id))) {
-            this.activeThreadSubject.next(mapped[0]);
-          }
-        }
-      } catch (err) {
-        console.warn('Failed to fetch threads', err);
-        this.threadsSubject.next([]);
-      } finally {
-        this.threadsQueryInFlight = null;
-      }
-    })();
-
-    return this.threadsQueryInFlight;
+    return this.threadManager.fetchThreads();
   }
 
-  /**
-   * Returns or creates the rich ThreadObject for the raw thread payload.
-   */
-  private getOrCreateThreadObject(thread: import('../dap.types').DapThread): DapThreadSession {
-    let obj = this.threadObjects.get(thread.id);
-    if (!obj) {
-      obj = new DapThreadSession(this, thread);
-      this.threadObjects.set(thread.id, obj);
-    }
-    return obj;
-  }
-
-  /**
-   * Clears the execution-scoped stackTrace cache for all registered ThreadObjects.
-   */
   public clearAllThreadCaches(): void {
-    this.threadObjects.forEach((thread) => thread.clearCache());
+    this.threadManager.clearAllThreadCaches();
   }
 
-  /**
-   * Set the current active thread and trigger a stackTrace refresh
-   */
   public setCurrentThread(thread: DapThreadSession): void {
-    if (this.activeThreadSubject.value?.id === thread.id) {
-      return;
-    }
-    this.activeThreadSubject.next(thread);
-    // Emitting a synthetic stopped event to trigger debugger.component.ts to reload the call stack
-    this.eventSubject.next({
-      seq: 0,
-      type: 'event',
-      event: 'stopped',
-      body: { threadId: thread.id }
-    });
+    this.threadManager.setCurrentThread(thread);
   }
 
+  public getOrCreateThreadObject(thread: import('../dap.types').DapThread): DapThreadSession {
+    return this.threadManager.getOrCreateThreadObject(thread);
+  }
 
-  /**
-   * Get scopes for a specific stack frame
-   * @param frameId Stack frame ID
-   */
+  // ── Session Event Handling ─────────────────────────────────────────
+
+  private ensureStopped(): void {
+    if (this.executionStateSubject.value !== 'stopped') {
+      throw new Error(`Invalid state: operation requires the execution to be 'stopped', but current state is '${this.executionStateSubject.value}'`);
+    }
+  }
+
   public async scopes(frameId: number): Promise<DapResponse> {
     this.ensureStopped();
     return this.sendRequest('scopes', { frameId });
   }
 
-  /**
-   * Get variables for a specific scope
-   * @param variablesReference Variables Reference (from scopes response)
-   */
   public async variables(variablesReference: number): Promise<DapResponse> {
     this.ensureStopped();
     return this.sendRequest('variables', { variablesReference });
   }
 
-  /**
-   * Disassemble instructions starting from a memory reference.
-   * @param args Strongly-typed disassemble arguments
-   * @param silentError When true, suppresses the `_dapError` UI event on failure.
-   *                    Use this when the caller handles the error itself (e.g. cache service).
-   */
   public async disassemble(args: DisassembleArguments, silentError = false): Promise<DapDisassemblyResponse> {
     this.ensureStopped();
     const response = await this.sendRequest('disassemble', args, 30000, silentError);
@@ -938,32 +659,18 @@ export class DapSessionService implements OnDestroy {
     return response as DapDisassemblyResponse;
   }
 
-  /**
-   * Reads memory from the debuggee.
-   * @param args readMemory arguments
-   */
   public async readMemory(args: ReadMemoryArguments): Promise<ReadMemoryResponse> {
     this.ensureStopped();
     const response = await this.sendRequest('readMemory', args);
     return response as ReadMemoryResponse;
   }
 
-  /**
-   * Writes memory to the debuggee.
-   * @param args writeMemory arguments
-   */
   public async writeMemory(args: WriteMemoryArguments): Promise<WriteMemoryResponse> {
     this.ensureStopped();
     const response = await this.sendRequest('writeMemory', args);
     return response as WriteMemoryResponse;
   }
 
-  /**
-   * Sends a DAP `cancel` request for the given in-flight request.
-   * No-op if called after session disconnect.
-   * Pre-condition: capabilities.supportsCancelRequest must be true.
-   * @param requestId - The `seq` of the request to cancel.
-   */
   public async cancelRequest(requestId: number): Promise<void> {
     if (!this.capabilities?.supportsCancelRequest) {
       return;
@@ -979,18 +686,9 @@ export class DapSessionService implements OnDestroy {
     }
   }
 
-  /**
-   * Sends a DAP `evaluate` request with a built-in 30 s cancel timeout.
-   * Rejects with EvaluateCancelledError on user cancel or timeout.
-   * Returns the full DAP response on success.
-   */
   public evaluate(expression: string, frameId?: number): Promise<DapResponse> {
     const TIMEOUT_MS = 30_000;
-
-    // sendRequest generates the next seq internally right away, but to capture it,
-    // we use the current seq value. Keep in mind seq is incremented synchronously.
     const expectedSeq = this.seq;
-    // We provide 35000 here so the internal DAP timeout doesn't fire before our 30000 timer.
     const evaluatePromise = this.sendRequest('evaluate', { expression, frameId, context: 'repl' }, 35000, true);
 
     return new Promise((resolve, reject) => {
@@ -1009,26 +707,16 @@ export class DapSessionService implements OnDestroy {
     });
   }
 
-  /**
-   * Get all sources currently loaded by the debug adapter.
-   */
   public async loadedSources(): Promise<DapResponse> {
     return this.sendRequest('loadedSources', {});
   }
 
-  /**
-   * Get the content of a specific source file.
-   */
   public async source(args: { sourceReference: number; source?: { path: string } }): Promise<DapResponse> {
     return this.sendRequest('source', args);
   }
 
-  /**
-   * Wrapper for sending a request and waiting for its response.
-   * @param command DAP command name
-   * @param args DAP command arguments (optional)
-   * @param timeoutMs Timeout in milliseconds (default 5000ms)
-   */
+  // ── outbound requests ──────────────────────────────────────────────────
+
   private sendRequest(command: string, args?: any, timeoutMs: number = 5000, silentError: boolean = false): Promise<DapResponse> {
     const transport = this.transport;
     if (!transport) {
@@ -1071,47 +759,56 @@ export class DapSessionService implements OnDestroy {
 
       this.pendingRequests.set(currentSeq, { resolve: resolveWrapper, reject: rejectWrapper, silentError });
       transport.sendRequest(request);
-      // Emit outgoing request to diagnostic traffic stream (§4.6)
       this.trafficSubject.next(request);
     });
   }
 
   /**
-   * @internal Sends a raw DAP request on behalf of internal session objects
-   * (e.g., DapThreadSession). Not part of the public API surface.
-   * This will be replaced by the DapRequestSender interface in WI-142.
+   * @internal Outbound proxy for internal objects and managers
    */
   public sendRequestInternal(command: string, args?: any): Promise<DapResponse> {
     return this.sendRequest(command, args);
   }
 
-  /**
-   * Provides the session-level event stream (pre-processed by the Session)
-   */
   public onEvent(): Observable<DapEvent> {
     return this.eventSubject.asObservable();
   }
 
-  // ── Session Event Handling ─────────────────────────────────────────
+  // ── internal sub-manager routing helpers ───────────────────────────────
 
   /**
-   * Check if current state is 'stopped', otherwise throw error (per R6 spec)
+   * @internal Exposes synthetic event generation for managers.
    */
-  private ensureStopped(): void {
-    if (this.executionStateSubject.value !== 'stopped') {
-      throw new Error(`Invalid state: operation requires the execution to be 'stopped', but current state is '${this.executionStateSubject.value}'`);
-    }
+  public emitSyntheticEvent(event: DapEvent): void {
+    this.eventSubject.next(event);
+  }
+
+  /**
+   * @internal Exposes execution state modifications.
+   */
+  public setExecutionStateInternal(state: ExecutionState): void {
+    this.executionStateSubject.next(state);
+  }
+
+  /**
+   * @internal Exposes state transition guard clearing.
+   */
+  public clearStateTransitionGuardInternal(): void {
+    this.clearStateTransitionGuard();
+  }
+
+  /**
+   * @internal Exposes control state tracking.
+   */
+  public setCommandInFlightInternal(inFlight: boolean): void {
+    this.commandInFlightSubject.next(inFlight);
   }
 
   // ── Message & Transport Handling ───────────────────────────────────
 
   private handleIncomingMessage(msg: any): void {
-    // Emit all incoming messages to the diagnostic traffic stream before processing (§4.6)
     this.trafficSubject.next(msg);
 
-    // ── Setup Channel Intercept ──────────────────────────────────────────────
-    // Messages from the taro-session setup channel (session-ready / session-failed)
-    // are not standard DAP messages; route them directly to the event subject.
     if (msg.channel === 'setup') {
       this.eventSubject.next(msg as any);
       return;
@@ -1125,8 +822,6 @@ export class DapSessionService implements OnDestroy {
         if (response.success) {
           handler.resolve(response);
         } else {
-          // Emit DAP error response as a synthetic event for UI-layer notification (R7)
-          // Suppressed if silentError is requested (WI-92)
           if (!handler.silentError) {
             this.eventSubject.next({
               seq: 0,
@@ -1141,7 +836,6 @@ export class DapSessionService implements OnDestroy {
           handler.reject(new Error(response.message || `Command ${response.command} failed`));
         }
       } else {
-        // Invalid response: no matching pending request — emit as _sessionWarning (§7.2)
         this.eventSubject.next({
           seq: 0,
           type: 'event',
@@ -1159,16 +853,12 @@ export class DapSessionService implements OnDestroy {
   private handleIncomingTransportError(err: any): void {
     const errMsg = err?.message || 'Unknown transport error';
 
-
-
-    // Emit synthetic event for UI-layer notification before transitioning state
     this.eventSubject.next({
       seq: 0,
       type: 'event',
       event: '_transportError',
       body: { reason: 'error', message: errMsg }
     });
-    // Mandatory: close transport before entering error state (R-ERR1)
     this.closeTransport();
     this.executionStateSubject.next('error');
     this.commandInFlightSubject.next(false);
@@ -1186,60 +876,17 @@ export class DapSessionService implements OnDestroy {
   }
 
   private clearSessionData(): void {
-    if (this.threadEventTimeout) {
-      clearTimeout(this.threadEventTimeout);
-      this.threadEventTimeout = null;
-    }
-    this.threadEventsBuffer = [];
-    this.threadObjects.forEach(t => t.setStatus('exited'));
-    this.threadObjects.clear();
-    this.threadsSubject.next([]);
-    this.activeThreadSubject.next(null);
+    this.threadManager.clearAll();
+    this.breakpointManager.clearAll();
     this.processInfoSubject.next(null);
-    this.breakpointsMap.clear();
-    this.breakpointsSubject.next(new Map());
     this.clearStateTransitionGuard();
     this.commandInFlightSubject.next(false);
   }
 
-  /**
-   * Unified handler for debug resumption state (Continue, Step, etc).
-   * Synchronizes execution state, stopped thread tracking, and reason maps.
-   */
   private handleResumptionState(allThreads: boolean, threadId?: number): void {
-    this.clearAllThreadCaches();
-    if (allThreads) {
-      this.executionStateSubject.next('running');
-      this.threadObjects.forEach(t => t.setStatus('running'));
-
-      this.clearStateTransitionGuard();
-      this.commandInFlightSubject.next(false);
-      this.threadsSubject.next([...this.threadsSubject.value]);
-      return;
-    }
-
-    if (threadId !== undefined) {
-      const resT = this.threadObjects.get(threadId);
-      if (resT) {
-        resT.setStatus('running');
-      }
-
-      const hasStopped = Array.from(this.threadObjects.values()).some(t => t.status === 'stopped');
-      if (!hasStopped) {
-        this.executionStateSubject.next('running');
-      }
-
-      this.clearStateTransitionGuard();
-      this.commandInFlightSubject.next(false);
-      this.threadsSubject.next([...this.threadsSubject.value]);
-    }
+    this.threadManager.handleResumptionState(allThreads, threadId);
   }
 
-  /**
-   * Handles raw DAP events from the Transport layer.
-   * The Session updates internal state and performs automatic responses,
-   * then forwards the event to external subscribers.
-   */
   private handleTransportEvent(event: DapEvent): void {
     switch (event.event) {
       case 'initialized':
@@ -1250,44 +897,15 @@ export class DapSessionService implements OnDestroy {
         this.executionStateSubject.next('stopped');
         this.clearStateTransitionGuard();
         this.commandInFlightSubject.next(false);
-        const stoppedThreadId = event.body?.threadId;
-        const allThreadsStopped = event.body?.allThreadsStopped ?? false;
-
+        
         const hitBps = event.body?.hitBreakpointIds || [];
-        const isSystemStop = hitBps.some((id: number) => this.systemBreakpointIds.has(id));
+        const isSystemStop = hitBps.some((id: number) => this.breakpointManager.isSystemBreakpoint(id));
         let stopReason = event.body?.description || event.body?.reason || 'paused';
         if (isSystemStop) {
           stopReason = 'Paused at entry (main)';
         }
 
-        let stoppedThreadObj: DapThreadSession | undefined;
-        if (stoppedThreadId !== undefined) {
-          stoppedThreadObj = this.getOrCreateThreadObject({ id: stoppedThreadId, name: `Thread ${stoppedThreadId}` });
-        }
-
-        if (allThreadsStopped) {
-          this.threadObjects.forEach(t => {
-            t.setStatus('stopped');
-          });
-          if (stoppedThreadObj) {
-            stoppedThreadObj.setStopReason(stopReason);
-          }
-        } else if (stoppedThreadObj) {
-          stoppedThreadObj.setStatus('stopped');
-          stoppedThreadObj.setStopReason(stopReason);
-        }
-
-        if (stoppedThreadObj) {
-          this.activeThreadSubject.next(stoppedThreadObj);
-        } else if (this.activeThreadSubject.value === null) {
-          const firstStopped = Array.from(this.threadObjects.values()).find(t => t.status === 'stopped');
-          if (firstStopped) {
-            this.activeThreadSubject.next(firstStopped);
-          }
-        }
-
-        this.threadsSubject.next([...this.threadsSubject.value]);
-        void this.fetchThreads();
+        this.threadManager.handleStoppedEvent(event, isSystemStop, stopReason);
         break;
       }
 
@@ -1299,7 +917,7 @@ export class DapSessionService implements OnDestroy {
         break;
 
       case 'thread': {
-        this.handleThreadEvent(event.body);
+        this.threadManager.handleThreadEvent(event.body);
         break;
       }
 
@@ -1325,60 +943,7 @@ export class DapSessionService implements OnDestroy {
         break;
 
       case 'breakpoint': {
-        const bp = event.body?.breakpoint;
-        if (bp && bp.source?.path && bp.line !== undefined) {
-          // If this is a system-managed breakpoint (e.g. stop-on-entry), ignore it here
-          // to prevent it from appearing in the user's breakpoint list (WI-123).
-          if (bp.id !== undefined && this.systemBreakpointIds.has(bp.id)) {
-            break;
-          }
-
-          const filePath = bp.source.path;
-          const currentBps = this.breakpointsMap.get(filePath) || [];
-
-          // Handle removal reason (DAP spec: 'new', 'changed', 'removed')
-          if (event.body?.reason === 'removed') {
-            const filtered = currentBps.filter(existingBp => {
-              if (bp.id !== undefined && existingBp.id === bp.id) return false;
-              if (existingBp.line === bp.line) return false;
-              return true;
-            });
-            this.breakpointsMap.set(filePath, filtered);
-            this.breakpointsSubject.next(new Map(this.breakpointsMap));
-            break;
-          }
-
-          // The DAP 'breakpoint' event is typically used to update a single breakpoint's status.
-          // Since we don't have a reliable ID mapping in the frontend yet for all adapters,
-          // we look for a breakpoint at the same line or with the same adapter ID.
-          let found = false;
-          const updatedBps = currentBps.map(existingBp => {
-            if ((bp.id !== undefined && existingBp.id === bp.id) || existingBp.line === bp.line) {
-              found = true;
-              return {
-                line: bp.line,
-                verified: bp.verified ?? false,
-                enabled: existingBp.enabled, // Preserve local enabled state
-                id: bp.id,
-                message: bp.message
-              };
-            }
-            return existingBp;
-          });
-
-          if (!found) {
-            updatedBps.push({
-              line: bp.line,
-              verified: bp.verified ?? false,
-              enabled: true, // Default to enabled for new server-initiated breakpoints
-              id: bp.id,
-              message: bp.message
-            });
-          }
-
-          this.breakpointsMap.set(filePath, updatedBps);
-          this.breakpointsSubject.next(new Map(this.breakpointsMap));
-        }
+        this.breakpointManager.handleBreakpointEvent(event);
         break;
       }
     }
@@ -1388,8 +953,6 @@ export class DapSessionService implements OnDestroy {
   }
 
   // ── State Transition Guard ───────────────────────────────────────────────
-  // Fires if the adapter fails to emit a stopped/continued event after a
-  // control command, unlocking the UI and reporting a synthetic session error.
 
   private startStateTransitionGuard(command: string): void {
     this.clearStateTransitionGuard();
@@ -1412,53 +975,6 @@ export class DapSessionService implements OnDestroy {
     if (this.stateTransitionTimer) {
       clearTimeout(this.stateTransitionTimer);
       this.stateTransitionTimer = undefined;
-    }
-  }
-
-  /**
-   * Handles incoming DAP 'thread' events by buffering them.
-   */
-  private handleThreadEvent(eventBody: any): void {
-    this.threadEventsBuffer.push(eventBody);
-
-    if (!this.threadEventTimeout) {
-      this.threadEventTimeout = setTimeout(() => {
-        this.flushThreadEventsBuffer();
-      }, 50); // 50ms buffering window
-    }
-  }
-
-  private flushThreadEventsBuffer(): void {
-    this.threadEventTimeout = null;
-    const events = [...this.threadEventsBuffer];
-    this.threadEventsBuffer = [];
-
-    let currentThreads = [...this.threadsSubject.value];
-
-    for (const body of events) {
-      const reason = body.reason;
-      const threadId = body.threadId;
-      if (threadId === undefined) continue;
-
-      if (reason === 'started') {
-        if (!currentThreads.some(t => t.id === threadId)) {
-          const threadObj = this.getOrCreateThreadObject({ id: threadId, name: `Thread ${threadId}` });
-          currentThreads.push(threadObj);
-        }
-      } else if (reason === 'exited') {
-        const exitedThread = this.threadObjects.get(threadId);
-        if (exitedThread) {
-          exitedThread.setStatus('exited');
-        }
-        currentThreads = currentThreads.filter(t => t.id !== threadId);
-        this.threadObjects.delete(threadId);
-      }
-    }
-
-    this.threadsSubject.next(currentThreads);
-    const hasStopped = currentThreads.some(t => t.status === 'stopped');
-    if (!hasStopped && this.executionState === 'stopped') {
-      this.executionStateSubject.next('running');
     }
   }
 }
