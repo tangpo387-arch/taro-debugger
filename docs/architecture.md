@@ -28,7 +28,7 @@ Taro Debugger utilizes a decoupled, client-server architecture designed to bypas
 graph TB
     subgraph Browser ["<b>taro-debugger-frontend (Angular SPA)</b>"]
         UI["<b>UI Components Layer</b><br/>Monaco Editor, inspection trees, console"]
-        Session["<b>Session Service Layer</b><br/>DapSessionService state machine"]
+        Session["<b>Session Service Layer</b><br/>DapSessionService facade"]
         Transport["<b>Transport Service Layer</b><br/>WebSocketTransportService client"]
     end
 

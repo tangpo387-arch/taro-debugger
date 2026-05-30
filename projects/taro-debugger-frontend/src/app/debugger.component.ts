@@ -28,7 +28,7 @@ import {
 } from '@taro/ui-inspection';
 import { PanelComponent, PanelGroupComponent, ErrorDialog, ErrorDialogData, TaroEmptyStateComponent } from '@taro/ui-shared';
 import { LogViewerComponent } from '@taro/ui-console';
-import { DapConfigService, DapConfig } from '@taro/dap-core';
+import { DapConfigService, DapConfig, DAP_SESSION_PROVIDERS } from '@taro/dap-core';
 import { DapSessionService, DapThreadSession, ExecutionState, VerifiedBreakpoint, DapBreakpointManager, DapThreadManager } from '@taro/dap-core';
 import { DapEvent, DapStackFrame } from '@taro/dap-core';
 import { FileNode } from './file-tree.service';
@@ -69,14 +69,10 @@ import { DapFileTreeService } from './dap-file-tree.service';
     TaroEmptyStateComponent,
   ],
   providers: [
-    DapSessionService,
-    DapBreakpointManager,
-    DapThreadManager,
+    ...DAP_SESSION_PROVIDERS,
     DapFileTreeService,
     DapVariablesService,
     DapLogService,
-    DapAssemblyCacheService,
-    DapMemoryService,
   ],
   templateUrl: './debugger.component.html',
   styleUrls: ['./debugger.component.scss']

@@ -12,7 +12,7 @@
 
 // @vitest-environment jsdom
 import { TestBed } from '@angular/core/testing';
-import { DapSessionService, ExecutionState, DapBreakpointManager, DapThreadManager, DapRequestBroker } from '@taro/dap-core';
+import { DapSessionService, ExecutionState, DapBreakpointManager, DapThreadManager, DAP_SESSION_PROVIDERS } from '@taro/dap-core';
 import { DapConfigService } from '@taro/dap-core';
 import { TransportFactoryService } from '@taro/dap-core';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -97,10 +97,7 @@ describe('TI-05 — Connection Error & Intent Detection', () => {
 
     TestBed.configureTestingModule({
       providers: [
-        DapSessionService,
-        DapRequestBroker,
-        DapBreakpointManager,
-        DapThreadManager,
+        ...DAP_SESSION_PROVIDERS,
         {
           provide: DapConfigService,
           useValue: {
@@ -116,6 +113,7 @@ describe('TI-05 — Connection Error & Intent Detection', () => {
         { provide: TransportFactoryService, useValue: transportFactory }
       ]
     });
+
 
     service = TestBed.inject(DapSessionService);
   });

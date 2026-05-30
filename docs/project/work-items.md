@@ -52,22 +52,6 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - [Doc] docs/archive/specs/taro-session-unit-testing.md
 - **Dependencies**: none
 
-### WI-143: Extract DapExecutionController & DapSessionLifecycle Facade
-
-- **Status**: 💡 Proposed
-- **Size**: L
-- **Description**: Decompose DapSessionService Phase 3: extract execution control and session lifecycle into final sub-services, reducing DapSessionService to a thin facade.
-- **Details**:
-  - Extract `DapExecutionController` service to own all execution control methods (continue, next, stepIn, stepOut, pause, instruction-level variants) and the commandInFlight state
-  - Extract `DapSessionLifecycle` service to own connectTransport, initializeSession, startSession, stop, restart, disconnect, and the executionState state machine
-  - DapSessionService becomes a thin facade (~200 lines) delegating to all extracted sub-services
-  - Refactor DapMessageRouter logic to dispatch events to the correct sub-manager
-  - [Test] Full integration test verifying the facade correctly delegates to all sub-services
-  - [Test] DapExecutionController unit tests with mocked broker
-  - [Test] DapSessionLifecycle unit tests for state transitions
-  - [Doc] docs/archive/specs/dap-session-refactor.md
-- **Dependencies**: WI-142
-
 ## Low-Level Inspection
 
 ### WI-107: DapRegisterService Implementation

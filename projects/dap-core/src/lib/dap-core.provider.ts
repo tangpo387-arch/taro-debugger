@@ -9,6 +9,23 @@ import { DapMemoryService } from './session/dap-memory.service';
 import { DapBreakpointManager } from './session/dap-breakpoint-manager.service';
 import { DapThreadManager } from './session/dap-thread-manager.service';
 import { DapRequestBroker } from './session/dap-request-broker.service';
+import { DapExecutionController } from './session/dap-execution-controller.service';
+import { DapSessionLifecycle } from './session/dap-session-lifecycle.service';
+
+/**
+ * A reusable provider array for creating an isolated DAP session scope.
+ * Use this in component providers to get a fresh instance of the session and its internal managers.
+ */
+export const DAP_SESSION_PROVIDERS: any[] = [
+  DapSessionService,
+  DapAssemblyCacheService,
+  DapMemoryService,
+  DapRequestBroker,
+  DapBreakpointManager,
+  DapThreadManager,
+  DapExecutionController,
+  DapSessionLifecycle,
+];
 
 /**
  * Provides the core DAP library services.
@@ -20,15 +37,11 @@ export function provideDapCore(): EnvironmentProviders {
     TransportFactoryService,
     WebSocketTransportService,
     IpcTransportService,
-    DapSessionService,
     DapConfigService,
-    DapAssemblyCacheService,
-    DapMemoryService,
-    DapRequestBroker,
-    DapBreakpointManager,
-    DapThreadManager,
+    ...DAP_SESSION_PROVIDERS,
     // Note: ELECTRON_API token should be provided by the host application
     // if IPC transport is used.
   ]);
 }
+
 

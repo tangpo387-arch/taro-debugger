@@ -62,7 +62,9 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 
 | File | Responsibility | Key Interfaces |
 | --- | --- | --- |
-| `projects/dap-core/src/lib/session/dap-session.service.ts` | DAP session lifecycle orchestrator, state machine, and unified communication facade | `startSession()`, `executionState$`, `commandInFlight$`, `activeThread$`, `threads$`, `onEvent()` |
+| `projects/dap-core/src/lib/session/dap-session.service.ts` | DAP session facade delegating to extracted sub-services (lifecycle, execution, brokers) | `startSession()`, `executionState$`, `commandInFlight$`, `activeThread$`, `threads$`, `onEvent()` |
+| `projects/dap-core/src/lib/session/dap-execution-controller.service.ts` | Responsible for stepping, pause/continue commands, and state transition timer protection guards | `continue()`, `next()`, `stepIn()`, `stepOut()`, `pause()`, `commandInFlight$` |
+| `projects/dap-core/src/lib/session/dap-session-lifecycle.service.ts` | Responsible for transport connection, GDB handshake, setup channels, state machine transitions, and session termination | `connectTransport()`, `startSession()`, `stop()`, `restart()`, `executionState$`, `connectionStatus$` |
 | `projects/dap-core/src/lib/session/dap-request-sender.interface.ts` | Narrow interface for dispatching DAP requests to break circular dependency | `DapRequestSender` (`executionState`, `sendRequest()`) |
 | `projects/dap-core/src/lib/session/dap-request-broker.service.ts` | Standalone service managing DAP request-response sequence numbers, pending requests map, and timeouts | `DapRequestBroker` (`sendRequest()`, `handleResponse()`, `clearPendingRequests()`, `onEvent()`, `onTraffic()`) |
 | `projects/dap-core/src/lib/session/dap-breakpoint-manager.service.ts` | Manages breakpoint SSOT state (breakpointsMap, systemBreakpointIds), optimistic UI updates, and synchronization with the DAP adapter | `setBreakpoints()`, `toggleBreakpoint()`, `toggleBreakpointEnabled()`, `removeBreakpoint()`, `breakpoints$` |

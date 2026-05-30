@@ -114,13 +114,13 @@ Raw events from the Transport layer are processed by Session's `handleTransportE
 
 ## 4. Connection Status Bridging
 
-The `DapSessionService` acts as a stable proxy for the volatile lifecycle of transport instances. Since transport instances are lazily created during `startSession()` and destroyed during `disconnect()`, direct UI subscriptions to the transport would be fragile and prone to memory leaks.
+The `DapSessionLifecycle` service acts as a stable proxy for the volatile lifecycle of transport instances. Since transport instances are lazily created during `startSession()` and destroyed during `disconnect()`, direct UI subscriptions to the transport would be fragile and prone to memory leaks.
 
-The Session layer bridges the Transport's `connectionStatus$` via an internal `BehaviorSubject<boolean>` to provide the following architectural guarantees:
+The `DapSessionLifecycle` service bridges the Transport's `connectionStatus$` via an internal `BehaviorSubject<boolean>` to provide the following architectural guarantees:
 
 - **Lifecycle Decoupling**: UI components can subscribe to `connectionStatus$` as soon as the application starts. They do not need to worry about whether a transport instance currently exists or is being re-instantiated during a restart.
 - **Consistent Initial State**: By using a `BehaviorSubject` initialized to `false`, the UI receives a valid connection state immediately upon subscription, preventing "undefined" UI flickers during the startup handshake.
-- **Stable Observable Reference**: When a new transport is created (e.g., switching from WebSocket to IPC), the Session layer internally manages the re-subscription logic. It pipes the new transport's status into the same subject, ensuring that external UI subscriptions remain valid and uninterrupted throughout the application's runtime.
+- **Stable Observable Reference**: When a new transport is created (e.g., switching from WebSocket to IPC), the `DapSessionLifecycle` service internally manages the re-subscription logic. It pipes the new transport's status into the same subject, ensuring that external UI subscriptions remain valid and uninterrupted throughout the application's runtime.
 - **Single Source of Truth (SSOT)**: This bridging ensures that all components see a unified connection state, even if the underlying transport is in a transitional state during a handshake.
 
 ## 5. Transport Lifecycle
@@ -167,12 +167,12 @@ The Session layer automates thread and context management to simplify UI impleme
 ### 7.1 Thread Selection
 
 - **DapThreadSession Object Representation**: Injected threads are managed as rich `DapThreadSession` instances. To prevent circular dependencies, each instance is injected with a narrow `DapRequestSender` interface (exposing only `sendRequest()` and `executionState`) instead of the full `DapSessionService`. Each instance encapsulates its own thread identity, in-flight request coalescing promise, and transient stack frame cache to prevent redundant traffic.
-- **Thread Event Storm Mitigation**: On multi-threaded targets, GDB can flood the adapter with rapid thread `started` / `exited` event waves. `DapSessionService` buffers these event storms over a **50ms temporal window** and flushes them to the UI in a single reactive transaction, preventing DOM thrashing.
-- **Automatic Thread Refresh**: On every `stopped` event, the Session queries the adapter's threads and updates `threadsSubject` with batch-instantiated `DapThreadSession` objects.
+- **Thread Event Storm Mitigation**: On multi-threaded targets, GDB can flood the adapter with rapid thread `started` / `exited` event waves. `DapThreadManager` buffers these event storms over a **50ms temporal window** and flushes them to the UI in a single reactive transaction, preventing DOM thrashing.
+- **Automatic Thread Refresh**: On every `stopped` event, `DapThreadManager` queries the adapter's threads and updates `threadsSubject` with batch-instantiated `DapThreadSession` objects.
 - **Active Thread Selection**: If the `stopped` event contains a `threadId`, the corresponding `DapThreadSession` is automatically set as the `activeThread`.
-- **Contextual Stop Reason**: The Session extracts `description` or `reason` from the `stopped` event body and writes it to the corresponding `DapThreadSession` via `setStopReason()`. Consumers read it via the `stopReason` getter on each thread object.
+- **Contextual Stop Reason**: `DapThreadManager` extracts `description` or `reason` from the `stopped` event body and writes it to the corresponding `DapThreadSession` via `setStopReason()`. Consumers read it via the `stopReason` getter on each thread object.
 - **Manual Selection**: `setCurrentThread(thread)` allows the user to switch inspection context, triggering a synthetic `stopped` event to force UI components to reload their stacks.
-- **Cache Invalidation**: Upon any stepping command (`next`, `continue`, `stepIn`, `stepOut`) or receiving a `'continued'` event, the Session automatically clears the transient caches of all active `DapThreadSession` objects.
+- **Cache Invalidation**: Upon any stepping command (`next`, `continue`, `stepIn`, `stepOut`) or receiving a `'continued'` event, `DapThreadManager` automatically clears the transient caches of all active `DapThreadSession` objects.
 
 > [!NOTE]
 > **Multi-Threaded Execution (Non-Stop Mode)**: While the Session layer is designed to track multiple threads, advanced Non-Stop mode behavior (independent thread control) is currently a planned feature. See [Non-Stop Mode UI Integration](../archive/specs/non-stop-mode-ui.md) for the design specification.
@@ -268,7 +268,7 @@ sequenceDiagram
 ### 9.2 Dynamic Configuration Synchronizations
 
 - **Mode Selection**: The client configuration defines a `setupMode` which can be `'new'` (creating a new session directory) or `'open'` (loading an existing session directory).
-- **Properties Merging**: Upon a successful `session-ready` response, the backend returns the authoritative launch configuration persisted in the session folder. `DapSessionService` merges these properties back into the client-side `DapConfigService` to ensure a single source of truth (SSOT).
+- **Properties Merging**: Upon a successful `session-ready` response, the backend returns the authoritative launch configuration persisted in the session folder. `DapSessionLifecycle` merges these properties back into the client-side `DapConfigService` to ensure a single source of truth (SSOT).
 - **Executable Bypass Guard**: Under `'open'` mode, the debugger starts with an empty executable path configuration on boot, since settings are resolved dynamically from the backend handshake. `DebuggerComponent.ngOnInit()` bypasses empty executable validation guards when `setupMode === 'open'`, preventing startup locking.
 
 ### 9.3 Handshake Reliability & Error Recovery

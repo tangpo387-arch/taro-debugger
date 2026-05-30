@@ -211,7 +211,9 @@ export class WebSocketServer {
             // Cleanly terminate the prior GDB process (if it exists) to avoid orphaned subprocesses
             if (this.gdbProcess) {
               this.logger.logStdout('Terminating stale GDB process instance prior to starting new session');
-              await this.gdbProcess.terminate();
+              const staleGdb = this.gdbProcess;
+              this.gdbProcess = undefined; // Detach immediately so onExit ignores it
+              await staleGdb.terminate();
             }
 
             const gdbProcess = new GdbProcessManager(this.logger);

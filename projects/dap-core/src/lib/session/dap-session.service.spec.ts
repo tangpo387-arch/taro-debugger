@@ -7,6 +7,8 @@ import { Subject, of, BehaviorSubject } from 'rxjs';
 import { DapBreakpointManager } from './dap-breakpoint-manager.service';
 import { DapThreadManager } from './dap-thread-manager.service';
 import { DapRequestBroker } from './dap-request-broker.service';
+import { DapExecutionController } from './dap-execution-controller.service';
+import { DapSessionLifecycle } from './dap-session-lifecycle.service';
 
 describe('DapSessionService', () => {
   let service: DapSessionService;
@@ -51,10 +53,13 @@ describe('DapSessionService', () => {
         DapRequestBroker,
         DapBreakpointManager,
         DapThreadManager,
+        DapExecutionController,
+        DapSessionLifecycle,
         { provide: TransportFactoryService, useValue: transportFactory },
         { provide: DapConfigService, useValue: configService }
       ]
     });
+
 
     service = TestBed.inject(DapSessionService);
   });

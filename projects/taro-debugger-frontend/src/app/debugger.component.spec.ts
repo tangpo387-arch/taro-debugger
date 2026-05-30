@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { DebuggerComponent } from './debugger.component';
-import { DapSessionService } from '@taro/dap-core';
-import { DapConfigService } from '@taro/dap-core';
+import { DapSessionService, DapThreadManager } from '@taro/dap-core';
+import { DapConfigService, TransportFactoryService } from '@taro/dap-core';
 import { DapVariablesService } from '@taro/ui-inspection';
 import { DapLogService } from '@taro/ui-console';
 import { NGX_MONACO_EDITOR_CONFIG } from 'ngx-monaco-editor-v2';
@@ -617,6 +617,42 @@ describe('DebuggerComponent — startSession Error Dialog Handling', () => {
         hideRetry: true
       }
     });
+  });
+});
+
+/**
+ * Unit tests for DI Split-Brain Regression
+ */
+describe('DebuggerComponent — DI Isolation (Split-Brain Bug Regression)', () => {
+  it('should instantiate all DAP session managers in the local injector without falling back to root', () => {
+    // We intentionally DO NOT provide provideDapCore() in the root TestBed.
+    // If DebuggerComponent's local providers array is missing any internal manager 
+    // (like DapSessionLifecycle or DapExecutionController), it will throw a NullInjectorError.
+    TestBed.configureTestingModule({
+      // DebuggerComponent is standalone, we import it
+      providers: [
+        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe', stopOnEntry: true, transportType: 'websocket' }) } },
+        { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
+        { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false }) } },
+        { provide: TransportFactoryService, useValue: { createTransport: vi.fn().mockReturnValue({ onMessage: vi.fn().mockReturnValue(EMPTY), connectionStatus$: EMPTY, connect: vi.fn().mockReturnValue(of(void 0)), disconnect: vi.fn() }) } },
+      ],
+      schemas: [NO_ERRORS_SCHEMA]
+    });
+
+    // This will throw if any internal dependency is missing from DebuggerComponent's DAP_SESSION_PROVIDERS
+    const fixture = TestBed.createComponent(DebuggerComponent);
+    const componentInjector = fixture.componentRef.injector;
+
+    const dapSession = componentInjector.get(DapSessionService);
+    const threadManager = componentInjector.get(DapThreadManager);
+
+    expect(dapSession).toBeDefined();
+    expect(threadManager).toBeDefined();
+
+    // Verify DapSessionService injected the exact same ThreadManager instance 
+    // as the local component injector (proving they are isolated together)
+    expect((dapSession as any).threadManager).toBe(threadManager);
   });
 });
 
