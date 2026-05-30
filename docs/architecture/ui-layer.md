@@ -26,7 +26,7 @@ The UI layer leverages a centralized foundation library to ensure visual consist
 - **Generic Components**: Reusable UI patterns like `PanelComponent` (collapsible/resizable containers) and `ErrorDialog`.
 - **Modularity Benefit**: Functional libraries like `ui-inspection` can depend on the shared foundation without pulling in the heavy `ui-editor` (Monaco) library.
 
-## 2. Responsibility Separation Reference
+## 3. Responsibility Separation Reference
 
 | Responsibility | Layer | Description |
 | --- | --- | --- |
@@ -40,7 +40,7 @@ The UI layer leverages a centralized foundation library to ensure visual consist
 | File source loading & editor update | **UI** | `DebuggerComponent.onFileSelected()` calls `DapFileTreeService.readFile()`, updates `EditorComponent` |
 | Layout size persistence | **UI** | Sidebar widths, visibility, console height stored in localStorage |
 
-## 3. DebuggerComponent Layout Structure
+## 4. DebuggerComponent Layout Structure
 
 The system follows a **Flush IDE** aesthetic with a consolidated left-to-right interaction flow. All navigation and inspection panels are hosted in a multi-tabbed Left Sidenav, maximizing horizontal space for code and memory inspection.
 
@@ -80,7 +80,9 @@ graph TD
     style LS fill:#e1f5fe,stroke:#01579b
 ```
 
-### 3.1 Consolidated Sidenav
+> [Diagram: DebuggerComponent UI layout hierarchy. The top toolbar provides global controls and anchors the left sidenav and main content area. The left sidenav uses tab-group switching to display either the Explorer tab (containing the File Explorer and Threads tree) or the Debug tab (housing the Call Stack, Variables, and Breakpoints accordion panels). The main content area embeds the Monaco editor/assembly view, which sits above the tabbed log viewer consoles and the footer status bar.]
+
+### 4.1 Consolidated Sidenav
 
 - **Activity Bar**: The left sidenav uses a `mat-tab-group` to toggle between **Explorer** (File context) and **Debug** (Runtime context).
 - **Expansion Panels**: Individual features (Variables, Call Stack, etc.) are housed in `mat-expansion-panel` elements within a `mat-accordion`, allowing them to share vertical space and be collapsed independently.
@@ -98,7 +100,7 @@ The application provides a unified global control surface that bridges the nativ
 
 ---
 
-## 4. Component Lifecycle (DebuggerComponent)
+## 5. Component Lifecycle (DebuggerComponent)
 
 The following table is the **authoritative specification** for dependency injection scoping and state destruction inside `DebuggerComponent`.
 
@@ -127,7 +129,7 @@ The following table is the **authoritative specification** for dependency inject
 | :--- | :--- | :--- |
 | `localStorage` | `taro-debugger-layout-sizes` | User layout preference — survives sessions intentionally |
 
-## 5. Logging Architecture (DapLogService + LogViewerComponent)
+## 6. Logging Architecture (DapLogService + LogViewerComponent)
 
 `DapLogService` manages two independent log streams:
 
@@ -171,7 +173,7 @@ interface LogEntry {
 - **Manages expanded/collapsed state locally** via `private readonly expandedLogs = new Set<string>()`, keyed by `log.timestamp.getTime().toString()`. This UI state is **never** stored in any Service.
 - **Clears `expandedLogs` in `ngOnDestroy()`** per R_SM5 to prevent orphan key accumulation on component teardown.
 
-## 6. Diagnostic Traffic Stream (onTraffic$)
+## 7. Diagnostic Traffic Stream (onTraffic$)
 
 To prevent high-frequency raw protocol telemetry from polluting the core business event pipeline (`onEvent`), the Session Layer (`DapSessionService`) exposes a dedicated `onTraffic$` observable.
 
@@ -179,7 +181,7 @@ To prevent high-frequency raw protocol telemetry from polluting the core busines
 - **Opt-in Telemetry**: The UI Layer (`DebuggerComponent`) subscribes to `onTraffic$` and forwards these raw payloads to `DapLogService` as structured `LogEntry` items with the `dap` category.
 - **Separation of Concerns**: This ensures the core `onEvent()` stream only emits structurally significant state events (e.g., `stopped`, `terminated`) required for state machine updates, while `onTraffic$` purely serves diagnostic logging purposes.
 
-## 7. Variable & Scope State Management
+## 8. Variable & Scope State Management
 
 The inspection of program variables follows a lazy-loading, reactive pattern to handle complex data structures efficiently without blocking the UI.
 

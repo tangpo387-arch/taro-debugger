@@ -4,8 +4,8 @@ scope: breakpoints, editor, session, serialization
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
 last_updated: 2026-04-28
 related:
-  - architecture/command-serialization.md
-  - architecture/ui-components/editor.md
+  - ../command-serialization.md
+  - ../ui-components/editor.md
 ---
 
 # Breakpoint Management System
@@ -47,12 +47,14 @@ DAP's `setBreakpoints` expects the latest state. To prevent race conditions or o
 While Source Breakpoints are tied to file/line pairs, the system also supports symbolic **Function Breakpoints**:
 
 ### 5.1 System-Managed Stops (Stop on Entry)
+
 To ensure robust behavior with the GDB adapter, the system uses function breakpoints for "Stop on Entry" logic:
 - **Automatic Injection**: During the session handshake, a function breakpoint for `main` is injected if `stopOnEntry` is enabled in the configuration.
 - **Protocol Distinction**: These use the `setFunctionBreakpoints` request, keeping them logically separate from user-initiated source breakpoints.
 - **Reporting**: These are identified as "System" breakpoints and reported with specialized UI stop reasons (e.g., "Paused at entry").
 
 ### 5.2 User-Defined Function Breakpoints (Future)
+
 Future support for user-defined function breakpoints will leverage the same `setFunctionBreakpoints` logic, merging system-managed symbols with user-requested ones.
 
 ---

@@ -4,8 +4,8 @@ scope: ui-console, debug-console, output-console, protocol-inspector, logging
 audience: [Human Engineer, Lead_Engineer, Product_Architect, Quality_Control_Reviewer]
 last_updated: 2026-04-28
 related:
-  - architecture/ui-shared.md
-  - architecture/visual-design.md
+  - ../ui-shared.md
+  - ../visual-design.md
 ---
 
 # Log Viewer & Consoles

@@ -4,9 +4,9 @@ scope: dap-core, session-layer, transport-layer, protocol
 audience: [Human Engineer, Lead_Engineer, Product_Architect, Quality_Control_Reviewer]
 last_updated: 2026-05-30
 related:
-  - architecture/session-layer.md
-  - architecture/transport-layer.md
-  - architecture/monorepo-standards.md
+  - ../session-layer.md
+  - ../transport-layer.md
+  - ../monorepo-standards.md
 ---
 
 # DAP Core Library

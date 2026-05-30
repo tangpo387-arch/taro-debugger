@@ -4,8 +4,8 @@ scope: ui-inspection, file-explorer, file-tree
 audience: [Human Engineer, Lead_Engineer, Product_Architect, Quality_Control_Reviewer]
 last_updated: 2026-04-28
 related:
-  - architecture/ui-components/inspection.md
-  - architecture/ui-shared.md
+  - inspection.md
+  - ../ui-shared.md
 ---
 
 # File Explorer Component

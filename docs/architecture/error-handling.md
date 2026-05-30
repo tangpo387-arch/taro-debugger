@@ -32,6 +32,8 @@ sequenceDiagram
     UI->>UI: Append error to DAP Console
 ```
 
+> [Diagram: Connection error handling flow. The Transport layer detects WebSocket errors or closures and notifies the Session layer via `onMessage()` completion or error streams. The Session layer then emits a synthetic `_transportError` event, transitions the `executionState` to `error`, rejects all active pending requests, and notifies the UI layer. Finally, the UI layer renders a snackbar notification and appends the error details to the DAP console.]
+
 | Error Scenario | Transport Layer Behavior | Session Layer Behavior | UI Layer Behavior |
 | --- | --- | --- | --- |
 | **Connection timeout** | `connect()` Observable error | `startSession()` reject | `ErrorDialog` (retry / go back) |
@@ -63,6 +65,8 @@ graph TD
     style Session_Layer fill:#f9f9f9,stroke:#333,stroke-dasharray: 5 5
     style UI_Layer fill:#f9f9f9,stroke:#333,stroke-dasharray: 5 5
 ```
+
+> [Diagram: DAP Server error handling architecture. Shows how different error categories detected at the Session layer (unsuccessful DAP responses, unmatched responses, and transport stream errors) map to synthetic `_dapError`, `_sessionWarning`, and `_transportError` events. These are bridged to the UI layer where they trigger corresponding snackbar notifications, DAP console logs, or standard console warnings.]
 
 | Error Scenario | Session Layer Behavior | UI Layer Behavior |
 | --- | --- | --- |

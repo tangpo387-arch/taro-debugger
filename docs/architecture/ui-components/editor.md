@@ -4,8 +4,8 @@ scope: ui-editor, monaco, view-state, breakpoints
 audience: [Human Engineer, Lead_Engineer, Product_Architect, Quality_Control_Reviewer]
 last_updated: 2026-04-28
 related:
-  - architecture/core/breakpoint-system.md
-  - architecture/ui-shared.md
+  - ../core/breakpoint-system.md
+  - ../ui-shared.md
 ---
 
 # Editor Component

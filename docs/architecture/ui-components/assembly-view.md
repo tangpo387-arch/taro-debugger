@@ -4,8 +4,8 @@ scope: ui-assembly, disassembly, dap-integration
 audience: [Human Engineer, Lead_Engineer, Product_Architect, Quality_Control_Reviewer]
 last_updated: 2026-05-23
 related:
-  - architecture/ui-layer.md
-  - system-specification.md
+  - ../ui-layer.md
+  - ../../project/system-specification.md
 ---
 
 # Assembly View (Disassembly)
@@ -98,15 +98,19 @@ When scrolling to unmapped or sparse regions, newly fetched ranges might not sta
 
 1. **Validation**: Check that the starting physical address is a valid hexadecimal string matching `^0x[0-9a-fA-F]+$` before generating CLI commands.
 2. **Query**: Issue a DAP `evaluate` request for the CLI command:
+
    ```text
    info symbol <address>
    ```
+
 3. **Parser**: Parse the GDB stdout string using the pattern:
+
    ```regex
    ^([^\s+]+)(?:\s*\+\s*([^\s]+))?
    ```
-   * Match Group 1: Extracted symbol name (e.g., `main`).
-   * Match Group 2: Offset in bytes (e.g., `16`, defaults to `0` if undefined).
+
+   - Match Group 1: Extracted symbol name (e.g., `main`).
+   - Match Group 2: Offset in bytes (e.g., `16`, defaults to `0` if undefined).
 4. **Resolution**: Set the parsed symbol and offset on the first instruction of the fetched range, then execute range-level propagation.
 
 ### 3.3 Unified Scroll Alignment & Loop Prevention
@@ -179,5 +183,3 @@ The application applies post-processing to normalize the display of function blo
 - **Capability Guard**: The view is disabled if the Debug Adapter does not support the `disassemble` capability.
 - **Cache Policy**: Instructions are cached in self-contained `CachedRange` objects. The cache is **preserved across thread switches** (since threads share memory) but is **invalidated on `module` events** to account for dynamic library loading.
 - **Capacity**: Maintained via a spatial pruning watermark and hard ceiling defined in the authoritative [DapAssemblyCacheService Specification](../core/dap-core.md#23-session-layer). When the ceiling is exceeded, the `CachedRange` farthest from the current IP is evicted atomically — no per-address iteration is required.
-
-

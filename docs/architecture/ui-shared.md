@@ -4,8 +4,8 @@ scope: ui-shared, design-system, tokens, shared-components
 audience: [Human Engineer, Lead_Engineer, Product_Architect, Quality_Control_Reviewer]
 last_updated: 2026-04-28
 related:
-  - architecture/monorepo-standards.md
-  - architecture/visual-design.md
+  - monorepo-standards.md
+  - visual-design.md
 ---
 
 # UI Shared Foundation

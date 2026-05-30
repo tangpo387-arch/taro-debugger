@@ -97,64 +97,46 @@ Taro uses a multiplexed, channel-based WebSocket protocol to handle DAP and Agen
 
 ---
 
-## 4. State Management & Lifecycle Coordination
-
-### 4.1 Lifecycle State Machine
-
-The coordination between `taro-debugger-frontend` and `taro-session` is managed via a strict lifecycle flow:
-
-```mermaid
-sequenceDiagram
-    participant FE as taro-debugger-frontend
-    participant TS as taro-session
-    participant GDB as GDB Subprocess
-
-    FE->>TS: Connect to ws://localhost:8080/session/client
-    TS-->>FE: (Server in UNINITIALIZED state — awaiting setup)
-    FE->>TS: setup channel: open-session or new-session
-    TS->>TS: INITIALIZING — load config & spawn GDB
-    TS-->>FE: setup: session-ready { config }
-    Note over FE,TS: Server transitions to READY state
-    FE->>TS: DAP initialize request
-    GDB-->>TS: Emit "initialized" event
-    TS-->>FE: Broadcast "initialized" event
-    FE->>TS: Send "configurationDone" DAP request
-    TS->>GDB: Forward "configurationDone"
-    GDB-->>TS: Emit GDB start execution
-    TS-->>FE: Broadcast "running" event
-```
-
-> [Diagram: Updated session lifecycle flow including the new Setup Handshake Phase (WI-136). The frontend connects and immediately enters the UNINITIALIZED state. It must send a `setup` channel command (`open-session` or `new-session`) before any standard DAP messages. Only upon receiving `session-ready` does the server enter the `READY` state, after which DAP initialization proceeds as normal.]
-
----
-
-## 5. Architectural Map of Sub-systems
+## 4. Architectural Map of Sub-systems
 
 The system documentation is organized logically into detailed modules:
 
-### 5.1 System Integration & Topology
+### 4.1 System Integration & Topology
 
 - **Master Index (This Document)**: Overview of frontend-backend client-server decoupling and topology.
 - **System Specification**: Detailed component-level specifications and deployment constraints: 👉 [system-specification.md](project/system-specification.md).
 - **taro-session Daemon**: Full server responsibilities, connection state machine, logging, and CLI reference: 👉 [architecture/taro-session.md](architecture/taro-session.md).
 - **Agentic Debug Architecture**: Cognitive companion, MCP tool details, SMT solver interfaces, and chat-log persistence: 👉 [architecture/agentic-debug-architecture.md](architecture/agentic-debug-architecture.md).
+- **Monorepo Build & Resolution Standards**: Compiled `@taro/*` library resolution and cascading watcher execution sequence: 👉 [architecture/monorepo-standards.md](architecture/monorepo-standards.md).
 
-### 5.2 Frontend Components & UI Layer (`taro-debugger-frontend`)
+### 4.2 Core Domain Layer & Session State (`projects/dap-core`)
+
+- **DAP Core Library (`@taro/dap-core`)**: Core Debug Adapter Protocol serialization, transport interfaces, caches, and core protocol boundaries: 👉 [architecture/core/dap-core.md](architecture/core/dap-core.md).
+- **Transport Services**: Buffer management, content-length parsers, and fail-fast validation: 👉 [architecture/transport-layer.md](architecture/transport-layer.md).
+- **Session State Machine**: DAP lifecycle state machine, threads cache, and verified breakpoints SSOT: 👉 [architecture/session-layer.md](architecture/session-layer.md).
+- **Breakpoint Management System**: Breakpoint serialization, gutter click debouncing, and Stop-on-Entry logic: 👉 [architecture/core/breakpoint-system.md](architecture/core/breakpoint-system.md).
+- **Command Serialization**: Concurrency gates and isolated event streams for control buttons and evaluate inputs: 👉 [architecture/command-serialization.md](architecture/command-serialization.md).
+- **Error Handling Architecture**: Division of error handling responsibilities, WebSocket error recovery, and synthetic protocol events: 👉 [architecture/error-handling.md](architecture/error-handling.md).
+
+### 4.3 Frontend Components, UI Layout & Styles
 
 - **UI Layer & Injection Control**: Dependency Injection boundaries, component lifecycles, and layout hierarchy: 👉 [architecture/ui-layer.md](architecture/ui-layer.md).
 - **UI Shared Foundation**: Panel systems, shared styling tokens, and dialog templates: 👉 [architecture/ui-shared.md](architecture/ui-shared.md).
-- **Transport Services**: Buffer management, content-length parsers, and fail-fast validation: 👉 [architecture/transport-layer.md](architecture/transport-layer.md).
-- **Session State Machine**: DAP lifecycle state machine, threads cache, and verified breakpoints SSOT: 👉 [architecture/session-layer.md](architecture/session-layer.md).
+- **Visual Design Architecture**: Dynamic high-density responsive padding, typography scales, and native IDE borders: 👉 [architecture/visual-design.md](architecture/visual-design.md).
+- **Fatal Error Redirection**: global catch boundaries, `ErrorDialog` popup integration, and routing recovery: 👉 [architecture/fatal-error-flow.md](architecture/fatal-error-flow.md).
 
-### 5.3 Technical Specifications for Feature Components
+### 4.4 Technical Specifications for Feature Components
 
-- **Code Editor Panel**: Monaco integration, breakpoint set triggers, and line gutter decorators: 👉 [architecture/ui-components/editor.md](ui-components/editor.md).
-- **Inspection Panel**: Variable flat list conversions, CDF overlay, and call-stack virtual scrolls: 👉 [architecture/ui-components/inspection.md](ui-components/inspection.md).
-- **Low-Level Assembly**: Virtual disassembly lists, sticky symbol headers, and dual-anchored program counter logic: 👉 [architecture/ui-components/assembly-view.md](ui-components/assembly-view.md).
+- **Code Editor Panel**: Monaco integration, breakpoint set triggers, and line gutter decorators: 👉 [architecture/ui-components/editor.md](architecture/ui-components/editor.md).
+- **Inspection Panel**: Variable flat list conversions, CDF overlay, and call-stack virtual scrolls: 👉 [architecture/ui-components/inspection.md](architecture/ui-components/inspection.md).
+- **Low-Level Assembly**: Virtual disassembly lists, sticky symbol headers, and dual-anchored program counter logic: 👉 [architecture/ui-components/assembly-view.md](architecture/ui-components/assembly-view.md).
+- **File Explorer Panel**: Source tree hierarchy categorizations, active file scroll revelations, and loadedSources limits: 👉 [architecture/ui-components/file-explorer.md](architecture/ui-components/file-explorer.md).
+- **Log Viewer & Consoles**: Debug/Output/Protocol console groupings, auto-scroll and memory eviction rules: 👉 [architecture/ui-components/log-viewer.md](architecture/ui-components/log-viewer.md).
+- **Global Keyboard Shortcuts**: Action ID keyboard mappings, zone re-entry guards, and Monaco textareas: 👉 [architecture/ui-components/keyboard-shortcuts.md](architecture/ui-components/keyboard-shortcuts.md).
 
 ---
 
-## 6. Structural Monorepo Workspace Mappings
+## 5. Structural Monorepo Workspace Mappings
 
 All features reside in the primary workspace root. Developers can locate concrete code segments using the following mapping:
 
@@ -168,7 +150,7 @@ All features reside in the primary workspace root. Developers can locate concret
 
 ---
 
-## 7. Exclusion Boundaries
+## 6. Exclusion Boundaries
 
 To maintain focus and avoid scope creep, the following areas are **out of scope**:
 - **Multi-Tenant Server Deployments**: `taro-session` processes operate strictly in a 1-to-1 mapping with an active debugger session bound to a local host (`localhost`) loopback. WAN public hosting is prohibited.

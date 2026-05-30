@@ -170,7 +170,25 @@ The status bar is a fixed-height single-line flex container. The following rules
 | Rule | Specification |
 | :--- | :--- |
 | **Single-line enforcement** | `.status-bar` MUST declare `flex-wrap: nowrap` and `overflow: hidden`. Without `flex-wrap: nowrap`, flex children can wrap onto a second line when the viewport is narrow, causing the container's fixed height to clip wrapped content. |
-| **Truncation Priority** | Informational metadata (e.g., server address) MUST truncate before critical state labels. Apply `flex-shrink: 0; white-space: nowrap` to high-priority elements (connection state, execution state). Apply `min-width: 0; overflow: hidden; text-overflow: ellipsis` to low-priority elements (server address). |
+
+### 6.6 Empty States
+
+To maintain visual consistency when no data is available, all functional panels MUST use the `TaroEmptyStateComponent` instead of custom placeholder text or icons.
+
+| Property | Rule | Rationale |
+| :--- | :--- | :--- |
+| **Component** | `TaroEmptyStateComponent` (@taro/ui-shared) | SSOT for empty state presentation |
+| **Centering** | `centered="true"` (Default) | Ensures the status message is the focal point of the empty container |
+| **Icon Size** | `32px` (Standardized in component SCSS) | Provides consistent visual weight across panels |
+| **Color** | `var(--mat-sys-on-surface-variant)` at `0.5` opacity | De-emphasizes the empty state relative to active data |
+
+**Integration Mapping Standards:**
+
+* **Variables**: `inventory_2` icon + description for pausing.
+* **Breakpoints**: `visibility_off` icon.
+* **Threads**: `format_list_bulleted` icon.
+* **Call Stack**: `reorder` icon.
+* **File Explorer**: `info` icon + description for unsupported server.
 
 ## 7. SCSS & `::ng-deep` Usage Policy
 
@@ -242,22 +260,3 @@ The **active tab** must visually "fuse" with its content area by matching the co
 | :--- | :--- | :--- |
 | **Main Editor** (Source / Disassembly / Memory) | `var(--mat-sys-surface)` | Monaco Editor / Assembly View / Memory View background |
 | **Console / Output** | `var(--mat-sys-surface-container)` | `.console-viewport` background |
-
-### 6.6 Empty States
-
-To maintain visual consistency when no data is available, all functional panels MUST use the `TaroEmptyStateComponent` instead of custom placeholder text or icons.
-
-| Property | Rule | Rationale |
-| :--- | :--- | :--- |
-| **Component** | `TaroEmptyStateComponent` (@taro/ui-shared) | SSOT for empty state presentation |
-| **Centering** | `centered="true"` (Default) | Ensures the status message is the focal point of the empty container |
-| **Icon Size** | `32px` (Standardized in component SCSS) | Provides consistent visual weight across panels |
-| **Color** | `var(--mat-sys-on-surface-variant)` at `0.5` opacity | De-emphasizes the empty state relative to active data |
-
-**Integration Mapping Standards:**
-
-* **Variables**: `inventory_2` icon + description for pausing.
-* **Breakpoints**: `visibility_off` icon.
-* **Threads**: `format_list_bulleted` icon.
-* **Call Stack**: `reorder` icon.
-* **File Explorer**: `info` icon + description for unsupported server.

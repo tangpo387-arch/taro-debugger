@@ -4,8 +4,8 @@ scope: ui-inspection, variables, call-stack, threads, breakpoints
 audience: [Human Engineer, Lead_Engineer, Product_Architect, Quality_Control_Reviewer]
 last_updated: 2026-05-21
 related:
-  - architecture/session-layer.md
-  - architecture/ui-shared.md
+  - ../session-layer.md
+  - ../ui-shared.md
 ---
 
 # Inspection Panels

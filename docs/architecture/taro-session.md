@@ -68,6 +68,33 @@ stateDiagram-v2
 > [!NOTE]
 > For complete message schemas (`open-session`, `new-session`, `session-ready`, `session-failed`) and Acceptance Criteria (AC-1 through AC-5), see 👉 [archive/specs/setup-handshake-protocol.md](../archive/specs/setup-handshake-protocol.md).
 
+### 2.1 Lifecycle Integration Handshake
+
+The coordination between `taro-debugger-frontend`, the `taro-session` daemon, and the GDB subprocess during the connection and initialization flow is managed via a strict sequence:
+
+```mermaid
+sequenceDiagram
+    participant FE as taro-debugger-frontend
+    participant TS as taro-session
+    participant GDB as GDB Subprocess
+
+    FE->>TS: Connect to ws://localhost:8080/session/client
+    TS-->>FE: (Server in UNINITIALIZED state — awaiting setup)
+    FE->>TS: setup channel: open-session or new-session
+    TS->>TS: INITIALIZING — load config & spawn GDB
+    TS-->>FE: setup: session-ready { config }
+    Note over FE,TS: Server transitions to READY state
+    FE->>TS: DAP initialize request
+    GDB-->>TS: Emit "initialized" event
+    TS-->>FE: Broadcast "initialized" event
+    FE->>TS: Send "configurationDone" DAP request
+    TS->>GDB: Forward "configurationDone"
+    GDB-->>TS: Emit GDB start execution
+    TS-->>FE: Broadcast "running" event
+```
+
+> [Diagram: Session lifecycle integration handshake. Highlights the sequential messaging between the frontend, the local daemon, and the GDB subprocess from the initial WebSocket handshake through GDB spawning, DAP initialization, and execution start.]
+
 ---
 
 ## 3. Graceful Disconnect & Orphan Sweeper
