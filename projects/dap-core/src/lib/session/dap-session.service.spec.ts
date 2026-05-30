@@ -61,6 +61,7 @@ describe('DapSessionService', () => {
   describe('Instruction Stepping', () => {
     it('should send next request with instruction granularity', async () => {
       (service as any).transport = mockTransport;
+      (service as any).executionStateSubject.next('stopped');
       service.nextInstruction();
 
       expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
@@ -71,6 +72,7 @@ describe('DapSessionService', () => {
 
     it('should send stepIn request with instruction granularity', async () => {
       (service as any).transport = mockTransport;
+      (service as any).executionStateSubject.next('stopped');
       service.stepInInstruction();
 
       expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({
@@ -1510,6 +1512,7 @@ describe('DapSessionService', () => {
       vi.spyOn(service as any, 'sendRequest').mockReturnValue(new Promise(() => { }));
 
       // Act: trigger next() — this arms the state transition guard
+      (service as any).executionStateSubject.next('stopped');
       service.next();
       expect((service as any).commandInFlightSubject.value).toBe(true);
 
@@ -1533,6 +1536,7 @@ describe('DapSessionService', () => {
       const emittedEvents: any[] = [];
       service.onEvent().subscribe(e => emittedEvents.push(e));
 
+      (service as any).executionStateSubject.next('stopped');
       service.next();
 
       // Act: stopped event arrives at t=2s (before 5s guard)
@@ -2051,6 +2055,47 @@ describe('DapSessionService', () => {
         expect(callOrder).toEqual(['stop', 'initializeSession']);
       });
     });
+  });
+  // ── WI-140: State Guard Enforcement ────────────────────────────────
+
+  describe('WI-140: Step Command State Guards', () => {
+    const stepMethods = ['continue', 'next', 'stepIn', 'stepOut', 'nextInstruction', 'stepInInstruction'] as const;
+    const nonStoppedStates: ExecutionState[] = ['disconnected', 'idle', 'starting', 'running', 'error'];
+
+    for (const method of stepMethods) {
+      for (const state of nonStoppedStates) {
+        it(`should throw DapFatalException when calling ${method}() from '${state}' state`, async () => {
+          (service as any).transport = mockTransport;
+          (service as any).executionStateSubject.next(state);
+
+          await expect((service as any)[method]()).rejects.toThrow(DapFatalException);
+        });
+      }
+    }
+
+    for (const method of stepMethods) {
+      it(`should NOT throw when calling ${method}() from 'stopped' state`, async () => {
+        (service as any).transport = mockTransport;
+        (service as any).executionStateSubject.next('stopped');
+
+        // Resolve immediately so the promise doesn't hang
+        mockTransport.sendRequest.mockImplementation((req: any) => {
+          setTimeout(() => {
+            (service as any).handleIncomingMessage({
+              type: 'response',
+              request_seq: req.seq,
+              success: true,
+              command: req.command,
+              body: {}
+            });
+          }, 0);
+        });
+
+        const promise = (service as any)[method]();
+        vi.advanceTimersByTime(1);
+        await expect(promise).resolves.toBeDefined();
+      });
+    }
   });
 
 });

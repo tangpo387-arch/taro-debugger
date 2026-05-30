@@ -52,6 +52,53 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - [Doc] docs/archive/specs/taro-session-unit-testing.md
 - **Dependencies**: none
 
+### WI-141: Extract DapBreakpointManager & DapThreadManager
+
+- **Status**: 💡 Proposed
+- **Size**: L
+- **Description**: Decompose DapSessionService Phase 1: extract breakpoint and thread management into dedicated services to reduce God Object scope.
+- **Details**:
+  - Extract `DapBreakpointManager` service to own all breakpoint state (breakpointsMap, breakpointFileState, systemBreakpointIds) and public breakpoint APIs (setBreakpoints, toggleBreakpoint, toggleBreakpointEnabled, removeBreakpoint, resyncAllBreakpointsInternal, setFunctionBreakpoints)
+  - Extract `DapThreadManager` service to own thread lifecycle (threadObjects, threadEventsBuffer, flush logic, active thread tracking)
+  - Refactor `handleTransportEvent` switch cases into dedicated handler methods delegating to the new sub-managers
+  - DapSessionService retains orchestration role and delegates to the extracted managers
+  - [Test] Existing dap-session.service.spec.ts must pass after extraction with updated DI setup
+  - [Test] Add unit tests for DapBreakpointManager in isolation
+  - [Test] Add unit tests for DapThreadManager in isolation
+  - [Doc] docs/archive/specs/dap-session-refactor.md
+- **Dependencies**: WI-140
+
+### WI-142: Extract DapRequestBroker & DapRequestSender Interface
+
+- **Status**: 💡 Proposed
+- **Size**: M
+- **Description**: Decompose DapSessionService Phase 2: extract request/response bookkeeping into DapRequestBroker and break circular DapThreadSession dependency via interface.
+- **Details**:
+  - Extract `DapRequestBroker` service to own seq counter, pendingRequests map, timeout logic, and raw sendRequest
+  - Define `DapRequestSender` interface with narrow API surface (sendRequest, executionState) for DapThreadSession dependency injection
+  - Refactor DapThreadSession constructor to accept `DapRequestSender` interface instead of full DapSessionService reference
+  - DapSessionService delegates all request/response bookkeeping to the broker
+  - [Test] DapThreadSession unit tests using a mock DapRequestSender
+  - [Test] DapRequestBroker unit tests in isolation
+  - [Doc] docs/archive/specs/dap-session-refactor.md
+- **Dependencies**: WI-141
+
+### WI-143: Extract DapExecutionController & DapSessionLifecycle Facade
+
+- **Status**: 💡 Proposed
+- **Size**: L
+- **Description**: Decompose DapSessionService Phase 3: extract execution control and session lifecycle into final sub-services, reducing DapSessionService to a thin facade.
+- **Details**:
+  - Extract `DapExecutionController` service to own all execution control methods (continue, next, stepIn, stepOut, pause, instruction-level variants) and the commandInFlight state
+  - Extract `DapSessionLifecycle` service to own connectTransport, initializeSession, startSession, stop, restart, disconnect, and the executionState state machine
+  - DapSessionService becomes a thin facade (~200 lines) delegating to all extracted sub-services
+  - Refactor DapMessageRouter logic to dispatch events to the correct sub-manager
+  - [Test] Full integration test verifying the facade correctly delegates to all sub-services
+  - [Test] DapExecutionController unit tests with mocked broker
+  - [Test] DapSessionLifecycle unit tests for state transitions
+  - [Doc] docs/archive/specs/dap-session-refactor.md
+- **Dependencies**: WI-142
+
 ## Low-Level Inspection
 
 ### WI-107: DapRegisterService Implementation

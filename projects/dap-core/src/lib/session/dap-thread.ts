@@ -81,7 +81,7 @@ export class DapThreadSession implements DapThread {
       return res.body?.stackFrames || [];
     }
 
-    this.stackTracePromise = this.session.sendRequest('stackTrace', { threadId: this.id });
+    this.stackTracePromise = this.session.sendRequestInternal('stackTrace', { threadId: this.id });
 
     try {
       const response = await this.stackTracePromise;

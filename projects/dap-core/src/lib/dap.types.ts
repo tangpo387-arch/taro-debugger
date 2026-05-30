@@ -178,3 +178,39 @@ export interface WriteMemoryResponse extends DapResponse {
     bytesWritten?: number;
   };
 }
+
+/**
+ * Capabilities reported by the debug adapter in the InitializeResponse.
+ * Based on the DAP specification's Capabilities interface.
+ */
+export interface DapCapabilities {
+  supportsConfigurationDoneRequest?: boolean;
+  supportsFunctionBreakpoints?: boolean;
+  supportsConditionalBreakpoints?: boolean;
+  supportsHitConditionalBreakpoints?: boolean;
+  supportsEvaluateForHovers?: boolean;
+  supportsStepBack?: boolean;
+  supportsSetVariable?: boolean;
+  supportsRestartFrame?: boolean;
+  supportsGotoTargetsRequest?: boolean;
+  supportsStepInTargetsRequest?: boolean;
+  supportsCompletionsRequest?: boolean;
+  supportsModulesRequest?: boolean;
+  supportsRestartRequest?: boolean;
+  supportsExceptionOptions?: boolean;
+  supportsValueFormattingOptions?: boolean;
+  supportsExceptionInfoRequest?: boolean;
+  supportTerminateDebuggee?: boolean;
+  supportsTerminateRequest?: boolean;
+  supportsSingleThreadExecutionRequests?: boolean;
+  supportsCancelRequest?: boolean;
+  supportsDisassembleRequest?: boolean;
+  supportsReadMemoryRequest?: boolean;
+  supportsWriteMemoryRequest?: boolean;
+  supportsSteppingGranularity?: boolean;
+  supportsInstructionBreakpoints?: boolean;
+  supportsLoadedSourcesRequest?: boolean;
+  supportsDataBreakpoints?: boolean;
+  /** Additional capabilities not explicitly listed. */
+  [key: string]: any;
+}

@@ -4,7 +4,7 @@ import { filter, timeout } from 'rxjs/operators';
 import { DapTransportService } from '../transport/dap-transport.service';
 import { TransportFactoryService } from '../transport/transport-factory.service';
 import { DapConfigService } from './dap-config.service';
-import { DapRequest, DapResponse, DapEvent, DisassembleArguments, StepArguments, DapDisassemblyResponse, ReadMemoryArguments, ReadMemoryResponse, WriteMemoryArguments, WriteMemoryResponse } from '../dap.types';
+import { DapRequest, DapResponse, DapEvent, DisassembleArguments, StepArguments, DapDisassemblyResponse, ReadMemoryArguments, ReadMemoryResponse, WriteMemoryArguments, WriteMemoryResponse, DapCapabilities } from '../dap.types';
 import { DapThreadSession } from './dap-thread';
 
 /** Error thrown when an evaluate request is cancelled or times out */
@@ -85,7 +85,7 @@ export class DapSessionService implements OnDestroy {
   private readonly processInfoSubject = new BehaviorSubject<{ name: string; systemProcessId?: number } | null>(null);
   public readonly processInfo$ = this.processInfoSubject.asObservable();
 
-  public capabilities: any = {};
+  public capabilities: DapCapabilities = {};
   private stateTransitionTimer?: any;
   private readonly STATE_TRANSITION_TIMEOUT_MS = 5000;
   private transport: DapTransportService;
@@ -158,15 +158,6 @@ export class DapSessionService implements OnDestroy {
     return this.connectionStatusSubject.asObservable();
   }
 
-  /**
-   * Starts a complete DAP Session.
-   * 
-   * Follows the standard DAP message flow:
-   * 1. Establish underlying Transport connection
-   * 2. Send initialize request
-   * 3. Wait for initialized event (configurationDone is handled internally)
-   * 4. Send launch/attach request (response returns after configurationDone)
-   */
   /**
    * Establishes the underlying connection to the debug transport (e.g., WebSocket).
    */
@@ -524,22 +515,39 @@ export class DapSessionService implements OnDestroy {
     await this.initializeSession();
   }
 
+  // ── Execution Control Commands ──────────────────────────────────────
+
   /**
-   * Continue execution
+   * Generic execution control command handler.
+   * Centralizes state assertion, commandInFlight guard, state transition guard,
+   * and resumption state handling for all step/continue commands.
+   *
+   * @param command The DAP command name (e.g., 'continue', 'next', 'stepIn')
+   * @param allThreadsContinued Whether resumption applies to all threads (true for continue, false for step commands)
+   * @param extraArgs Optional additional arguments to merge into the request (e.g., granularity)
+   * @param allowedStates Execution states from which this command is allowed (defaults to ['stopped'])
    */
-  public async continue(): Promise<DapResponse> {
-    this.assertState(['stopped'], 'continue');
+  private async executeStepCommand(
+    command: string,
+    allThreadsContinued: boolean,
+    extraArgs?: Partial<StepArguments>,
+    allowedStates: ExecutionState[] = ['stopped']
+  ): Promise<DapResponse> {
+    this.assertState(allowedStates, command);
     if (this.commandInFlightSubject.value) {
-      return Promise.resolve({ seq: 0, type: 'response', command: 'continue', success: true, request_seq: 0 });
+      return Promise.resolve({ seq: 0, type: 'response', command, success: true, request_seq: 0 });
     }
     this.commandInFlightSubject.next(true);
-    this.startStateTransitionGuard('continue');
+    this.startStateTransitionGuard(command);
     try {
       const threadId = this.activeThreadSubject.value?.id || 1;
-      const response = await this.sendRequest('continue', { threadId });
+      const args: StepArguments = { threadId, ...extraArgs };
+      const response = await this.sendRequest(command, args);
       if (response.success) {
-        // DAP Spec: If allThreadsContinued is missing, assume true.
-        this.handleResumptionState(response.body?.allThreadsContinued ?? true, threadId);
+        this.handleResumptionState(
+          command === 'continue' ? (response.body?.allThreadsContinued ?? true) : allThreadsContinued,
+          threadId
+        );
       } else {
         this.clearStateTransitionGuard();
         this.commandInFlightSubject.next(false);
@@ -550,138 +558,48 @@ export class DapSessionService implements OnDestroy {
       this.commandInFlightSubject.next(false);
       throw e;
     }
+  }
+
+  /**
+   * Continue execution
+   */
+  public async continue(): Promise<DapResponse> {
+    return this.executeStepCommand('continue', true);
   }
 
   /**
    * Step Over (Next)
    */
   public async next(): Promise<DapResponse> {
-    if (this.commandInFlightSubject.value) {
-      return Promise.resolve({ seq: 0, type: 'response', command: 'next', success: true, request_seq: 0 });
-    }
-    this.commandInFlightSubject.next(true);
-    this.startStateTransitionGuard('next');
-    try {
-      const threadId = this.activeThreadSubject.value?.id || 1;
-      const response = await this.sendRequest('next', { threadId });
-      if (response.success) {
-        this.handleResumptionState(false, threadId);
-      } else {
-        this.clearStateTransitionGuard();
-        this.commandInFlightSubject.next(false);
-      }
-      return response;
-    } catch (e) {
-      this.clearStateTransitionGuard();
-      this.commandInFlightSubject.next(false);
-      throw e;
-    }
+    return this.executeStepCommand('next', false);
   }
 
   /**
    * Step Into
    */
   public async stepIn(): Promise<DapResponse> {
-    if (this.commandInFlightSubject.value) {
-      return Promise.resolve({ seq: 0, type: 'response', command: 'stepIn', success: true, request_seq: 0 });
-    }
-    this.commandInFlightSubject.next(true);
-    this.startStateTransitionGuard('stepIn');
-    try {
-      const threadId = this.activeThreadSubject.value?.id || 1;
-      const response = await this.sendRequest('stepIn', { threadId });
-      if (response.success) {
-        this.handleResumptionState(false, threadId);
-      } else {
-        this.clearStateTransitionGuard();
-        this.commandInFlightSubject.next(false);
-      }
-      return response;
-    } catch (e) {
-      this.clearStateTransitionGuard();
-      this.commandInFlightSubject.next(false);
-      throw e;
-    }
+    return this.executeStepCommand('stepIn', false);
   }
 
   /**
    * Step Out
    */
   public async stepOut(): Promise<DapResponse> {
-    if (this.commandInFlightSubject.value) {
-      return Promise.resolve({ seq: 0, type: 'response', command: 'stepOut', success: true, request_seq: 0 });
-    }
-    this.commandInFlightSubject.next(true);
-    this.startStateTransitionGuard('stepOut');
-    try {
-      const threadId = this.activeThreadSubject.value?.id || 1;
-      const response = await this.sendRequest('stepOut', { threadId });
-      if (response.success) {
-        this.handleResumptionState(false, threadId);
-      } else {
-        this.clearStateTransitionGuard();
-        this.commandInFlightSubject.next(false);
-      }
-      return response;
-    } catch (e) {
-      this.clearStateTransitionGuard();
-      this.commandInFlightSubject.next(false);
-      throw e;
-    }
+    return this.executeStepCommand('stepOut', false);
   }
 
   /**
    * Step Over at Instruction Level (Nexti)
    */
   public async nextInstruction(): Promise<DapResponse> {
-    if (this.commandInFlightSubject.value) {
-      return Promise.resolve({ seq: 0, type: 'response', command: 'next', success: true, request_seq: 0 });
-    }
-    this.commandInFlightSubject.next(true);
-    this.startStateTransitionGuard('nextInstruction');
-    try {
-      const threadId = this.activeThreadSubject.value?.id || 1;
-      const args: StepArguments = { threadId, granularity: 'instruction' };
-      const response = await this.sendRequest('next', args);
-      if (response.success) {
-        this.handleResumptionState(false, threadId);
-      } else {
-        this.clearStateTransitionGuard();
-        this.commandInFlightSubject.next(false);
-      }
-      return response;
-    } catch (e) {
-      this.clearStateTransitionGuard();
-      this.commandInFlightSubject.next(false);
-      throw e;
-    }
+    return this.executeStepCommand('next', false, { granularity: 'instruction' });
   }
 
   /**
    * Step Into at Instruction Level (Stepi)
    */
   public async stepInInstruction(): Promise<DapResponse> {
-    if (this.commandInFlightSubject.value) {
-      return Promise.resolve({ seq: 0, type: 'response', command: 'stepIn', success: true, request_seq: 0 });
-    }
-    this.commandInFlightSubject.next(true);
-    this.startStateTransitionGuard('stepInInstruction');
-    try {
-      const threadId = this.activeThreadSubject.value?.id || 1;
-      const args: StepArguments = { threadId, granularity: 'instruction' };
-      const response = await this.sendRequest('stepIn', args);
-      if (response.success) {
-        this.handleResumptionState(false, threadId);
-      } else {
-        this.clearStateTransitionGuard();
-        this.commandInFlightSubject.next(false);
-      }
-      return response;
-    } catch (e) {
-      this.clearStateTransitionGuard();
-      this.commandInFlightSubject.next(false);
-      throw e;
-    }
+    return this.executeStepCommand('stepIn', false, { granularity: 'instruction' });
   }
 
   /**
@@ -997,7 +915,7 @@ export class DapSessionService implements OnDestroy {
    */
   public async disassemble(args: DisassembleArguments, silentError = false): Promise<DapDisassemblyResponse> {
     this.ensureStopped();
-    const response = await this.sendRequest('disassemble', args, 500000, silentError);
+    const response = await this.sendRequest('disassemble', args, 30000, silentError);
 
     // Translation layer to ensure addresses are correctly cast to BigInt
     if (response.body?.instructions) {
@@ -1111,7 +1029,7 @@ export class DapSessionService implements OnDestroy {
    * @param args DAP command arguments (optional)
    * @param timeoutMs Timeout in milliseconds (default 5000ms)
    */
-  public sendRequest(command: string, args?: any, timeoutMs: number = 500000, silentError: boolean = false): Promise<DapResponse> {
+  private sendRequest(command: string, args?: any, timeoutMs: number = 5000, silentError: boolean = false): Promise<DapResponse> {
     const transport = this.transport;
     if (!transport) {
       return Promise.reject(new Error('Transport not initialized. Call startSession() first.'));
@@ -1156,6 +1074,15 @@ export class DapSessionService implements OnDestroy {
       // Emit outgoing request to diagnostic traffic stream (§4.6)
       this.trafficSubject.next(request);
     });
+  }
+
+  /**
+   * @internal Sends a raw DAP request on behalf of internal session objects
+   * (e.g., DapThreadSession). Not part of the public API surface.
+   * This will be replaced by the DapRequestSender interface in WI-142.
+   */
+  public sendRequestInternal(command: string, args?: any): Promise<DapResponse> {
+    return this.sendRequest(command, args);
   }
 
   /**
