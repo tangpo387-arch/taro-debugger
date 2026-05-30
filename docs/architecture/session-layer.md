@@ -2,7 +2,7 @@
 title: Architecture - Session Layer
 scope: architecture, session-layer, state-machine, data-flow
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-05-27
+last_updated: 2026-05-30
 related:
   - ../architecture.md
   - command-serialization.md
@@ -67,6 +67,8 @@ graph TD
 > - **Imperative transitions (Red)** are triggered by User functions like `startSession()`, `continue()`, `next()`, and `stepIn/Out()`.
 > - **Asynchronous transitions (Blue)** are triggered by Adapter events like `stopped`, `continued`, and `terminated`.
 > - **Error state** is reached via unexpected disconnections. The public recovery path is `stop()`, which returns early (no request sent) when in `error` state, allowing `restart()` or `startSession()` to be called next.
+
+<!-- -->
 
 > [!IMPORTANT]
 > **R-ERR1 — Mandatory Transport Close on Error Entry**: Any code path that transitions the execution state to `error` **MUST** call `closeTransport()` before setting the new state. This guarantees that no stale transport subscriptions or dangling socket references survive past the error boundary.
@@ -214,26 +216,63 @@ When the user switches between call stack frames, the system enforces a **"Lates
 | `readMemory(args)` | `Promise<ReadMemoryResponse>` | Low-level protocol memory read. |
 | `writeMemory(args)` | `Promise<WriteMemoryResponse>` | Low-level protocol memory write. |
 
-## 9. Configuration Flow (DapConfig)
+## 9. Configuration Flow (DapConfig) & Setup Handshake
+
+To prevent premature DAP initializations before backend readiness, the frontend establishes a loopback WebSocket connection and completes a custom `"setup"` channel handshake protocol before initiating the standard DAP connection cycle.
+
+### 9.1 Handshake Sequence Diagram
 
 ```mermaid
 sequenceDiagram
-    participant SC as SetupComponent
+    participant UI as Setup Component
     participant DCS as DapConfigService
     participant DSS as DapSessionService
+    participant TS as taro-session Daemon
 
-    Note over SC, DCS: Enter config on setup page
-    SC->>DCS: setConfig({ transportType, serverAddress, ... })
-    SC->>SC: navigate('/debug')
+    Note over UI, DCS: 1. User configures parameters & selects mode
+    UI->>DCS: setConfig({ setupMode: 'new' | 'open', sessionPath, ... })
+    UI->>UI: Navigate to '/debug'
 
-    Note over DSS, DCS: Read config on debug page
-    DSS->>DCS: getConfig()
-    DCS-->>DSS: current config
-    DSS->>DSS: TransportFactoryService.createTransport(type)
-    DSS->>DSS: connect(address)
+    Note over DSS, TS: 2. Connect & Negotiate Setup Handshake
+    DSS->>DSS: Connect ws://localhost:8080/session/client
+    Note right of DSS: Server starts in UNINITIALIZED state
+
+    alt setupMode === 'new' (Create New Session)
+        DSS->>TS: sendRequest(channel: "setup", command: "new-session", config)
+    else setupMode === 'open' (Open Existing Session)
+        DSS->>TS: sendRequest(channel: "setup", command: "open-session", sessionPath)
+    end
+
+    alt Handshake Success
+        TS-->>DSS: Emit "session-ready" event with merged config
+        Note over TS: Server transitions to READY state
+        DSS->>DCS: setConfig(mergedBackendConfig)
+        Note over DSS: Proceed with standard DAP initialize & launch
+    else Handshake Failure (Or socket close / timeout)
+        TS-->>DSS: Emit "session-failed" or Socket Close
+        Note over TS: Server transitions to ERROR state & closes socket
+        DSS->>DSS: execute closeTransport() & cleanup
+        DSS-->>UI: Raise error (displays "DAP Handshake Failed" dialog)
+    end
 ```
 
-### 9.1 Electron Specifics (Bridge Management)
+> [Diagram: Configuration flow and setup handshake sequence. Demonstrates how `SetupComponent` stores parameters in `DapConfigService` before routing to `/debug`. `DapSessionService` then creates a WebSocket connection and executes either a `new-session` or `open-session` command. Upon receiving `session-ready`, the backend config is merged back to the client, and DAP initialization commences. If the handshake fails, the transport is cleaned up, and a failure dialog is shown.]
+
+### 9.2 Dynamic Configuration Synchronizations
+
+- **Mode Selection**: The client configuration defines a `setupMode` which can be `'new'` (creating a new session directory) or `'open'` (loading an existing session directory).
+- **Properties Merging**: Upon a successful `session-ready` response, the backend returns the authoritative launch configuration persisted in the session folder. `DapSessionService` merges these properties back into the client-side `DapConfigService` to ensure a single source of truth (SSOT).
+- **Executable Bypass Guard**: Under `'open'` mode, the debugger starts with an empty executable path configuration on boot, since settings are resolved dynamically from the backend handshake. `DebuggerComponent.ngOnInit()` bypasses empty executable validation guards when `setupMode === 'open'`, preventing startup locking.
+
+### 9.3 Fail-Fast Handshake Cleanups
+
+- **Robust Resource Reclamation**: If `taro-session` sends a `session-failed` event or the WebSocket closes abruptly during the negotiation phase:
+  1. `DapSessionService` catches the exception using a `try-catch` wrapper.
+  2. The service immediately unsubscribes from the transport message streams, calls `closeTransport()`, and nulls the transport references.
+  3. The execution state is reset to `disconnected` and a descriptive error is bubbled up.
+  4. The UI displays an interactive dialog, allowing the user to either retry connection or safely navigate back to `/setup`.
+
+### 9.4 Electron Specifics (Bridge Management)
 
 - **HashLocationStrategy**: Uses `withHashLocation()` to ensure reloads work within Electron's `file://` protocol.
 - **Main Process Isolation**: Native logic is gated behind the Electron Preload bridge.

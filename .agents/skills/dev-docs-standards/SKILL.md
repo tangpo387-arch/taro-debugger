@@ -1,6 +1,6 @@
 ---
 name: "[DEV:DOCS] Documentation Standards"
-description: Structure, tone, context, and verification standards for writing or reviewing any project Markdown document.
+description: Structure, tone, context, and verification standards for writing or reviewing any project Markdown document. Includes mandatory rules for docs/architecture.md authoring and subsystem document extraction.
 ---
 
 # Documentation Authoring Rules
@@ -175,6 +175,89 @@ Every troubleshooting entry must follow this four-field structure:
 | **Root Cause** | Specific technical explanation |
 | **Resolution** | Numbered steps |
 | **Prevention** | Code pattern or config that prevents recurrence |
+
+---
+
+---
+
+## 8. `docs/architecture.md` Authoring Rules
+
+`docs/architecture.md` is the **Master Index** for the system topology. It MUST NOT become a deep-dive reference. Enforce the following rules every time it is modified.
+
+### 8.1 Single-Responsibility Rule
+
+<constraints>
+
+- `docs/architecture.md` MUST contain ONLY:
+  - System topology diagram (Mermaid `graph` or `sequenceDiagram`)
+  - High-level module responsibility summaries (3–5 bullets per module)
+  - The Communication Protocol Map table
+  - The Architectural Map of Sub-systems (§5) — links to all detail docs
+  - The Structural Monorepo Workspace Mappings table
+  - Exclusion Boundaries
+- `docs/architecture.md` MUST NOT contain:
+  - State machine tables or transition logic
+  - CLI option references
+  - Log file paths or I/O schemas
+  - Protocol message schemas (JSON / TypeScript interface blocks)
+  - Step-by-step operational procedures
+
+</constraints>
+
+### 8.2 Subsystem Extraction Pattern
+
+When a section in `docs/architecture.md` exceeds **summary scope** (i.e., contains state tables, schemas, or operational detail), you MUST extract it to a dedicated file.
+
+<workflow>
+
+| Step | Action |
+| :--- | :--- |
+| **1. Create** | Create `docs/architecture/<subsystem-name>.md` with a full `Service/Architecture Doc` structure (Overview, Layer Responsibilities, API Contract, Constraints). |
+| **2. Condense** | Replace the extracted content in `docs/architecture.md` with a 1–4 bullet summary of the module's responsibilities. |
+| **3. Link** | Add a `> For full detail, see 👉 [architecture/<subsystem-name>.md](architecture/<subsystem-name>.md)` blockquote after the summary. |
+| **4. Register** | Add the new file as a bullet in `docs/architecture.md §5.1 System Integration & Topology`. |
+| **5. Update** | Add the new file to the `related:` frontmatter of `docs/architecture.md` and update its `last_updated` date. |
+| **6. File Map** | Add a reference to the new file in the relevant section of `docs/file-map.md`. |
+
+</workflow>
+
+### 8.3 Forwarding Stub Removal Rule
+
+A **forwarding stub** is a section whose only content is a link to another document — it has no information of its own.
+
+<constraints>
+
+- STRICTLY FORBIDDEN from keeping a section that is purely a forwarding stub. If a section contains only a link and no independent explanatory content, it MUST be removed.
+- Before removing a stub section, verify the linked target document contains the full content.
+- After removing a stub, check whether the parent `##` heading still has meaningful sub-sections. If all sub-sections are removed, evaluate removing or renaming the parent heading.
+
+</constraints>
+
+### 8.4 Subsystem Document Template
+
+Every `docs/architecture/<subsystem>.md` file MUST follow this frontmatter and section structure:
+
+```markdown
+---
+title: <Subsystem Name> — Architecture & Lifecycle
+scope: <comma-separated keywords>
+audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
+last_updated: YYYY-MM-DD
+related:
+  - docs/architecture.md
+  - <other related docs>
+---
+
+# <Subsystem Name> — Architecture & Lifecycle
+
+<1-sentence description of the subsystem's role in the system.>
+
+## 1. Core Responsibilities
+## 2. <Primary Behavior / State Machine / Protocol>
+## 3. <Secondary Behavior / Lifecycle>
+## 4. <I/O, Logging, or Configuration>
+## 5. <CLI / API Reference> (if applicable)
+```
 
 ---
 

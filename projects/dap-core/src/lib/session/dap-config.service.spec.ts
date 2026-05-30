@@ -13,7 +13,8 @@ describe('DapConfigService', () => {
     sourcePath: '/path/to/src',
     programArgs: '--help',
     stopOnEntry: false,
-    sessionPath: '/path/to/.tarodb'
+    sessionPath: '/path/to/.tarodb',
+    setupMode: 'new'
   };
 
   // Suppress console.log emitted by setConfig() to keep CI output clean (QCR §7)

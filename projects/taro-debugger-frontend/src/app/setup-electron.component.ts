@@ -53,6 +53,10 @@ export class SetupElectronComponent implements OnInit, OnDestroy {
     sessionPath: new FormControl('.tarodb', {
       nonNullable: true,
       validators: Validators.required
+    }),
+    setupMode: new FormControl<'new' | 'open'>('new', {
+      nonNullable: true,
+      validators: Validators.required
     })
   });
 
@@ -68,14 +72,20 @@ export class SetupElectronComponent implements OnInit, OnDestroy {
       sourcePath: existingConfig.sourcePath,
       programArgs: existingConfig.programArgs,
       stopOnEntry: existingConfig.stopOnEntry,
-      sessionPath: existingConfig.sessionPath || '.tarodb'
+      sessionPath: existingConfig.sessionPath || '.tarodb',
+      setupMode: existingConfig.setupMode || 'new'
     });
 
-    this.updateExecPathValidator(existingConfig.launchMode);
+    this.updateValidators();
 
     this.subscriptions.add(
-      this.form.controls.launchMode.valueChanges.subscribe(mode => {
-        this.updateExecPathValidator(mode);
+      this.form.controls.launchMode.valueChanges.subscribe(() => {
+        this.updateValidators();
+      })
+    );
+    this.subscriptions.add(
+      this.form.controls.setupMode.valueChanges.subscribe(() => {
+        this.updateValidators();
       })
     );
   }
@@ -84,10 +94,13 @@ export class SetupElectronComponent implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
-  /** Centralized logic for updating executablePath validation rules */
-  private updateExecPathValidator(mode: 'launch' | 'attach'): void {
+  /** Centralized logic for updating executablePath validation rules based on setupMode and launchMode */
+  private updateValidators(): void {
+    const setupMode = this.form.controls.setupMode.value;
+    const launchMode = this.form.controls.launchMode.value;
     const execCtrl = this.form.controls.executablePath;
-    if (mode === 'launch') {
+
+    if (setupMode === 'new' && launchMode === 'launch') {
       execCtrl.setValidators(Validators.required);
     } else {
       execCtrl.clearValidators();
@@ -95,15 +108,25 @@ export class SetupElectronComponent implements OnInit, OnDestroy {
     execCtrl.updateValueAndValidity();
   }
 
+  get setupMode(): 'new' | 'open' {
+    return this.form.controls.setupMode.value;
+  }
+
   get launchMode(): 'launch' | 'attach' {
     return this.form.controls.launchMode.value;
   }
 
   get connectButtonLabel(): string {
+    if (this.setupMode === 'open') {
+      return 'Open & Debug';
+    }
     return this.launchMode === 'launch' ? 'Launch & Debug' : 'Attach & Debug';
   }
 
   get connectButtonIcon(): string {
+    if (this.setupMode === 'open') {
+      return 'folder_open';
+    }
     return this.launchMode === 'launch' ? 'play_arrow' : 'link';
   }
 

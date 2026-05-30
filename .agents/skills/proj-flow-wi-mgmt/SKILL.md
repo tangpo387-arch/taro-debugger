@@ -269,7 +269,9 @@ The script automatically handles timestamps for `accepted` and `aborted` statuse
 
 **Steps**:
 1. Implement the feature and create the Review Package.
-2. Before transitioning the WI to `done`, update the architecture and file map documents.
+2. Before transitioning the WI to `done`, update the architecture and file map documents:
+   - Update the work item's spec document to the files in the `docs/architecture/` directory, and ensure there is a storyline/flow linking to the added document content from `docs/architecture.md`.
+   - Update `docs/file-map.md` to reflect any new, modified, or relocated files.
 3. **Submission**: Propose the transition to `done` and STOP to await USER authorization before executing `update-wi.js`.
 
 ### 6.3 Phase 3: Quality Control Review (Quality_Control_Reviewer)

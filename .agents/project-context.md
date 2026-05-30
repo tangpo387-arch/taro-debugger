@@ -54,6 +54,7 @@ This document is purely an index and terminology outline. You are STRICTLY FORBI
 | Define or update requirements | — | `Product_Architect` | Load **Skill: `[DEV:ARCH] System Architecture`** |
 | Write any feature spec or design document | - | `Product_Architect` | Load **Skill: `[PROJ:FLOW] Work Item Management`** |
 | Write or format human-facing documentation (`docs/`) | — | `Product_Architect`, `Quality_Control_Reviewer` | Load **Skill: `[DEV:DOCS] Documentation Standards`** |
+| Modify `docs/architecture.md` or create `docs/architecture/*.md` | — | `Product_Architect`, `Lead_Engineer` | Load **Skill: `[DEV:DOCS] Documentation Standards`** (§8: architecture.md rules) |
 | Write or design AI skill prompts (`.agents/skills/`) | — | `Product_Architect`, `Quality_Control_Reviewer` | Load **Skill: `[META:RULE] AI Skill Engineering`** |
 | Add a new UI feature | **UI** | `Lead_Engineer` | Load **Skill: `[DEV:ARCH] System Architecture`** |
 | Use Angular Framework APIs (mat-tree) | **UI** | `Lead_Engineer` | Load **Skill: `[DEV:ANG] Angular Feature Specs`** |

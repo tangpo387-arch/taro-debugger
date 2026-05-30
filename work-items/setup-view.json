@@ -71,6 +71,34 @@
       "timeline": {
         "completed": "2026-03"
       }
+    },
+    {
+      "id": "WI-137",
+      "title": "Integrate Frontend Setup Handshake with Dynamic sessionPath and Connection States",
+      "featureGroup": "Setup View",
+      "metadata": {
+        "status": "accepted",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-136"
+        ]
+      },
+      "description": "Integrate the client-side setup handshake flow within Setup components, enabling dynamic session path and connection state orchestration.",
+      "details": [
+        "Update SetupWebComponent and SetupElectronComponent to pass the correct session path and config arguments during connection",
+        "Implement user UI selection to choose between opening an existing session path or creating a new session path, triggering open-session vs new-session setup commands dynamically",
+        "Update DapSessionService to parse session-ready responses and dynamically synchronize DapConfigService parameters",
+        "Ensure the frontend correctly handles the session-failed state, displays appropriate errors, and closes the connection cleanly",
+        "[Doc] docs/archive/specs/frontend-setup-handshake-integration.md",
+        "[Test] Verify that opening an existing session without program arguments successfully sends open-session and populates frontend config",
+        "[Test] Verify that launching a new session with program arguments successfully sends new-session with complete configurations"
+      ],
+      "timeline": {
+        "created": "2026-05-30",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-30"
+      }
     }
   ]
 }

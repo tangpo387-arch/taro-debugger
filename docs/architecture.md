@@ -55,6 +55,7 @@ graph TB
     style Daemon fill:#e1f5fe,stroke:#01579b,stroke-width:2px
     style LocalOS fill:#fff,stroke:#ccc,stroke-dasharray: 5 5
 ```
+
 > [Diagram: System-level client-server topology. The `taro-debugger-frontend` Angular application connects via standard WebSocket to the standalone `taro-session` Node.js daemon. The frontend encapsulates the UI components, session layer state machine, and the WebSocket client. The backend daemon hosts the WebSocket router/multiplexer, GDB process manager, MCP server, session manager, and low-latency logger. The daemon manages native GDB subprocess execution and reads/writes persistent state to the local workspace's `.tarodb/` folder.]
 
 ---
@@ -64,6 +65,7 @@ graph TB
 To ensure optimal crash resilience and separation of concerns, the systems follow a strict division of responsibilities:
 
 ### 2.1 `taro-debugger-frontend` (Presentation & Local Layout State)
+
 - **High-Density UI Rendering**: Projects and updates standalone visual components (editor gutter highlights, disassembly table virtual scrolls, CDK-connected variable type info overlays).
 - **Reactive Stream Consumption**: Subscribes to execution states (`executionState$`, `activeThread$`) and streams telemetry directly to UI components.
 - **Client-Side Transport**: Buffers raw incoming network frames via `WebSocketTransportService`, enforcing strict content-length validation.
@@ -71,6 +73,7 @@ To ensure optimal crash resilience and separation of concerns, the systems follo
 - **DI Encapsulation**: Guarantees session isolation by binding all debug state services (`DapSessionService`, `DapVariablesService`, etc.) to the lifecycle of the parent `DebuggerComponent` to prevent context leakages.
 
 ### 2.2 `taro-session` (Process Execution & Session Persistence)
+
 - **Subprocess Isolation**: Spawns and owns the `gdb --interpreter=dap` child process.
 - **Unified Persistence**: Maintains the `.tarodb` directory (`config.json`, `breakpoints.json`, `chat.json`, `memory.md`, `logs/`).
 - **Telemetry Brokering**: Multiplexes GDB output to both `/session/client` and `/session/agent` simultaneously.
@@ -97,6 +100,7 @@ Taro uses a multiplexed, channel-based WebSocket protocol to handle DAP and Agen
 ## 4. State Management & Lifecycle Coordination
 
 ### 4.1 Lifecycle State Machine
+
 The coordination between `taro-debugger-frontend` and `taro-session` is managed via a strict lifecycle flow:
 
 ```mermaid
@@ -107,8 +111,8 @@ sequenceDiagram
 
     FE->>TS: Connect to ws://localhost:8080/session/client
     TS-->>FE: (Server in UNINITIALIZED state — awaiting setup)
-    FE->>TS: setup channel: open-session { sessionPath }
-    TS->>TS: INITIALIZING — read config.json, spawn GDB
+    FE->>TS: setup channel: open-session or new-session
+    TS->>TS: INITIALIZING — load config & spawn GDB
     TS-->>FE: setup: session-ready { config }
     Note over FE,TS: Server transitions to READY state
     FE->>TS: DAP initialize request
@@ -119,6 +123,7 @@ sequenceDiagram
     GDB-->>TS: Emit GDB start execution
     TS-->>FE: Broadcast "running" event
 ```
+
 > [Diagram: Updated session lifecycle flow including the new Setup Handshake Phase (WI-136). The frontend connects and immediately enters the UNINITIALIZED state. It must send a `setup` channel command (`open-session` or `new-session`) before any standard DAP messages. Only upon receiving `session-ready` does the server enter the `READY` state, after which DAP initialization proceeds as normal.]
 
 ---
@@ -128,18 +133,21 @@ sequenceDiagram
 The system documentation is organized logically into detailed modules:
 
 ### 5.1 System Integration & Topology
+
 - **Master Index (This Document)**: Overview of frontend-backend client-server decoupling and topology.
 - **System Specification**: Detailed component-level specifications and deployment constraints: 👉 [system-specification.md](project/system-specification.md).
 - **taro-session Daemon**: Full server responsibilities, connection state machine, logging, and CLI reference: 👉 [architecture/taro-session.md](architecture/taro-session.md).
 - **Agentic Debug Architecture**: Cognitive companion, MCP tool details, SMT solver interfaces, and chat-log persistence: 👉 [architecture/agentic-debug-architecture.md](architecture/agentic-debug-architecture.md).
 
 ### 5.2 Frontend Components & UI Layer (`taro-debugger-frontend`)
+
 - **UI Layer & Injection Control**: Dependency Injection boundaries, component lifecycles, and layout hierarchy: 👉 [architecture/ui-layer.md](architecture/ui-layer.md).
 - **UI Shared Foundation**: Panel systems, shared styling tokens, and dialog templates: 👉 [architecture/ui-shared.md](architecture/ui-shared.md).
 - **Transport Services**: Buffer management, content-length parsers, and fail-fast validation: 👉 [architecture/transport-layer.md](architecture/transport-layer.md).
 - **Session State Machine**: DAP lifecycle state machine, threads cache, and verified breakpoints SSOT: 👉 [architecture/session-layer.md](architecture/session-layer.md).
 
 ### 5.3 Technical Specifications for Feature Components
+
 - **Code Editor Panel**: Monaco integration, breakpoint set triggers, and line gutter decorators: 👉 [architecture/ui-components/editor.md](ui-components/editor.md).
 - **Inspection Panel**: Variable flat list conversions, CDF overlay, and call-stack virtual scrolls: 👉 [architecture/ui-components/inspection.md](ui-components/inspection.md).
 - **Low-Level Assembly**: Virtual disassembly lists, sticky symbol headers, and dual-anchored program counter logic: 👉 [architecture/ui-components/assembly-view.md](ui-components/assembly-view.md).

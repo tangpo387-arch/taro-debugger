@@ -133,6 +133,7 @@ graph LR
     WI_01["WI-01 Extend `GdbConfigService` Configuration Model"]
     WI_02["WI-02 Setup Form Field Completion"]
     WI_03["WI-03 Setup Form Validation"]
+    WI_137["WI-137 Integrate Frontend Setup Handshake with Dynamic sessionPath and Connection States"]
     WI_75["WI-75 Refactor: Extract @taro/ui-shared Foundation"]
     WI_74["WI-74 Standardization of UI Patterns"]
     WI_76["WI-76 Design Tokens & Dark Mode Support"]
@@ -240,6 +241,7 @@ graph LR
     WI_106 --> WI_130
     WI_01 --> WI_02
     WI_02 --> WI_03
+    WI_136 --> WI_137
     WI_75 --> WI_74
     WI_75 --> WI_76
     WI_75 --> WI_77
@@ -369,6 +371,7 @@ graph LR
     style WI_01 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_02 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_03 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_137 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_75 fill:#cbd5e1,stroke:#000,stroke-width:2.5px
     style WI_74 fill:#cbd5e1,stroke:#000,stroke-width:2.5px
     style WI_76 fill:#cbd5e1,stroke:#475569

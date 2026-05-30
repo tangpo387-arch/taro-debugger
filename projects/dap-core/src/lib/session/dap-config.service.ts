@@ -34,6 +34,12 @@ export interface DapConfig {
    * Defaults to '.tarodb' relative to the daemon working directory.
    */
   sessionPath: string;
+
+  /**
+   * Setup mode: 'new' creates a new session path, 'open' opens an existing one.
+   * Defaults to 'new'.
+   */
+  setupMode?: 'new' | 'open';
 }
 
 /**
@@ -56,7 +62,8 @@ export class DapConfigService {
     sourcePath: '',
     programArgs: '',
     stopOnEntry: true,
-    sessionPath: '.tarodb'
+    sessionPath: '.tarodb',
+    setupMode: 'new'
   };
 
   constructor() {

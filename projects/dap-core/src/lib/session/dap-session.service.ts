@@ -210,19 +210,46 @@ export class DapSessionService implements OnDestroy {
       )
     );
 
-    // Send open-session setup envelope
-    this.transport.sendRequest({
-      channel: 'setup',
-      command: 'open-session',
-      arguments: {
-        sessionPath: config.sessionPath || '.tarodb'
-      }
-    } as any);
+    // Send setup handshake command dynamically based on configured setupMode
+    if (config.setupMode === 'new') {
+      this.transport.sendRequest({
+        channel: 'setup',
+        command: 'new-session',
+        arguments: {
+          sessionPath: config.sessionPath,
+          config: {
+            program: config.executablePath,
+            args: config.programArgs ? config.programArgs.split(' ').filter(a => a.length > 0) : [],
+            cwd: config.sourcePath || undefined
+          }
+        }
+      } as any);
+    } else {
+      this.transport.sendRequest({
+        channel: 'setup',
+        command: 'open-session',
+        arguments: {
+          sessionPath: config.sessionPath || '.tarodb'
+        }
+      } as any);
+    }
 
-    const setupResult: any = await setupResultPromise;
+    let setupResult: any;
+    try {
+      setupResult = await setupResultPromise;
+    } catch (e: any) {
+      this.closeTransport();
+      this.executionStateSubject.next('disconnected');
+      if (e.name === 'TimeoutError') {
+        throw new Error('Session setup handshake timed out');
+      }
+      throw e;
+    }
 
     if (setupResult.event === 'session-failed') {
       const reason = setupResult.body?.error || 'Unknown session setup failure';
+      this.closeTransport();
+      this.executionStateSubject.next('disconnected');
       throw new Error(`Session setup failed: ${reason}`);
     }
 

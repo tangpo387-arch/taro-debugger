@@ -61,6 +61,10 @@ export class SetupWebComponent implements OnInit, OnDestroy {
     sessionPath: new FormControl('.tarodb', {
       nonNullable: true,
       validators: Validators.required
+    }),
+    setupMode: new FormControl<'new' | 'open'>('new', {
+      nonNullable: true,
+      validators: Validators.required
     })
   });
 
@@ -78,16 +82,22 @@ export class SetupWebComponent implements OnInit, OnDestroy {
       sourcePath: existingConfig.sourcePath,
       programArgs: existingConfig.programArgs,
       stopOnEntry: existingConfig.stopOnEntry,
-      sessionPath: existingConfig.sessionPath || '.tarodb'
+      sessionPath: existingConfig.sessionPath || '.tarodb',
+      setupMode: existingConfig.setupMode || 'new'
     });
 
-    // 2. Adjust initial validation based on loaded launchMode
-    this.updateExecPathValidator(existingConfig.launchMode);
+    // 2. Adjust initial validation based on loaded launchMode & setupMode
+    this.updateValidators();
 
-    // 3. Listen for launchMode changes and dynamically adjust executablePath's required validator
+    // 3. Listen for launchMode & setupMode changes and dynamically adjust executablePath's required validator
     this.subscriptions.add(
-      this.form.controls.launchMode.valueChanges.subscribe(mode => {
-        this.updateExecPathValidator(mode);
+      this.form.controls.launchMode.valueChanges.subscribe(() => {
+        this.updateValidators();
+      })
+    );
+    this.subscriptions.add(
+      this.form.controls.setupMode.valueChanges.subscribe(() => {
+        this.updateValidators();
       })
     );
   }
@@ -96,10 +106,13 @@ export class SetupWebComponent implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
-  /** Centralized logic for updating executablePath validation rules */
-  private updateExecPathValidator(mode: 'launch' | 'attach'): void {
+  /** Centralized logic for updating executablePath validation rules based on setupMode and launchMode */
+  private updateValidators(): void {
+    const setupMode = this.form.controls.setupMode.value;
+    const launchMode = this.form.controls.launchMode.value;
     const execCtrl = this.form.controls.executablePath;
-    if (mode === 'launch') {
+
+    if (setupMode === 'new' && launchMode === 'launch') {
       execCtrl.setValidators(Validators.required);
     } else {
       execCtrl.clearValidators();
@@ -110,18 +123,29 @@ export class SetupWebComponent implements OnInit, OnDestroy {
 
   // ── Convenience Getters: For Template usage ────────────────────────────
 
+  /** Currently selected setup mode */
+  get setupMode(): 'new' | 'open' {
+    return this.form.controls.setupMode.value;
+  }
+
   /** Currently selected launch mode */
   get launchMode(): 'launch' | 'attach' {
     return this.form.controls.launchMode.value;
   }
 
-  /** Return dynamic button label based on current launchMode */
+  /** Return dynamic button label based on setupMode and launchMode */
   get connectButtonLabel(): string {
+    if (this.setupMode === 'open') {
+      return 'Open & Debug';
+    }
     return this.launchMode === 'launch' ? 'Launch & Debug' : 'Attach & Debug';
   }
 
-  /** Return dynamic button icon based on current launchMode */
+  /** Return dynamic button icon based on setupMode and launchMode */
   get connectButtonIcon(): string {
+    if (this.setupMode === 'open') {
+      return 'folder_open';
+    }
     return this.launchMode === 'launch' ? 'play_arrow' : 'link';
   }
 

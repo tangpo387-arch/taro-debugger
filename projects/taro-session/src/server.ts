@@ -1,5 +1,7 @@
 import { WebSocketServer as WSS, WebSocket } from 'ws';
 import { IncomingMessage } from 'http';
+import fs from 'fs';
+import path from 'path';
 import { GdbProcessManager } from './gdb-process.js';
 import { SessionManager } from './session.js';
 import { SessionLogger } from './logger.js';
@@ -278,6 +280,11 @@ export class WebSocketServer {
     this.sessionState = 'INITIALIZING';
 
     try {
+      const resolvedPath = path.resolve(args.sessionPath);
+      if (command === 'new-session' && fs.existsSync(resolvedPath)) {
+        throw new Error(`Cannot create new session: path '${args.sessionPath}' already exists.`);
+      }
+
       // Instantiate session manager (creates directory + default files if missing)
       const sessionManager = new SessionManager(args.sessionPath);
 

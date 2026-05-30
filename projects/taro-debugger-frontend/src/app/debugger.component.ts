@@ -134,7 +134,8 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     sourcePath: '',
     programArgs: '',
     stopOnEntry: true,
-    sessionPath: '.tarodb'
+    sessionPath: '.tarodb',
+    setupMode: 'new'
   };
 
   /** Current execution state (used for non-async pipe scenarios) */
@@ -210,7 +211,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     this.currentConfig = this.configService.getConfig();
 
     // Guard mechanism: If executable path is missing, automatically navigate back to setup page
-    if (!this.currentConfig.executablePath) {
+    if (this.currentConfig.setupMode !== 'open' && !this.currentConfig.executablePath) {
       console.warn('Incomplete configuration parameters detected. Navigating back to setup page.');
       this.snackBar.open('Incomplete configuration parameters detected. Returning to setup page.', 'OK', { duration: 3000 });
       this.router.navigate(['/setup']);

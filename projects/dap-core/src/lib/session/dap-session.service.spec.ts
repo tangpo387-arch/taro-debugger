@@ -261,6 +261,109 @@ describe('DapSessionService', () => {
         programArgs: '--verbose --port=8080'
       }));
     });
+
+    it('should send new-session on the setup channel when setupMode is new', async () => {
+      configService.getConfig.mockReturnValue({
+        serverAddress: 'ws://127.0.0.1:8080/session/client',
+        transportType: 'websocket',
+        launchMode: 'launch',
+        executablePath: '/usr/bin/myapp',
+        stopOnEntry: false,
+        sessionPath: '/my/session.tarodb',
+        setupMode: 'new',
+        programArgs: '--verbose --port=8080',
+        sourcePath: '/workspace/project'
+      });
+
+      wireFullStartSession({
+        status: 'success',
+        sessionPath: '/my/session.tarodb',
+        config: { configuration: { program: '/usr/bin/myapp', args: ['--verbose', '--port=8080'], cwd: '/workspace/project' } }
+      });
+
+      const sessionPromise = service.startSession();
+      await vi.runAllTimersAsync();
+      await sessionPromise;
+
+      const calls = mockTransport.sendRequest.mock.calls;
+      const firstCall = calls[0][0];
+      expect(firstCall).toMatchObject({
+        channel: 'setup',
+        command: 'new-session',
+        arguments: {
+          sessionPath: '/my/session.tarodb',
+          config: {
+            program: '/usr/bin/myapp',
+            args: ['--verbose', '--port=8080'],
+            cwd: '/workspace/project'
+          }
+        }
+      });
+    });
+
+    it('should send open-session on the setup channel when setupMode is open', async () => {
+      configService.getConfig.mockReturnValue({
+        serverAddress: 'ws://127.0.0.1:8080/session/client',
+        transportType: 'websocket',
+        launchMode: 'launch',
+        executablePath: '',
+        stopOnEntry: false,
+        sessionPath: '/my/session.tarodb',
+        setupMode: 'open'
+      });
+
+      wireFullStartSession({
+        status: 'success',
+        sessionPath: '/my/session.tarodb',
+        config: { configuration: { program: '/usr/bin/myapp', args: [], cwd: '/root' } }
+      });
+
+      const sessionPromise = service.startSession();
+      await vi.runAllTimersAsync();
+      await sessionPromise;
+
+      const calls = mockTransport.sendRequest.mock.calls;
+      const firstCall = calls[0][0];
+      expect(firstCall).toMatchObject({
+        channel: 'setup',
+        command: 'open-session',
+        arguments: {
+          sessionPath: '/my/session.tarodb'
+        }
+      });
+    });
+
+    it('should handle session-failed and close transport cleanly', async () => {
+      configService.getConfig.mockReturnValue({
+        serverAddress: 'ws://127.0.0.1:8080/session/client',
+        transportType: 'websocket',
+        launchMode: 'launch',
+        executablePath: '/usr/bin/myapp',
+        stopOnEntry: false,
+        sessionPath: '/my/session.tarodb',
+        setupMode: 'new'
+      });
+
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          if (req.channel === 'setup') {
+            (service as any).handleIncomingMessage({
+              channel: 'setup',
+              event: 'session-failed',
+              body: { error: 'Invalid executable path' }
+            });
+            return;
+          }
+        }, 0);
+      });
+
+      const sessionPromise = service.startSession();
+      sessionPromise.catch(() => {}); // Prevent unhandled rejection
+      await vi.runAllTimersAsync();
+
+      await expect(sessionPromise).rejects.toThrow('Session setup failed: Invalid executable path');
+      expect(mockTransport.disconnect).toHaveBeenCalled();
+    });
   });
 
   describe('Stop on Entry (WI-123)', () => {

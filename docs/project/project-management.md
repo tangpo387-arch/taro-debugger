@@ -113,6 +113,13 @@ Every Work Item MUST contain the following structured fields to be considered co
 
 > For the strict underlying JSON schema, refer to the data governance specs in the `work-item-management` skill.
 
+### 1.5 Architecture Spec Integration & Promotion
+
+When implementing a Work Item that has an associated specification document (e.g., size **M** or above, or triggering the Complexity Gate), the design must be promoted from a temporary specification to the permanent system architecture documentation before submission.
+
+- **Spec Document Promotion**: The developer MUST merge and update the non-temporary, structural architecture details from `docs/archive/specs/*.md` into the relevant files under the `docs/architecture/` directory (either updating an existing subsystem doc or creating a new one following the standard subsystem template).
+- **Master Index Integration**: The developer MUST ensure that the master architecture index file [docs/architecture.md](file:///root/taro-debugger/docs/architecture.md) contains a clear storyline and structure that links directly to the new or updated subsystem document under `docs/architecture/`. This prevents orphaned documentation and keeps the overall system topology current.
+
 ---
 
 ## 2. Work Item Lifecycle
@@ -264,17 +271,19 @@ sequenceDiagram
 
 **Submission Steps**:
 1. Implement all items listed in the WI's details.
-2. Run: `npm run test -- --watch=false` (all tests must pass)
-3. Run: `npm run lint:docs` (all documents must pass verification; alias for `node scripts/doc-guard.js verify`)
-4. Produce: `docs/archive/reviews/{WI-ID}.review-package.md`
+2. Update the work item's spec document to the files in the `docs/architecture/` directory, and ensure there is a storyline/flow linking to the added document content from `docs/architecture.md`.
+3. Update `docs/file-map.md` to reflect any new, modified, or relocated files.
+4. Run: `npm run test -- --watch=false` (all tests must pass)
+5. Run: `npm run lint:docs` (all documents must pass verification; alias for `node scripts/doc-guard.js verify`)
+6. Produce: `docs/archive/reviews/{WI-ID}.review-package.md`
    - **§1 Acceptance Criteria** (copied verbatim from `manage-wi.js show`)
    - **§2 Diff Summary** (file + line ranges only; no pasted code)
    - **§3 Edge Cases** (🔍 flags for areas requiring deeper QCR inspection)
    - **§4 Tests Added** (suite names + test descriptions)
    - **§5 Spec-Plan Updates** (list of spec-plan files updated)
    - **§6 Self-Verification** (pasted terminal output proving tests pass)
-5. Submit: `"QCR review {WI-ID}"`
-6. Execute `node scripts/update-wi.js WI-## done` to submit the Review Package to the QCR.
+7. Submit: `"QCR review {WI-ID}"`
+8. Execute `node scripts/update-wi.js WI-## done` to submit the Review Package to the QCR.
 
 ---
 

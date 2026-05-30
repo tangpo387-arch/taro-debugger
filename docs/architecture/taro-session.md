@@ -63,6 +63,7 @@ stateDiagram-v2
 - Connections to `/session/agent` are **closed with code `4005`** unless state is `READY`.
 - On `ERROR`, the server closes the client WebSocket and resets to accept a new connection (**Reconnect-Retry Only** — no socket reuse).
 - The DAP `launch` request validates that `arguments.program` is non-empty before forwarding to GDB.
+- The `new-session` command validates that the target session directory does not already exist on the filesystem. If it does, the command **fails-fast** and returns a setup error to prevent silent configuration overrides.
 
 > [!NOTE]
 > For complete message schemas (`open-session`, `new-session`, `session-ready`, `session-failed`) and Acceptance Criteria (AC-1 through AC-5), see 👉 [archive/specs/setup-handshake-protocol.md](../archive/specs/setup-handshake-protocol.md).
@@ -92,9 +93,11 @@ The daemon writes three append-only log streams per connection cycle:
 | `dap.log` | Raw DAP protocol traffic — prefixed with `[IN]` / `[OUT]` and ISO 8601 timestamp |
 
 **Default log path:**
-```
+
+```text
 <os.tmpdir()>/taro-session-logs-<PID>/logs/
 ```
+
 - `<PID>` is `process.pid` — each daemon instance writes to an isolated directory.
 - Example on Linux: `/tmp/taro-session-logs-12345/logs/stdout.log`
 
@@ -104,7 +107,7 @@ The daemon writes three append-only log streams per connection cycle:
 
 ## 5. CLI Reference
 
-```
+```bash
 taro-session [--port <number>] [--gdb-path <path>] [--one-shot] [--log-path <directory>]
 ```
 
