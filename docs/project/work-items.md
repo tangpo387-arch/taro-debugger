@@ -52,22 +52,6 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - [Doc] docs/archive/specs/taro-session-unit-testing.md
 - **Dependencies**: none
 
-### WI-141: Extract DapBreakpointManager & DapThreadManager
-
-- **Status**: ⏳ Pending
-- **Size**: L
-- **Description**: Decompose DapSessionService Phase 1: extract breakpoint and thread management into dedicated services to reduce God Object scope.
-- **Details**:
-  - Extract `DapBreakpointManager` service to own all breakpoint state (breakpointsMap, breakpointFileState, systemBreakpointIds) and public breakpoint APIs (setBreakpoints, toggleBreakpoint, toggleBreakpointEnabled, removeBreakpoint, resyncAllBreakpointsInternal, setFunctionBreakpoints)
-  - Extract `DapThreadManager` service to own thread lifecycle (threadObjects, threadEventsBuffer, flush logic, active thread tracking)
-  - Refactor `handleTransportEvent` switch cases into dedicated handler methods delegating to the new sub-managers
-  - DapSessionService retains orchestration role and delegates to the extracted managers
-  - [Test] Existing dap-session.service.spec.ts must pass after extraction with updated DI setup
-  - [Test] Add unit tests for DapBreakpointManager in isolation
-  - [Test] Add unit tests for DapThreadManager in isolation
-  - [Doc] docs/archive/specs/dap-session-refactor.md
-- **Dependencies**: WI-140
-
 ### WI-142: Extract DapRequestBroker & DapRequestSender Interface
 
 - **Status**: 💡 Proposed

@@ -887,39 +887,53 @@ export class DapSessionService implements OnDestroy {
     this.threadManager.handleResumptionState(allThreads, threadId);
   }
 
+  private handleStoppedEvent(event: DapEvent): void {
+    this.executionStateSubject.next('stopped');
+    this.clearStateTransitionGuard();
+    this.commandInFlightSubject.next(false);
+    
+    const hitBps = event.body?.hitBreakpointIds || [];
+    const isSystemStop = hitBps.some((id: number) => this.breakpointManager.isSystemBreakpoint(id));
+    let stopReason = event.body?.description || event.body?.reason || 'paused';
+    if (isSystemStop) {
+      stopReason = 'Paused at entry (main)';
+    }
+
+    this.threadManager.handleStoppedEvent(event, isSystemStop, stopReason);
+  }
+
+  private handleContinuedEvent(event: DapEvent): void {
+    this.handleResumptionState(
+      event.body?.allThreadsContinued ?? true,
+      event.body?.threadId
+    );
+  }
+
+  private handleThreadEvent(event: DapEvent): void {
+    this.threadManager.handleThreadEvent(event.body);
+  }
+
+  private handleBreakpointEvent(event: DapEvent): void {
+    this.breakpointManager.handleBreakpointEvent(event);
+  }
+
   private handleTransportEvent(event: DapEvent): void {
     switch (event.event) {
       case 'initialized':
         // The initialized event processing (launch + configurationDone) is managed by startSession()
         break;
 
-      case 'stopped': {
-        this.executionStateSubject.next('stopped');
-        this.clearStateTransitionGuard();
-        this.commandInFlightSubject.next(false);
-        
-        const hitBps = event.body?.hitBreakpointIds || [];
-        const isSystemStop = hitBps.some((id: number) => this.breakpointManager.isSystemBreakpoint(id));
-        let stopReason = event.body?.description || event.body?.reason || 'paused';
-        if (isSystemStop) {
-          stopReason = 'Paused at entry (main)';
-        }
-
-        this.threadManager.handleStoppedEvent(event, isSystemStop, stopReason);
+      case 'stopped':
+        this.handleStoppedEvent(event);
         break;
-      }
 
       case 'continued':
-        this.handleResumptionState(
-          event.body?.allThreadsContinued ?? true,
-          event.body?.threadId
-        );
+        this.handleContinuedEvent(event);
         break;
 
-      case 'thread': {
-        this.threadManager.handleThreadEvent(event.body);
+      case 'thread':
+        this.handleThreadEvent(event);
         break;
-      }
 
       case 'exited': {
         const state = this.executionStateSubject.value;
@@ -942,10 +956,9 @@ export class DapSessionService implements OnDestroy {
         });
         break;
 
-      case 'breakpoint': {
-        this.breakpointManager.handleBreakpointEvent(event);
+      case 'breakpoint':
+        this.handleBreakpointEvent(event);
         break;
-      }
     }
 
     // Forward processed event to external subscribers (Components, etc.)
