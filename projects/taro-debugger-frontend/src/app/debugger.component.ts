@@ -487,16 +487,17 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
       this.logService.consoleLog(`Session started in ${this.currentConfig.launchMode} mode.`, 'info', 'system');
     } catch (error: any) {
-      const msg = error?.message || 'Unknown error';
-      this.logService.consoleLog(`Start Session failed: ${msg}`, 'error', 'system');
+      const rawMsg = error?.message || 'Unknown error';
+      this.logService.consoleLog(`StartSession failed: ${rawMsg}`, 'error', 'system');
 
       // 2. Show error dialog
       const dialogRef = this.dialog.open(ErrorDialog, {
         width: '400px',
         disableClose: true, // Force user to make a choice
         data: {
-          title: 'DAP Handshake Failed',
-          message: `Could not establish DAP connection or session: ${msg}`
+          title: 'Session Setup Failed',
+          message: rawMsg,
+          hideRetry: true
         } as ErrorDialogData
       });
 

@@ -333,7 +333,7 @@ describe('DapSessionService', () => {
       });
     });
 
-    it('should handle session-failed and close transport cleanly', async () => {
+    it('should handle session-failed and transition to error state, keeping transport open', async () => {
       configService.getConfig.mockReturnValue({
         serverAddress: 'ws://127.0.0.1:8080/session/client',
         transportType: 'websocket',
@@ -361,8 +361,48 @@ describe('DapSessionService', () => {
       sessionPromise.catch(() => {}); // Prevent unhandled rejection
       await vi.runAllTimersAsync();
 
-      await expect(sessionPromise).rejects.toThrow('Session setup failed: Invalid executable path');
+      await expect(sessionPromise).rejects.toThrow('Invalid executable path');
+      expect(service.executionState).toBe('error');
+      expect(mockTransport.disconnect).not.toHaveBeenCalled();
+    });
+
+    it('should handle transport error during setup handshake and transition to error state', async () => {
+      configService.getConfig.mockReturnValue({
+        serverAddress: 'ws://127.0.0.1:8080/session/client',
+        transportType: 'websocket',
+        launchMode: 'launch',
+        executablePath: '/usr/bin/myapp',
+        stopOnEntry: false,
+        sessionPath: '/my/session.tarodb',
+        setupMode: 'new'
+      });
+
+      mockTransport.sendRequest.mockImplementation((req: any) => {
+        setTimeout(() => {
+          if (req.channel === 'setup') {
+            // Simulate sudden transport error/close during starting state
+            (service as any).handleIncomingTransportError(new Error('Connection unexpectedly lost'));
+            return;
+          }
+        }, 0);
+      });
+
+      const sessionPromise = service.startSession();
+      sessionPromise.catch(() => {}); // Prevent unhandled rejection
+      await vi.runAllTimersAsync();
+
+      await expect(sessionPromise).rejects.toThrow('Session setup failed: Connection unexpectedly lost');
       expect(mockTransport.disconnect).toHaveBeenCalled();
+      expect(service.executionState).toBe('error');
+    });
+
+    it('should close transport and transition to disconnected when stop is called in error state', async () => {
+      (service as any).executionStateSubject.next('error');
+      
+      await service.stop();
+      
+      expect(mockTransport.disconnect).toHaveBeenCalled();
+      expect(service.executionState).toBe('disconnected');
     });
   });
 

@@ -264,7 +264,7 @@ export class WebSocketServer {
    * Valid commands: 'open-session' (load existing .tarodb) or 'new-session' (create new).
    */
   private async handleSetupMessage(socket: WebSocket, envelope: SetupEnvelope): Promise<void> {
-    if (this.sessionState !== 'UNINITIALIZED') {
+    if (this.sessionState !== 'UNINITIALIZED' && this.sessionState !== 'ERROR') {
       this.logger.logStderr(`Ignored setup command '${envelope.command}': state is already ${this.sessionState}`);
       return;
     }
@@ -382,8 +382,8 @@ export class WebSocketServer {
       // Socket may already be closing; ignore send errors
     }
 
-    // Fail-Fast: close the socket immediately
-    socket.close(1011, 'Session error — reconnect to retry');
+    // Keep WebSocket alive to support client retry without full reconnection
+    // socket.close(1011, 'Session error — reconnect to retry');
   }
 
   /**

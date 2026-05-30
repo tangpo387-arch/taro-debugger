@@ -2,7 +2,7 @@
 title: Architecture - DAP Core Library (@taro/dap-core)
 scope: dap-core, session-layer, transport-layer, protocol
 audience: [Human Engineer, Lead_Engineer, Product_Architect, Quality_Control_Reviewer]
-last_updated: 2026-05-14
+last_updated: 2026-05-30
 related:
   - architecture/session-layer.md
   - architecture/transport-layer.md
@@ -41,8 +41,10 @@ Provides the abstract interface and concrete implementations for the physical co
 
 Manages the high-level protocol handshake and execution state machine.
 - **`DapSessionService`**: The primary coordinator. Responsible for:
+  - Establishing a loopback WebSocket connection and executing the setup handshake (`open-session` or `new-session` on the `'setup'` channel) before standard DAP initialization.
   - Sequential DAP handshake (`initialize` → `launch`/`attach`).
   - Request/Response pairing and timeout management.
+  - Fail-fast setup handshake error handling (`session-failed` or socket close during starting phase) and configuration synchronization with `DapConfigService`.
   - Broadcasting the `executionState$` (Inactive, Launching, Running, Paused).
 - **`DapAssemblyCacheService`**: Manages instruction-level caching for disassembly. Instructions are embedded directly in self-contained `CachedRange` objects (sorted by address).
   - **Performance**: Merge cost is $O(K+M)$ per batch; pruning evicts an entire range object in $O(1)$.

@@ -53,9 +53,10 @@ graph TD
     running -- "<font color='#5c7fb8'>[E] disconnect</font>" ---> error
     stopped -- "<font color='#5c7fb8'>[E] disconnect</font>" ---> error
     idle -- "<font color='#5c7fb8'>[E] terminated</font>" -----> disconnected
+    starting -- "<font color='#5c7fb8'>[E] setup failed / timeout</font>" ---> error
     %% Styles
     linkStyle 0,1,2,3 stroke:#b85c5c,stroke-width:2px;
-    linkStyle 4,5,6,7,8,9,10,11,12,13 stroke:#5c7fb8,stroke-width:2px;
+    linkStyle 4,5,6,7,8,9,10,11,12,13,14 stroke:#5c7fb8,stroke-width:2px;
     
     classDef default fill:#eee,stroke:#333,stroke-width:1px;
     style error fill:#fcf3f3,stroke:#b85c5c;
@@ -66,7 +67,7 @@ graph TD
 > The state machine transitions between five primary states: `idle`, `starting`, `running`, `stopped`, and `error`.
 > - **Imperative transitions (Red)** are triggered by User functions like `startSession()`, `continue()`, `next()`, and `stepIn/Out()`.
 > - **Asynchronous transitions (Blue)** are triggered by Adapter events like `stopped`, `continued`, and `terminated`.
-> - **Error state** is reached via unexpected disconnections. The public recovery path is `stop()`, which returns early (no request sent) when in `error` state, allowing `restart()` or `startSession()` to be called next.
+> - **Error state** is reached via unexpected disconnections or setup handshake failures during starting state. The public recovery path is `stop()`, which returns early (no request sent) when in `error` state, allowing `restart()` or `startSession()` to be called next.
 
 <!-- -->
 
@@ -108,7 +109,7 @@ Raw events from the Transport layer are processed by Session's `handleTransportE
 | Synthetic Event | Trigger | Purpose | Exception |
 | :--- | :--- | :--- | :--- |
 | `_dapError` | DAP response `success: false` | Notify UI of command failures (e.g., "Step failed"). | **Silent Protocol**: Commands sent with `silentError: true` (e.g., `evaluate`) do NOT emit this event. |
-| `_transportError` | Socket close or timeout | Notify UI of connection loss or handshake failure. | None |
+| `_transportError` | Socket close or timeout | Notify UI of connection loss after debug session is established or during handshake. | None |
 | `_sessionWarning` | Request timeout or unknown response | Diagnostic warnings for mismatched sequences. | None |
 
 ## 4. Connection Status Bridging
@@ -132,7 +133,7 @@ Transport instances are **lazily created** via `TransportFactoryService` during 
 | `startSession()` | Created based on `config.transportType`. |
 | `stop()` (public) | Sends `terminate`, awaits the `terminated` event, then internally calls `disconnect()`. Returns immediately (no request sent) when state is `idle`, `disconnected`, or `error`. |
 | `disconnect()` (private) | Sends a DAP `disconnect` request, clears message subscriptions, and resets state to `disconnected`. Only reachable via the `terminated` event handler or the `idle`-state internal path. |
-| Error entry (R-ERR1) | **`closeTransport()` is called before the state is set to `error`** — this unsubscribes the message stream, calls `transport.disconnect()`, nulls the transport reference, and sets `connectionStatus$` to `false`. This invariant applies to all error code paths (`handleIncomingTransportError`, `handleIncomingTransportComplete`). |
+| Error entry (R-ERR1) | **`closeTransport()` is called before the state is set to `error`** — this unsubscribes the message stream, calls `transport.disconnect()`, nulls the transport reference, and sets `connectionStatus$` to `false`. This invariant applies to all active-session error code paths (`handleIncomingTransportError`, `handleIncomingTransportComplete`). During the `'starting'` handshake phase, transport errors are caught by `startSession()` and reset state to `'error'` (see §9.3). |
 
 ## 6. Breakpoint Management (SSOT)
 
@@ -248,15 +249,21 @@ sequenceDiagram
         Note over TS: Server transitions to READY state
         DSS->>DCS: setConfig(mergedBackendConfig)
         Note over DSS: Proceed with standard DAP initialize & launch
-    else Handshake Failure (Or socket close / timeout)
-        TS-->>DSS: Emit "session-failed" or Socket Close
+    else Handshake Failure (Socket close / Timeout)
+        TS-->>DSS: Socket Close
         Note over TS: Server transitions to ERROR state & closes socket
-        DSS->>DSS: execute closeTransport() & cleanup
+        DSS->>DSS: execute closeTransport()
+        DSS->>DSS: Set state to 'error'
+        DSS-->>UI: Raise error (displays "DAP Handshake Failed" dialog)
+    else Handshake Failure (session-failed command validation)
+        TS-->>DSS: Emit "session-failed"
+        Note over TS: Server transitions to ERROR state but KEEPS socket open
+        DSS->>DSS: Set state to 'error' (Keeps transport alive)
         DSS-->>UI: Raise error (displays "DAP Handshake Failed" dialog)
     end
 ```
 
-> [Diagram: Configuration flow and setup handshake sequence. Demonstrates how `SetupComponent` stores parameters in `DapConfigService` before routing to `/debug`. `DapSessionService` then creates a WebSocket connection and executes either a `new-session` or `open-session` command. Upon receiving `session-ready`, the backend config is merged back to the client, and DAP initialization commences. If the handshake fails, the transport is cleaned up, and a failure dialog is shown.]
+> [Diagram: Configuration flow and setup handshake sequence. Demonstrates how `SetupComponent` stores parameters in `DapConfigService` before routing to `/debug`. `DapSessionService` then creates a WebSocket connection and executes either a `new-session` or `open-session` command. Upon receiving `session-ready`, the backend config is merged back to the client, and DAP initialization commences. If the handshake fails, the transport is transitioned to `'error'`. If setup validation fails, the socket is kept alive to support fast retries.]
 
 ### 9.2 Dynamic Configuration Synchronizations
 
@@ -264,13 +271,16 @@ sequenceDiagram
 - **Properties Merging**: Upon a successful `session-ready` response, the backend returns the authoritative launch configuration persisted in the session folder. `DapSessionService` merges these properties back into the client-side `DapConfigService` to ensure a single source of truth (SSOT).
 - **Executable Bypass Guard**: Under `'open'` mode, the debugger starts with an empty executable path configuration on boot, since settings are resolved dynamically from the backend handshake. `DebuggerComponent.ngOnInit()` bypasses empty executable validation guards when `setupMode === 'open'`, preventing startup locking.
 
-### 9.3 Fail-Fast Handshake Cleanups
+### 9.3 Handshake Reliability & Error Recovery
 
-- **Robust Resource Reclamation**: If `taro-session` sends a `session-failed` event or the WebSocket closes abruptly during the negotiation phase:
-  1. `DapSessionService` catches the exception using a `try-catch` wrapper.
-  2. The service immediately unsubscribes from the transport message streams, calls `closeTransport()`, and nulls the transport references.
-  3. The execution state is reset to `disconnected` and a descriptive error is bubbled up.
-  4. The UI displays an interactive dialog, allowing the user to either retry connection or safely navigate back to `/setup`.
+- **Starting to Error Transition**: If setup fails (either via a `session-failed` event or a transport timeout), `DapSessionService` transitions the execution state from `'starting'` directly to `'error'`.
+- **Fast Retry Socket Retention**: To prevent unnecessary socket teardown/reconnect cycles when a setup command fails validation (e.g., creating a new session on a path that already exists):
+  1. The `taro-session` backend broadcasts the `session-failed` event and transitions to `'ERROR'`, but keeps the WebSocket connection alive.
+  2. The client transitions to `'error'` and bubbles up the exception to open the failure dialog, while leaving the transport connected.
+  3. If the user clicks **RETRY**, `startSession()` reuses the active WebSocket connection to transmit the updated setup command. The backend (configured to accept setup commands in the `'ERROR'` state) transitions back to `'INITIALIZING'` to re-attempt execution, bypassing socket reconnect latency.
+- **Graceful Resource Reclamation**: If the user clicks **GO BACK** instead of retrying:
+  1. The `DebuggerComponent.goBack()` method executes `dapSession.stop()`.
+  2. Because the active transport is still open, the `'error'` case in `stop()` calls `closeTransport()` to terminate the connection cleanly and resets the execution state to `'disconnected'`, preventing background socket or timer leaks.
 
 ### 9.4 Electron Specifics (Bridge Management)
 

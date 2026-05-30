@@ -200,11 +200,13 @@ export class DapSessionService implements OnDestroy {
     // ── Setup Handshake Phase ───────────────────────────────────────────────
     // Per WI-136 spec: the client MUST send a setup channel command and await
     // session-ready before issuing any standard DAP messages.
+    // We also monitor '_transportError' to fail immediately on socket error/close
+    // rather than waiting for a delayed timeout.
     const setupResultPromise = firstValueFrom(
       this.eventSubject.pipe(
         filter((e: any) =>
-          e.channel === 'setup' &&
-          (e.event === 'session-ready' || e.event === 'session-failed')
+          (e.channel === 'setup' && (e.event === 'session-ready' || e.event === 'session-failed')) ||
+          e.event === '_transportError'
         ),
         timeout(10000)
       )
@@ -239,18 +241,23 @@ export class DapSessionService implements OnDestroy {
       setupResult = await setupResultPromise;
     } catch (e: any) {
       this.closeTransport();
-      this.executionStateSubject.next('disconnected');
+      this.executionStateSubject.next('error');
       if (e.name === 'TimeoutError') {
         throw new Error('Session setup handshake timed out');
       }
       throw e;
     }
 
+    if (setupResult.event === '_transportError') {
+      const reason = setupResult.body?.message || 'Connection to Debug session was unexpectedly closed';
+      throw new Error(`Session setup failed: ${reason}`);
+    }
+
     if (setupResult.event === 'session-failed') {
       const reason = setupResult.body?.error || 'Unknown session setup failure';
-      this.closeTransport();
-      this.executionStateSubject.next('disconnected');
-      throw new Error(`Session setup failed: ${reason}`);
+      // Keeping transport open to allow fast retry on the same socket
+      this.executionStateSubject.next('error');
+      throw new Error(reason);
     }
 
     // session-ready: merge returned configuration into DapConfigService so that
@@ -388,6 +395,9 @@ export class DapSessionService implements OnDestroy {
     const state = this.executionStateSubject.value;
     switch (state) {
       case 'error':
+        this.closeTransport();
+        this.executionStateSubject.next('disconnected');
+        return;
       case 'idle':
       case 'disconnected':
         return;
@@ -1136,6 +1146,9 @@ export class DapSessionService implements OnDestroy {
 
   private handleIncomingTransportError(err: any): void {
     const errMsg = err?.message || 'Unknown transport error';
+
+
+
     // Emit synthetic event for UI-layer notification before transitioning state
     this.eventSubject.next({
       seq: 0,

@@ -6,6 +6,7 @@ import { DapVariablesService } from '@taro/ui-inspection';
 import { DapLogService } from '@taro/ui-console';
 import { NGX_MONACO_EDITOR_CONFIG } from 'ngx-monaco-editor-v2';
 import { Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ChangeDetectorRef, Injector, DestroyRef, NO_ERRORS_SCHEMA } from '@angular/core';
 import { KeyboardShortcutService, ActionID } from './keyboard-shortcut.service';
@@ -536,3 +537,86 @@ describe('DebuggerComponent — Memory View Integration (WI-106)', () => {
     expect(component.activeMemoryData.length).toBe(0);
   });
 });
+
+/**
+ * Unit tests for DebuggerComponent — startSession Error Dialog Handling
+ */
+describe('DebuggerComponent — startSession Error Dialog Handling', () => {
+  let component: DebuggerComponent;
+  let mockDapSession: any;
+  let mockDialog: any;
+
+  beforeEach(() => {
+    mockDapSession = {
+      connectionStatus$: EMPTY,
+      executionState$: EMPTY,
+      onEvent: () => EMPTY,
+      onTraffic$: EMPTY,
+      stop: vi.fn().mockResolvedValue(undefined),
+      disconnect: vi.fn(),
+      startSession: vi.fn(),
+    };
+
+    mockDialog = {
+      open: vi.fn().mockReturnValue({
+        afterClosed: () => of('goback')
+      })
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        DebuggerComponent,
+        { provide: DapSessionService, useValue: mockDapSession },
+        { provide: DapVariablesService, useValue: { executionState$: EMPTY, scopes$: EMPTY, clear: vi.fn(), fetchScopes: vi.fn() } },
+        { provide: DapLogService, useValue: { consoleLog: vi.fn() } },
+        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe', stopOnEntry: true }) } },
+        { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
+        { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } },
+        { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
+        { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false }) } },
+        { provide: DapMemoryService, useValue: { read: vi.fn(), write: vi.fn() } },
+        { provide: MatDialog, useValue: mockDialog },
+      ],
+      schemas: [NO_ERRORS_SCHEMA]
+    }).overrideComponent(DebuggerComponent, {
+      set: { providers: [] }
+    });
+    component = TestBed.inject(DebuggerComponent);
+  });
+
+  it('should present digestible title, clean message and hide retry on Session setup failed error', async () => {
+    const errorMsg = "Cannot create new session: path '/tmp/test-113.tarodb' already exists.";
+    mockDapSession.startSession.mockRejectedValue(new Error(errorMsg));
+
+    await (component as any).startSession();
+
+    expect(mockDialog.open).toHaveBeenCalledWith(expect.any(Function), {
+      width: '400px',
+      disableClose: true,
+      data: {
+        title: 'Session Setup Failed',
+        message: "Cannot create new session: path '/tmp/test-113.tarodb' already exists.",
+        hideRetry: true
+      }
+    });
+  });
+
+  it('should present digestible title, raw message and hide retry on other errors', async () => {
+    const errorMsg = "Connection to localhost:4005 timed out";
+    mockDapSession.startSession.mockRejectedValue(new Error(errorMsg));
+
+    await (component as any).startSession();
+
+    expect(mockDialog.open).toHaveBeenCalledWith(expect.any(Function), {
+      width: '400px',
+      disableClose: true,
+      data: {
+        title: 'Session Setup Failed',
+        message: "Connection to localhost:4005 timed out",
+        hideRetry: true
+      }
+    });
+  });
+});
+
