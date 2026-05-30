@@ -355,6 +355,15 @@ export class WebSocketServer {
         throw new Error(`Cannot create new session: path '${args.sessionPath}' already exists.`);
       }
 
+      if (command === 'open-session') {
+        if (!fs.existsSync(resolvedPath)) {
+          throw new Error(`Cannot open session: path '${args.sessionPath}' does not exist.`);
+        }
+        if (!fs.statSync(resolvedPath).isDirectory()) {
+          throw new Error(`Cannot open session: path '${args.sessionPath}' is not a directory.`);
+        }
+      }
+
       // Instantiate session manager (creates directory + default files if missing)
       const sessionManager = new SessionManager(args.sessionPath);
 

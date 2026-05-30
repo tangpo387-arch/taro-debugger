@@ -646,6 +646,31 @@
         "created": "2026-05-30",
         "created_by": "Antigravity-Agent"
       }
+    },
+    {
+      "id": "WI-139",
+      "title": "Validate Session Directory Existence in setup open-session Handshake",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "accepted",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-136",
+          "WI-137"
+        ]
+      },
+      "description": "Reject open-session setup command in taro-session if the target session path does not exist or is not a directory.",
+      "details": [
+        "Validate that arguments.sessionPath exists and is a directory during 'open-session' setup command",
+        "[Test] Verify open-session command fails with session-failed if directory does not exist",
+        "[Test] Verify frontend shows error dialog for non-existent session directory"
+      ],
+      "timeline": {
+        "created": "2026-05-30",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-30"
+      }
     }
   ]
 }

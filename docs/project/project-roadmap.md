@@ -41,6 +41,7 @@ graph LR
     WI_134["WI-134 Implement AI Companion Integration & Cognitive Loop"]
     WI_136["WI-136 Implement taro-session Connection State Machine & Setup Handshake"]
     WI_138["WI-138 Implement taro-session Unit Testing Suite"]
+    WI_139["WI-139 Validate Session Directory Existence in setup open-session Handshake"]
     WI_10["WI-10 Debug Control Button Functionality"]
     WI_11["WI-11 DAP Event Handling & State Management"]
     WI_39["WI-39 Command Serialization: Control Button In-Flight Guard"]
@@ -171,6 +172,8 @@ graph LR
     WI_09 --> WI_132
     WI_132 --> WI_133
     WI_133 --> WI_134
+    WI_136 --> WI_139
+    WI_137 --> WI_139
     WI_07 --> WI_10
     WI_07 --> WI_11
     WI_10 --> WI_39
@@ -280,6 +283,7 @@ graph LR
     style WI_134 fill:#4ade80,stroke:#22c55e
     style WI_136 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_138 fill:#4ade80,stroke:#22c55e
+    style WI_139 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_10 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_11 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_39 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
