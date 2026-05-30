@@ -10,20 +10,6 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
 
 ## DAP Transport Layer
 
-### WI-132: Implement taro-session Chat Routing & Log Persistence
-
-- **Status**: 💡 Proposed
-- **Size**: M
-- **Description**: Implement the real-time chat sub-protocol, /session/agent WebSocket routing, event broadcasting, and continuous log file persistence inside the logs/ directory
-- **Details**:
-  - Implement /session/agent socket connection and validation
-  - Implement real-time logical user-agent chat message routing
-  - Broadcast GDB DAP events to both Client and Agent sockets concurrently
-  - Implement continuous real-time logging to logs/stdout.log, logs/stderr.log, and logs/dap.log
-  - [Test] Verify GDB events are broadcasted, chat messages route correctly, and logs are persisted to disk
-  - [Doc] docs/architecture/agentic-debug-architecture.md
-- **Dependencies**: WI-09
-
 ### WI-133: Implement taro-session Agent Memory & MCP Host
 
 - **Status**: 💡 Proposed
@@ -52,6 +38,19 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - [Test] Verify companion connects, performs active GDB tool-calling, and updates memory.md via taro-session
   - [Doc] docs/architecture/agentic-debug-architecture.md
 - **Dependencies**: WI-133
+
+### WI-138: Implement taro-session Unit Testing Suite
+
+- **Status**: ⏳ Pending
+- **Size**: M
+- **Description**: Establish the unit testing framework for taro-session and implement tests to verify WebSocket server routing, GDB event broadcasting, and logger file persistence
+- **Details**:
+  - Configure test runner for taro-session
+  - [Test] Verify server rejects unauthorized /session/agent connections
+  - [Test] Verify GDB events are broadcasted to client and agent concurrently
+  - [Test] Verify SessionLogger writes to stdout.log, stderr.log, and dap.log
+  - [Doc] docs/archive/specs/taro-session-unit-testing.md
+- **Dependencies**: none
 
 ## Low-Level Inspection
 

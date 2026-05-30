@@ -521,7 +521,7 @@
       "title": "Implement taro-session Chat Routing & Log Persistence",
       "featureGroup": "DAP Transport Layer",
       "metadata": {
-        "status": "proposed",
+        "status": "aborted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": [
@@ -539,7 +539,8 @@
       ],
       "timeline": {
         "created": "2026-05-24",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-30"
       }
     },
     {
@@ -621,6 +622,29 @@
         "created": "2026-05-29",
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-30"
+      }
+    },
+    {
+      "id": "WI-138",
+      "title": "Implement taro-session Unit Testing Suite",
+      "featureGroup": "DAP Transport Layer",
+      "metadata": {
+        "status": "pending",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Establish the unit testing framework for taro-session and implement tests to verify WebSocket server routing, GDB event broadcasting, and logger file persistence",
+      "details": [
+        "Configure test runner for taro-session",
+        "[Test] Verify server rejects unauthorized /session/agent connections",
+        "[Test] Verify GDB events are broadcasted to client and agent concurrently",
+        "[Test] Verify SessionLogger writes to stdout.log, stderr.log, and dap.log",
+        "[Doc] docs/archive/specs/taro-session-unit-testing.md"
+      ],
+      "timeline": {
+        "created": "2026-05-30",
+        "created_by": "Antigravity-Agent"
       }
     }
   ]
