@@ -46,6 +46,7 @@ Each file below corresponds to a specific module or test level. **Open and read 
 | :--- | :--- |
 | [unit-dap-config.spec-plan.md](tests/unit-dap-config.spec-plan.md) | `DapConfigService` |
 | [unit-dap-session.spec-plan.md](tests/unit-dap-session.spec-plan.md) | `DapSessionService` |
+| [unit-dap-thread.spec-plan.md](tests/unit-dap-thread.spec-plan.md) | `DapThreadSession` |
 | [unit-websocket-transport.spec-plan.md](tests/unit-websocket-transport.spec-plan.md) | `WebSocketTransportService` |
 | [unit-dap-variables.spec-plan.md](tests/unit-dap-variables.spec-plan.md) | `DapVariablesService` |
 | [unit-assembly-cache.spec-plan.md](tests/unit-assembly-cache.spec-plan.md) | `DapAssemblyCacheService` (range-embedded storage) |

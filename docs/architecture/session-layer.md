@@ -15,7 +15,7 @@ related:
 
 - Manage the **DAP session lifecycle** (initialize → launch/attach → debug → disconnect)
 - Manage **Transport instances** (lazy creation based on config, destruction on disconnect)
-- Maintain **request/response pairing** (seq → pending request mapping)
+- Delegate **request/response pairing**, sequence number generation, and timeout bookkeeping to the standalone `DapRequestBroker` service
 - Manage the **execution state machine** (`ExecutionState`)
 - **Intercept and process Transport events**, including the generation of **Synthetic Events** (`_dapError`, `_transportError`)
 - Maintain **Single Source of Truth (SSOT)** for verified breakpoints across all source files
@@ -166,7 +166,7 @@ The Session layer automates thread and context management to simplify UI impleme
 
 ### 7.1 Thread Selection
 
-- **DapThreadSession Object Representation**: Injected threads are managed as rich `DapThreadSession` instances. Each instance encapsulates its own thread identity, in-flight request coalescing promise, and transient stack frame cache to prevent redundant traffic.
+- **DapThreadSession Object Representation**: Injected threads are managed as rich `DapThreadSession` instances. To prevent circular dependencies, each instance is injected with a narrow `DapRequestSender` interface (exposing only `sendRequest()` and `executionState`) instead of the full `DapSessionService`. Each instance encapsulates its own thread identity, in-flight request coalescing promise, and transient stack frame cache to prevent redundant traffic.
 - **Thread Event Storm Mitigation**: On multi-threaded targets, GDB can flood the adapter with rapid thread `started` / `exited` event waves. `DapSessionService` buffers these event storms over a **50ms temporal window** and flushes them to the UI in a single reactive transaction, preventing DOM thrashing.
 - **Automatic Thread Refresh**: On every `stopped` event, the Session queries the adapter's threads and updates `threadsSubject` with batch-instantiated `DapThreadSession` objects.
 - **Active Thread Selection**: If the `stopped` event contains a `threadId`, the corresponding `DapThreadSession` is automatically set as the `activeThread`.

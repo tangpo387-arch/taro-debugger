@@ -8,6 +8,8 @@ import { DapRequest, DapResponse, DapEvent, DisassembleArguments, StepArguments,
 import { DapThreadSession } from './dap-thread';
 import { DapBreakpointManager, VerifiedBreakpoint } from './dap-breakpoint-manager.service';
 import { DapThreadManager } from './dap-thread-manager.service';
+import { DapRequestSender } from './dap-request-sender.interface';
+import { DapRequestBroker } from './dap-request-broker.service';
 
 /** Error thrown when an evaluate request is cancelled or times out */
 export class EvaluateCancelledError extends Error {
@@ -32,16 +34,15 @@ export class DapFatalException extends Error {
 export type ExecutionState = 'disconnected' | 'idle' | 'starting' | 'running' | 'stopped' | 'error';
 
 @Injectable()
-export class DapSessionService implements OnDestroy {
+export class DapSessionService implements OnDestroy, DapRequestSender {
   private readonly configService = inject(DapConfigService);
   private readonly transportFactory = inject(TransportFactoryService);
   
   // Sub-managers
   private readonly breakpointManager = inject(DapBreakpointManager);
   private readonly threadManager = inject(DapThreadManager);
+  private readonly requestBroker = inject(DapRequestBroker);
 
-  private seq = 1;
-  private readonly pendingRequests = new Map<number, { resolve: (response: DapResponse) => void; reject: (error: any) => void; silentError?: boolean }>();
   private messageSubscription?: Subscription;
 
   /** Reactive stream of the current breakpoint state. */
@@ -130,11 +131,16 @@ export class DapSessionService implements OnDestroy {
   public constructor() {
     const config = this.configService.getConfig();
     this.transport = this.transportFactory.createTransport(config.transportType);
+    this.requestBroker.setTransport(this.transport);
 
     // Bridge transport connection status to the Session level
     this.transportStatusSubscription = this.transport.connectionStatus$.subscribe(
       status => this.connectionStatusSubject.next(status)
     );
+
+    // Forward events and diagnostic traffic from the broker to our subjects
+    this.requestBroker.onEvent().subscribe(event => this.eventSubject.next(event));
+    this.requestBroker.onTraffic().subscribe(traffic => this.trafficSubject.next(traffic));
   }
 
   public ngOnDestroy(): void {
@@ -417,10 +423,7 @@ export class DapSessionService implements OnDestroy {
    * Reset session completely to idle, without sending a DAP request.
    */
   private reset(): void {
-    for (const [seq, handler] of this.pendingRequests.entries()) {
-      handler.reject(new Error('Session reset'));
-      this.pendingRequests.delete(seq);
-    }
+    this.requestBroker.clearPendingRequests(new Error('Session reset'));
 
     this.commandInFlightSubject.next(false);
     this.clearSessionData();
@@ -688,7 +691,7 @@ export class DapSessionService implements OnDestroy {
 
   public evaluate(expression: string, frameId?: number): Promise<DapResponse> {
     const TIMEOUT_MS = 30_000;
-    const expectedSeq = this.seq;
+    const expectedSeq = this.requestBroker.currentSeq;
     const evaluatePromise = this.sendRequest('evaluate', { expression, frameId, context: 'repl' }, 35000, true);
 
     return new Promise((resolve, reject) => {
@@ -717,50 +720,11 @@ export class DapSessionService implements OnDestroy {
 
   // ── outbound requests ──────────────────────────────────────────────────
 
-  private sendRequest(command: string, args?: any, timeoutMs: number = 5000, silentError: boolean = false): Promise<DapResponse> {
-    const transport = this.transport;
-    if (!transport) {
-      return Promise.reject(new Error('Transport not initialized. Call startSession() first.'));
-    }
-
-    return new Promise((resolve, reject) => {
-      const currentSeq = this.seq++;
-
-      const request: DapRequest = {
-        seq: currentSeq,
-        type: 'request',
-        command: command,
-        arguments: args
-      };
-
-      const timeoutId = setTimeout(() => {
-        if (this.pendingRequests.has(currentSeq)) {
-          this.pendingRequests.delete(currentSeq);
-          const msg = `DAP request '${command}' timed out after ${timeoutMs}ms`;
-          this.eventSubject.next({
-            seq: 0,
-            type: 'event',
-            event: '_sessionWarning',
-            body: { message: msg }
-          });
-          reject(new Error(msg));
-        }
-      }, timeoutMs);
-
-      const resolveWrapper = (response: DapResponse) => {
-        clearTimeout(timeoutId);
-        resolve(response);
-      };
-
-      const rejectWrapper = (error: any) => {
-        clearTimeout(timeoutId);
-        reject(error);
-      };
-
-      this.pendingRequests.set(currentSeq, { resolve: resolveWrapper, reject: rejectWrapper, silentError });
-      transport.sendRequest(request);
-      this.trafficSubject.next(request);
-    });
+  /**
+   * Dispatches a DAP request to the debug adapter using the extracted broker.
+   */
+  public sendRequest(command: string, args?: any, timeoutMs: number = 5000, silentError: boolean = false): Promise<DapResponse> {
+    return this.requestBroker.sendRequest(command, args, timeoutMs, silentError);
   }
 
   /**
@@ -815,36 +779,7 @@ export class DapSessionService implements OnDestroy {
     }
 
     if (msg.type === 'response') {
-      const response = msg as DapResponse;
-      const handler = this.pendingRequests.get(response.request_seq);
-      if (handler) {
-        this.pendingRequests.delete(response.request_seq);
-        if (response.success) {
-          handler.resolve(response);
-        } else {
-          if (!handler.silentError) {
-            this.eventSubject.next({
-              seq: 0,
-              type: 'event',
-              event: '_dapError',
-              body: {
-                command: response.command,
-                message: response.message || `Command '${response.command}' failed`
-              }
-            });
-          }
-          handler.reject(new Error(response.message || `Command ${response.command} failed`));
-        }
-      } else {
-        this.eventSubject.next({
-          seq: 0,
-          type: 'event',
-          event: '_sessionWarning',
-          body: {
-            message: `Received DAP response for unknown request_seq=${response.request_seq}, command='${response.command}'. Ignoring.`
-          }
-        });
-      }
+      this.requestBroker.handleResponse(msg as DapResponse);
     } else if (msg.type === 'event') {
       this.handleTransportEvent(msg as DapEvent);
     }
@@ -862,10 +797,7 @@ export class DapSessionService implements OnDestroy {
     this.closeTransport();
     this.executionStateSubject.next('error');
     this.commandInFlightSubject.next(false);
-    for (const [seq, handler] of this.pendingRequests.entries()) {
-      handler.reject(err);
-      this.pendingRequests.delete(seq);
-    }
+    this.requestBroker.clearPendingRequests(err);
     this.clearSessionData();
   }
 

@@ -1,5 +1,6 @@
 import { DapThread, DapResponse, DapStackFrame } from '../dap.types';
-import { DapSessionService, ExecutionState } from './dap-session.service';
+import { ExecutionState } from './dap-session.service';
+import { DapRequestSender } from './dap-request-sender.interface';
 
 export type DapThreadStatus = 'running' | 'stopped' | 'exited';
 
@@ -50,7 +51,7 @@ export class DapThreadSession implements DapThread {
   private stackTracePromise: Promise<DapResponse> | null = null;
 
   constructor(
-    private readonly session: DapSessionService,
+    private readonly session: DapRequestSender,
     thread: DapThread
   ) {
     this.id = thread.id;
@@ -81,7 +82,7 @@ export class DapThreadSession implements DapThread {
       return res.body?.stackFrames || [];
     }
 
-    this.stackTracePromise = this.session.sendRequestInternal('stackTrace', { threadId: this.id });
+    this.stackTracePromise = this.session.sendRequest('stackTrace', { threadId: this.id });
 
     try {
       const response = await this.stackTracePromise;

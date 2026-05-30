@@ -293,7 +293,7 @@ graph LR
     style WI_139 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_140 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_141 fill:#4ade80,stroke:#000,stroke-width:2.5px
-    style WI_142 fill:#4ade80,stroke:#22c55e
+    style WI_142 fill:#4ade80,stroke:#000,stroke-width:2.5px
     style WI_143 fill:#4ade80,stroke:#22c55e
     style WI_10 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_11 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2

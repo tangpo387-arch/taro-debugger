@@ -52,21 +52,6 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - [Doc] docs/archive/specs/taro-session-unit-testing.md
 - **Dependencies**: none
 
-### WI-142: Extract DapRequestBroker & DapRequestSender Interface
-
-- **Status**: 💡 Proposed
-- **Size**: M
-- **Description**: Decompose DapSessionService Phase 2: extract request/response bookkeeping into DapRequestBroker and break circular DapThreadSession dependency via interface.
-- **Details**:
-  - Extract `DapRequestBroker` service to own seq counter, pendingRequests map, timeout logic, and raw sendRequest
-  - Define `DapRequestSender` interface with narrow API surface (sendRequest, executionState) for DapThreadSession dependency injection
-  - Refactor DapThreadSession constructor to accept `DapRequestSender` interface instead of full DapSessionService reference
-  - DapSessionService delegates all request/response bookkeeping to the broker
-  - [Test] DapThreadSession unit tests using a mock DapRequestSender
-  - [Test] DapRequestBroker unit tests in isolation
-  - [Doc] docs/archive/specs/dap-session-refactor.md
-- **Dependencies**: WI-141
-
 ### WI-143: Extract DapExecutionController & DapSessionLifecycle Facade
 
 - **Status**: 💡 Proposed

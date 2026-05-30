@@ -63,6 +63,8 @@ This is the **quick-reference cheat sheet** for locating which file to read or m
 | File | Responsibility | Key Interfaces |
 | --- | --- | --- |
 | `projects/dap-core/src/lib/session/dap-session.service.ts` | DAP session lifecycle orchestrator, state machine, and unified communication facade | `startSession()`, `executionState$`, `commandInFlight$`, `activeThread$`, `threads$`, `onEvent()` |
+| `projects/dap-core/src/lib/session/dap-request-sender.interface.ts` | Narrow interface for dispatching DAP requests to break circular dependency | `DapRequestSender` (`executionState`, `sendRequest()`) |
+| `projects/dap-core/src/lib/session/dap-request-broker.service.ts` | Standalone service managing DAP request-response sequence numbers, pending requests map, and timeouts | `DapRequestBroker` (`sendRequest()`, `handleResponse()`, `clearPendingRequests()`, `onEvent()`, `onTraffic()`) |
 | `projects/dap-core/src/lib/session/dap-breakpoint-manager.service.ts` | Manages breakpoint SSOT state (breakpointsMap, systemBreakpointIds), optimistic UI updates, and synchronization with the DAP adapter | `setBreakpoints()`, `toggleBreakpoint()`, `toggleBreakpointEnabled()`, `removeBreakpoint()`, `breakpoints$` |
 | `projects/dap-core/src/lib/session/dap-thread-manager.service.ts` | Manages active thread selection, thread lifecycle tracking, and debounced event buffering | `fetchThreads()`, `setCurrentThread()`, `threads$`, `activeThread$` |
 | `projects/dap-core/src/lib/session/dap-thread.ts` | Rich, object-oriented representation of a thread (`DapThreadSession`) encapsulating thread-specific execution-scoped cache, status tracking, and request coalescing | `stackTrace()`, `clearCache()`, `id`, `name`, `status`, `stopReason`, `setStatus()`, `setStopReason()` |

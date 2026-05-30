@@ -17,6 +17,8 @@ export * from './lib/session/assembly.types';
 export * from './lib/session/dap-assembly-cache.service';
 export * from './lib/session/dap-memory.service';
 export * from './lib/session/dap-thread';
+export * from './lib/session/dap-request-broker.service';
+export * from './lib/session/dap-request-sender.interface';
 
 // Re-export error types that might be needed by consumers
 export { EvaluateCancelledError, DapFatalException } from './lib/session/dap-session.service';

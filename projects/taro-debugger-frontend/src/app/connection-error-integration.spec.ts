@@ -12,7 +12,7 @@
 
 // @vitest-environment jsdom
 import { TestBed } from '@angular/core/testing';
-import { DapSessionService, ExecutionState, DapBreakpointManager, DapThreadManager } from '@taro/dap-core';
+import { DapSessionService, ExecutionState, DapBreakpointManager, DapThreadManager, DapRequestBroker } from '@taro/dap-core';
 import { DapConfigService } from '@taro/dap-core';
 import { TransportFactoryService } from '@taro/dap-core';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -79,7 +79,6 @@ describe('TI-05 — Connection Error & Intent Detection', () => {
 
   // Helper — bring service into a synthetic 'running' state without a real handshake
   function simulateRunningState(): void {
-    (service as any).transport = mockTransport;
     (service as any).messageSubscription = mockTransport.onMessage().subscribe({
       next: (msg: any) => (service as any).handleIncomingMessage(msg),
       error: (err: any) => (service as any).handleIncomingTransportError(err),
@@ -99,6 +98,7 @@ describe('TI-05 — Connection Error & Intent Detection', () => {
     TestBed.configureTestingModule({
       providers: [
         DapSessionService,
+        DapRequestBroker,
         DapBreakpointManager,
         DapThreadManager,
         {
@@ -207,8 +207,6 @@ describe('TI-05 — Connection Error & Intent Detection', () => {
 
     it('should NOT emit _transportError when transport completes after session is already idle', () => {
       // Arrange: session stays in default idle state — do NOT call simulateRunningState()
-      (service as any).transport = mockTransport;
-
       const emittedEvents: any[] = [];
       service.onEvent().subscribe(e => emittedEvents.push(e));
 

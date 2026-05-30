@@ -6,6 +6,7 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Subject, of, BehaviorSubject } from 'rxjs';
 import { DapBreakpointManager } from './dap-breakpoint-manager.service';
 import { DapThreadManager } from './dap-thread-manager.service';
+import { DapRequestBroker } from './dap-request-broker.service';
 
 describe('DapSessionService', () => {
   let service: DapSessionService;
@@ -47,6 +48,7 @@ describe('DapSessionService', () => {
     TestBed.configureTestingModule({
       providers: [
         DapSessionService,
+        DapRequestBroker,
         DapBreakpointManager,
         DapThreadManager,
         { provide: TransportFactoryService, useValue: transportFactory },
@@ -64,7 +66,6 @@ describe('DapSessionService', () => {
 
   describe('Instruction Stepping', () => {
     it('should send next request with instruction granularity', async () => {
-      (service as any).transport = mockTransport;
       (service as any).executionStateSubject.next('stopped');
       service.nextInstruction();
 
@@ -75,7 +76,6 @@ describe('DapSessionService', () => {
     });
 
     it('should send stepIn request with instruction granularity', async () => {
-      (service as any).transport = mockTransport;
       (service as any).executionStateSubject.next('stopped');
       service.stepInInstruction();
 
@@ -88,8 +88,6 @@ describe('DapSessionService', () => {
 
   describe('Sequence ID Management', () => {
     it('should increment seq for each request', () => {
-      (service as any).transport = mockTransport;
-
       (service as any).sendRequest('command1');
       expect(mockTransport.sendRequest).toHaveBeenCalledWith(expect.objectContaining({ seq: 1 }));
 
@@ -100,8 +98,6 @@ describe('DapSessionService', () => {
 
   describe('Promise Mapping', () => {
     it('should resolve when matching response is received', async () => {
-      (service as any).transport = mockTransport;
-
       const promise = (service as any).sendRequest('testCommand');
 
       // Manually trigger the handler
@@ -118,8 +114,6 @@ describe('DapSessionService', () => {
     });
 
     it('should reject when failed response is received', async () => {
-      (service as any).transport = mockTransport;
-
       const promise = (service as any).sendRequest('testCommand');
 
       (service as any).handleIncomingMessage({
@@ -134,8 +128,6 @@ describe('DapSessionService', () => {
     });
 
     it('should ignore responses with unknown request_seq', () => {
-      (service as any).transport = mockTransport;
-
       // The session should emit a _sessionWarning event instead of logging directly
       const emittedEvents: any[] = [];
       (service as any).eventSubject.subscribe((e: any) => emittedEvents.push(e));
@@ -155,8 +147,6 @@ describe('DapSessionService', () => {
 
   describe('Timeout Mechanism', () => {
     it('should reject on timeout', async () => {
-      (service as any).transport = mockTransport;
-
       const promise = (service as any).sendRequest('slowCommand', {}, 100);
 
       vi.advanceTimersByTime(101);
@@ -554,8 +544,6 @@ describe('DapSessionService', () => {
     });
 
     it('should track system breakpoint IDs and update stop reason', async () => {
-      (service as any).transport = mockTransport;
-
       mockTransport.sendRequest.mockImplementation((req: any) => {
         setTimeout(() => {
           (service as any).handleIncomingMessage({
@@ -590,8 +578,6 @@ describe('DapSessionService', () => {
     });
 
     it('should ignore "breakpoint" events for system-managed breakpoints', async () => {
-      (service as any).transport = mockTransport;
-
       // 1. Setup system breakpoint ID 500
       mockTransport.sendRequest.mockImplementation((req: any) => {
         setTimeout(() => {
@@ -633,8 +619,6 @@ describe('DapSessionService', () => {
     });
 
     it('should ignore "breakpoint" events for system breakpoints even if they were initially unverified', async () => {
-      (service as any).transport = mockTransport;
-
       // 1. Setup system breakpoint ID 600, initially UNVERIFIED
       mockTransport.sendRequest.mockImplementation((req: any) => {
         setTimeout(() => {
@@ -727,7 +711,6 @@ describe('DapSessionService', () => {
 
     it('should transition through states based on events', () => {
       // Provide a transport so fetchThreads() (triggered by the 'stopped' event) can run cleanly.
-      (service as any).transport = mockTransport;
       mockTransport.sendRequest.mockImplementation((req: any) => {
         setTimeout(() => {
           (service as any).handleIncomingMessage({
@@ -771,7 +754,6 @@ describe('DapSessionService', () => {
     });
 
     it('should transition to running upon successful continue request if allThreadsContinued is true', async () => {
-      (service as any).transport = mockTransport;
       (service as any).executionStateSubject.next('stopped');
 
       const promise = service.continue();
@@ -792,7 +774,6 @@ describe('DapSessionService', () => {
 
 
     it('should transition to running upon successful next request (instant feedback)', async () => {
-      (service as any).transport = mockTransport;
       (service as any).executionStateSubject.next('stopped');
 
       const promise = service.next();
