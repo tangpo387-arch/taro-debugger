@@ -34,10 +34,10 @@ export class DebugControlGroupComponent {
   @Input() public activeTabIndex = 0;
 
   private readonly dapSession = inject(DapSessionService);
-
+ 
   /** Observable for the execution state to drive button disabling logic */
   public readonly executionState$ = this.dapSession.executionState$;
-
+ 
   /** Convenience observables for specific button states */
   public readonly isStopped$ = this.executionState$.pipe(map(state => state === 'stopped'));
   public readonly isRunning$ = this.executionState$.pipe(map(state => state === 'running'));
@@ -47,6 +47,12 @@ export class DebugControlGroupComponent {
   public readonly isDisconnected$ = this.executionState$.pipe(map(state => state === 'disconnected'));
   /** Emits true when a control command is currently being processed by the session */
   public readonly commandInFlight$ = this.dapSession.commandInFlight$;
+
+  /** Observable for the active thread status to drive button state under GDB non-stop mode */
+  public readonly activeThread$ = this.dapSession.activeThread$;
+  public readonly isActiveThreadStopped$: Observable<boolean> = this.activeThread$.pipe(
+    map(thread => !thread || thread.status !== 'running')
+  );
 
   // ── Execution Handlers ───────────────────────────────────────────────────
 

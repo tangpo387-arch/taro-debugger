@@ -207,6 +207,32 @@
         "created_by": "Antigravity-Agent",
         "completed": "2026-05-01"
       }
+    },
+    {
+      "id": "WI-144",
+      "title": "bug: Handle Active Thread Stepping and Play/Pause Controls under Multi-Threaded Non-Stop Stepping",
+      "featureGroup": "Debug Controls",
+      "metadata": {
+        "status": "accepted",
+        "size": "S",
+        "milestone": "v1.0",
+        "dependencies": []
+      },
+      "description": "Implement thread status checking and Play/Pause toolbar toggling under GDB non-stop multi-threaded stepping to prevent invalid stepping commands.",
+      "details": [
+        "Implement active thread status mapping in DebugControlGroupComponent",
+        "Enable Play/Pause toggling based on active thread state",
+        "Disable stepping buttons when the active thread is running",
+        "Guard keyboard shortcuts in DebuggerComponent for running active threads",
+        "Write unit tests for the control group and keyboard shortcut guards",
+        "[Test] Verify stepping buttons are disabled and F5 is ignored when active thread is running",
+        "[Doc] Update docs/architecture/command-serialization.md following [DEV:DOCS] Documentation Standards"
+      ],
+      "timeline": {
+        "created": "2026-05-31",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-31"
+      }
     }
   ]
 }

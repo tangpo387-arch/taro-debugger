@@ -1,5 +1,6 @@
 import { spawn, ChildProcess } from 'child_process';
 import { SessionLogger } from './logger.js';
+import path from 'path';
 
 export class GdbProcessManager {
   private gdbProcess?: ChildProcess;
@@ -23,7 +24,13 @@ export class GdbProcessManager {
 
     // Set up GDB environment and spawn arguments
     // We spawn GDB using the DAP interpreter.
-    const spawnArgs = ['--interpreter=dap'];
+    const gdbLogFile = path.join(this.logger.logsDir, 'gdb-process.log');
+    const spawnArgs = [
+      '--interpreter=dap',
+      '-ex', `set debug dap-log-file ${gdbLogFile}`,
+      '-ex', 'set debug dap-log-level 2',
+      '-q'
+    ];
 
     // GDB is standard, we spawn GDB in DAP interpreter mode.
     this.gdbProcess = spawn(activeGdbPath, spawnArgs, {

@@ -1,8 +1,8 @@
 ---
-title: Architecture - Command Serialization
+title: Command Serialization — Architecture & Lifecycle
 scope: architecture, command-serialization, session-layer, ui-layer, dap-cancel
 audience: [Human Engineer, Lead_Engineer, Quality_Control_Reviewer]
-last_updated: 2026-04-15
+last_updated: 2026-05-31
 related:
   - ../architecture.md
   - session-layer.md
@@ -58,33 +58,34 @@ The following fundamental constraints govern all command serialization patterns 
 
 - When any execution-control command is dispatched:
   - If a prior control command has not yet received its response, the new click is **silently dropped** (no queue, no retry).
-  - All control buttons enter a **disabled state** immediately on click.
-  - Buttons re-enable when the command response is received (resolved or rejected) **or** when the `executionState$` transitions via a DAP `stopped` / `continued` / `terminated` event.
+  - All control buttons enter a **disabled state** immediately on click (jitter filtering).
+  - Buttons re-enable when the command response is settled **or** when the `executionState$` transitions via a DAP `stopped` / `continued` / `terminated` event.
 - Rationale: Sending a second control command before the first state transition is confirmed is a DAP protocol violation.
 - **Run vs. Resume Differentiation**: The "Play" button icon (`play_arrow`) is enabled in `idle`, `terminated`, and `stopped` states, but maps to different semantic actions:
   - **Run (`onRun`)**: Triggered from `idle` or `terminated`. Calls `startSession()` to establish a fresh transport and handshake.
   - **Resume (`onResume`)**: Triggered from `stopped`. Calls `continue()` to resume the existing process.
-- **Button Lifecycle**:
-  - All control buttons enter a **disabled state** immediately on click (jitter filtering).
-  - Buttons re-enable when the command response is settled **or** when the `executionState$` transitions via a DAP event.
 - Rationale: Explicitly separating the "Run" intent (session initialization) from the "Resume" intent (execution control) prevent protocol race conditions when attempting to restart a naturally terminated session.
 
 ### Enforcement
 
 | Concern | Layer | Mechanism |
 | :--- | :--- | :--- |
-| Guard against duplicate dispatch | **Session** (`DapSessionService`) | `private commandInFlightSubject = new BehaviorSubject<boolean>(false)` guards each of `continue()`, `next()`, `stepIn()`, `stepOut()`, `pause()` |
-| Button disabled binding | **UI** (`DebuggerComponent`) | `[disabled]="commandInFlight$ \| async"` |
+| Guard against duplicate dispatch | **Session** (`DapExecutionController`) | `private commandInFlightSubject = new BehaviorSubject<boolean>(false)` guards each of `continue()`, `next()`, `stepIn()`, `stepOut()`, `pause()` |
+| Button disabled binding | **UI** (`DebugControlGroupComponent`) | `[disabled]="commandInFlight$ \| async"` |
 
-### New Session Layer Observable
+### State Transition Timeout Guard
 
-```typescript
-// Emits true while any execution-control command is in-flight; false when idle.
-public readonly commandInFlight$: Observable<boolean>;
-```
+If the Debug Adapter fails to emit a state transition event (`stopped`, `continued`, `terminated`) within **5 000 ms** after a successful step command response, `DapExecutionController` automatically:
 
-Implemented as a `BehaviorSubject<boolean>` initialized to `false`. Set to `true`
-immediately before `sendRequest()` is called; reset to `false` on promise settlement.
+1. Resets `commandInFlight$` to `false` (unlocking the UI).
+2. Emits a synthetic `_sessionError` event warning the user.
+
+This prevents the UI from becoming permanently locked when the adapter silently drops a state transition.
+
+> [!NOTE]
+> The timeout guard applies only to stepping commands (`continue`, `next`, `stepIn`, `stepOut`). The `pause` command does not use this guard because its response directly resolves the in-flight state.
+
+For multi-threaded non-stop mode behavior that affects control button state, see [§7. Multi-Threaded Non-Stop Thread Filtering](#7-multi-threaded-non-stop-thread-filtering).
 
 ---
 
@@ -149,30 +150,11 @@ On timeout, the same cancel flow is triggered automatically and a snackbar warns
 | Concern | Layer | Mechanism |
 | :--- | :--- | :--- |
 | Capability gate | **Session** (`DapSessionService`) | Check `capabilities.supportsCancelRequest` after `initialize` |
-| In-flight signal | **UI** (`LogViewerComponent`) | `private evaluateInFlight$ = new BehaviorSubject<boolean>(false)` — isolated from `commandInFlight$` |
-| Pending seq storage | **UI** (`LogViewerComponent`) | `private pendingEvaluateSeq: number \| undefined` |
+| In-flight signal | **UI** (`DebugConsoleComponent`) | `private evaluateInFlight$ = new BehaviorSubject<boolean>(false)` — isolated from `commandInFlight$` |
+| Pending seq storage | **UI** (`DebugConsoleComponent`) | `private pendingEvaluateSeq: number \| undefined` |
 | Cancel dispatch | **Session** (`DapSessionService`) | `public cancelRequest(requestId: number): Promise<void>` |
 | Timeout guard | **Session** (`DapSessionService`) | `Promise.race` inside `evaluate()` |
-| Auto-timeout snackbar | **UI** (`LogViewerComponent`) | Catch `EvaluateCancelledError` with `source === 'timeout'` flag |
-
-### New Session Layer API
-
-```typescript
-/**
- * Sends a DAP `cancel` request for the given in-flight request.
- * No-op if called after session disconnect.
- * Pre-condition: capabilities.supportsCancelRequest must be true.
- * @param requestId - The `seq` of the request to cancel.
- */
-public cancelRequest(requestId: number): Promise<void>;
-
-/**
- * Sends a DAP `evaluate` request with a built-in 30 s cancel timeout.
- * Rejects with EvaluateCancelledError on user cancel or timeout.
- * Returns the full DAP response on success.
- */
-public evaluate(expression: string, frameId?: number): Promise<DapResponse>;
-```
+| Auto-timeout snackbar | **UI** (`DebugConsoleComponent`) | Catch `EvaluateCancelledError` with `source === 'timeout'` flag |
 
 ---
 
@@ -199,26 +181,12 @@ frameSelected$.pipe(
 ).subscribe(/* update variable display */);
 ```
 
-> [Diagram: Frame selection stream → switchMap cancels prior in-flight scopes/variables
-> chain → new scopes request dispatched → variables fetched for selected frame.]
+> [Diagram: Frame selection stream → `switchMap` cancels prior in-flight `scopes`/`variables`
+> chain → new `scopes` request dispatched → `variables` fetched for selected frame.]
 
 ---
 
-## 5. Signal Isolation Summary
-
-| Signal / Guard | Owner | Scope | Consumers |
-| :--- | :--- | :--- | :--- |
-| `commandInFlight$` | `DapSessionService` | Control button commands only | `DebuggerComponent` (button `[disabled]`) |
-| `evaluateInFlight$` | `LogViewerComponent` | Evaluate command only | `LogViewerComponent` template (Cancel/submit swap) |
-| `pendingEvaluateSeq` | `LogViewerComponent` | Single in-flight evaluate seq | `LogViewerComponent.onCancelEvaluate()` |
-| `breakpointFileState` map | `DapSessionService` (or `DapBreakpointService`) | Per-file in-flight + pending flags | Internal only — no Observable exposed |
-| `ExecutionState` terminal guard | `DapSessionService` | `disconnect()`/`terminate()` one-shot | Session state machine — no new signal |
-
-All signals are **fully independent**. No two guards share state or block each other.
-
----
-
-## 6. R-CS4: setBreakpoints Debounce + Per-File Serialization
+## 5. R-CS4: setBreakpoints Debounce + Per-File Serialization
 
 ### Behavior
 
@@ -237,7 +205,7 @@ The implementation of R-CS4 is intentionally distributed across both layers to s
 1. **UI Layer (`EditorComponent`) — Human Noise Filtering**:
     - **Debouncing**: Gutter clicks are inherently "jittery." Grouping by file and debouncing ensures we only synchronize the user's final intent, significantly reducing redundant protocol traffic.
     - **Responsiveness**: The UI can update local decorations (markers) immediately without waiting for the 150 ms window, while the expensive server sync happens asynchronously.
-2. **Session Layer (`DapSessionService`) — Protocol Safety**:
+2. **Session Layer (`DapBreakpointManager`) — Protocol Safety**:
     - **Serialization**: While the UI delays the *start* of a request, the Session Layer ensures that once a request is dispatched, any subsequent updates for that file wait for the first to complete.
     - **Integrity**: This prevents race conditions where a fast second request might be overwritten by a slow first request's confirmation, maintaining the "latest-write-wins" guarantee.
 
@@ -245,9 +213,9 @@ The implementation of R-CS4 is intentionally distributed across both layers to s
 
 | Concern | Layer | Mechanism |
 | :--- | :--- | :--- |
-| Debounce gutter clicks | **UI** (`DebuggerComponent` / `EditorComponent`) | `debounceTime(150)` on per-file breakpoint mutation stream |
-| Per-file in-flight guard + pending slot | **Session** (`DapSessionService` or dedicated `DapBreakpointService`) | `Map<string, { inFlight: boolean; pending: BreakpointList \| undefined }>` keyed by source path |
-| Dispatch pending on response | **Session** | After `setBreakpoints` response, check pending slot; dispatch and clear immediately if non-empty |
+| Debounce gutter clicks | **UI** (`EditorComponent`) | `debounceTime(150)` on per-file breakpoint mutation stream |
+| Per-file in-flight guard + pending slot | **Session** (`DapBreakpointManager`) | `Map<string, { inFlight: boolean; pending: BreakpointList \| undefined }>` keyed by source path |
+| Dispatch pending on response | **Session** (`DapBreakpointManager`) | After `setBreakpoints` response, check pending slot; dispatch and clear immediately if non-empty |
 
 ```typescript
 // Session Layer — per-file serialization sketch
@@ -277,13 +245,13 @@ public async setBreakpoints(path: string, lines: number[]): Promise<DapResponse>
 }
 ```
 
-> [Diagram: Gutter click stream → debounceTime(150ms) → setBreakpoints(file X).
+> [Diagram: Gutter click stream → `debounceTime(150ms)` → `setBreakpoints(file X)`.
 > If in-flight: store as pending (last-write-wins). On response → dispatch pending if exists.
 > Parallel files proceed independently.]
 
 ---
 
-## 7. R-CS5: stop / restart Hierarchical Fallback & Guards
+## 6. R-CS5: stop / restart Hierarchical Fallback & Guards
 
 ### Behavior
 
@@ -306,8 +274,82 @@ public async setBreakpoints(path: string, lines: number[]): Promise<DapResponse>
 | Concern | Layer | Mechanism |
 | :--- | :--- | :--- |
 | One-shot guard | **Session** (`DapSessionService`) | Early-exit at top of `stop()`, `restart()`, and `disconnect()` |
-| Terminal action filtering | **UI** (`DebugControlGroup`) | `[disabled]` binding blocks Restart button in `idle`/`terminated` |
+| Terminal action filtering | **UI** (`DebugControlGroupComponent`) | `[disabled]` binding blocks Restart button in `idle`/`terminated` |
 | UI button suppression | **UI** (`DebuggerComponent`) | Existing `executionState$` binding |
 
-> [Diagram: Control button click → check executionState → if terminal (and command is restart): return.
-> Otherwise: dispatch hierarchical command (terminate/restart/disconnect), transition state.]
+> [Diagram: Control button click → check `executionState` → if terminal (and command is restart): return.
+> Otherwise: dispatch hierarchical command (`terminate`/`restart`/`disconnect`), transition state.]
+
+---
+
+## 7. Multi-Threaded Non-Stop Thread Filtering
+
+This section documents a **cross-cutting concern** that affects control button serialization (§2), pause routing (§6), and signal isolation (§8).
+
+### Behavior under GDB Non-Stop Mode
+
+When the GDB Debug Adapter is executed in native multi-threaded non-stop mode (`--interpreter=dap` and GDB non-stop active), individual threads can resume or step independently while other threads remain paused. As a consequence, the global session `executionState` may be `'stopped'` (because at least one thread is suspended) while the user's active/focused thread is `'running'`.
+
+To prevent protocol-level failures (such as GDB issuing `notStopped` errors when trying to step a running thread):
+
+1. **Stepping Buttons Blocked**: Stepping control buttons (Step Over, Step Into, Step Out, Nexti, Stepi) are disabled if the active thread's status is `'running'`.
+2. **Play/Pause Toggle**: The floating toolbar's **Play** button toggles to a **Pause** button if either the global session state is running OR the focused thread itself is currently `'running'`.
+3. **Execution Guards**: Both UI buttons and global keyboard shortcuts (F5, F10, F11, Shift+F11) are guarded within the controller. If the active thread status is `'running'`, stepping requests are dropped immediately. The Pause command (F6) is allowed and targets the running active thread specifically.
+
+### Enforcement
+
+| Concern | Layer | Mechanism |
+| :--- | :--- | :--- |
+| Thread-level State Mapping | **UI** (`DebugControlGroupComponent`) | `isActiveThreadStopped$ = activeThread$.pipe(map(thread => !thread &#124;&#124; thread.status !== 'running'))` |
+| Floating Toolbar Binding | **UI** (`debug-control-group.component.html`) | Stepping disabled binding: `[disabled]="!(isStopped$ &#124; async) &#124;&#124; !(isActiveThreadStopped$ &#124; async) &#124;&#124; (commandInFlight$ &#124; async)"`<br>Play/Pause toggle expression: `@if ((isRunning$ &#124; async) &#124;&#124; !(isActiveThreadStopped$ &#124; async))` |
+| Keyboard Shortcut & Action Guards | **UI** (`DebuggerComponent`) | Methods `onResume()`, `onStepOver()`, `onStepInto()`, `onStepOut()`, and `onStepInstructionTab()` exit early if `this.activeThread?.status === 'running'`. `onPause()` is permitted if `this.executionState === 'running' &#124;&#124; this.activeThread?.status === 'running'`. |
+| Thread-Specific Pause Request | **Session** (`DapExecutionController`) | Dispatches DAP `pause` request with the active thread ID (`{ threadId: activeThread.id }`). |
+
+---
+
+## 8. Signal Isolation Summary
+
+| Signal / Guard | Owner | Scope | Consumers |
+| :--- | :--- | :--- | :--- |
+| `commandInFlight$` | `DapExecutionController` | Control button commands only | `DebugControlGroupComponent` (button `[disabled]`) |
+| `evaluateInFlight$` | `DebugConsoleComponent` | Evaluate command only | `DebugConsoleComponent` template (Cancel/submit swap) |
+| `pendingEvaluateSeq` | `DebugConsoleComponent` | Single in-flight evaluate seq | `DebugConsoleComponent.onCancelEvaluate()` |
+| `breakpointFileState` map | `DapBreakpointManager` | Per-file in-flight + pending flags | Internal only — no Observable exposed |
+| `ExecutionState` terminal guard | `DapSessionService` | `disconnect()`/`terminate()` one-shot | Session state machine — no new signal |
+| `isActiveThreadStopped$` | `DebugControlGroupComponent` | Active thread stopped check | Stepping button `[disabled]` binding |
+
+All signals are **fully independent**. No two guards share state or block each other.
+
+---
+
+## 9. API Reference
+
+### Session Layer Observables
+
+```typescript
+// DapExecutionController
+// Emits true while any execution-control command is in-flight; false when idle.
+public readonly commandInFlight$: Observable<boolean>;
+```
+
+Implemented as a `BehaviorSubject<boolean>` initialized to `false`. Set to `true`
+immediately before `sendRequest()` is called; reset to `false` on promise settlement.
+
+### Session Layer Methods
+
+```typescript
+/**
+ * Sends a DAP `cancel` request for the given in-flight request.
+ * No-op if called after session disconnect.
+ * Pre-condition: capabilities.supportsCancelRequest must be true.
+ * @param requestId - The `seq` of the request to cancel.
+ */
+public cancelRequest(requestId: number): Promise<void>;
+
+/**
+ * Sends a DAP `evaluate` request with a built-in 30 s cancel timeout.
+ * Rejects with EvaluateCancelledError on user cancel or timeout.
+ * Returns the full DAP response on success.
+ */
+public evaluate(expression: string, frameId?: number): Promise<DapResponse>;
+```

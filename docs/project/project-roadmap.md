@@ -2,7 +2,7 @@
 title: Project Roadmap & Dependency Map
 scope: milestones, dependencies, architecture-tracking
 audience: [Product_Architect, Lead_Engineer, Quality_Control_Reviewer, Human Engineer]
-last_updated: 2026-05-30
+last_updated: 2026-05-31
 ---
 
 # Project Roadmap & Dependency Map
@@ -54,6 +54,7 @@ graph LR
     WI_97["WI-97 Context-Aware Debug Toolbar"]
     WI_98["WI-98 Global Debug Lifecycle Actions (Stop All)"]
     WI_101["WI-101 Fix Execution State Toggle Delay & Stepping Thread Context"]
+    WI_144["WI-144 bug: Handle Active Thread Stepping and Play/Pause Controls under Multi-Threaded Non-Stop Stepping"]
     WI_12["WI-12 Monaco Editor Breakpoint Interaction"]
     WI_13["WI-13 Breakpoint DAP Synchronization"]
     WI_14["WI-14 Current Line Highlight"]
@@ -303,6 +304,7 @@ graph LR
     style WI_97 fill:none,stroke-dasharray:5
     style WI_98 fill:none,stroke-dasharray:5
     style WI_101 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
+    style WI_144 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_12 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_13 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2
     style WI_14 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray:2

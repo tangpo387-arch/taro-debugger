@@ -13,10 +13,12 @@ describe('DebugControlGroupComponent', () => {
   let mockDapSession: any;
   let executionState$: BehaviorSubject<string>;
   let commandInFlight$: BehaviorSubject<boolean>;
+  let activeThread$: BehaviorSubject<any>;
 
   beforeEach(async () => {
     executionState$ = new BehaviorSubject<string>('idle');
     commandInFlight$ = new BehaviorSubject<boolean>(false);
+    activeThread$ = new BehaviorSubject<any>(null);
     mockDapSession = {
       executionState$: executionState$.asObservable(),
       continue: vi.fn().mockResolvedValue({}),
@@ -24,7 +26,8 @@ describe('DebugControlGroupComponent', () => {
       next: vi.fn().mockResolvedValue({}),
       stepIn: vi.fn().mockResolvedValue({}),
       stepOut: vi.fn().mockResolvedValue({}),
-      commandInFlight$: commandInFlight$.asObservable()
+      commandInFlight$: commandInFlight$.asObservable(),
+      activeThread$: activeThread$.asObservable()
     };
 
     await TestBed.configureTestingModule({
@@ -115,5 +118,47 @@ describe('DebugControlGroupComponent', () => {
     commandInFlight$.next(false);
     fixture.detectChanges();
     expect(stepOverButton.nativeElement.disabled).toBe(false);
+  });
+
+  it('should disable stepping buttons when the active thread is running', () => {
+    executionState$.next('stopped');
+    // activeThread is running
+    activeThread$.next({ id: 1, status: 'running' });
+    fixture.detectChanges();
+
+    const stepOverButton = fixture.debugElement.query(By.css('button[title^="Step Over"]'));
+    const stepIntoButton = fixture.debugElement.query(By.css('button[title^="Step Into"]'));
+    const stepOutButton = fixture.debugElement.query(By.css('button[title^="Step Out"]'));
+    
+    expect(stepOverButton.nativeElement.disabled).toBe(true);
+    expect(stepIntoButton.nativeElement.disabled).toBe(true);
+    expect(stepOutButton.nativeElement.disabled).toBe(true);
+
+    // activeThread is stopped
+    activeThread$.next({ id: 1, status: 'stopped' });
+    fixture.detectChanges();
+
+    expect(stepOverButton.nativeElement.disabled).toBe(false);
+    expect(stepIntoButton.nativeElement.disabled).toBe(false);
+    expect(stepOutButton.nativeElement.disabled).toBe(false);
+  });
+
+  it('should toggle Play button to Pause button when the active thread is running', () => {
+    executionState$.next('stopped');
+    // activeThread is stopped -> should show play_arrow (Resume)
+    activeThread$.next({ id: 1, status: 'stopped' });
+    fixture.detectChanges();
+
+    const playButton = fixture.debugElement.query(By.css('button[title^="Continue"]'));
+    expect(playButton).toBeTruthy();
+    expect(playButton.query(By.css('mat-icon')).nativeElement.textContent.trim()).toBe('play_arrow');
+
+    // activeThread is running -> should show pause
+    activeThread$.next({ id: 1, status: 'running' });
+    fixture.detectChanges();
+
+    const pauseButton = fixture.debugElement.query(By.css('button[title^="Pause"]'));
+    expect(pauseButton).toBeTruthy();
+    expect(pauseButton.query(By.css('mat-icon')).nativeElement.textContent.trim()).toBe('pause');
   });
 });

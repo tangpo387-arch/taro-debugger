@@ -5,16 +5,17 @@ export class SessionLogger {
   private stdoutStream?: fs.WriteStream;
   private stderrStream?: fs.WriteStream;
   private dapStream?: fs.WriteStream;
+  public readonly logsDir: string;
 
   constructor(sessionPath: string) {
-    const logsDir = path.join(sessionPath, 'logs');
-    if (!fs.existsSync(logsDir)) {
-      fs.mkdirSync(logsDir, { recursive: true });
+    this.logsDir = path.join(sessionPath, 'logs');
+    if (!fs.existsSync(this.logsDir)) {
+      fs.mkdirSync(this.logsDir, { recursive: true });
     }
 
-    this.stdoutStream = fs.createWriteStream(path.join(logsDir, 'stdout.log'), { flags: 'a', encoding: 'utf8' });
-    this.stderrStream = fs.createWriteStream(path.join(logsDir, 'stderr.log'), { flags: 'a', encoding: 'utf8' });
-    this.dapStream = fs.createWriteStream(path.join(logsDir, 'dap.log'), { flags: 'a', encoding: 'utf8' });
+    this.stdoutStream = fs.createWriteStream(path.join(this.logsDir, 'stdout.log'), { flags: 'a', encoding: 'utf8' });
+    this.stderrStream = fs.createWriteStream(path.join(this.logsDir, 'stderr.log'), { flags: 'a', encoding: 'utf8' });
+    this.dapStream = fs.createWriteStream(path.join(this.logsDir, 'dap.log'), { flags: 'a', encoding: 'utf8' });
   }
 
   public logStdout(message: string): void {

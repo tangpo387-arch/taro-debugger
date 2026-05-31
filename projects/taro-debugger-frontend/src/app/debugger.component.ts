@@ -173,6 +173,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
    * would incorrectly trigger a full tree reload on each stop.
    */
   private initialSourcesLoaded: boolean = false;
+  private activeThread: DapThreadSession | null = null;
 
   // ── Call Stack State ──────────────────────────────────────────────────────
 
@@ -241,8 +242,13 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     this.dapSession.activeThread$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(async (thread) => {
+        this.activeThread = thread;
         if (thread && this.executionState === 'stopped') {
-          await this.autoSelectTopFrame(thread);
+          if (thread.status === 'stopped') {
+            await this.autoSelectTopFrame(thread);
+          } else {
+            this.clearExecutionState();
+          }
         }
       });
 
@@ -636,6 +642,9 @@ export class DebuggerComponent implements OnInit, OnDestroy {
    * This guarantees that GDB's stop location is immediately shown in the Editor & Scopes views.
    */
   private async autoSelectTopFrame(thread: DapThreadSession): Promise<void> {
+    if (thread.status !== 'stopped') {
+      return;
+    }
     try {
       const stackFrames = await thread.stackTrace();
 
@@ -765,6 +774,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   /** Resume execution */
   public async onResume(): Promise<void> {
     if (this.executionState !== 'stopped') return;
+    if (this.activeThread && this.activeThread.status === 'running') return;
     try {
       await this.dapSession.continue();
     } catch (e: any) {
@@ -774,7 +784,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
 
   /** Pause execution */
   public async onPause(): Promise<void> {
-    if (this.executionState !== 'running') return;
+    if (this.executionState !== 'running' && this.activeThread?.status !== 'running') return;
     try {
       await this.dapSession.pause();
     } catch (e: any) {
@@ -785,6 +795,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   /** Step Over */
   public async onStepOver(): Promise<void> {
     if (this.executionState !== 'stopped') return;
+    if (this.activeThread && this.activeThread.status === 'running') return;
     try {
       await this.dapSession.next();
     } catch (e: any) {
@@ -804,6 +815,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   /** Step Into */
   public async onStepInto(): Promise<void> {
     if (this.executionState !== 'stopped') return;
+    if (this.activeThread && this.activeThread.status === 'running') return;
     try {
       await this.dapSession.stepIn();
     } catch (e: any) {
@@ -814,6 +826,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   /** Step Out */
   public async onStepOut(): Promise<void> {
     if (this.executionState !== 'stopped') return;
+    if (this.activeThread && this.activeThread.status === 'running') return;
     try {
       await this.dapSession.stepOut();
     } catch (e: any) {
@@ -855,6 +868,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
     this.activeLine = null;
     this.activeLineFilePath = null;
     this.activeInstructionPointer = undefined;
+    this.variablesService.clear();
     // Note: initialSourcesLoaded is intentionally NOT reset here.
     // It is only reset on session-level events (terminated, exited) or explicit
     // disconnect/reconnect — to prevent a Resume → StepOver cycle from triggering
@@ -882,6 +896,7 @@ export class DebuggerComponent implements OnInit, OnDestroy {
   /** Handle instruction-level stepping requested from the control group */
   public async onStepInstructionTab(action: 'stepi' | 'nexti'): Promise<void> {
     if (this.executionState !== 'stopped') return;
+    if (this.activeThread && this.activeThread.status === 'running') return;
 
     // Switch to Disassembly tab immediately (activeTabIndex = 1)
     this.activeTabIndex = 1;

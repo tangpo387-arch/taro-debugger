@@ -195,7 +195,7 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
           isActive: t.id === (activeThread?.id ?? null),
           isStopped: isStopped,
           stopReason: t.stopReason || undefined,
-          status: isStopped ? 'Paused' : 'Running',
+          status: isStopped ? (t.stopReason ? `Paused: ${t.stopReason}` : 'Paused') : 'Running',
           isLoading: t.isLoadingStackTrace || false,
           children: children
         };
@@ -215,7 +215,7 @@ export class ThreadCallStackComponent implements OnInit, OnDestroy {
     }
 
     // Auto-fetch frames for the active thread if it's stopped and we don't have them yet.
-    if (activeThread !== null && execState === 'stopped') {
+    if (activeThread !== null && execState === 'stopped' && activeThread.status !== 'running') {
       const threadNode = rootNode.children?.find(c => c.thread?.id === activeThread.id);
       if (threadNode && !threadNode.children) {
         // fetchFrames will run async and trigger a cacheUpdate$ which rebuilding the tree

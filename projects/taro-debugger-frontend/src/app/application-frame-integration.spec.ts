@@ -192,7 +192,8 @@ describe('WI-81: Application Frame & Global Controls Integration', () => {
         pause: vi.fn().mockResolvedValue({}),
         next: vi.fn().mockResolvedValue({}),
         stepIn: vi.fn().mockResolvedValue({}),
-        stepOut: vi.fn().mockResolvedValue({})
+        stepOut: vi.fn().mockResolvedValue({}),
+        activeThread$: EMPTY
       };
 
       await TestBed.configureTestingModule({

@@ -156,6 +156,9 @@ export class DapThreadManager {
       const resT = this.threadObjects.get(threadId);
       if (resT) {
         resT.setStatus('running');
+        if (this.activeThread?.id === resT.id) {
+          this.activeThreadSubject.next(resT);
+        }
       }
 
       const hasStopped = Array.from(this.threadObjects.values()).some(t => t.status === 'stopped');
@@ -245,6 +248,10 @@ export class DapThreadManager {
         }
         currentThreads = currentThreads.filter(t => t.id !== threadId);
         this.threadObjects.delete(threadId);
+        if (this.activeThreadSubject.value?.id === threadId) {
+          const nextActive = currentThreads.find(t => t.status === 'stopped') || currentThreads[0] || null;
+          this.activeThreadSubject.next(nextActive);
+        }
       }
     }
 

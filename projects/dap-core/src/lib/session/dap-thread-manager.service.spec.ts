@@ -121,4 +121,37 @@ describe('DapThreadManager', () => {
     expect(manager.activeThread?.stopReason).toBe('Hit breakpoint');
     expect(manager.activeThread?.status).toBe('stopped');
   });
+
+  it('should update active thread subject when active thread status changes to running', () => {
+    // Arrange
+    const t1 = manager.getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
+    manager.setActiveThread(t1);
+    let activeThreadEmitted: DapThreadSession | null = null;
+    manager.activeThread$.subscribe(t => activeThreadEmitted = t);
+
+    // Act
+    manager.handleResumptionState(false, 1);
+
+    // Assert
+    expect(t1.status).toBe('running');
+    expect(activeThreadEmitted).toBe(t1);
+  });
+
+  it('should transition active thread when active thread exits', () => {
+    // Arrange
+    const t1 = manager.getOrCreateThreadObject({ id: 1, name: 'Thread 1' });
+    const t2 = manager.getOrCreateThreadObject({ id: 2, name: 'Thread 2' });
+    t2.setStatus('stopped');
+    manager.handleThreadEvent({ reason: 'started', threadId: 1 });
+    manager.handleThreadEvent({ reason: 'started', threadId: 2 });
+    vi.advanceTimersByTime(50);
+    manager.setActiveThread(t1);
+
+    // Act - thread 1 exits
+    manager.handleThreadEvent({ reason: 'exited', threadId: 1 });
+    vi.advanceTimersByTime(50);
+
+    // Assert
+    expect(manager.activeThread?.id).toBe(2);
+  });
 });

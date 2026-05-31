@@ -656,3 +656,127 @@ describe('DebuggerComponent — DI Isolation (Split-Brain Bug Regression)', () =
   });
 });
 
+/**
+ * Unit tests for Multi-Thread Stepping and Status Filtering (WI-Sleep Thread Fix)
+ */
+describe('DebuggerComponent — Multi-Thread Stepping and Status Filtering', () => {
+  let component: DebuggerComponent;
+  let activeThreadSubject: BehaviorSubject<any>;
+  let mockVariablesService: any;
+
+  beforeEach(() => {
+    activeThreadSubject = new BehaviorSubject<any>(null);
+    mockVariablesService = {
+      clear: vi.fn()
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        DebuggerComponent,
+        {
+          provide: DapSessionService,
+          useValue: {
+            connectionStatus$: EMPTY,
+            executionState$: EMPTY,
+            processInfo$: EMPTY,
+            threads$: EMPTY,
+            activeThread$: activeThreadSubject.asObservable(),
+            onEvent: () => EMPTY,
+            onTraffic$: EMPTY,
+            stop: vi.fn().mockResolvedValue(undefined),
+            disconnect: vi.fn(),
+          }
+        },
+        { provide: DapVariablesService, useValue: mockVariablesService },
+        { provide: DapLogService, useValue: { consoleLog: vi.fn() } },
+        { provide: DapConfigService, useValue: { getConfig: () => ({ executablePath: 'exe', stopOnEntry: true }) } },
+        { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
+        { provide: ChangeDetectorRef, useValue: { detectChanges: vi.fn(), markForCheck: vi.fn() } },
+        { provide: DapFileTreeService, useValue: { readFile: () => of(''), getTree: () => EMPTY, destroy: vi.fn() } },
+        { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false }) } },
+        { provide: DapMemoryService, useValue: { read: vi.fn(), write: vi.fn() } },
+      ],
+      schemas: [NO_ERRORS_SCHEMA]
+    }).overrideComponent(DebuggerComponent, {
+      set: { providers: [] }
+    });
+    component = TestBed.inject(DebuggerComponent);
+    component.executionState = 'stopped';
+    component.ngOnInit();
+  });
+
+  it('should call autoSelectTopFrame when active thread is stopped', async () => {
+    const spy = vi.spyOn(component as any, 'autoSelectTopFrame').mockResolvedValue(undefined);
+    const mockThread = { id: 1, status: 'stopped', stackTrace: vi.fn().mockResolvedValue([]) };
+
+    activeThreadSubject.next(mockThread);
+
+    expect(spy).toHaveBeenCalledWith(mockThread);
+  });
+
+  it('should call clearExecutionState and clear variables when active thread is running', () => {
+    const spy = vi.spyOn(component as any, 'clearExecutionState');
+    const mockThread = { id: 1, status: 'running' };
+
+    activeThreadSubject.next(mockThread);
+
+    expect(spy).toHaveBeenCalled();
+    expect(mockVariablesService.clear).toHaveBeenCalled();
+  });
+
+  it('should guard execution controls and exit early when active thread is running', async () => {
+    const mockDapSession = (component as any).dapSession;
+    mockDapSession.continue = vi.fn().mockResolvedValue({});
+    mockDapSession.next = vi.fn().mockResolvedValue({});
+    mockDapSession.stepIn = vi.fn().mockResolvedValue({});
+    mockDapSession.stepOut = vi.fn().mockResolvedValue({});
+    mockDapSession.nextInstruction = vi.fn().mockResolvedValue({});
+
+    // Set active thread to running
+    const mockThread = { id: 1, status: 'running' };
+    activeThreadSubject.next(mockThread);
+
+    await component.onResume();
+    await component.onStepOver();
+    await component.onStepInto();
+    await component.onStepOut();
+    await component.onStepInstructionTab('nexti');
+
+    expect(mockDapSession.continue).not.toHaveBeenCalled();
+    expect(mockDapSession.next).not.toHaveBeenCalled();
+    expect(mockDapSession.stepIn).not.toHaveBeenCalled();
+    expect(mockDapSession.stepOut).not.toHaveBeenCalled();
+    expect(mockDapSession.nextInstruction).not.toHaveBeenCalled();
+
+    // Set active thread to stopped
+    mockThread.status = 'stopped';
+    activeThreadSubject.next(mockThread);
+
+    await component.onResume();
+    await component.onStepOver();
+    await component.onStepInto();
+    await component.onStepOut();
+    await component.onStepInstructionTab('nexti');
+
+    expect(mockDapSession.continue).toHaveBeenCalled();
+    expect(mockDapSession.next).toHaveBeenCalled();
+    expect(mockDapSession.stepIn).toHaveBeenCalled();
+    expect(mockDapSession.stepOut).toHaveBeenCalled();
+    expect(mockDapSession.nextInstruction).toHaveBeenCalled();
+  });
+
+  it('should allow pausing when active thread is running even if session state is stopped', async () => {
+    const mockDapSession = (component as any).dapSession;
+    mockDapSession.pause = vi.fn().mockResolvedValue({});
+
+    // Session is stopped, but active thread is running
+    component.executionState = 'stopped';
+    const mockThread = { id: 1, status: 'running' };
+    activeThreadSubject.next(mockThread);
+
+    await component.onPause();
+    expect(mockDapSession.pause).toHaveBeenCalled();
+  });
+});
+
