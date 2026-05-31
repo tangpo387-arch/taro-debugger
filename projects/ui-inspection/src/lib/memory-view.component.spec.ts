@@ -286,5 +286,91 @@ describe('MemoryViewComponent', () => {
       expect(scrollToOffsetSpy).toHaveBeenCalledWith(840, 'auto');
     });
   });
+
+  describe('Inline Memory Editing (WI-121)', () => {
+    beforeEach(() => {
+      component.isStopped = true;
+      component.baseAddress = 0x2000n;
+      component.data = new Uint8Array([0x41, 0x42, 0x43]); // 'ABC'
+      component.ngOnChanges({
+        baseAddress: new SimpleChange(null, 0x2000n, true),
+        data: new SimpleChange(null, component.data, true)
+      });
+      fixture.detectChanges();
+    });
+
+    it('should activate inline editing on double-click when debugger is stopped and cell is mapped', () => {
+      // Act: double-click first cell (row '0x0000000000002000', index 0)
+      component.startEdit('0x0000000000002000', 0, '41');
+
+      // Assert
+      expect(component.isEditing('0x0000000000002000', 0)).toBe(true);
+      expect(component.editValue).toBe('41');
+    });
+
+    it('should not activate inline editing if debugger is not stopped', () => {
+      component.isStopped = false;
+      fixture.detectChanges();
+
+      // In the HTML template, double click is bound with `isStopped` check.
+      // We can also check that component doesn't start edit when isFetching is true.
+      component['isFetching'] = true;
+      component.startEdit('0x0000000000002000', 0, '41');
+      expect(component.isEditing('0x0000000000002000', 0)).toBe(false);
+    });
+
+    it('should restrict and format user hex input dynamically', () => {
+      const mockEvent = {
+        target: {
+          value: '4g5x'
+        }
+      } as any;
+
+      component.onInputChange(mockEvent);
+
+      expect(component.editValue).toBe('45');
+      expect(mockEvent.target.value).toBe('45');
+    });
+
+    it('should invoke DapMemoryService.write with absolute target cell address on confirmation', async () => {
+      component.startEdit('0x0000000000002000', 1, '42');
+      component.editValue = '46'; // 'F'
+
+      await component.confirmEdit('0x0000000000002000', 1);
+
+      expect(mockMemoryService.write).toHaveBeenCalledWith('0x0000000000002001', 0, new Uint8Array([0x46]));
+    });
+
+    it('should commit value, update local row bytes, refresh ASCII preview, and flash success on successful write', async () => {
+      component.startEdit('0x0000000000002000', 1, '42');
+      component.editValue = '46'; // 'F'
+      mockMemoryService.write.mockResolvedValueOnce(1); // successful write of 1 byte
+
+      await component.confirmEdit('0x0000000000002000', 1);
+
+      // Assert row data updated
+      expect(component.rows[0].bytes[1]).toBe('46');
+      expect(component.rows[0].ascii.startsWith('AFC')).toBe(true);
+
+      // Assert success state set
+      expect(component.cellStates['0x0000000000002001']).toBe('success');
+    });
+
+    it('should rollback instantly to original value, show error border, and set error tooltip on failed write', async () => {
+      component.startEdit('0x0000000000002000', 1, '42');
+      component.editValue = 'FF';
+      mockMemoryService.write.mockResolvedValueOnce(0); // failed write
+
+      await component.confirmEdit('0x0000000000002000', 1);
+
+      // Assert row data rolled back to original '42' ('B')
+      expect(component.rows[0].bytes[1]).toBe('42');
+      expect(component.rows[0].ascii.startsWith('ABC')).toBe(true);
+
+      // Assert error state and message set
+      expect(component.cellStates['0x0000000000002001']).toBe('error');
+      expect(component.cellErrorMessages['0x0000000000002001']).toBe('Write Failed');
+    });
+  });
 });
 

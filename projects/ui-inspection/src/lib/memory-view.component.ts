@@ -70,12 +70,22 @@ export class MemoryViewComponent implements OnInit, OnChanges, AfterViewInit, On
   private isFetching = false;
   private lastVisibleAddressStr: string | null = null;
 
+  // ── Inline Editing State ──────────────────────────────────────────────────
+  public editingCell: { rowAddress: string; byteIndex: number } | null = null;
+  public editValue: string = '';
+  public cellStates: { [address: string]: 'pending' | 'success' | 'error' } = {};
+  public cellErrorMessages: { [address: string]: string } = {};
+
   public ngOnInit(): void {
     this.dapSession.connectionStatus$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(connected => {
       if (!connected) {
         this.rows = [];
         this.localBaseAddress = 0n;
         this.lastVisibleAddressStr = null;
+        this.editingCell = null;
+        this.editValue = '';
+        this.cellStates = {};
+        this.cellErrorMessages = {};
         this.cdr.detectChanges();
       }
     });
@@ -356,6 +366,141 @@ export class MemoryViewComponent implements OnInit, OnChanges, AfterViewInit, On
 
   public trackByAddress(_index: number, row: MemoryRow): string {
     return row.address;
+  }
+
+  // ── Inline Memory Editing (WI-121) ─────────────────────────────────────────
+
+  /**
+   * Calculates the absolute memory address of a cell and formats it as a hex string.
+   */
+  public getCellAddressStr(rowAddress: string, byteIndex: number): string {
+    try {
+      const rowAddr = BigInt(rowAddress);
+      return '0x' + (rowAddr + BigInt(byteIndex)).toString(16).toUpperCase().padStart(16, '0');
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Returns whether a cell is currently in active editing mode.
+   */
+  public isEditing(rowAddress: string, byteIndex: number): boolean {
+    return this.editingCell !== null &&
+      this.editingCell.rowAddress === rowAddress &&
+      this.editingCell.byteIndex === byteIndex;
+  }
+
+  /**
+   * Activates inline editing for a mapped byte cell when the debugger is stopped.
+   */
+  public startEdit(rowAddress: string, byteIndex: number, currentValue: string): void {
+    if (this.isFetching) return;
+    this.editingCell = { rowAddress, byteIndex };
+    this.editValue = currentValue;
+
+    // Use microtask to focus and select the input
+    setTimeout(() => {
+      const inputEl = document.querySelector('.byte-input') as HTMLInputElement;
+      if (inputEl) {
+        inputEl.focus();
+        inputEl.select();
+      }
+    }, 0);
+  }
+
+  /**
+   * Restricts user inputs to standard 2-character hexadecimal format.
+   */
+  public onInputChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let val = input.value.replace(/[^0-9A-Fa-f]/g, '').toUpperCase();
+    if (val.length > 2) {
+      val = val.substring(0, 2);
+    }
+    this.editValue = val;
+    input.value = val;
+  }
+
+  /**
+   * Resets active editing states without modifying memory.
+   */
+  public cancelEdit(): void {
+    this.editingCell = null;
+    this.editValue = '';
+  }
+
+  /**
+   * Invokes the DAP memory write action and applies animations or triggers instant rollbacks.
+   */
+  public async confirmEdit(rowAddress: string, byteIndex: number): Promise<void> {
+    if (!this.editingCell) return;
+
+    this.editingCell = null;
+    const newValueStr = this.editValue.padStart(2, '0');
+    this.editValue = '';
+
+    const cellAddrStr = this.getCellAddressStr(rowAddress, byteIndex);
+    if (!cellAddrStr) return;
+
+    const rowIndex = this.rows.findIndex(r => r.address === rowAddress);
+    if (rowIndex < 0) return;
+
+    const originalByteStr = this.rows[rowIndex].bytes[byteIndex];
+    if (originalByteStr === newValueStr) {
+      return; // No value change, skip API request
+    }
+
+    const byteValue = parseInt(newValueStr, 16);
+    if (isNaN(byteValue)) {
+      return;
+    }
+
+    // Enter pending-write transaction state
+    this.cellStates[cellAddrStr] = 'pending';
+    delete this.cellErrorMessages[cellAddrStr];
+    this.cdr.detectChanges();
+
+    try {
+      const bytesWritten = await this.memoryService.write(cellAddrStr, 0, new Uint8Array([byteValue]));
+      if (bytesWritten > 0) {
+        // Success: commit value and refresh row preview
+        this.rows[rowIndex].bytes[byteIndex] = newValueStr;
+
+        // Rebuild row ascii string to reflect updated character
+        let newAscii = '';
+        for (let j = 0; j < this.BYTES_PER_ROW; j++) {
+          const byteStr = this.rows[rowIndex].bytes[j];
+          if (byteStr && byteStr !== '??') {
+            const b = parseInt(byteStr, 16);
+            newAscii += (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
+          } else if (byteStr === '??') {
+            newAscii += '.';
+          } else {
+            newAscii += ' ';
+          }
+        }
+        this.rows[rowIndex].ascii = newAscii;
+
+        this.cellStates[cellAddrStr] = 'success';
+        this.cdr.detectChanges();
+
+        // Fade out success highlighting after 1.5s
+        setTimeout(() => {
+          if (this.cellStates[cellAddrStr] === 'success') {
+            delete this.cellStates[cellAddrStr];
+            this.cdr.detectChanges();
+          }
+        }, 1500);
+      } else {
+        throw new Error('Write failed');
+      }
+    } catch (err: any) {
+      // Error: Rollback value instantly and flash error border / message
+      this.cellStates[cellAddrStr] = 'error';
+      this.cellErrorMessages[cellAddrStr] = 'Write Failed';
+      this.cdr.detectChanges();
+    }
   }
 
   /**

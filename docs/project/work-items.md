@@ -95,20 +95,6 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - [Test] Verify struct layout visualization for a nested C++ object
 - **Dependencies**: WI-130
 
-### WI-121: Inline Memory Editing Support
-
-- **Status**: 💡 Proposed
-- **Size**: M
-- **Description**: Enable users to modify memory contents directly from the Hex Dump interface.
-- **Details**:
-  - Double-clicking a byte cell loads a text input with strict two-character hexadecimal formatting
-  - Pressing Enter or clicking outside triggers a DAP writeMemory event
-  - Successful modifications display a temporary green highlight transition
-  - Failed modifications rollback instantly, display original data, and highlight error with red border
-  - [Doc] docs/archive/specs/memory-view-spec.md
-  - [Test] Verify memory write transaction flow and rollback on failure
-- **Dependencies**: WI-130
-
 ### WI-145: Memory Segment Minimap
 
 - **Status**: 💡 Proposed

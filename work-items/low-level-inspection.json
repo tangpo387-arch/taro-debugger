@@ -580,7 +580,7 @@
       "title": "Inline Memory Editing Support",
       "featureGroup": "Low-Level Inspection",
       "metadata": {
-        "status": "proposed",
+        "status": "accepted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": [
@@ -598,7 +598,8 @@
       ],
       "timeline": {
         "created": "2026-05-16",
-        "created_by": "Antigravity-Agent"
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-31"
       }
     },
     {

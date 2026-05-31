@@ -21,8 +21,24 @@
              [class.highlighted]="isHighlighted(row.address, byteIndex)"
              [class.empty]="!byte"
              [class.unmapped]="row.isUnmapped"
-             [matTooltip]="row.isUnmapped ? 'Unreadable Memory Segment' : ''">
-          {{ byte || '..' }}
+             [class.editing]="isEditing(row.address, byteIndex)"
+             [class.pending-write]="cellStates[getCellAddressStr(row.address, byteIndex)] === 'pending'"
+             [class.success-updated]="cellStates[getCellAddressStr(row.address, byteIndex)] === 'success'"
+             [class.write-error]="cellStates[getCellAddressStr(row.address, byteIndex)] === 'error'"
+             [matTooltip]="row.isUnmapped ? 'Unreadable Memory Segment' : (cellErrorMessages[getCellAddressStr(row.address, byteIndex)] || '')"
+             (dblclick)="isStopped && !row.isUnmapped && byte && startEdit(row.address, byteIndex, byte)">
+          <ng-container *ngIf="isEditing(row.address, byteIndex); else displayMode">
+            <input class="byte-input" 
+                   [value]="editValue"
+                   (input)="onInputChange($event)"
+                   (blur)="confirmEdit(row.address, byteIndex)"
+                   (keydown.enter)="confirmEdit(row.address, byteIndex)"
+                   (keydown.escape)="cancelEdit()"
+                   maxlength="2" />
+          </ng-container>
+          <ng-template #displayMode>
+            {{ byte || '..' }}
+          </ng-template>
         </div>
       </div>
 
