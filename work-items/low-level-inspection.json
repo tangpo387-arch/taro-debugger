@@ -660,7 +660,7 @@
       "title": "Infinite Memory View Scroll & Anchoring",
       "featureGroup": "Low-Level Inspection",
       "metadata": {
-        "status": "proposed",
+        "status": "accepted",
         "size": "M",
         "milestone": "v1.0",
         "dependencies": [
@@ -677,6 +677,32 @@
       ],
       "timeline": {
         "created": "2026-05-23",
+        "created_by": "Antigravity-Agent",
+        "completed": "2026-05-31"
+      }
+    },
+    {
+      "id": "WI-145",
+      "title": "Memory Segment Minimap",
+      "featureGroup": "Low-Level Inspection",
+      "metadata": {
+        "status": "proposed",
+        "size": "M",
+        "milestone": "v1.0",
+        "dependencies": [
+          "WI-130"
+        ]
+      },
+      "description": "Implement a high-density vertical minimap track next to the memory view scrollbar to visualize and navigate virtual memory segments.",
+      "details": [
+        "Create MemorySegmentMinimapComponent in ui-inspection library",
+        "Integrate segment indicators showing variable and stack frame positions in the track",
+        "Implement drag-to-scroll navigation within the target segment boundaries",
+        "[Doc] docs/archive/specs/memory-minimap-spec.md",
+        "[Test] Verify minimap coordinates translate scroll positions correctly in mock context"
+      ],
+      "timeline": {
+        "created": "2026-05-31",
         "created_by": "Antigravity-Agent"
       }
     }

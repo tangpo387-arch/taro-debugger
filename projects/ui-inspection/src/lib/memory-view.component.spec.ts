@@ -1,17 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MemoryViewComponent } from './memory-view.component';
-import { ScrollingModule } from '@angular/cdk/scrolling';
+import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
 import { SimpleChange } from '@angular/core';
 
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { of } from 'rxjs';
 import { JumpToAddressDialogComponent } from '@taro/ui-shared';
-import { DapSessionService } from '@taro/dap-core';
+import { DapSessionService, DapMemoryService } from '@taro/dap-core';
+import { vi } from 'vitest';
 
 describe('MemoryViewComponent', () => {
   let component: MemoryViewComponent;
   let fixture: ComponentFixture<MemoryViewComponent>;
   let mockDialog: any;
+  let mockMemoryService: any;
 
   beforeEach(async () => {
     mockDialog = {
@@ -20,10 +22,16 @@ describe('MemoryViewComponent', () => {
       })
     };
 
+    mockMemoryService = {
+      read: vi.fn().mockResolvedValue(new Uint8Array(512).fill(0xAA)),
+      write: vi.fn().mockResolvedValue(1)
+    };
+
     await TestBed.configureTestingModule({
       imports: [MemoryViewComponent, ScrollingModule, MatDialogModule],
       providers: [
         { provide: MatDialog, useValue: mockDialog },
+        { provide: DapMemoryService, useValue: mockMemoryService },
         { 
           provide: DapSessionService, 
           useValue: { 
@@ -100,28 +108,32 @@ describe('MemoryViewComponent', () => {
   });
 
   describe('Highlighting', () => {
+    beforeEach(() => {
+      component.baseAddress = 0x1000n;
+    });
+
     it('should identify highlighted bytes within range', () => {
       // Arrange
       component.highlightedRange = { start: 2, length: 3 };
 
       // Act & Assert
-      expect(component.isHighlighted(0, 1)).toBe(false); // Index 1
-      expect(component.isHighlighted(0, 2)).toBe(true);  // Index 2
-      expect(component.isHighlighted(0, 3)).toBe(true);  // Index 3
-      expect(component.isHighlighted(0, 4)).toBe(true);  // Index 4
-      expect(component.isHighlighted(0, 5)).toBe(false); // Index 5
+      expect(component.isHighlighted('0x1000', 1)).toBe(false); // Index 1
+      expect(component.isHighlighted('0x1000', 2)).toBe(true);  // Index 2
+      expect(component.isHighlighted('0x1000', 3)).toBe(true);  // Index 3
+      expect(component.isHighlighted('0x1000', 4)).toBe(true);  // Index 4
+      expect(component.isHighlighted('0x1000', 5)).toBe(false); // Index 5
     });
 
     it('should handle multi-row highlighting', () => {
       // Arrange
-      // Row 0 is 0-15, Row 1 is 16-31
+      // Row 0 is 0x1000, Row 1 is 0x1010
       component.highlightedRange = { start: 15, length: 2 };
 
       // Act & Assert
-      expect(component.isHighlighted(0, 14)).toBe(false);
-      expect(component.isHighlighted(0, 15)).toBe(true);  // Last byte of row 0
-      expect(component.isHighlighted(1, 0)).toBe(true);   // First byte of row 1
-      expect(component.isHighlighted(1, 1)).toBe(false);
+      expect(component.isHighlighted('0x1000', 14)).toBe(false);
+      expect(component.isHighlighted('0x1000', 15)).toBe(true);  // Last byte of row 0
+      expect(component.isHighlighted('0x1010', 0)).toBe(true);   // First byte of row 1
+      expect(component.isHighlighted('0x1010', 1)).toBe(false);
     });
   });
 
@@ -159,4 +171,120 @@ describe('MemoryViewComponent', () => {
       expect(row.ascii[5]).toBe(' '); // Padded
     });
   });
+
+  describe('Infinite Scroll & Anchoring', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      component.baseAddress = 0x2000n;
+      component.data = new Uint8Array(256).fill(0xBB);
+      component.ngOnChanges({
+        baseAddress: new SimpleChange(null, 0x2000n, true),
+        data: new SimpleChange(null, component.data, true)
+      });
+      fixture.detectChanges();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('should trigger prepend memory fetch on scroll near top', async () => {
+      const viewport = component['viewport']!;
+      vi.spyOn(viewport, 'getViewportSize').mockReturnValue(100);
+      vi.spyOn(viewport, 'measureScrollOffset').mockReturnValue(10);
+      vi.spyOn(viewport, 'scrollToOffset').mockImplementation(() => {});
+
+      // Act: scroll near top (index = 5, THRESHOLD_ROWS = 10)
+      component['onViewportScroll'](5, 4);
+      vi.advanceTimersByTime(150);
+      await fixture.whenStable();
+
+      // Assert: DapMemoryService.read should be called with preceding address (0x2000 - 512 = 0x1E00)
+      expect(mockMemoryService.read).toHaveBeenCalledWith(0x1E00n, 0, 512);
+    });
+
+    it('should correct scroll offset after prepend operations (Scroll Anchoring)', async () => {
+      const viewport = component['viewport']!;
+      vi.spyOn(viewport, 'getViewportSize').mockReturnValue(100);
+      vi.spyOn(viewport, 'measureScrollOffset').mockReturnValue(10);
+      const scrollToOffsetSpy = vi.spyOn(viewport, 'scrollToOffset').mockImplementation(() => {});
+
+      // Act
+      component['onViewportScroll'](2, 4);
+      vi.advanceTimersByTime(150);
+      await fixture.whenStable();
+
+      // Assert: scroll anchoring calculation
+      // PAGE_SIZE = 512 bytes = 32 rows. ROW_HEIGHT = 24. Added height = 32 * 24 = 768.
+      // Expected new offset = currentOffset (10) + addedHeight (768) = 778.
+      expect(scrollToOffsetSpy).toHaveBeenCalledWith(778, 'auto');
+    });
+
+    it('should render unmapped placeholders on failed memory reads', async () => {
+      mockMemoryService.read.mockResolvedValueOnce(new Uint8Array(0)); // simulate read failure
+      
+      const viewport = component['viewport']!;
+      vi.spyOn(viewport, 'getViewportSize').mockReturnValue(100);
+      vi.spyOn(viewport, 'measureScrollOffset').mockReturnValue(10);
+      vi.spyOn(viewport, 'scrollToOffset').mockImplementation(() => {});
+
+      // Act
+      component['onViewportScroll'](2, 4);
+      vi.advanceTimersByTime(150);
+      await fixture.whenStable();
+
+      // Assert: rows should be prepended
+      // Initial: 256 bytes = 16 rows. Added: 32 unmapped rows. Total: 48 rows.
+      expect(component.rows.length).toBe(48);
+      // Prepended row at index 0 should be unmapped with '??' cells
+      expect(component.rows[0].isUnmapped).toBe(true);
+      expect(component.rows[0].bytes[0]).toBe('??');
+    });
+
+    it('should restore scroll position to align baseAddress when tab becomes visible again', async () => {
+      const viewport = component['viewport']!;
+      const scrollToOffsetSpy = vi.spyOn(viewport, 'scrollToOffset').mockImplementation(() => {});
+
+      // Prepend some rows so that baseAddress is no longer at index 0
+      // Initial baseAddress: 0x2000n.
+      // Prepend PAGE_SIZE = 512 bytes = 32 rows.
+      // PrependAddress = 0x1E00n.
+      // rows index of 0x2000n will be exactly 32.
+      // targetOffset = 32 * ROW_HEIGHT (24) = 768px.
+      component['localBaseAddress'] = 0x1E00n;
+      component.rows = [
+        ...component['buildUnmappedRows'](0x1E00n, 512),
+        ...component['buildRows'](0x2000n, new Uint8Array(256).fill(0xBB))
+      ];
+
+      // Act
+      component['restoreScrollPosition']();
+
+      // Assert
+      expect(scrollToOffsetSpy).toHaveBeenCalledWith(768, 'auto');
+    });
+
+    it('should restore scroll position to the last visible address string when present', async () => {
+      const viewport = component['viewport']!;
+      const scrollToOffsetSpy = vi.spyOn(viewport, 'scrollToOffset').mockImplementation(() => {});
+
+      // Prepend some rows
+      component['localBaseAddress'] = 0x1E00n;
+      component.rows = [
+        ...component['buildUnmappedRows'](0x1E00n, 512),
+        ...component['buildRows'](0x2000n, new Uint8Array(256).fill(0xBB))
+      ];
+
+      // User scrolls to index 35 (which is 0x2030, since each row is 16 bytes: 0x2000 + 3 * 16 = 0x2030)
+      component['lastVisibleAddressStr'] = '0x0000000000002030';
+
+      // Act
+      component['restoreScrollPosition']();
+
+      // Assert
+      // Row 35 is found at index 35. targetOffset = 35 * ROW_HEIGHT (24) = 840px.
+      expect(scrollToOffsetSpy).toHaveBeenCalledWith(840, 'auto');
+    });
+  });
 });
+

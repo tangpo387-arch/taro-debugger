@@ -92,6 +92,11 @@
   color: var(--mat-sys-outline); // Muted color for secondary metadata
   flex-shrink: 0;
   border-right: 1px solid var(--mat-sys-outline-variant);
+
+  &.unmapped {
+    opacity: 0.5;
+    font-style: italic;
+  }
 }
 
 .hex-grid {
@@ -117,6 +122,13 @@
     color: var(--mat-sys-outline-variant);
     opacity: 0.5;
   }
+
+  &.unmapped {
+    color: var(--mat-sys-outline) !important;
+    opacity: 0.5;
+    font-style: italic;
+    cursor: help;
+  }
 }
 
 .ascii-cell {
@@ -125,6 +137,11 @@
   font-family: var(--font-mono);
   letter-spacing: 2px;
   white-space: pre;
+
+  &.unmapped {
+    opacity: 0.5;
+    font-style: italic;
+  }
 }
 
 .empty-memory {

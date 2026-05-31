@@ -122,15 +122,15 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - [Test] Verify memory write transaction flow and rollback on failure
 - **Dependencies**: WI-130
 
-### WI-130: Infinite Memory View Scroll & Anchoring
+### WI-145: Memory Segment Minimap
 
 - **Status**: 💡 Proposed
 - **Size**: M
-- **Description**: Implement dynamic paging of memory blocks on-demand during scrolling with scroll anchoring loop prevention.
+- **Description**: Implement a high-density vertical minimap track next to the memory view scrollbar to visualize and navigate virtual memory segments.
 - **Details**:
-  - Implement bidirectional scroll trigger boundaries (THRESHOLD_ROWS = 10) in MemoryViewComponent
-  - Implement Scroll Anchoring in MemoryViewComponent using offset delta to prevent jumps
-  - Render greyed-out cell placeholders for unmapped memory pages
-  - [Doc] docs/archive/specs/memory-view-spec.md
-  - [Test] Verify scroll anchoring offset correction during prepend operations
-- **Dependencies**: WI-106
+  - Create MemorySegmentMinimapComponent in ui-inspection library
+  - Integrate segment indicators showing variable and stack frame positions in the track
+  - Implement drag-to-scroll navigation within the target segment boundaries
+  - [Doc] docs/archive/specs/memory-minimap-spec.md
+  - [Test] Verify minimap coordinates translate scroll positions correctly in mock context
+- **Dependencies**: WI-130

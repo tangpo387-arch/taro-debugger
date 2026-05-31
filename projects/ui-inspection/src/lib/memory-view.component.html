@@ -10,7 +10,7 @@
          [style.height.px]="ROW_HEIGHT">
       
       <!-- Address Column -->
-      <div class="memory-cell address-cell">
+      <div class="memory-cell address-cell" [class.unmapped]="row.isUnmapped">
         {{ row.address }}
       </div>
 
@@ -18,14 +18,16 @@
       <div class="hex-grid">
         <div *ngFor="let byte of row.bytes; let byteIndex = index" 
              class="byte-cell"
-             [class.highlighted]="isHighlighted(rowIndex, byteIndex)"
-             [class.empty]="!byte">
+             [class.highlighted]="isHighlighted(row.address, byteIndex)"
+             [class.empty]="!byte"
+             [class.unmapped]="row.isUnmapped"
+             [matTooltip]="row.isUnmapped ? 'Unreadable Memory Segment' : ''">
           {{ byte || '..' }}
         </div>
       </div>
 
       <!-- ASCII Preview -->
-      <div class="ascii-cell">
+      <div class="ascii-cell" [class.unmapped]="row.isUnmapped">
         {{ row.ascii }}
       </div>
     </div>

@@ -28,7 +28,7 @@ Verifies the `MemoryViewComponent` in `@taro/ui-inspection`. Focuses on correct 
   - **Description**: Verifies that row addresses are correctly incremented from the base address.
   - **Arrange**: Set `baseAddress` to `0x00007FFFFFFFDC00`. Set `data` to 32 bytes.
   - **Act**: `ngOnChanges`.
-  - **Assert**: 
+  - **Assert**:
     - Row 0 address: `0x00007FFFFFFFDC00`.
     - Row 1 address: `0x00007FFFFFFFDC10`.
 
@@ -68,3 +68,23 @@ Verifies the `MemoryViewComponent` in `@taro/ui-inspection`. Focuses on correct 
     - `rows` length should be 1.
     - `rows[0].bytes[5]` should be `''`.
     - `rows[0].ascii[5]` should be `' '`.
+
+### Infinite Scroll & Anchoring
+
+- **Prepend memory fetch on scroll near top**
+  - **Description**: Verifies that scrolling near the top boundary (index <= 10) triggers a prepend read memory fetch at the preceding address.
+  - **Arrange**: Set `baseAddress` to `0x2000n`, `data` to 256 bytes. Mock `CdkVirtualScrollViewport` methods and spy on `DapMemoryService.read`.
+  - **Act**: Scroll near top (index = 5).
+  - **Assert**: `DapMemoryService.read` should be called with `0x1E00n` (preceding address).
+
+- **Correct scroll offset after prepend (Scroll Anchoring)**
+  - **Description**: Verifies that scroll offset is correctly adjusted by the prepended rows height to prevent jumps.
+  - **Arrange**: Setup mock viewport with `measureScrollOffset` returning `10`.
+  - **Act**: Scroll near top (index = 2).
+  - **Assert**: `viewport.scrollToOffset` should be called with `778` (`10 + 32 * 24`).
+
+- **Render unmapped placeholders on failed reads**
+  - **Description**: Verifies that failing to read preceding memory generates placeholder rows filled with `??`.
+  - **Arrange**: Mock `DapMemoryService.read` to resolve with empty array (failed read).
+  - **Act**: Scroll near top (index = 2).
+  - **Assert**: `rows` length should increase by `32` and the prepended row at index 0 should have `isUnmapped = true` and `??` cells.
