@@ -74,12 +74,12 @@ export class WebSocketServer {
     }
   }
 
-  public start(): void {
+  public start(cb?: () => void): void {
     // Bind WS server strictly to local loopback (127.0.0.1) for safety
     this.wss = new WSS({
       port: this.port,
       host: '127.0.0.1'
-    });
+    }, cb);
 
     this.logger.logStdout(`WebSocket bridge server listening on ws://127.0.0.1:${this.port}`);
 
@@ -557,4 +557,29 @@ export class WebSocketServer {
     this.clientSocket?.close();
     this.agentSocket?.close();
   }
+
+  // ── Testing Getters ────────────────────────────────────────────────────────
+
+  public getPort(): number {
+    if (this.wss) {
+      const address = this.wss.address();
+      if (address && typeof address === 'object') {
+        return address.port;
+      }
+    }
+    return this.port;
+  }
+
+  public getSessionState(): ServerSessionState {
+    return this.sessionState;
+  }
+
+  public getGdbProcess(): GdbProcessManager | undefined {
+    return this.gdbProcess;
+  }
+
+  public getSessionManager(): SessionManager | undefined {
+    return this.sessionManager;
+  }
 }
+

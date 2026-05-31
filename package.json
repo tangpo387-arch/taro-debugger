@@ -25,6 +25,7 @@
       "test:debugger": "ng test taro-debugger-frontend --watch=false",
     "test:libs": "ng test dap-core --watch=false && ng test ui-shared --watch=false && ng test ui-editor --watch=false && ng test ui-inspection --watch=false && ng test ui-console --watch=false && ng test ui-assembly --watch=false",
     "test:file": "ng test",
+    "test:session": "vitest run projects/taro-session",
     "postinstall": "node scripts/postinstall.js",
     "electron:build": "npm run build -w taro-debugger-electron",
     "electron:run": "electron . --no-sandbox",

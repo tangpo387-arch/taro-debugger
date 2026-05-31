@@ -39,19 +39,6 @@ audience: [Lead_Engineer, Product_Architect, Human Engineer]
   - [Doc] docs/architecture/agentic-debug-architecture.md
 - **Dependencies**: WI-133
 
-### WI-138: Implement taro-session Unit Testing Suite
-
-- **Status**: ⏳ Pending
-- **Size**: M
-- **Description**: Establish the unit testing framework for taro-session and implement tests to verify WebSocket server routing, GDB event broadcasting, and logger file persistence
-- **Details**:
-  - Configure test runner for taro-session
-  - [Test] Verify server rejects unauthorized /session/agent connections
-  - [Test] Verify GDB events are broadcasted to client and agent concurrently
-  - [Test] Verify SessionLogger writes to stdout.log, stderr.log, and dap.log
-  - [Doc] docs/archive/specs/taro-session-unit-testing.md
-- **Dependencies**: none
-
 ## Low-Level Inspection
 
 ### WI-107: DapRegisterService Implementation
